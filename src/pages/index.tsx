@@ -6,68 +6,245 @@ import Scene from '../components/Scene/Scene';
 import Panel from '../components/UI/Panel';
 import { WeaponType } from '../types/weapons';
 import { trunkColors, leafColors } from '@/utils/colors';
-import { generateMountains, generateTrees, generateMushrooms } from '@/utils/terrainGenerators';
-import { Vector3 } from 'three';
-import OrbitControls from 'three/examples/jsm/controls/OrbitControls';
-import { SceneProps } from '@/types/SceneProps';
+import TrainingDummy from '../components/TrainingDummy';
 
-interface AbilityButton {
-  key: string;
-  cooldown: number;
-  currentCooldown: number;
-  icon: string;
-  maxCooldown: number;
-  name: string;
-}
 
-interface WeaponInfo {
-  [key: string]: {
-    q: AbilityButton;
-    e: AbilityButton;
-  };
-}
+// DISGUSTINGLY PACKED - MOVE ALL DIS TOM FOOLERY m8
+const SunsetSkyShader = {
+  uniforms: {
+    topColor: { value: new THREE.Color('#c45e99') },
+    middleColor: { value: new THREE.Color('#de6795') },
+    bottomColor: { value: new THREE.Color('#fc9f82') },
+    offset: { value: 33 },
+    exponent: { value: 0.6 },
+  },
+  vertexShader: `
+    varying vec3 vWorldPosition;
+    
+    void main() {
+      vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+      vWorldPosition = worldPosition.xyz;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 topColor;
+    uniform vec3 middleColor;
+    uniform vec3 bottomColor;
+    uniform float offset;
+    uniform float exponent;
+    
+    varying vec3 vWorldPosition;
+    
+    void main() {
+      float h = normalize(vWorldPosition + vec3(0.0, offset, 0.0)).y;
+      float mixStrength = max(pow(max(h, 0.0), exponent), 0.0);
+      vec3 color = mix(middleColor, topColor, mixStrength);
+      color = mix(bottomColor, color, smoothstep(0.0, 1.0, h));
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `,
+};
 
-// SKELE SPAWN POINTS
-const generateRandomPosition = () => {
-  const radius = 30; // Increased radius for more spread
-  const angle = Math.random() * Math.PI * 2;
-  const distance = Math.sqrt(Math.random()) * radius; // Using sqrt for more even distribution
-  return new Vector3(
-    Math.cos(angle) * distance,
-    0,
-    Math.sin(angle) * distance
+// CustomSky Component
+const CustomSky: React.FC = () => {
+  const shaderParams = useMemo(() => ({
+    uniforms: {
+      topColor: { value: new Color('#c45e99') },
+      middleColor: { value: new Color('#de6795') },
+      bottomColor: { value: new Color('#fc9f82') },
+      offset: { value: 33 },
+      exponent: { value: 0.6 },
+    },
+    vertexShader: SunsetSkyShader.vertexShader,
+    fragmentShader: SunsetSkyShader.fragmentShader,
+    side: THREE.BackSide,
+  }), []);
+
+  return (
+    <mesh>
+      <sphereGeometry args={[500, 32, 32]} />
+      <shaderMaterial attach="material" args={[shaderParams]} />
+    </mesh>
   );
 };
 
-// Modify the number of skeletons
-const NUM_SKELETONS = 5;  // Changed from 30 to 5
+// Planets - PACK DIS SHIT UP FAM
+const Planet: React.FC = () => {
+  return (
+    <group position={[100, 80, -150]} scale={[30, 30, 30]}>
+      {/* Main planet sphere */}
+      <mesh>
+        <sphereGeometry args={[1, 32, 32]} />
+        <meshStandardMaterial
+          color="#B8E0D2"
+          roughness={0.7}
+          metalness={0.2}
+          emissive="#B8E0D2"
+          emissiveIntensity={0.5}
+        />
+      </mesh>
+
+      {/* Inner glow */}
+      <mesh scale={[1.2, 1.2, 1.2]}>
+        <sphereGeometry args={[1, 32, 32]} />
+        <meshBasicMaterial
+          color="#4dff90"
+          transparent
+          opacity={0.6}
+        />
+      </mesh>
+
+      {/* Outer glow */}
+      <mesh scale={[1.5, 1.5, 1.5]}>
+        <sphereGeometry args={[1, 32, 32]} />
+        <meshBasicMaterial
+          color="#4dff90"
+          transparent
+          opacity={0.1}
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      {/* Point light for additional glow effect */}
+      <pointLight
+        color="#4dff90"
+        intensity={2}
+        distance={50}
+      />
+    </group>
+  );
+};
+
+// Mushroom Component
+interface MushroomProps {
+  position: THREE.Vector3;
+  scale: number;
+}
+
+const Mushroom: React.FC<MushroomProps> = ({ position, scale }) => {
+  const mushroomRef = useRef<Mesh>(null!);
+
+  // slight animation ( bobbing)
+  useFrame((state) => {
+    if (mushroomRef.current) {
+      mushroomRef.current.position.y = position.y + Math.sin(state.clock.getElapsedTime()) * 0.05;
+    }
+  });
+
+  return (
+    <group position={position} scale={scale}>
+      {/* Stem */}
+      <mesh ref={mushroomRef}>
+        <cylinderGeometry args={[0.05, 0.05, 0.6, 16]} />
+        <meshStandardMaterial color="#d66a95" />
+      </mesh>
+      {/* Cap */}
+      <mesh position={[0, 0.35, 0]}>
+        <coneGeometry args={[0.2, 0.3, 16]} />
+        <meshStandardMaterial color="#d66a95" />
+      </mesh>
+    </group>
+  );
+};
+
+// Define the GeneratedTree interface
+interface GeneratedTree {
+  position: THREE.Vector3;
+  scale: number;
+  trunkColor: THREE.Color;
+  leafColor: THREE.Color;
+}
+
+const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
+  const mountains: Array<{ position: Vector3; scale: number }> = [];
+  const numberOfMountains = 45; 
+
+  for (let i = 0; i < numberOfMountains; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 35 + Math.random() * 40;
+
+    const x = Math.cos(angle) * distance;
+    const z = Math.sin(angle) * distance;
+
+    const scale = 0.6 + Math.random() * 0.8;
+
+    mountains.push({
+      position: new THREE.Vector3(x, 0, z),
+      scale: scale,
+    });
+  }
+
+  return mountains;
+};
+
+const generateTrees = (): GeneratedTree[] => {
+  const trees: GeneratedTree[] = [];
+  const numberOfClusters = 15;
+  const treesPerCluster = 8;
+
+  for (let i = 0; i < numberOfClusters; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 10 + Math.random() * 30;
+
+    const clusterX = Math.cos(angle) * distance;
+    const clusterZ = Math.sin(angle) * distance;
+
+    const numberOfTreesInCluster = treesPerCluster + Math.floor(Math.random() * 5);
+
+    for (let j = 0; j < numberOfTreesInCluster; j++) {
+      const offsetDistance = Math.random() * (6 + ((j % 3) * 2));
+      const offsetAngle = Math.random() * Math.PI * 2;
+
+      const treeX = clusterX + Math.cos(offsetAngle) * offsetDistance;
+      const treeZ = clusterZ + Math.sin(offsetAngle) * offsetDistance;
+
+      const scale = 0.4 + Math.random() * 1.6;
+
+      const trunkColor = trunkColors[Math.floor(Math.random() * trunkColors.length)];
+      const leafColor = leafColors[Math.floor(Math.random() * leafColors.length)];
+
+      trees.push({
+        position: new THREE.Vector3(treeX, 0, treeZ),
+        scale: scale,
+        trunkColor: new THREE.Color(trunkColor),
+        leafColor: new THREE.Color(leafColor),
+      });
+    }
+  }
+
+  return trees;
+};
+
+const generateMushrooms = () => {
+  const mushrooms: Array<{ position: THREE.Vector3; scale: number }> = [];
+  const numberOfMushrooms = 100; // Adjust as needed
+
+  for (let i = 0; i < numberOfMushrooms; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * 45; // Within the baseRadius + layers
+
+    const x = distance * Math.cos(angle);
+    const z = distance * Math.sin(angle);
+
+    const scale = 0.3 + Math.random() * 0.2; // Small mushrooms
+
+    mushrooms.push({
+      position: new THREE.Vector3(x, 0, z),
+      scale: scale,
+    });
+  }
+
+  return mushrooms;
+};
 
 // Home Component
 export default function HomePage() {
   const [currentWeapon, setCurrentWeapon] = useState<WeaponType>(WeaponType.SCYTHE);
-  const controlsRef = useRef<OrbitControls>(null) as React.MutableRefObject<OrbitControls | null>;
+  const controlsRef = useRef<OrbitControlsImpl>(null);
   const [playerHealth, setPlayerHealth] = useState(200);
   const [dummyHealth, setDummyHealth] = useState(300);
   const [lastHitTime, setLastHitTime] = useState(0);
-  const [dummy2Health, setDummy2Health] = useState(300);
-  const [abilities, setAbilities] = useState<WeaponInfo>({
-    [WeaponType.SWORD]: {
-      q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q2.svg', maxCooldown: 1, name: 'Sword Q' },
-      e: { key: 'e', cooldown: 5, currentCooldown: 0, icon: '/icons/e2.svg', maxCooldown: 3, name: 'Sword E' }
-    },
-    [WeaponType.SCYTHE]: {
-      q: { key: 'q', cooldown: 0.95, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q' },
-      e: { key: 'e', cooldown: 0.5, currentCooldown: 0, icon: '/icons/e1.svg', maxCooldown: 1, name: 'Scythe E' }
-    },
-    [WeaponType.SABRES]: {
-      q: { key: 'q', cooldown: 0.7, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres Q' },
-      e: { key: 'e', cooldown: 1.5, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
-    },
-    [WeaponType.SABRES2]: {
-      q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres2 Q' },
-      e: { key: 'e', cooldown: 2.5, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 3, name: 'Sabres2 E' }
-    }
-  });
 
   // Define the main tree position
   const treePositions = useMemo(() => ({
@@ -97,31 +274,18 @@ export default function HomePage() {
     setCurrentWeapon(weapon);
   };
 
-  const handleHit = (targetId: string, damage: number) => {
+  const handleDummyHit = () => {
     const currentTime = Date.now();
     if (currentTime - lastHitTime > 100) { // 100ms cooldown
-      if (targetId === 'dummy1') {
-        if (dummyHealth > 0) {
-          const newHealth = Math.max(0, dummyHealth - damage);
-          setDummyHealth(newHealth);
-        }
-      } else if (targetId === 'dummy2') {
-        if (dummy2Health > 0) {
-          const newHealth = Math.max(0, dummy2Health - damage);
-          setDummy2Health(newHealth);
-        }
-      } else if (targetId.startsWith('skeleton-')) {
-        const skeletonIndex = parseInt(targetId.split('-')[1]);
-        if (skeletonHealths[skeletonIndex] > 0) {
-          const newHealth = Math.max(0, skeletonHealths[skeletonIndex] - damage);
-          setSkeletonHealths(prev => {
-            const newHealths = [...prev];
-            newHealths[skeletonIndex] = newHealth;
-            return newHealths;
-          });
-        }
-      }
+      setDummyHealth(prev => Math.max(0, prev - 10));
+      setLastHitTime(currentTime);
+    }
+  };
 
+  const handleTreeHit = () => {
+    const currentTime = Date.now();
+    if (currentTime - lastHitTime > 100) { // 100ms cooldown
+      setTreeHealth(prev => Math.max(0, prev - 10));
       setLastHitTime(currentTime);
     }
   };
@@ -313,15 +477,62 @@ export default function HomePage() {
             RIGHT: THREE.MOUSE.ROTATE,
           }}
         />
+
+        <Terrain />
+        {mountainData.map((data, index) => (
+          <Mountain key={`mountain-${index}`} position={data.position} scale={data.scale} />
+        ))}
+        <GravelPath />
+
+        {/* Render all trees */}
+        {treeData.map((data, index) => (
+          <Tree 
+            key={`tree-${index}`} 
+            position={data.position} 
+            scale={data.scale} 
+            health={treeHealth} // Pass current tree health
+            trunkColor={data.trunkColor}
+            leafColor={data.leafColor}
+          />
+        ))}
+
+        {/* Render all mushrooms */}
+        {mushroomData.map((data, index) => (
+          <Mushroom key={`mushroom-${index}`} position={data.position} scale={data.scale} />
+        ))}
+
+        {/* Render the main interactive tree */}
+        <Tree 
+          position={treePositions.mainTree} 
+          scale={1} 
+          health={treeHealth} // Pass current tree health
+          trunkColor={interactiveTrunkColor}
+          leafColor={interactiveLeafColor}
+        />
+
+        <Unit 
+          onDummyHit={handleDummyHit}
+          onTreeHit={handleTreeHit}
+          controlsRef={controlsRef} 
+          currentWeapon={currentWeapon} 
+          onWeaponSelect={handleWeaponSelect}
+          health={playerHealth}
+          maxHealth={200}
+          isPlayer={true}
+        />
+
+        <TrainingDummy 
+          position={new THREE.Vector3(5, 0, 5)}
+          health={dummyHealth}
+          maxHealth={300}
+          onHit={() => setDummyHealth(300)}
+        />
       </Canvas>
       <Panel
         currentWeapon={currentWeapon}
         onWeaponSelect={handleWeaponSelect}
         playerHealth={playerHealth}
         maxHealth={200}
-        abilities={abilities}
-        onReset={handleReset}
-        killCount={killCount}
       />
     </div>
   );
