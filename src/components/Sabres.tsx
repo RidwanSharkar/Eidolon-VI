@@ -1,13 +1,15 @@
 interface SabreProps {
     isSwinging: boolean;
     onSwingComplete: () => void;
+    onLeftSwingStart: () => void;
+    onRightSwingStart: () => void;
   }
   
   import { useRef } from 'react';
   import { Group, Shape } from 'three';
   import { useFrame } from '@react-three/fiber';
   
-  export default function Sabre({ isSwinging, onSwingComplete }: SabreProps) {
+  export default function Sabre({ isSwinging, onSwingComplete, onLeftSwingStart, onRightSwingStart }: SabreProps) {
     // Refs and states for the left sabre
     const leftSabreRef = useRef<Group>(null);
     const leftSwingProgress = useRef(0);
@@ -26,6 +28,9 @@ interface SabreProps {
       if (isSwinging) {
         // Handle left sabre swing
         if (leftSabreRef.current) {
+          if (leftSwingProgress.current === 0) {
+            onLeftSwingStart();
+          }
           leftSwingProgress.current += delta * 7;
   
           const swingPhase = Math.min(leftSwingProgress.current / Math.PI, 1);
@@ -49,16 +54,18 @@ interface SabreProps {
           if (leftSwingProgress.current >= Math.PI) {
             leftSwingProgress.current = 0;
             leftSabreRef.current.rotation.set(0, 0, 0);
-            leftSabreRef.current.position.set(leftBasePosition[0], leftBasePosition[1], leftBasePosition[2]);
-            onSwingComplete();
+            leftSabreRef.current.position.set(...leftBasePosition);
           }
         }
   
-        // Handle right sabre swing with delay
+        // Handle right sabre swing with shorter delay
         if (rightSabreRef.current) {
-          if (rightSwingDelay.current < 0.15) {
+          if (rightSwingDelay.current < 0.08) {
             rightSwingDelay.current += delta;
           } else {
+            if (rightSwingProgress.current === 0) {
+              onRightSwingStart();
+            }
             rightSwingProgress.current += delta * 7;
   
             const swingPhase = Math.min(rightSwingProgress.current / Math.PI, 1);
@@ -82,7 +89,7 @@ interface SabreProps {
             if (rightSwingProgress.current >= Math.PI) {
               rightSwingProgress.current = 0;
               rightSabreRef.current.rotation.set(0, 0, 0);
-              rightSabreRef.current.position.set(rightBasePosition[0], rightBasePosition[1], rightBasePosition[2]);
+              rightSabreRef.current.position.set(...rightBasePosition);
               onSwingComplete();
             }
           }

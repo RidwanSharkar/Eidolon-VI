@@ -1,24 +1,20 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { Mesh, Vector3, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import Fireball from './Fireball';
-import { OrbitControls as OrbitControlsImpl } from 'three/examples/jsm/controls/OrbitControls';
-import Scythe from './Scythe';
-import Sword from './Sword';
-import GhostTrail from './GhostTrail';
-import Sabres from './Sabres';
-import Sabres2 from './Sabres2';
-import Billboard from './Billboard';
-import Smite from './Smite';
-import DamageNumber from './DamageNumber';
-
-// WeaponType enum
-export enum WeaponType {
-  SCYTHE = 'scythe',
-  SWORD = 'sword',
-  SABRES = 'sabres',
-  SABRES2 = 'sabres2'
-}
+import Fireball from '../Spells/Fireball';
+import OrbitControlsImpl from 'three/examples/jsm/controls/OrbitControls';
+import Scythe from '../Weapons/Scythe';
+import Sword from '../Weapons/Sword';
+import GhostTrail from '../Effects/GhostTrail';
+import Sabres from '../Weapons/Sabres';
+import Sabres2 from '../Weapons/Sabres2';
+import Billboard from '../UI/Billboard';
+import Smite from '../Spells/Smite';
+import DamageNumber from '../UI/DamageNumber';
+import * as THREE from 'three';
+import { WeaponType, WeaponInfo } from '../../types/weapons';
+import { WEAPON_DAMAGES } from '../../constants/weaponStats';
+import EtherealBow from '../Weapons/EtherealBow';
 
 // Add export to the interface declaration
 export interface UnitProps {
@@ -31,19 +27,13 @@ export interface UnitProps {
   isPlayer?: boolean;
   abilities: WeaponInfo;
   onAbilityUse: (weapon: WeaponType, ability: 'q' | 'e') => void;
+  onPositionUpdate: (position: THREE.Vector3) => void;
 }
 
 const calculateDamage = (baseAmount: number): { damage: number; isCritical: boolean } => {
   const isCritical = Math.random() < 0.15; // 15% chance
   const damage = isCritical ? baseAmount * 2 : baseAmount;
   return { damage, isCritical };
-};
-
-const WEAPON_DAMAGES = {
-  [WeaponType.SWORD]: { normal: 10, special: 25 },
-  [WeaponType.SCYTHE]: { normal: 7, special: 15 },
-  [WeaponType.SABRES]: { normal: 6, special: 0 }, // Special not used
-  [WeaponType.SABRES2]: { normal: 6, special: 0 }, // Special not used
 };
 
 const OrbitalParticles = ({ parentRef }: { parentRef: React.RefObject<Group> }) => {
@@ -89,7 +79,7 @@ const OrbitalParticles = ({ parentRef }: { parentRef: React.RefObject<Group> }) 
   );
 };
 
-export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponSelect, health, maxHealth, isPlayer = false, abilities, onAbilityUse }: UnitProps) {
+export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponSelect, health, maxHealth, isPlayer = false, abilities, onAbilityUse, onPositionUpdate }: UnitProps) {
   const groupRef = useRef<Group>(null);
   const [isSwinging, setIsSwinging] = useState(false);
   const [fireballs, setFireballs] = useState<{ id: number; position: Vector3; direction: Vector3 }[]>([]);
@@ -110,8 +100,23 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
     damage: number;
     position: Vector3;
     isCritical: boolean;
+    isLightning?: boolean;
   }[]>([]);
   const nextDamageNumberId = useRef(0);
+  const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
+  const [isBowCharging, setIsBowCharging] = useState(false);
+  const [bowChargeProgress, setBowChargeProgress] = useState(0);
+  const bowChargeStartTime = useRef<number | null>(null);
+  const bowChargeLineOpacity = useRef(0);
+  const [activeProjectiles, setActiveProjectiles] = useState<Array<{
+    id: number;
+    position: Vector3;
+    direction: Vector3;
+    power: number;
+    startTime: number;
+    maxDistance: number;
+    startPosition: Vector3;
+  }>>([]);
 
   const shootFireball = () => {
     if (!groupRef.current) return;
@@ -133,24 +138,74 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
     setFireballs(prev => prev.filter(fireball => fireball.id !== id));
   };
 
-  const handleWeaponHit = (targetPosition: Vector3) => {
+  const handleWeaponHit = (targetPosition: Vector3, targetId: 'dummy1' | 'dummy2') => {
     if (!groupRef.current || !isSwinging) return null;
     
+    const isDualWielding = currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2;
+    const maxHits = isDualWielding ? 2 : 1;
+    const currentHits = hitCountThisSwing[targetId] || 0;
+    
+    if (currentHits >= maxHits) return null;
+    
     const distance = groupRef.current.position.distanceTo(targetPosition);
-    const weaponRange = 3;
+    const weaponRange = isDualWielding ? 5.0 : 4.5;
     
     if (distance <= weaponRange) {
-      const baseDamage = isSmiting && currentWeapon === WeaponType.SWORD
-        ? WEAPON_DAMAGES[WeaponType.SWORD].special 
-        : WEAPON_DAMAGES[currentWeapon].normal;
-
-      const { damage, isCritical } = calculateDamage(baseDamage);
-      return { damage, isCritical };
+      setHitCountThisSwing(prev => ({
+        ...prev,
+        [targetId]: (prev[targetId] || 0) + 1
+      }));
+      
+      let baseDamage;
+      if (currentWeapon === WeaponType.SWORD && isSmiting) {
+        baseDamage = 10; // Regular swing damage during smite
+        const { damage, isCritical } = calculateDamage(baseDamage);
+        
+        // Add the damage number for the swing
+        setDamageNumbers(prev => [...prev, {
+          id: nextDamageNumberId.current++,
+          damage,
+          position: targetPosition,
+          isCritical
+        }]);
+        onDummyHit(targetId, damage);
+        
+        // Add delayed lightning damage
+        setTimeout(() => {
+          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(25);
+          onDummyHit(targetId, lightningDamage);
+          setDamageNumbers(prev => [...prev, {
+            id: nextDamageNumberId.current++,
+            damage: lightningDamage,
+            position: targetPosition,
+            isCritical: lightningCrit,
+            isLightning: true
+          }]);
+        }, 250);
+        
+        return { damage, isCritical };
+      } else {
+        baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
+        const { damage, isCritical } = calculateDamage(baseDamage);
+        onDummyHit(targetId, damage);
+        setDamageNumbers(prev => [...prev, {
+          id: nextDamageNumberId.current++,
+          damage,
+          position: targetPosition,
+          isCritical
+        }]);
+        return { damage, isCritical };
+      }
     }
     return null;
   };
 
-  useFrame(() => {
+  const handleSwingComplete = () => {
+    setIsSwinging(false);
+    setHitCountThisSwing({});
+  };
+
+  useFrame((_, delta) => {
     if (!groupRef.current) return;
 
     const cameraDirection = new Vector3();
@@ -188,8 +243,8 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
       const dummyPosition = new Vector3(5, 0, 5);
       const dummy2Position = new Vector3(-5, 0, 5);
       
-      const dummy1Hit = handleWeaponHit(dummyPosition);
-      const dummy2Hit = handleWeaponHit(dummy2Position);
+      const dummy1Hit = handleWeaponHit(dummyPosition, 'dummy1');
+      const dummy2Hit = handleWeaponHit(dummy2Position, 'dummy2');
       
       if (dummy1Hit) {
         onDummyHit('dummy1', dummy1Hit.damage);
@@ -211,7 +266,111 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
         }]);
       }
     }
+
+    if (groupRef.current) {
+      onPositionUpdate(groupRef.current.position);
+    }
+
+    // Use delta for smoother bow charging
+    if (isBowCharging && bowChargeStartTime.current !== null) {
+      const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
+      const progress = Math.min(chargeTime / 2, 1); // 2 seconds for full charge
+      setBowChargeProgress(progress);
+
+      // Smooth charge line opacity using delta
+      const targetOpacity = progress;
+      const currentOpacity = bowChargeLineOpacity.current;
+      bowChargeLineOpacity.current += (targetOpacity - currentOpacity) * delta * 5;
+
+      if (progress >= 1) {
+        releaseBowShot(1);
+      }
+    }
+
+    // Update projectiles with range limit
+    setActiveProjectiles(prev => prev.map(projectile => {
+      const elapsed = (Date.now() - projectile.startTime) / 1000;
+      
+      // Calculate distance traveled
+      const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
+      
+      if (distanceTraveled < projectile.maxDistance) {
+        const speed = 0.5;
+        const wave = Math.sin(elapsed * 10) * 0.05;
+        
+        projectile.position.add(
+          projectile.direction
+            .clone()
+            .multiplyScalar(speed)
+            .add(new Vector3(wave, wave, 0))
+        );
+        
+        return projectile;
+      }
+      return projectile;
+    }).filter(projectile => {
+      // Remove projectiles that have exceeded their range or time limit
+      const elapsed = (Date.now() - projectile.startTime) / 1000;
+      const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
+      return elapsed < 0.5 && distanceTraveled < projectile.maxDistance;
+    }));
   });
+
+  const releaseBowShot = useCallback((power: number) => {
+    if (!groupRef.current) return;
+
+    const damage = power >= 1 ? 40 : 5;
+    const unitPosition = groupRef.current.position.clone();
+    unitPosition.y += 1;
+
+    const direction = new Vector3(0, 0, 1);
+    direction.applyQuaternion(groupRef.current.quaternion);
+
+    const maxRange = 15;
+    const rayStart = unitPosition.clone();
+    
+    // Create a ray for hit detection
+    const ray = new THREE.Ray(rayStart, direction.normalize());
+
+    // Check hits on training dummies
+    [
+      { position: new Vector3(5, 0, 5), id: 'dummy1' as const },
+      { position: new Vector3(-5, 0, 5), id: 'dummy2' as const }
+    ].forEach(dummy => {
+      const dummyPos = dummy.position.clone();
+      dummyPos.y = 1;
+      
+      const distanceToRay = ray.distanceToPoint(dummyPos);
+      const distanceAlongRay = ray.direction.dot(dummyPos.clone().sub(rayStart));
+      
+      const hitRadius = 1;
+      if (distanceToRay < hitRadius && distanceAlongRay > 0 && distanceAlongRay < maxRange) {
+        onDummyHit(dummy.id, damage);
+        setDamageNumbers(prev => [...prev, {
+          id: nextDamageNumberId.current++,
+          damage,
+          position: dummy.position.clone(),
+          isCritical: power >= 1
+        }]);
+      }
+    });
+
+    // Add projectile with max range limit
+    setActiveProjectiles(prev => [...prev, {
+      id: Date.now(),
+      position: rayStart.clone(),
+      direction: direction.clone(),
+      power,
+      startTime: Date.now(),
+      maxDistance: maxRange,
+      startPosition: rayStart.clone() // Store initial position to track distance traveled
+    }]);
+
+    setIsBowCharging(false);
+    setBowChargeProgress(0);
+    bowChargeStartTime.current = null;
+    onAbilityUse(currentWeapon, 'e');
+  }, [currentWeapon, groupRef, onDummyHit, setDamageNumbers, setActiveProjectiles, onAbilityUse]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -234,6 +393,7 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
         if (eAbility.currentCooldown <= 0) {
           if (currentWeapon === WeaponType.SWORD && !isSmiting) {
             setIsSmiting(true);
+            setIsSwinging(true);
             const targetPos = groupRef.current!.position.clone();
             targetPos.add(new Vector3(0, 0, 3.5).applyQuaternion(groupRef.current!.quaternion));
             setSmiteEffects(prev => [...(prev || []), { 
@@ -241,7 +401,10 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
               position: targetPos 
             }]);
             onAbilityUse(currentWeapon, 'e');
-          } else if (currentWeapon !== WeaponType.SWORD) {
+          } else if (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) {
+            setIsBowCharging(true);
+            bowChargeStartTime.current = Date.now();
+          } else {
             shootFireball();
             onAbilityUse(currentWeapon, 'e');
           }
@@ -273,6 +436,10 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
       if (key in keys.current) {
         keys.current[key as keyof typeof keys.current] = false;
       }
+
+      if (key === 'e' && isBowCharging) {
+        releaseBowShot(bowChargeProgress);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -282,14 +449,12 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isSwinging, onWeaponSelect, isSmiting, currentWeapon, abilities, onAbilityUse]);
-
-  const handleSwingComplete = () => {
-    setIsSwinging(false);
-  };
+  }, [isSwinging, onWeaponSelect, isSmiting, currentWeapon, abilities, onAbilityUse, isBowCharging, bowChargeProgress, releaseBowShot]);
 
   const handleSmiteComplete = () => {
     setIsSmiting(false);
+    setIsSwinging(false);
+    setHitCountThisSwing({});
   };
 
   const handleSmiteEffectComplete = (id: number) => {
@@ -299,6 +464,12 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
   const handleDamageNumberComplete = (id: number) => {
     setDamageNumbers(prev => prev.filter(dn => dn.id !== id));
   };
+
+  useEffect(() => {
+    if (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) {
+      setHitCountThisSwing({});
+    }
+  }, [currentWeapon]);
 
   return (
     <>
@@ -342,11 +513,15 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
           <Sabres2 
             isSwinging={isSwinging} 
             onSwingComplete={handleSwingComplete}
+            onLeftSwingStart={() => {}}
+            onRightSwingStart={() => {}}
           />
         ) : currentWeapon === WeaponType.SABRES ? (
           <Sabres 
             isSwinging={isSwinging} 
             onSwingComplete={handleSwingComplete}
+            onLeftSwingStart={() => {}}
+            onRightSwingStart={() => {}}
           />
         ) : currentWeapon === WeaponType.SCYTHE ? (
           <Scythe 
@@ -410,8 +585,119 @@ export default function Unit({ onDummyHit, controlsRef, currentWeapon, onWeaponS
           damage={dn.damage}
           position={dn.position}
           isCritical={dn.isCritical}
+          isLightning={dn.isLightning}
           onComplete={() => handleDamageNumberComplete(dn.id)}
         />
+      ))}
+
+      {(currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) && isBowCharging && (
+        <EtherealBow
+          position={groupRef.current?.position.clone().add(new Vector3(0, 1, 0)) || new Vector3()}
+          direction={new Vector3(0, 0, 1).applyQuaternion(groupRef.current?.quaternion || new THREE.Quaternion())}
+          chargeProgress={bowChargeProgress}
+          isCharging={isBowCharging}
+          onRelease={releaseBowShot}
+        />
+      )}
+
+      {activeProjectiles.map(projectile => (
+        <group
+          key={projectile.id}
+          position={projectile.position.toArray()}
+          rotation={[0, Math.atan2(projectile.direction.x, projectile.direction.z), 0]}
+        >
+          {/* Core projectile */}
+          <mesh>
+            <cylinderGeometry args={[0.2, 0.4, 1.2, 8]} />
+            <meshStandardMaterial
+              color="#00ffff"
+              emissive="#00ffff"
+              emissiveIntensity={5}
+              transparent
+              opacity={0.9}
+            />
+          </mesh>
+
+          {/* Inner energy core */}
+          <mesh>
+            <sphereGeometry args={[0.3, 16, 16]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive="#ffffff"
+              emissiveIntensity={8}
+              transparent
+              opacity={0.7}
+            />
+          </mesh>
+
+          {/* Outer energy shell */}
+          <mesh scale={[1.2, 1.2, 1.5]}>
+            <sphereGeometry args={[0.4, 16, 16]} />
+            <meshStandardMaterial
+              color="#80ffff"
+              emissive="#40ffff"
+              emissiveIntensity={3}
+              transparent
+              opacity={0.3}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+
+          {/* Trailing particles */}
+          {[...Array(4)].map((_, i) => (
+            <mesh
+              key={i}
+              position={[
+                Math.sin(Date.now() * 0.01 + i) * 0.2,
+                Math.cos(Date.now() * 0.01 + i) * 0.2,
+                -i * 0.3
+              ]}
+            >
+              <sphereGeometry args={[0.15 - i * 0.03, 8, 8]} />
+              <meshStandardMaterial
+                color="#00ffff"
+                emissive="#00ffff"
+                emissiveIntensity={4}
+                transparent
+                opacity={0.5 - i * 0.1}
+              />
+            </mesh>
+          ))}
+
+          {/* Energy rings */}
+          {[...Array(3)].map((_, i) => (
+            <mesh
+              key={`ring-${i}`}
+              position={[0, 0, -i * 0.4]}
+              rotation={[Math.PI / 2, 0, Date.now() * 0.003 + i * Math.PI / 3]}
+            >
+              <torusGeometry args={[0.4 + i * 0.1, 0.05, 8, 16]} />
+              <meshStandardMaterial
+                color="#00ffff"
+                emissive="#00ffff"
+                emissiveIntensity={3}
+                transparent
+                opacity={0.4 - i * 0.1}
+              />
+            </mesh>
+          ))}
+
+          {/* Strong point light for local illumination */}
+          <pointLight 
+            color="#00ffff" 
+            intensity={4} 
+            distance={5}
+            decay={2}
+          />
+
+          {/* Wider ambient glow */}
+          <pointLight
+            color="#80ffff"
+            intensity={2}
+            distance={8}
+            decay={1}
+          />
+        </group>
       ))}
     </>
   );

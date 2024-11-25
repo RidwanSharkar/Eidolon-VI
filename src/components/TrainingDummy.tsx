@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
-import { Billboard } from '@react-three/drei';
+import { Billboard, Text } from '@react-three/drei';
 
 interface TrainingDummyProps {
   position: Vector3;
@@ -13,21 +13,25 @@ export default function TrainingDummy({ position, health, maxHealth, onHit }: Tr
   const dummyRef = useRef<Group>(null);
   const regenerationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Handle health regeneration
+  // Enhanced regeneration logic
   useEffect(() => {
-    if (health === 0) {
-      // Clear any existing timeout
-      if (regenerationTimeoutRef.current) {
-        clearTimeout(regenerationTimeoutRef.current);
-      }
-
-      // Set new timeout for health regeneration
-      regenerationTimeoutRef.current = setTimeout(() => {
-        onHit(); // Use this to reset health to max in the parent component
-      }, 5000); // 5 seconds
+    console.log(`TrainingDummy Health: ${health}`);
+    // Clear any existing timeout first
+    if (regenerationTimeoutRef.current) {
+      clearTimeout(regenerationTimeoutRef.current);
+      regenerationTimeoutRef.current = null;
     }
 
-    // Cleanup timeout on unmount or when health changes
+    // Set up regeneration when health hits 0
+    if (health === 0) {
+      console.log('Setting up regeneration timer...'); // Debug log
+      regenerationTimeoutRef.current = setTimeout(() => {
+        console.log('Regenerating dummy...'); // Debug log
+        onHit();
+      }, 5000);
+    }
+
+    // Cleanup
     return () => {
       if (regenerationTimeoutRef.current) {
         clearTimeout(regenerationTimeoutRef.current);
@@ -58,20 +62,32 @@ export default function TrainingDummy({ position, health, maxHealth, onHit }: Tr
 
       {/* HP Bar */}
       <Billboard
-        position={[0, 2.7, 0]}
-        follow={true}
+        position={[0, 3.0, 0]}
         lockX={false}
         lockY={false}
         lockZ={false}
       >
+        {/* Background bar */}
         <mesh>
-          <planeGeometry args={[1, 0.1]} />
-          <meshBasicMaterial color="#333333" />
+          <planeGeometry args={[1.5, 0.2]} />
+          <meshBasicMaterial color="#333333" opacity={0.8} transparent />
         </mesh>
-        <mesh position={[-0.5 + (health / maxHealth) * 0.5, 0, 0.001]}>
-          <planeGeometry args={[(health / maxHealth), 0.08]} />
-          <meshBasicMaterial color="#ff3333" />
+        {/* Health bar */}
+        <mesh position={[-0.75 + (health / maxHealth) * 0.75, 0, 0.001]}>
+          <planeGeometry args={[(health / maxHealth) * 1.5, 0.18]} />
+          <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
         </mesh>
+        {/* Health text */}
+        <Text
+          position={[0, 0, 0.002]}
+          fontSize={0.15}
+          color="#ffffff"
+          anchorX="center"
+          anchorY="middle"
+          fontWeight="bold"
+        >
+          {`${health}/${maxHealth}`}
+        </Text>
       </Billboard>
     </group>
   );
