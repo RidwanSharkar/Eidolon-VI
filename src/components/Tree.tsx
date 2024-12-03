@@ -20,7 +20,7 @@ const varyColor = (baseColor: Color, range: number = 0.1) => {
 
 const TreeComponent: React.FC<TreeProps> = ({ 
   position = new Vector3(0, 2, -5),
-  scale = 1,
+  scale = 0.8,
   trunkColor,
   leafColor,
 }: TreeProps) => {

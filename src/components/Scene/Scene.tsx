@@ -10,7 +10,8 @@ import EnemyUnit from '../Units/EnemyUnit';
 import { SceneProps as SceneType } from '../../types/SceneProps';
 import { Group } from 'three';
 import { UnitProps } from '../../types/UnitProps';
-
+import Planet from '../Environment/Planet';
+import CustomSky from '../Effects/CustomSky';
 
 interface Enemy {
   id: string;
@@ -124,7 +125,11 @@ export default function Scene({
 
   return (
     <>
-      {/* Other Environment Components */}
+      {/* Background Environment */}
+      <CustomSky />
+      <Planet />
+
+      {/* Ground Environment */}
       <Terrain />
       {mountainData.map((data, index) => (
         <Mountain key={`mountain-${index}`} position={data.position} scale={data.scale} />
