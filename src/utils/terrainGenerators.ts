@@ -32,31 +32,30 @@ export const generateMountains = (): Array<{ position: Vector3; scale: number }>
 
 export const generateTrees = (): GeneratedTree[] => {
   const trees: GeneratedTree[] = [
-    // Entrance path trees (smaller scale)
-    { position: new Vector3(-8, 0, 8), scale: 0.6, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]) },
-    { position: new Vector3(8, 0, 8), scale: 0.6, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]) },
+    // Dense cluster 1 (left side)
+    { position: new Vector3(-15, 0, -5), scale: 0.9, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    { position: new Vector3(-16.5, 0, -6.5), scale: 0.75, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    { position: new Vector3(-14, 0, -6), scale: 0.85, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    { position: new Vector3(-15.5, 0, -3.5), scale: 0.8, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     
-    // Forest cluster 1 (left side)
-    { position: new Vector3(-15, 0, -5), scale: 0.8, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
-    { position: new Vector3(-17, 0, -8), scale: 0.7, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
-    { position: new Vector3(-13, 0, -7), scale: 0.75, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    // Dense cluster 2 (right side)
+    { position: new Vector3(16, 0, -8), scale: 0.85, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
+    { position: new Vector3(17.5, 0, -9), scale: 0.9, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
+    { position: new Vector3(15, 0, -9.5), scale: 0.8, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
+    { position: new Vector3(16.5, 0, -6.5), scale: 0.75, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
     
-    // Forest cluster 2 (right side)
-    { position: new Vector3(15, 0, -5), scale: 0.8, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
-    { position: new Vector3(17, 0, -8), scale: 0.7, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
-    { position: new Vector3(13, 0, -7), scale: 0.75, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
-    
-    // Back forest line
-    { position: new Vector3(-20, 0, -20), scale: 0.9, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]) },
-    { position: new Vector3(-10, 0, -22), scale: 0.85, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
-    { position: new Vector3(0, 0, -23), scale: 0.9, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
-    { position: new Vector3(10, 0, -22), scale: 0.85, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]) },
-    { position: new Vector3(20, 0, -20), scale: 0.9, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    // Back forest cluster (more spread out)
+    { position: new Vector3(-20, 0, -20), scale: 0.95, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]) },
+    { position: new Vector3(-10, 0, -22), scale: 0.9, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    { position: new Vector3(0, 0, -23), scale: 0.95, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
+    { position: new Vector3(10, 0, -22), scale: 0.9, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]) },
+    { position: new Vector3(20, 0, -20), scale: 0.95, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     
     // Scattered individual trees
-    { position: new Vector3(-12, 0, 15), scale: 0.7, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
-    { position: new Vector3(12, 0, 15), scale: 0.7, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]) },
-    { position: new Vector3(0, 0, -15), scale: 0.8, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    { position: new Vector3(-12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
+    { position: new Vector3(12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]) },
+    { position: new Vector3(-5, 0, -15), scale: 0.85, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    { position: new Vector3(5, 0, -18), scale: 0.85, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
   ];
 
   return trees;
