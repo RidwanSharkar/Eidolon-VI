@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Vector3 } from 'three';
 import Terrain from '../Environment/Terrain';
 import Mountain from '../Environment/Mountain';
@@ -6,15 +6,19 @@ import GravelPath from '../Environment/GravelPath';
 import Tree from '../Environment/Tree';
 import Mushroom from '../Environment/Mushroom';
 import Unit from '../Units/Unit';
-import TrainingDummy from '../Units/TrainingDummy';
 import EnemyUnit from '../Units/EnemyUnit';
-import { v4 as uuidv4 } from 'uuid';
 import { SceneProps as SceneType } from '../../types/SceneProps';
 import { Group } from 'three';
-import { TrainingDummyProps } from '../../types/TrainingDummyProps';
 import { UnitProps } from '../../types/UnitProps';
-import { TargetId } from '../../types/TargetId';
-import HealthBar from '../UI/HealthBar';
+
+
+interface Enemy {
+  id: string;
+  initialPosition: Vector3;
+  currentPosition: Vector3;
+  health: number;
+  maxHealth: number;
+}
 
 export default function Scene({
   mountainData,
@@ -26,36 +30,16 @@ export default function Scene({
   unitProps,
   skeletonProps,
 }: SceneType) {
-  // State for enemies
-  const [enemies, setEnemies] = useState<Array<{
-    id: string;
-    initialPosition: Vector3;
-    health: number;
-    maxHealth: number;
-  }>>([
-    // Regular enemies
-    {
-      id: `enemy-${uuidv4()}`,
-      initialPosition: new Vector3(10, 0, 10),
-      health: 200,
-      maxHealth: 200,
-    },
-    {
-      id: `enemy-${uuidv4()}`,
-      initialPosition: new Vector3(-10, 0, 10),
-      health: 200,
-      maxHealth: 200,
-    },
-    // Skeletons
-    ...useMemo(() =>
-      skeletonProps.map((skeleton, index) => ({
-        id: `enemy-skeleton-${index}`, // Ensure consistent prefix
-        initialPosition: skeleton.initialPosition,
-        health: skeleton.health,
-        maxHealth: skeleton.maxHealth,
-      })), [skeletonProps]
-    ),
-  ]);
+  // State for enemies (only skeletons now)
+  const [enemies, setEnemies] = useState<Enemy[]>(
+    skeletonProps.map((skeleton, index) => ({
+      id: `skeleton-${index}`,
+      initialPosition: skeleton.initialPosition,
+      currentPosition: skeleton.initialPosition.clone(),
+      health: skeleton.health,
+      maxHealth: skeleton.maxHealth,
+    }))
+  );
 
   // Update playerHealth state to be used with HealthBar
   const [playerHealth, setPlayerHealth] = useState<number>(unitProps.health);
@@ -67,14 +51,21 @@ export default function Scene({
   const [playerPosition, setPlayerPosition] = useState<Vector3>(new Vector3(0, 0, 0));
 
   // Callback to handle damage to enemies
-  const handleTakeDamage = useCallback((targetId: TargetId, damage: number) => {
-    console.log(`Target ${targetId} takes ${damage} damage.`);
-    setEnemies((prevEnemies) =>
-      prevEnemies.map((enemy) =>
-        enemy.id === targetId
-          ? { ...enemy, health: Math.max(0, enemy.health - damage) }
-          : enemy
-      )
+  const handleTakeDamage = useCallback((targetId: string, damage: number) => {
+    console.log(`Target ${targetId} takes ${damage} damage`);
+    setEnemies(prevEnemies =>
+      prevEnemies.map(enemy => {
+        // Remove the 'enemy-' prefix when comparing IDs
+        const strippedId = targetId.replace('enemy-', '');
+        if (enemy.id === strippedId) {
+          console.log(`Found enemy ${enemy.id}, reducing health from ${enemy.health} by ${damage}`);
+          return {
+            ...enemy,
+            health: Math.max(0, enemy.health - damage)
+          };
+        }
+        return enemy;
+      })
     );
   }, []);
 
@@ -100,25 +91,35 @@ export default function Scene({
     setPlayerPosition(position);
   }, []);
 
+  // Add this callback before unitComponentProps
+  const handleEnemyPositionUpdate = useCallback((id: string, newPosition: Vector3) => {
+    setEnemies(prevEnemies =>
+      prevEnemies.map(enemy =>
+        enemy.id === id.replace('enemy-', '')
+          ? { ...enemy, currentPosition: newPosition.clone() }
+          : enemy
+      )
+    );
+  }, []);
+
   // Update unitComponentProps to use playerHealth
   const unitComponentProps: UnitProps = {
-    onHit: handleTakeDamage as (targetId: string, damage: number) => void,
+    onHit: handleTakeDamage,
     controlsRef: unitProps.controlsRef,
     currentWeapon: unitProps.currentWeapon,
     onWeaponSelect: unitProps.onWeaponSelect,
-    health: playerHealth, // Use playerHealth here instead of unitProps.health
+    health: playerHealth,
     maxHealth: unitProps.maxHealth,
     isPlayer: unitProps.isPlayer,
     abilities: unitProps.abilities,
     onAbilityUse: unitProps.onAbilityUse,
     onPositionUpdate: handlePlayerPositionUpdate,
     enemyData: enemies.map((enemy) => ({
-      id: enemy.id,
-      position: enemy.initialPosition,
+      id: `enemy-${enemy.id}`,
+      position: enemy.currentPosition,
       health: enemy.health,
       maxHealth: enemy.maxHealth,
-    })),
-    dummyProps: unitProps.dummyProps,
+    }))
   };
 
   return (
@@ -159,19 +160,7 @@ export default function Scene({
         <Unit {...unitComponentProps} />
       </group>
 
-      {/* Training Dummies */}
-      {unitProps.dummyProps && unitProps.dummyProps.map((dummy: TrainingDummyProps) => (
-        <TrainingDummy
-          key={`dummy-${dummy.id}`}
-          id={dummy.id}
-          position={dummy.position}
-          health={dummy.health}
-          maxHealth={dummy.maxHealth}
-          onHit={() => handleTakeDamage(dummy.id, 15)} // Example damage value
-        />
-      ))}
-
-      {/* Enemy Units (Regular Enemies and Skeletons) */}
+      {/* Enemy Units (Skeletons only) */}
       {enemies.map((enemy) => (
         <EnemyUnit
           key={enemy.id}
@@ -180,18 +169,14 @@ export default function Scene({
           health={enemy.health}
           maxHealth={enemy.maxHealth}
           onTakeDamage={handleTakeDamage}
+          onPositionUpdate={handleEnemyPositionUpdate}
           onRegenerate={handleRegenerate}
-          playerPosition={playerPosition} // Pass the correct player position
-          onAttackPlayer={handlePlayerDamage} // Pass the correct function
+          playerPosition={playerPosition}
+          onAttackPlayer={handlePlayerDamage}
         />
       ))}
 
-      {/* Display Player Health */}
-      <HealthBar 
-        current={playerHealth}  // Changed from 'health' to 'current'
-        max={100}              // Changed from 'maxHealth' to 'max'
-        position={[0, 5, -10]}
-      />
+     
     </>
   );
 }

@@ -3,6 +3,7 @@ import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import CustomSkeleton from './CustomSkeleton';
+import BoneVortex from '../Effects/BoneVortex';
 
 interface EnemyUnitProps {
   id: string;
@@ -13,6 +14,7 @@ interface EnemyUnitProps {
   onRegenerate: (id: string) => void;
   playerPosition: Vector3;
   onAttackPlayer: (damage: number) => void;
+  onPositionUpdate: (id: string, position: Vector3) => void;
 }
 
 export default function EnemyUnit({
@@ -20,54 +22,37 @@ export default function EnemyUnit({
   initialPosition,
   health,
   maxHealth,
-  onRegenerate,
+  onTakeDamage,
+  onPositionUpdate,
   playerPosition,
   onAttackPlayer,
 }: EnemyUnitProps) {
   const enemyRef = useRef<Group>(null);
-  const regenerationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastAttackTime = useRef<number>(0);
   const [isAttacking, setIsAttacking] = useState(false);
+  const [showDeathEffect, setShowDeathEffect] = useState(false);
+  const [isDead, setIsDead] = useState(false);
+  const currentPosition = useRef(initialPosition.clone());
 
   const ATTACK_RANGE = 2;
   const ATTACK_COOLDOWN = 2000;
   const MOVEMENT_SPEED = 0.02;
   const ATTACK_DAMAGE = 5;
 
-  // Regeneration logic with cleanup
-  useEffect(() => {
-    console.log(`EnemyUnit ${id} Health: ${health}`);
-
-    // Clear any existing timeout when health changes
-    if (regenerationTimeoutRef.current) {
-      clearTimeout(regenerationTimeoutRef.current);
-      regenerationTimeoutRef.current = null;
-    }
-
-    // Only set up regeneration when health is exactly 0
-    if (health === 0) {
-      console.log(`Setting up regeneration for skeleton ${id}`);
-      regenerationTimeoutRef.current = setTimeout(() => {
-        console.log(`Regenerating skeleton ${id}`);
-        onRegenerate(id);
-      }, 5000);
-    }
-
-    // Cleanup on unmount or health change
-    return () => {
-      if (regenerationTimeoutRef.current) {
-        clearTimeout(regenerationTimeoutRef.current);
-      }
-    };
-  }, [health, onRegenerate, id]);
-
-  // Set initial position once
   useEffect(() => {
     if (enemyRef.current) {
       enemyRef.current.position.copy(initialPosition);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array ensures this runs only once
+  }, []);
+
+  useEffect(() => {
+    if (health === 0 && !isDead) {
+      console.log(`Enemy ${id} died`);
+      setShowDeathEffect(true);
+      setIsDead(true);
+    }
+  }, [isDead, health, id]);
 
   useFrame(() => {
     if (!enemyRef.current || health <= 0 || !playerPosition) return;
@@ -78,56 +63,92 @@ export default function EnemyUnit({
 
     const distanceToPlayer = enemyRef.current.position.distanceTo(playerPosition);
 
-    // Move towards player if not in attack range and not dead
     if (distanceToPlayer > ATTACK_RANGE && health > 0) {
       setIsAttacking(false);
       enemyRef.current.position.add(direction.multiplyScalar(MOVEMENT_SPEED));
       enemyRef.current.lookAt(playerPosition);
+      currentPosition.current.copy(enemyRef.current.position);
+      onPositionUpdate(id, currentPosition.current);
     } else if (health > 0) {
-      // Attack logic - only if alive
       const currentTime = Date.now();
       if (currentTime - lastAttackTime.current >= ATTACK_COOLDOWN) {
         setIsAttacking(true);
         onAttackPlayer(ATTACK_DAMAGE);
         lastAttackTime.current = currentTime;
 
-        // Reset attack animation after a short delay
         setTimeout(() => setIsAttacking(false), 500);
       }
     }
   });
 
-  return (
-    <group ref={enemyRef} visible={health > 0}>
-      <CustomSkeleton
-        position={[0, 0, 0]}
-        isAttacking={isAttacking}
-        isWalking={!isAttacking && health > 0}
-      />
+  useEffect(() => {
+    console.log(`EnemyUnit ${id} health updated:`, health);
+  }, [health, id]);
 
-      <Billboard position={[0, 3.0, 0]} lockX={false} lockY={false} lockZ={false}>
-        {/* Background bar */}
-        <mesh>
-          <planeGeometry args={[1.5, 0.2]} />
-          <meshBasicMaterial color="#333333" opacity={0.8} transparent />
-        </mesh>
-        {/* Health bar */}
-        <mesh position={[-0.75 + (health / maxHealth) * 0.75, 0, 0.001]}>
-          <planeGeometry args={[(health / maxHealth) * 1.5, 0.18]} />
-          <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
-        </mesh>
-        {/* Health text */}
-        <Text
-          position={[0, 0, 0.002]}
-          fontSize={0.15}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="middle"
-          fontWeight="bold"
+  return (
+    <>
+      <group 
+        ref={enemyRef} 
+        visible={health > 0}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (health > 0) {
+            console.log(`Clicked enemy ${id}`);
+            onTakeDamage(`enemy-${id}`, 10);
+          }
+        }}
+      >
+        <CustomSkeleton
+          position={[0, 0, 0]}
+          isAttacking={isAttacking}
+          isWalking={!isAttacking && health > 0}
+          onHit={(damage: number) => {
+            if (health > 0) {
+              onTakeDamage(`enemy-${id}`, damage);
+            }
+          }}
+        />
+
+        <Billboard
+          position={[0, 3.5, 0]}
+          follow={true}
+          lockX={false}
+          lockY={false}
+          lockZ={false}
         >
-          {`${health}/${maxHealth}`}
-        </Text>
-      </Billboard>
-    </group>
+          {health > 0 && (
+            <>
+              <mesh position={[0, 0, 0]}>
+                <planeGeometry args={[2.0, 0.25]} />
+                <meshBasicMaterial color="#333333" opacity={0.8} transparent />
+              </mesh>
+              <mesh position={[-1.0 + (health / maxHealth), 0, 0.001]}>
+                <planeGeometry args={[(health / maxHealth) * 2.0, 0.23]} />
+                <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
+              </mesh>
+              <Text
+                position={[0, 0, 0.002]}
+                fontSize={0.2}
+                color="#ffffff"
+                anchorX="center"
+                anchorY="middle"
+                fontWeight="bold"
+              >
+                {`${Math.ceil(health)}/${maxHealth}`}
+              </Text>
+            </>
+          )}
+        </Billboard>
+      </group>
+
+      {showDeathEffect && (
+        <BoneVortex 
+          position={currentPosition.current}
+          onComplete={() => {
+            setShowDeathEffect(false);
+          }}
+        />
+      )}
+    </>
   );
 } 

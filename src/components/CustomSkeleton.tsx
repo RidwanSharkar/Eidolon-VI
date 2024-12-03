@@ -6,9 +6,10 @@ interface CustomSkeletonProps {
   position: [number, number, number];
   isAttacking: boolean;
   isWalking: boolean;
+  onHit?: (damage: number) => void;
 }
 
-export default function CustomSkeleton({ position, isAttacking, isWalking }: CustomSkeletonProps) {
+export default function CustomSkeleton({ position, isAttacking, isWalking, }: CustomSkeletonProps) {
   const groupRef = useRef<Group>(null);
   const [walkCycle, setWalkCycle] = useState(0);
   const [attackCycle, setAttackCycle] = useState(0);

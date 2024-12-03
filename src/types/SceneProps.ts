@@ -1,7 +1,6 @@
 import { Vector3, Color } from 'three';
 import { GeneratedTree } from '@/utils/terrainGenerators';
 import { UnitProps } from './UnitProps';
-import { TrainingDummyProps } from './TrainingDummyProps';
 
 export interface SkeletonProps {
   id: string;
@@ -27,6 +26,5 @@ export interface SceneProps {
   interactiveTrunkColor: Color;
   interactiveLeafColor: Color;
   unitProps: UnitProps;
-  dummyProps: TrainingDummyProps[];
   skeletonProps: SkeletonProps[];
 }

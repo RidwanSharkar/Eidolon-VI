@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls as DreiOrbitControls } from '@react-three/drei';
-import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import Scene from '../components/Scene/Scene';
 import Panel from '../components/UI/Panel';
@@ -155,24 +155,6 @@ export default function HomePage() {
   // Add unit position state
   const [unitPosition] = useState(new THREE.Vector3(0, 0, 0));
 
-  // Update the dummy reset handlers
-  const handleDummy1Reset = useCallback(() => {
-    console.log('handleDummy1Reset called');
-    console.log('Resetting Dummy 1 health to max');
-    requestAnimationFrame(() => {
-      setDummyHealth(300);
-      console.log('Dummy 1 health set to 300');
-    });
-  }, []);
-
-  const handleDummy2Reset = useCallback(() => {
-    console.log('handleDummy2Reset called');
-    console.log('Resetting Dummy 2 health to max');
-    requestAnimationFrame(() => {
-      setDummy2Health(300);
-      console.log('Dummy 2 health set to 300');
-    });
-  }, []);
 
   useEffect(() => {
     console.log(`Dummy 1 Health: ${dummyHealth}`);
@@ -207,7 +189,6 @@ export default function HomePage() {
     interactiveTrunkColor,
     interactiveLeafColor,
     unitProps: {
-      dummyProps: [],
       onHit: handleHit,
       controlsRef,
       currentWeapon,
@@ -242,22 +223,7 @@ export default function HomePage() {
         })),
       ],
     },
-    dummyProps: [
-      {
-        id: 'dummy1',
-        position: new Vector3(5, 0, 5),
-        health: dummyHealth,
-        maxHealth: 300,
-        onHit: handleDummy1Reset,
-      },
-      {
-        id: 'dummy2',
-        position: new Vector3(-5, 0, 5),
-        health: dummy2Health,
-        maxHealth: 300,
-        onHit: handleDummy2Reset,
-      }
-    ],
+
     skeletonProps // Use the memoized skeletonProps
   };
 

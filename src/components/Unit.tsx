@@ -21,7 +21,9 @@ import BonePlate from './BonePlate';
 import BoneTail from './BoneTail';
 import BoneVortex from './BoneVortex';
 
-// NEEDS COLLOSAL REFACTORING hamie
+// ORB CHARGE COOLDOWN
+const FIREBALL_COOLDOWN = 12000; // 12 seconds 
+
 export interface UnitProps {
   onHit: (targetId: string, damage: number) => void;
   controlsRef: React.RefObject<OrbitControlsImpl>;
@@ -41,7 +43,10 @@ export interface UnitProps {
   }>;
 }
 
-const calculateDamage = (baseAmount: number): { damage: number; isCritical: boolean } => {
+const calculateDamage = (baseAmount: number, isFullyCharged: boolean = false): { damage: number; isCritical: boolean } => {
+  if (isFullyCharged) {
+    return { damage: 40, isCritical: false }; // Fixed damage for fully charged bow
+  }
   const isCritical = Math.random() < 0.15; // 15% chance
   const damage = isCritical ? baseAmount * 2 : baseAmount;
   return { damage, isCritical };
@@ -105,9 +110,7 @@ interface FireballData {
   maxDistance: number;
 }
 
-// ORB CHARGE COOLDOWN
-const FIREBALL_COOLDOWN = 12000; // 6 seconds 
-
+// NEEDS COLLOSAL REFACTORING hamie
 export default function Unit({
   onHit,
   controlsRef,
@@ -199,35 +202,39 @@ export default function Unit({
       direction: direction.normalize(),
       maxDistance: 15
     }]);
-  }, [groupRef, fireballCharges, setFireballCharges, setFireballs]);
+  }, [groupRef, fireballCharges]);
 
   const handleFireballImpact = (id: number) => {
     setFireballs(prev => prev.filter(fireball => fireball.id !== id));
   };
 
-  const handleWeaponHit = (targetPosition: Vector3, targetId: string) => {
-    if (!groupRef.current || !isSwinging) return null;
+  const handleWeaponHit = (targetId: string) => {
+    if (!groupRef.current || !isSwinging) return;
 
-    const isEnemy = targetId.startsWith('enemy');
-    const isDummy = targetId.startsWith('dummy');
+    const target = enemyData.find(e => e.id === targetId) || 
+                   (targetId === 'dummy1' || targetId === 'dummy2' ? { id: targetId, position: new Vector3(), health: 1, maxHealth: 1 } : null);
+    if (!target) return;
+
+    const isEnemy = target.id.startsWith('enemy');
+    const isDummy = target.id.startsWith('dummy');
     
-    if (isEnemy && isDummy) return null;
-    if (!isEnemy && !isDummy) return null;
+    if (isEnemy && isDummy) return;
+    if (!isEnemy && !isDummy) return;
 
     const maxHits = isEnemy 
-      ? 2 // SWING RADIUS>!? forgot
+      ? 2 // Example value, adjust as needed
       : (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2 ? 2 : 1);
-    const currentHits = hitCountThisSwing[targetId] || 0;
+    const currentHits = hitCountThisSwing[target.id] || 0;
 
-    if (currentHits >= maxHits) return null;
+    if (currentHits >= maxHits) return;
 
-    const distance = groupRef.current.position.distanceTo(targetPosition);
+    const distance = groupRef.current.position.distanceTo(target.position);
     const weaponRange = (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) ? 5.0 : 4.5;
 
     if (distance <= weaponRange) {
       setHitCountThisSwing(prev => ({
         ...prev,
-        [targetId]: (prev[targetId] || 0) + 1
+        [target.id]: (prev[target.id] || 0) + 1
       }));
 
       let baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
@@ -235,63 +242,74 @@ export default function Unit({
       // Smite initial hit damage (10)
       if (isSmiting && currentWeapon === WeaponType.SWORD) {
         baseDamage = 10;
-        const { damage, isCritical } = calculateDamage(baseDamage);
-        onHit(targetId, damage);
+        const { damage, isCritical } = calculateDamage(baseDamage, false);
+        onHit(target.id, damage);
 
         // Add the damage number for the initial hit
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
           damage,
-          position: targetPosition,
+          position: target.position.clone(),
           isCritical
         }]);
 
         // Add delayed lightning damage (250ms instead of 100ms)
         setTimeout(() => {
-          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(25);
-          onHit(targetId, lightningDamage);
-          setDamageNumbers(prev => [...prev, {
-            id: nextDamageNumberId.current++,
-            damage: lightningDamage,
-            position: targetPosition,
-            isCritical: lightningCrit,
-            isLightning: true
-          }]);
+          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(25, false);
+          onHit(target.id, lightningDamage);
+
+          // Check target's health after lightning damage
+          const targetAfterLightning = target.health - lightningDamage;
+          if (targetAfterLightning > 0) {
+            setDamageNumbers(prev => [...prev, {
+              id: nextDamageNumberId.current++,
+              damage: lightningDamage,
+              position: target.position.clone(),
+              isCritical: lightningCrit,
+              isLightning: true
+            }]);
+          }
         }, 250);
 
-        return { damage, isCritical };
+        return;
       }
 
       // Normal weapon hit handling
-      const { damage, isCritical } = calculateDamage(baseDamage);
-      onHit(targetId, damage);
+      const { damage, isCritical } = calculateDamage(baseDamage, false);
+      onHit(target.id, damage);
 
-      // Special handling for Sabres to offset damage numbers
-      if (currentWeapon === WeaponType.SABRES) {
-        const offset = currentHits === 0 ? -0.4 : 0.4;
-        setDamageNumbers(prev => [...prev, {
-          id: nextDamageNumberId.current++,
-          damage,
-          position: new Vector3(
-            targetPosition.x + offset,
-            targetPosition.y,
-            targetPosition.z
-          ),
-          isCritical
-        }]);
-      } else {
-        setDamageNumbers(prev => [...prev, {
-          id: nextDamageNumberId.current++,
-          damage,
-          position: targetPosition,
-          isCritical
-        }]);
+      // Calculate target's health after damage
+      const targetAfterDamage = target.health - damage;
+
+      // Only display damage number if target is still alive
+      if (targetAfterDamage > 0) {
+        // Special handling for Sabres to offset damage numbers
+        if (currentWeapon === WeaponType.SABRES) {
+          const offset = currentHits === 0 ? -0.4 : 0.4;
+          setDamageNumbers(prev => [...prev, {
+            id: nextDamageNumberId.current++,
+            damage,
+            position: new Vector3(
+              target.position.x + offset,
+              target.position.y,
+              target.position.z
+            ),
+            isCritical
+          }]);
+        } else {
+          setDamageNumbers(prev => [...prev, {
+            id: nextDamageNumberId.current++,
+            damage,
+            position: target.position.clone(),
+            isCritical
+          }]);
+        }
       }
 
-      return { damage, isCritical };
+      return;
     }
 
-    return null;
+    return;
   };
 
   const handleSwingComplete = () => {
@@ -336,17 +354,12 @@ export default function Unit({
 
     if (isSwinging && groupRef.current) {
       // Handle hits for training dummies
-      const dummy1Position = new Vector3(5, 0, 5);
-      const dummy2Position = new Vector3(-5, 0, 5);
-      
-      handleWeaponHit(dummy1Position, 'dummy1');
-      handleWeaponHit(dummy2Position, 'dummy2');
+      handleWeaponHit('dummy1');
+      handleWeaponHit('dummy2');
       
       // Handle hits for enemy units
       enemyData.forEach(enemy => {
-        const enemyPos = enemy.position.clone();
-        enemyPos.y = 1.5;
-        handleWeaponHit(enemyPos, enemy.id);
+        handleWeaponHit(enemy.id);
       });
     }
 
@@ -387,7 +400,7 @@ export default function Unit({
         enemyData.forEach(enemy => {
           const distanceToEnemy = projectile.position.distanceTo(enemy.position);
           if (distanceToEnemy < 1.5) { // Hit radius
-            handleProjectileHit(projectile.id, enemy.id, enemy.position.clone());
+            handleProjectileHit(projectile.id, enemy.id);
           }
         });
         
@@ -398,47 +411,45 @@ export default function Unit({
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       return distanceTraveled < projectile.maxDistance;
     }));
-
+    
     // Update fireballs with collision detection
     setFireballs(prev => prev.map(fireball => {
       const distanceTraveled = fireball.position.distanceTo(fireball.startPosition);
       
-      if (distanceTraveled >= fireball.maxDistance) {
-        return null;
-      }
+      if (distanceTraveled < fireball.maxDistance) {
+        const speed = 0.5;
+        fireball.position.add(
+          fireball.direction
+            .clone()
+            .multiplyScalar(speed)
+        );
 
-      // Move the fireball
-      const speed = 0.5;
-      fireball.position.add(
-        fireball.direction
-          .clone()
-          .multiplyScalar(speed)
-      );
-
-      // Check dummy collisions
-      const dummy1Pos = new Vector3(5, 1.5, 5);
-      const dummy2Pos = new Vector3(-5, 1.5, 5);
-      
-      if (fireball.position.distanceTo(dummy1Pos) < 1.5) {
-        handleFireballHit(fireball.id, 'dummy1', dummy1Pos);
-        return null;
-      }
-      
-      if (fireball.position.distanceTo(dummy2Pos) < 1.5) {
-        handleFireballHit(fireball.id, 'dummy2', dummy2Pos);
-        return null;
-      }
-
-      // Check enemy collisions
-      for (const enemy of enemyData) {
-        const enemyPos = enemy.position.clone();
-        enemyPos.y = 1.5;
-        if (fireball.position.distanceTo(enemyPos) < 1.5) {
-          handleFireballHit(fireball.id, enemy.id, enemyPos);
+        // Check dummy collisions
+        const dummy1Pos = new Vector3(5, 1.5, 5);
+        const dummy2Pos = new Vector3(-5, 1.5, 5);
+        
+        if (fireball.position.distanceTo(dummy1Pos) < 1.5) {
+          handleFireballHit(fireball.id, 'dummy1');
           return null;
         }
-      }
+        
+        if (fireball.position.distanceTo(dummy2Pos) < 1.5) {
+          handleFireballHit(fireball.id, 'dummy2');
+          return null;
+        }
 
+        // Check enemy collisions
+        for (const enemy of enemyData) {
+          const enemyPos = enemy.position.clone();
+          enemyPos.y = 1.5;
+          if (fireball.position.distanceTo(enemyPos) < 1.5) {
+            handleFireballHit(fireball.id, enemy.id);
+            return null;
+          }
+        }
+
+        return fireball;
+      }
       return fireball;
     }).filter(Boolean) as FireballData[]);
 
@@ -457,8 +468,9 @@ export default function Unit({
   const releaseBowShot = useCallback((power: number) => {
     if (!groupRef.current) return;
 
-    // Increase base damage for charged shots
-    const damage = Math.floor(power >= 1 ? 40 : Math.max(20 * power, 5));
+    // Determine damage based on charge power
+    const isFullyCharged = power >= 1;
+    const damage = isFullyCharged ? 40 : Math.max(20 * power, 5);
     const unitPosition = groupRef.current.position.clone();
     unitPosition.y += 1;
 
@@ -471,50 +483,46 @@ export default function Unit({
     // Create a ray for hit detection
     const ray = new THREE.Ray(rayStart, direction.normalize());
 
-    // Check hits on training dummies and enemy units
-    const targets: Array<{ position: Vector3; id: string | 'dummy1' | 'dummy2' }> = [
+    // Prepare targets including dynamic enemies
+    const targets: Array<{ position: Vector3; id: string }> = [
       { position: new Vector3(5, 0, 5), id: 'dummy1' as const },
       { position: new Vector3(-5, 0, 5), id: 'dummy2' as const },
-      // Add enemy positions dynamically
-      // This requires accessing enemy data, possibly via context or props
+      // Dynamic enemy targets
+      ...enemyData.map(enemy => ({
+        position: enemy.position.clone(),
+        id: enemy.id
+      }))
     ];
 
-    // Here, you should integrate with your enemy management system
-    // For example, pass enemy positions and IDs via props or context
-    // Assuming you have access to enemy data here
-
-    // Example:
-    // props.enemies.forEach(enemy => {
-    //   targets.push({ position: enemy.position, id: enemy.id });
-    // });
-
-    // For demonstration, we'll assume a static reference
-    // Replace this with dynamic data as per your implementation
-    // ...
-
-    // Update to target enemy units dynamically
-    // This requires passing enemy data to Unit component or using a global state
-    // For simplicity, here's how you might do it with props (not shown here)
-    // Ensure to update the 'targets' array accordingly
-
-    targets.forEach(dummy => {
-      const dummyPos = dummy.position.clone();
-      dummyPos.y = 1;
+    targets.forEach(target => {
+      const targetPos = target.position.clone();
+      targetPos.y = 1; // Adjust height if necessary
       
-      const distanceToRay = ray.distanceToPoint(dummyPos);
-      const distanceAlongRay = ray.direction.dot(dummyPos.clone().sub(rayStart));
-      
-      // Increased hit radius and more forgiving hit detection
+      const distanceToRay = ray.distanceToPoint(targetPos);
+      const distanceAlongRay = ray.direction.dot(targetPos.clone().sub(rayStart));
+
+      // Hit detection
       const hitRadius = 1.5;
       if (distanceToRay < hitRadius && distanceAlongRay > 0 && distanceAlongRay < maxRange) {
-        const { damage: finalDamage, isCritical } = calculateDamage(damage);
-        onHit(dummy.id, finalDamage);
-        setDamageNumbers(prev => [...prev, {
-          id: nextDamageNumberId.current++,
-          damage: finalDamage,
-          position: dummy.position.clone(),
-          isCritical: power >= 1 || isCritical
-        }]);
+        // Calculate damage without critical for fully charged shots
+        const { damage: finalDamage, isCritical } = calculateDamage(damage, isFullyCharged);
+        onHit(target.id, finalDamage);
+
+        // Find the target's current health
+        const enemy = enemyData.find(e => e.id === target.id);
+        const dummy = (target.id === 'dummy1' || target.id === 'dummy2') ? { health: 1, maxHealth:1 } : null;
+        const currentHealth = enemy ? enemy.health : dummy ? dummy.health : 0;
+        const targetAfterDamage = currentHealth - finalDamage;
+
+        // Only display damage number if target is still alive
+        if (targetAfterDamage > 0) {
+          setDamageNumbers(prev => [...prev, {
+            id: nextDamageNumberId.current++,
+            damage: finalDamage,
+            position: target.position.clone(),
+            isCritical: isFullyCharged || isCritical
+          }]);
+        }
       }
     });
 
@@ -533,7 +541,7 @@ export default function Unit({
     setBowChargeProgress(0);
     bowChargeStartTime.current = null;
     onAbilityUse(currentWeapon, 'e');
-  }, [currentWeapon, groupRef, onHit, setDamageNumbers, setActiveProjectiles, onAbilityUse]);
+  }, [currentWeapon, groupRef, onHit, setDamageNumbers, setActiveProjectiles, onAbilityUse, enemyData]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -635,41 +643,58 @@ export default function Unit({
     }
   }, [currentWeapon]);
 
-  const handleProjectileHit = (projectileId: number, targetId: string, targetPosition: Vector3) => {
+  const handleProjectileHit = (projectileId: number, targetId: string) => {
     const isEnemy = targetId.startsWith('enemy');
     if (!isEnemy) return; // Only hit enemies with projectiles
 
+    const enemy = enemyData.find(e => e.id === targetId);
+    if (!enemy) return;
+
     const baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
-    const { damage, isCritical } = calculateDamage(baseDamage);
+    const { damage, isCritical } = calculateDamage(baseDamage, false);
     
     onHit(targetId, damage);
-    setDamageNumbers(prev => [...prev, {
-      id: nextDamageNumberId.current++,
-      damage,
-      position: targetPosition,
-      isCritical
-    }]);
+
+    // Check if target is still alive before adding damage number
+    const targetAfterDamage = enemy.health - damage;
+    if (targetAfterDamage > 0) {
+      setDamageNumbers(prev => [...prev, {
+        id: nextDamageNumberId.current++,
+        damage,
+        position: enemy.position.clone(),
+        isCritical
+      }]);
+    }
 
     // Remove the projectile
     setActiveProjectiles(prev => prev.filter(p => p.id !== projectileId));
   };
 
-  const handleFireballHit = (fireballId: number, targetId: string, targetPosition: Vector3) => {
+  const handleFireballHit = (fireballId: number, targetId: string) => {
     const isEnemy = targetId.startsWith('enemy');
     const isDummy = targetId.startsWith('dummy');
     
     if (!isEnemy && !isDummy) return;
 
-    const baseDamage = 15; // Fixed fireball damage
-    const { damage, isCritical } = calculateDamage(baseDamage);
+    const enemy = enemyData.find(e => e.id === targetId);
+    const dummy = (targetId === 'dummy1' || targetId === 'dummy2') ? { id: targetId, position: new Vector3(), health: 1, maxHealth: 1 } : null;
+    const target = enemy || dummy;
+    if (!target) return;
+
+    const { damage, isCritical } = calculateDamage(15, false); // Fixed fireball damage
     
-    onHit(targetId, damage);
-    setDamageNumbers(prev => [...prev, {
-      id: nextDamageNumberId.current++,
-      damage,
-      position: targetPosition.clone(),
-      isCritical
-    }]);
+    onHit(target.id, damage);
+
+    // Check if target is still alive before adding damage number
+    const targetAfterDamage = target.health - damage;
+    if (targetAfterDamage > 0) {
+      setDamageNumbers(prev => [...prev, {
+        id: nextDamageNumberId.current++,
+        damage,
+        position: target.position.clone(),
+        isCritical
+      }]);
+    }
 
     // Remove the fireball
     handleFireballImpact(fireballId);
@@ -701,8 +726,6 @@ export default function Unit({
             shininess={80}
           />
         </mesh>
-        
-
         
         {/* Enhanced outer glow */}
         <mesh scale={1.3}>
