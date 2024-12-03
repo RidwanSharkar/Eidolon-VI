@@ -46,7 +46,7 @@ const NUM_SKELETONS = 5;  // Changed from 30 to 5
 export default function HomePage() {
   const [currentWeapon, setCurrentWeapon] = useState<WeaponType>(WeaponType.SCYTHE);
   const controlsRef = useRef<OrbitControls>(null) as React.MutableRefObject<OrbitControls | null>;
-  const [playerHealth] = useState(200);
+  const [playerHealth, setPlayerHealth] = useState(200);
   const [dummyHealth, setDummyHealth] = useState(300);
   const [lastHitTime, setLastHitTime] = useState(0);
   const [dummy2Health, setDummy2Health] = useState(300);
@@ -57,11 +57,11 @@ export default function HomePage() {
     },
     [WeaponType.SCYTHE]: {
       q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q' },
-      e: { key: 'e', cooldown: 0.33, currentCooldown: 0, icon: '/icons/e1.svg', maxCooldown: 1, name: 'Scythe E' }
+      e: { key: 'e', cooldown: 0.5, currentCooldown: 0, icon: '/icons/e1.svg', maxCooldown: 1, name: 'Scythe E' }
     },
     [WeaponType.SABRES]: {
-      q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres Q' },
-      e: { key: 'e', cooldown: 0.5, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
+      q: { key: 'q', cooldown: 0.75, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres Q' },
+      e: { key: 'e', cooldown: 1.5, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
     },
     [WeaponType.SABRES2]: {
       q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/sabres2_q.svg', maxCooldown: 1, name: 'Sabres2 Q' },
@@ -180,6 +180,10 @@ export default function HomePage() {
     }))
   );
 
+  const handlePlayerDamage = (damage: number) => {
+    setPlayerHealth(prevHealth => Math.max(0, prevHealth - damage));
+  };
+
   // Prepare props for Scene component
   const sceneProps: SceneProps = {
     mountainData,
@@ -222,6 +226,7 @@ export default function HomePage() {
           maxHealth: 200,
         })),
       ],
+      onDamage: handlePlayerDamage,
     },
 
     skeletonProps // Use the memoized skeletonProps

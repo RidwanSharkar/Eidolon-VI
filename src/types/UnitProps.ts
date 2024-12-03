@@ -22,4 +22,5 @@ export interface UnitProps {
     health: number;
     maxHealth: number;
   }>;
+  onDamage?: (damage: number) => void;
 }

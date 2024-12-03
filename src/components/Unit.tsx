@@ -222,7 +222,7 @@ export default function Unit({
     if (!isEnemy && !isDummy) return;
 
     const maxHits = isEnemy 
-      ? 2 // Example value, adjust as needed
+      ? 2 
       : (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2 ? 2 : 1);
     const currentHits = hitCountThisSwing[target.id] || 0;
 
@@ -245,31 +245,39 @@ export default function Unit({
         const { damage, isCritical } = calculateDamage(baseDamage, false);
         onHit(target.id, damage);
 
-        // Add the damage number for the initial hit
-        setDamageNumbers(prev => [...prev, {
-          id: nextDamageNumberId.current++,
-          damage,
-          position: target.position.clone(),
-          isCritical
-        }]);
+        // Check target's health after initial hit
+        const targetAfterInitialDamage = target.health - damage;
+        if (targetAfterInitialDamage > 0) {
+          setDamageNumbers(prev => [...prev, {
+            id: nextDamageNumberId.current++,
+            damage,
+            position: target.position.clone(),
+            isCritical
+          }]);
 
-        // Add delayed lightning damage (250ms instead of 100ms)
-        setTimeout(() => {
-          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(25, false);
-          onHit(target.id, lightningDamage);
+          // Add delayed lightning damage only if target is still alive
+          setTimeout(() => {
+            const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(25, false);
+            
+            // Get latest target health before applying lightning damage
+            const currentTarget = enemyData.find(e => e.id === target.id);
+            if (!currentTarget || currentTarget.health <= 0) return;
+            
+            onHit(target.id, lightningDamage);
 
-          // Check target's health after lightning damage
-          const targetAfterLightning = target.health - lightningDamage;
-          if (targetAfterLightning > 0) {
-            setDamageNumbers(prev => [...prev, {
-              id: nextDamageNumberId.current++,
-              damage: lightningDamage,
-              position: target.position.clone(),
-              isCritical: lightningCrit,
-              isLightning: true
-            }]);
-          }
-        }, 250);
+            // Check target's health after lightning damage
+            const targetAfterLightning = currentTarget.health - lightningDamage;
+            if (targetAfterLightning > 0) {
+              setDamageNumbers(prev => [...prev, {
+                id: nextDamageNumberId.current++,
+                damage: lightningDamage,
+                position: target.position.clone(),
+                isCritical: lightningCrit,
+                isLightning: true
+              }]);
+            }
+          }, 250);
+        }
 
         return;
       }
@@ -468,9 +476,10 @@ export default function Unit({
   const releaseBowShot = useCallback((power: number) => {
     if (!groupRef.current) return;
 
-    // Determine damage based on charge power
-    const isFullyCharged = power >= 1;
-    const damage = isFullyCharged ? 40 : Math.max(20 * power, 5);
+    // Calculate damage based on charge time
+    const baseDamage = 5;
+    const maxDamage = 75;
+    const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * power);
     const unitPosition = groupRef.current.position.clone();
     unitPosition.y += 1;
 
@@ -496,7 +505,7 @@ export default function Unit({
 
     targets.forEach(target => {
       const targetPos = target.position.clone();
-      targetPos.y = 1; // Adjust height if necessary
+      targetPos.y = 1;
       
       const distanceToRay = ray.distanceToPoint(targetPos);
       const distanceAlongRay = ray.direction.dot(targetPos.clone().sub(rayStart));
@@ -504,8 +513,10 @@ export default function Unit({
       // Hit detection
       const hitRadius = 1.5;
       if (distanceToRay < hitRadius && distanceAlongRay > 0 && distanceAlongRay < maxRange) {
-        // Calculate damage without critical for fully charged shots
-        const { damage: finalDamage, isCritical } = calculateDamage(damage, isFullyCharged);
+        // Apply the scaled damage directly without additional calculations
+        const finalDamage = scaledDamage;
+        const isCritical = power >= 1; // Only fully charged shots are critical
+        
         onHit(target.id, finalDamage);
 
         // Find the target's current health
@@ -520,7 +531,7 @@ export default function Unit({
             id: nextDamageNumberId.current++,
             damage: finalDamage,
             position: target.position.clone(),
-            isCritical: isFullyCharged || isCritical
+            isCritical: isCritical
           }]);
         }
       }
@@ -681,7 +692,7 @@ export default function Unit({
     const target = enemy || dummy;
     if (!target) return;
 
-    const { damage, isCritical } = calculateDamage(15, false); // Fixed fireball damage
+    const { damage, isCritical } = calculateDamage(20, false); // Fixed fireball damage
     
     onHit(target.id, damage);
 

@@ -76,7 +76,9 @@ export default function EnemyUnit({
         onAttackPlayer(ATTACK_DAMAGE);
         lastAttackTime.current = currentTime;
 
-        setTimeout(() => setIsAttacking(false), 500);
+        setTimeout(() => {
+          setIsAttacking(false);
+        }, 500);
       }
     }
   });

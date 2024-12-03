@@ -84,8 +84,8 @@ export default function Scene({
 
   // Update handlePlayerDamage to use setPlayerHealth
   const handlePlayerDamage = useCallback((damage: number) => {
-    setPlayerHealth(prevHealth => Math.max(0, prevHealth - damage));
-  }, []);
+    unitProps.onDamage?.(damage);
+  }, [unitProps]);
 
   // Callback to update player position
   const handlePlayerPositionUpdate = useCallback((position: Vector3) => {

@@ -31,7 +31,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
     // Animate the lightning bolt
     if (progress < 1) {
       // Start from high up and strike down
-      const startY = 20;
+      const startY = 40;
       const currentY = startY * (1 - progress);
       lightningRef.current.position.y = currentY;
 
