@@ -3,7 +3,7 @@ import { Vector3 } from 'three';
 
 // Internal helper function to generate random positions
 const generateRandomPosition = () => {
-  const radius = 15; // Spawn radius
+  const radius = 20; // Spawn radius
   const angle = Math.random() * Math.PI * 2;
   const x = Math.cos(angle) * radius * Math.random();
   const z = Math.sin(angle) * radius * Math.random();
@@ -32,18 +32,20 @@ interface BehaviorProps {
 export default function Behavior({ playerHealth, onReset, onSpawnSkeleton }: BehaviorProps) {
   const [isGameOver, setIsGameOver] = useState(false);
   const [gameOverMessage, setGameOverMessage] = useState<GameOverMessage | null>(null);
+  const [skeletonCount, setSkeletonCount] = useState(0);
 
   // Handle spawning new skeletons
   useEffect(() => {
     const spawnInterval = setInterval(() => {
-      if (!isGameOver) {
+      if (!isGameOver && skeletonCount < 10) {
         const newPosition = generateRandomPosition();
         onSpawnSkeleton(newPosition);
+        setSkeletonCount(prev => prev + 1);
       }
-    }, 10000); // Spawn every 10 seconds
+    }, 12000); // Spawn every 10 seconds
 
     return () => clearInterval(spawnInterval);
-  }, [isGameOver, onSpawnSkeleton]);
+  }, [isGameOver, onSpawnSkeleton, skeletonCount]);
 
   // Handle player death
   useEffect(() => {
@@ -52,11 +54,12 @@ export default function Behavior({ playerHealth, onReset, onSpawnSkeleton }: Beh
       setGameOverMessage(randomMessage);
       setIsGameOver(true);
     }
-  }, [isGameOver,playerHealth]);
+  }, [isGameOver, playerHealth]);
 
   const handleRetry = useCallback(() => {
     setIsGameOver(false);
     setGameOverMessage(null);
+    setSkeletonCount(0);
     onReset();
   }, [onReset]);
 

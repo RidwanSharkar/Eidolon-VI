@@ -12,6 +12,8 @@ import { UnitProps } from '../../types/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Effects/CustomSky';
 import Behavior from '../Units/Behavior';
+import DriftingSouls from '../Effects/DriftingSouls';
+import BackgroundStars from '../Effects/BackgroundStars';
 
 interface Enemy {
   id: string;
@@ -161,6 +163,8 @@ export default function Scene({
       />
 
       {/* Background Environment */}
+      <BackgroundStars />
+      <DriftingSouls />
       <CustomSky />
       <Planet />
 
