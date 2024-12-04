@@ -29,6 +29,7 @@ interface WeaponInfo {
 interface DamageNotificationData {
   id: number;
   damage: number;
+  timestamp: number;
 }
 
 /**
@@ -81,7 +82,11 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
       const damage = prevHealth.current - playerHealth;
       setDamageNotifications(prev => [
         ...prev,
-        { id: nextNotificationId.current++, damage }
+        { 
+          id: nextNotificationId.current++, 
+          damage,
+          timestamp: Date.now()
+        }
       ].slice(-3)); // Keep only the last 3 notifications
     }
     
@@ -101,6 +106,7 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
             key={notification.id}
             damage={notification.damage}
             index={index}
+            timestamp={notification.timestamp}
             onComplete={() => handleNotificationComplete(notification.id)}
           />
         ))}

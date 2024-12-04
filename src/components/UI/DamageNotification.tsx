@@ -5,25 +5,42 @@ interface DamageNotificationProps {
   damage: number;
   index: number;
   onComplete: () => void;
+  timestamp: number;
 }
 
-export default function DamageNotification({ damage, index, onComplete }: DamageNotificationProps) {
+export default function DamageNotification({ 
+  damage, 
+  index, 
+  onComplete,
+  timestamp 
+}: DamageNotificationProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const displayTimer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onComplete, 300); // Allow time for fade out animation
+      setTimeout(onComplete, 300);
     }, 1000);
 
-    return () => clearTimeout(timer);
+    const cleanupTimer = setTimeout(() => {
+      onComplete();
+    }, 2000);
+
+    return () => {
+      clearTimeout(displayTimer);
+      clearTimeout(cleanupTimer);
+    };
   }, [onComplete]);
+
+  const age = Date.now() - timestamp;
+  const opacity = Math.max(0, 1 - (age / 1000));
 
   return (
     <div 
       className={`${styles.notification} ${isVisible ? styles.visible : styles.hidden}`}
       style={{ 
-        transform: `translateY(${-20 - (index * 25)}px)`
+        transform: `translateY(${-20 - (index * 25)}px)`,
+        opacity
       }}
     >
       -{damage}
