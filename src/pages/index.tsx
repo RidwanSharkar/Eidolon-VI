@@ -259,8 +259,29 @@ export default function HomePage() {
     setLastHitTime(0);
   };
 
+  useEffect(() => {
+    const preventSpaceScroll = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', preventSpaceScroll);
+    
+    return () => {
+      window.removeEventListener('keydown', preventSpaceScroll);
+    };
+  }, []);
+
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
+    <div style={{ 
+      width: '100vw', 
+      height: '100vh', 
+      overflow: 'hidden',
+      position: 'fixed',
+      top: 0,
+      left: 0
+    }}>
       <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
         <ambientLight intensity={0.3} />
         <Scene {...sceneProps} />
