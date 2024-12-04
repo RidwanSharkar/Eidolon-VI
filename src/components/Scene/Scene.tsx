@@ -11,6 +11,7 @@ import { Group } from 'three';
 import { UnitProps } from '../../types/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Effects/CustomSky';
+import Behavior from '../Units/Behavior';
 
 interface Enemy {
   id: string;
@@ -36,7 +37,7 @@ export default function Scene({
       id: `skeleton-${index}`,
       initialPosition: skeleton.initialPosition,
       currentPosition: skeleton.initialPosition.clone(),
-      health: skeleton.health,
+      health: skeleton.maxHealth,
       maxHealth: skeleton.maxHealth,
     }))
   );
@@ -102,6 +103,35 @@ export default function Scene({
     );
   }, []);
 
+  // Add function to handle spawning new skeletons
+  const handleSpawnSkeleton = useCallback((position: Vector3) => {
+    setEnemies(prev => {
+      const newId = `skeleton-${prev.length}`;
+      return [...prev, {
+        id: newId,
+        initialPosition: position,
+        currentPosition: position.clone(),
+        health: 200,
+        maxHealth: 200,
+      }];
+    });
+  }, []);
+
+  // Add reset function
+  const handleReset = useCallback(() => {
+    // Reset player health
+    setPlayerHealth(unitProps.maxHealth);
+    
+    // Reset enemies to initial state
+    setEnemies(skeletonProps.map((skeleton, index) => ({
+      id: `skeleton-${index}`,
+      initialPosition: skeleton.initialPosition,
+      currentPosition: skeleton.initialPosition.clone(),
+      health: skeleton.maxHealth,
+      maxHealth: skeleton.maxHealth,
+    })));
+  }, [skeletonProps, unitProps.maxHealth]);
+
   // Update unitComponentProps to use playerHealth
   const unitComponentProps: UnitProps = {
     onHit: handleTakeDamage,
@@ -124,6 +154,12 @@ export default function Scene({
 
   return (
     <>
+      <Behavior 
+        playerHealth={playerHealth}
+        onReset={handleReset}
+        onSpawnSkeleton={handleSpawnSkeleton}
+      />
+
       {/* Background Environment */}
       <CustomSky />
       <Planet />

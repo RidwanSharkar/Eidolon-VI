@@ -27,7 +27,7 @@ interface WeaponInfo {
   };
 }
 
-// Add this helper function at the top of the file, after the imports
+// SKELE SPAWN POINTS
 const generateRandomPosition = () => {
   const radius = 30; // Increased radius for more spread
   const angle = Math.random() * Math.PI * 2;
@@ -52,8 +52,8 @@ export default function HomePage() {
   const [dummy2Health, setDummy2Health] = useState(300);
   const [abilities, setAbilities] = useState<WeaponInfo>({
     [WeaponType.SWORD]: {
-      q: { key: 'q', cooldown: 1.4, currentCooldown: 0, icon: '/icons/q2.svg', maxCooldown: 1, name: 'Sword Q' },
-      e: { key: 'e', cooldown: 3, currentCooldown: 0, icon: '/icons/e2.svg', maxCooldown: 3, name: 'Sword E' }
+      q: { key: 'q', cooldown: 1.1, currentCooldown: 0, icon: '/icons/q2.svg', maxCooldown: 1, name: 'Sword Q' },
+      e: { key: 'e', cooldown: 4, currentCooldown: 0, icon: '/icons/e2.svg', maxCooldown: 3, name: 'Sword E' }
     },
     [WeaponType.SCYTHE]: {
       q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q' },
