@@ -28,7 +28,7 @@ export default function EnemyUnit({
   onAttackPlayer,
 }: EnemyUnitProps) {
   const enemyRef = useRef<Group>(null);
-  const lastAttackTime = useRef<number>(0);
+  const lastAttackTime = useRef<number>(Date.now() + 2000);
   const [isAttacking, setIsAttacking] = useState(false);
   const [showDeathEffect, setShowDeathEffect] = useState(false);
   const [isDead, setIsDead] = useState(false);
@@ -108,6 +108,13 @@ export default function EnemyUnit({
             if (health > 0) {
               onTakeDamage(`enemy-${id}`, damage);
             }
+          }}
+          materialProps={{
+            color: "#67f2b9",
+            emissive: "#67f2b9",
+            emissiveIntensity: 0.3,
+            transparent: true,
+            opacity: 0.9
           }}
         />
 

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { WeaponType } from '../../types/weapons';
 import styles from './Panel.module.css';
 import Image from 'next/image';
+import DamageNotification from './DamageNotification';
 
 interface PanelProps {
   currentWeapon: WeaponType;
@@ -23,6 +24,11 @@ interface WeaponInfo {
     q: AbilityButton;
     e: AbilityButton;
   };
+}
+
+interface DamageNotificationData {
+  id: number;
+  damage: number;
 }
 
 /**
@@ -66,10 +72,38 @@ const RoundedSquareProgress: React.FC<{
 };
 
 export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, maxHealth, abilities }: PanelProps) {
+  const [damageNotifications, setDamageNotifications] = useState<DamageNotificationData[]>([]);
+  const nextNotificationId = useRef(0);
+  const prevHealth = useRef(playerHealth);
+
+  useEffect(() => {
+    if (playerHealth < prevHealth.current) {
+      const damage = prevHealth.current - playerHealth;
+      setDamageNotifications(prev => [
+        ...prev,
+        { id: nextNotificationId.current++, damage }
+      ].slice(-3)); // Keep only the last 3 notifications
+    }
+    
+    prevHealth.current = playerHealth;
+  }, [playerHealth]);
+
+  const handleNotificationComplete = (id: number) => {
+    setDamageNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
   return (
     <div className={styles.bottomPanel}>
       {/* Health Bar Section */}
       <div className={styles.healthBarSection}>
+        {damageNotifications.map((notification, index) => (
+          <DamageNotification
+            key={notification.id}
+            damage={notification.damage}
+            index={index}
+            onComplete={() => handleNotificationComplete(notification.id)}
+          />
+        ))}
         <div className={styles.healthBarContainer}>
           <div className={styles.healthBarDecoration}>
             <div className={styles.healthBarOrnamentLeft} />
@@ -150,7 +184,7 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
       {/* Weapons Section */}
       <div className={styles.weaponIcons}>
         {Object.values(WeaponType)
-          .filter((_, index) => index < 3) // Only show first 3 weapons
+          .filter((_, index) => index < 3)
           .map((weapon, index) => (
             <div 
               key={weapon}

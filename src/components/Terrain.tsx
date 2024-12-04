@@ -87,8 +87,8 @@ export default function Terrain() {
         
         // Colors
         vec3 snowColor = vec3(0.92, 0.93, 0.95);
-        vec3 blightColor = vec3(0.15, 0.13, 0.12); // Darker, more corrupted looking
-        vec3 glowColor = vec3(0.3, 0.8, 0.2); // Sickly green glow
+        vec3 blightColor = vec3(0.25, 0.22, 0.20); // Slightly browner tone, was (0.15, 0.13, 0.12)
+        vec3 glowColor = vec3(0.3, 0.8, 0.2); // Keeping the same sickly green glow
         
         // Create sharp transitions between snow and ground
         float blend = smoothstep(0.0, 0.1, groundPattern);
