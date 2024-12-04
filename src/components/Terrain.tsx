@@ -11,8 +11,9 @@ export default function Terrain() {
   const snowMaterial = new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
-      scale: { value: 20.0 }, // Scale of the snow pattern
-      elevation: { value: 0.2 }, // Height of snow bumps
+      scale: { value: 20.0 },
+      elevation: { value: 0.2 },
+      groundScale: { value: 0.1 },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -28,6 +29,7 @@ export default function Terrain() {
       uniform float time;
       uniform float scale;
       uniform float elevation;
+      uniform float groundScale;
       
       varying vec2 vUv;
       varying vec3 vNormal;
@@ -66,27 +68,43 @@ export default function Terrain() {
       }
       
       void main() {
-        // Create multiple layers of noise for snow texture
+        // Create large distinct patches
+        vec2 groundUv = vUv * groundScale;
+        float groundPattern = snoise(groundUv);
+        
+        // Create snow texture for detail
         vec2 uv = vUv * scale;
         float n = snoise(uv) * 0.5;
         n += snoise(uv * 2.0) * 0.25;
         n += snoise(uv * 4.0) * 0.125;
         n += snoise(uv * 8.0) * 0.0625;
         
-        // Reduced sparkle intensity
+        // Sparkle effect
         float sparkle = pow(max(0.0, snoise(uv * 20.0 + time * 0.1)), 20.0) * 0.3;
         
-        // More muted snow color with subtle grey tint
+        // Create blight glow spots
+        float blightSpots = pow(max(0.0, snoise(uv * 8.0 + time * 0.05)), 8.0) * 0.15;
+        
+        // Colors
         vec3 snowColor = vec3(0.92, 0.93, 0.95);
+        vec3 blightColor = vec3(0.15, 0.13, 0.12); // Darker, more corrupted looking
+        vec3 glowColor = vec3(0.3, 0.8, 0.2); // Sickly green glow
         
-        // Softer shadows
+        // Create sharp transitions between snow and ground
+        float blend = smoothstep(0.0, 0.1, groundPattern);
+        vec3 finalColor = mix(snowColor, blightColor, blend);
+        
+        // Add green glow spots only to blighted areas
+        float blightAmount = blend;
+        finalColor += glowColor * blightSpots * blightAmount;
+        
+        // Add snow effects only to snow areas
+        float snowAmount = 1.0 - blend;
         float shadow = smoothstep(-1.0, 1.0, n) * 0.2;
-        snowColor = mix(snowColor * 0.85, snowColor, shadow);
+        finalColor = mix(finalColor, finalColor * 1.15, shadow * snowAmount);
+        finalColor += vec3(sparkle * snowAmount);
         
-        // Add reduced sparkle
-        snowColor += vec3(sparkle);
-        
-        gl_FragColor = vec4(snowColor, 1.0);
+        gl_FragColor = vec4(finalColor, 1.0);
       }
     `,
     side: DoubleSide,

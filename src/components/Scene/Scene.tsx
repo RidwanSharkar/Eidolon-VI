@@ -2,7 +2,6 @@ import React, { useState, useCallback, useRef } from 'react';
 import { Vector3 } from 'three';
 import Terrain from '../Environment/Terrain';
 import Mountain from '../Environment/Mountain';
-import GravelPath from '../Environment/GravelPath';
 import Tree from '../Environment/Tree';
 import Mushroom from '../Environment/Mushroom';
 import Unit from '../Units/Unit';
@@ -134,7 +133,6 @@ export default function Scene({
       {mountainData.map((data, index) => (
         <Mountain key={`mountain-${index}`} position={data.position} scale={data.scale} />
       ))}
-      <GravelPath />
 
       {/* Render all trees */}
       {treeData.map((data, index) => (
