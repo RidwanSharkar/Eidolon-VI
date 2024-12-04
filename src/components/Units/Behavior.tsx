@@ -15,21 +15,31 @@ interface GameOverMessage {
   subtitle: string;
 }
 
+// SHIT TALKING
 const GAME_OVER_MESSAGES: GameOverMessage[] = [
   { title: "The Darkness Claims Another", subtitle: "Your soul joins the eternal dance..." },
   { title: "Fallen to Shadow", subtitle: "The necropolis grows stronger..." },
   { title: "Death's Embrace", subtitle: "The bones welcome their kin..." },
   { title: "The Last Stand", subtitle: "Your light fades into the abyss..." },
-  { title: "Eternal Rest", subtitle: "The skeleton army claims victory..." }
+  { title: "Eternal Rest", subtitle: "The skeleton army claims victory..." },
+  { title: "Denied Ascension", subtitle: "The dragons turn their backs on another unworthy soul..." },
+  { title: "Draconic Disappointment", subtitle: "Your flames were not strong enough to join their ranks..." },
+  { title: "Failed Wyrm", subtitle: "The ancient dragons scoff at your weakness..." },
+  { title: "Wingless One", subtitle: "You'll never know the freedom of dragon flight..." },
+  { title: "Mortal Chains", subtitle: "Forever bound to walk while dragons soar above..." },
+  { title: "Lost Heritage", subtitle: "The dragon blood within you grows cold..." },
+  { title: "Fading Ember", subtitle: "Your draconic spark extinguishes in darkness..." },
+  { title: "Rejected by Fire", subtitle: "The dragon's flame finds you unworthy..." }
 ];
 
 interface BehaviorProps {
   playerHealth: number;
   onReset: () => void;
   onSpawnSkeleton: (position: Vector3) => void;
+  killCount: number;
 }
 
-export default function Behavior({ playerHealth, onReset, onSpawnSkeleton }: BehaviorProps) {
+export default function Behavior({ playerHealth, onReset, onSpawnSkeleton, killCount }: BehaviorProps) {
   const [isGameOver, setIsGameOver] = useState(false);
   const [gameOverMessage, setGameOverMessage] = useState<GameOverMessage | null>(null);
   const [skeletonCount, setSkeletonCount] = useState(0);
@@ -51,10 +61,13 @@ export default function Behavior({ playerHealth, onReset, onSpawnSkeleton }: Beh
   useEffect(() => {
     if (playerHealth <= 0 && !isGameOver) {
       const randomMessage = GAME_OVER_MESSAGES[Math.floor(Math.random() * GAME_OVER_MESSAGES.length)];
-      setGameOverMessage(randomMessage);
+      setGameOverMessage({
+        title: randomMessage.title,
+        subtitle: `${randomMessage.subtitle}\nSkeletons Slain: ${killCount}`
+      });
       setIsGameOver(true);
     }
-  }, [isGameOver, playerHealth]);
+  }, [playerHealth, isGameOver, killCount]);
 
   const handleRetry = useCallback(() => {
     setIsGameOver(false);
@@ -92,7 +105,9 @@ export default function Behavior({ playerHealth, onReset, onSpawnSkeleton }: Beh
       <p style={{
         fontSize: '1.5rem',
         marginBottom: '2rem',
-        color: '#aaa'
+        color: '#aaa',
+        textAlign: 'center',
+        whiteSpace: 'pre-line'
       }}>
         {gameOverMessage.subtitle}
       </p>
@@ -120,6 +135,18 @@ export default function Behavior({ playerHealth, onReset, onSpawnSkeleton }: Beh
       >
         RETRY
       </button>
+      <div style={{
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        color: '#fff',
+        fontSize: '24px',
+        fontFamily: 'Arial, sans-serif',
+        zIndex: 1000,
+        pointerEvents: 'none'
+      }}>
+        Kills: {killCount}
+      </div>
     </div>
   );
 } 

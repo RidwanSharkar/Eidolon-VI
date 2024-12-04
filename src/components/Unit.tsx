@@ -692,7 +692,7 @@ export default function Unit({
     const target = enemy || dummy;
     if (!target) return;
 
-    const { damage, isCritical } = calculateDamage(20, false); // Fixed fireball damage
+    const { damage, isCritical } = calculateDamage(24, false); // Fixed fireball damage
     
     onHit(target.id, damage);
 

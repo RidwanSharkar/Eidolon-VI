@@ -11,6 +11,7 @@ interface PanelProps {
   maxHealth: number;
   abilities: WeaponInfo;
   onReset: () => void;
+  killCount: number;
 }
 
 interface AbilityButton {
@@ -95,7 +96,7 @@ const RoundedSquareProgress: React.FC<{
   );
 };
 
-export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, maxHealth, abilities, onReset }: PanelProps) {
+export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, maxHealth, abilities, onReset, killCount }: PanelProps) {
   const [damageNotifications, setDamageNotifications] = useState<DamageNotificationData[]>([]);
   const nextNotificationId = useRef(0);
   const prevHealth = useRef(playerHealth);
@@ -147,7 +148,11 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
           <div className={styles.healthBarContainer}>
             <div className={styles.healthBarDecoration}>
               <div className={styles.healthBarOrnamentLeft} />
-              <div className={styles.healthBarOrnamentRight} />
+              <div className={styles.healthBarOrnamentRight}>
+                <span className={styles.killCountText}>
+                  {killCount}
+                </span>
+              </div>
             </div>
             <div className={styles.healthBar}>
               <div className={styles.healthBarBackground} />

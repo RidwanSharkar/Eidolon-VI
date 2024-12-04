@@ -32,6 +32,7 @@ export default function Scene({
   interactiveLeafColor,
   unitProps,
   skeletonProps,
+  killCount,
 }: SceneType) {
   // State for enemies (only skeletons now)
   const [enemies, setEnemies] = useState<Enemy[]>(
@@ -58,31 +59,23 @@ export default function Scene({
     console.log(`Target ${targetId} takes ${damage} damage`);
     setEnemies(prevEnemies =>
       prevEnemies.map(enemy => {
-        // Remove the 'enemy-' prefix when comparing IDs
         const strippedId = targetId.replace('enemy-', '');
         if (enemy.id === strippedId) {
-          console.log(`Found enemy ${enemy.id}, reducing health from ${enemy.health} by ${damage}`);
+          const newHealth = Math.max(0, enemy.health - damage);
+          console.log(`Enemy ${strippedId} health: ${enemy.health} -> ${newHealth}`);
+          if (newHealth === 0 && enemy.health > 0) {
+            console.log('Enemy defeated, triggering onEnemyDeath');
+            unitProps.onEnemyDeath();
+          }
           return {
             ...enemy,
-            health: Math.max(0, enemy.health - damage)
+            health: newHealth
           };
         }
         return enemy;
       })
     );
-  }, []);
-
-  // Callback to handle regeneration of enemies
-  const handleRegenerate = useCallback((id: string) => {
-    console.log(`Enemy ${id} regenerates to max health.`);
-    setEnemies((prevEnemies) =>
-      prevEnemies.map((enemy) =>
-        enemy.id === id
-          ? { ...enemy, health: enemy.maxHealth }
-          : enemy
-      )
-    );
-  }, []);
+  }, [unitProps]);
 
   // Update handlePlayerDamage to use setPlayerHealth
   const handlePlayerDamage = useCallback((damage: number) => {
@@ -121,10 +114,7 @@ export default function Scene({
 
   // Add reset function
   const handleReset = useCallback(() => {
-    // Reset player health
     setPlayerHealth(unitProps.maxHealth);
-    
-    // Reset enemies to initial state
     setEnemies(skeletonProps.map((skeleton, index) => ({
       id: `skeleton-${index}`,
       initialPosition: skeleton.initialPosition,
@@ -151,7 +141,11 @@ export default function Scene({
       position: enemy.currentPosition,
       health: enemy.health,
       maxHealth: enemy.maxHealth,
-    }))
+    })),
+    onDamage: unitProps.onDamage,
+    onEnemyDeath: () => {
+      console.log("Kill counted in Scene");  // Debug log
+    }
   };
 
   return (
@@ -160,6 +154,7 @@ export default function Scene({
         playerHealth={playerHealth}
         onReset={handleReset}
         onSpawnSkeleton={handleSpawnSkeleton}
+        killCount={killCount}
       />
 
       {/* Background Environment */}
@@ -206,6 +201,7 @@ export default function Scene({
       {/* Enemy Units (Skeletons only) */}
       {enemies.map((enemy) => (
         <EnemyUnit
+        
           key={enemy.id}
           id={enemy.id}
           initialPosition={enemy.initialPosition}
@@ -213,13 +209,10 @@ export default function Scene({
           maxHealth={enemy.maxHealth}
           onTakeDamage={handleTakeDamage}
           onPositionUpdate={handleEnemyPositionUpdate}
-          onRegenerate={handleRegenerate}
           playerPosition={playerPosition}
           onAttackPlayer={handlePlayerDamage}
         />
       ))}
-
-
     </>
   );
 }

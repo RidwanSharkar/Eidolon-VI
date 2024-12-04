@@ -11,10 +11,9 @@ interface EnemyUnitProps {
   health: number;
   maxHealth: number;
   onTakeDamage: (id: string, damage: number) => void;
-  onRegenerate: (id: string) => void;
+  onPositionUpdate: (id: string, position: Vector3) => void;
   playerPosition: Vector3;
   onAttackPlayer: (damage: number) => void;
-  onPositionUpdate: (id: string, position: Vector3) => void;
 }
 
 export default function EnemyUnit({
@@ -49,10 +48,10 @@ export default function EnemyUnit({
   useEffect(() => {
     if (health === 0 && !isDead) {
       console.log(`Enemy ${id} died`);
-      setShowDeathEffect(true);
       setIsDead(true);
+      setShowDeathEffect(true);
     }
-  }, [isDead, health, id]);
+  }, [health, id, isDead]);
 
   useFrame(() => {
     if (!enemyRef.current || health <= 0 || !playerPosition) return;
@@ -109,13 +108,7 @@ export default function EnemyUnit({
               onTakeDamage(`enemy-${id}`, damage);
             }
           }}
-          materialProps={{
-            color: "#67f2b9",
-            emissive: "#67f2b9",
-            emissiveIntensity: 0.3,
-            transparent: true,
-            opacity: 0.9
-          }}
+
         />
 
         <Billboard

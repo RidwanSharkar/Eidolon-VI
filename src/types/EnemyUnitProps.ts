@@ -9,7 +9,7 @@
      health: number;
      maxHealth: number;
      onTakeDamage: (targetId: TargetId, damage: number) => void;
-     onRegenerate: (id: TargetId) => void;
      playerPosition: Vector3;
      onAttackPlayer: (damage: number) => void;
+     onPositionUpdate: (id: string, position: Vector3) => void;
    }

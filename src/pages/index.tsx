@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls as DreiOrbitControls } from '@react-three/drei';
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 import Scene from '../components/Scene/Scene';
 import Panel from '../components/UI/Panel';
@@ -56,12 +56,12 @@ export default function HomePage() {
       e: { key: 'e', cooldown: 5, currentCooldown: 0, icon: '/icons/e2.svg', maxCooldown: 3, name: 'Sword E' }
     },
     [WeaponType.SCYTHE]: {
-      q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q' },
+      q: { key: 'q', cooldown: 0.95, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q' },
       e: { key: 'e', cooldown: 0.5, currentCooldown: 0, icon: '/icons/e1.svg', maxCooldown: 1, name: 'Scythe E' }
     },
     [WeaponType.SABRES]: {
-      q: { key: 'q', cooldown: 0.85, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres Q' },
-      e: { key: 'e', cooldown: 1.25, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
+      q: { key: 'q', cooldown: 0.7, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres Q' },
+      e: { key: 'e', cooldown: 1.5, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
     },
     [WeaponType.SABRES2]: {
       q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres2 Q' },
@@ -184,6 +184,18 @@ export default function HomePage() {
     setPlayerHealth(prevHealth => Math.max(0, prevHealth - damage));
   };
 
+  const [killCount, setKillCount] = useState(0);
+
+  // Add this handler function
+  const handleEnemyDeath = useCallback(() => {
+    console.log("Enemy death registered in HomePage");
+    setKillCount(prev => {
+      const newCount = prev + 1;
+      console.log("Kill count updated:", newCount);
+      return newCount;
+    });
+  }, []);
+
   // Prepare props for Scene component
   const sceneProps: SceneProps = {
     mountainData,
@@ -227,9 +239,11 @@ export default function HomePage() {
         })),
       ],
       onDamage: handlePlayerDamage,
+      onEnemyDeath: handleEnemyDeath,
     },
 
-    skeletonProps // Use the memoized skeletonProps
+    skeletonProps, // Use the memoized skeletonProps
+    killCount: killCount, // Add this to pass to Scene
   };
 
   // Add handleReset function
@@ -257,6 +271,9 @@ export default function HomePage() {
 
     // Reset last hit time
     setLastHitTime(0);
+
+    // Reset kill count
+    setKillCount(0);
   };
 
   useEffect(() => {
@@ -304,6 +321,7 @@ export default function HomePage() {
         maxHealth={200}
         abilities={abilities}
         onReset={handleReset}
+        killCount={killCount}
       />
     </div>
   );

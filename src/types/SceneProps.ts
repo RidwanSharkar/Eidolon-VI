@@ -27,4 +27,5 @@ export interface SceneProps {
   interactiveLeafColor: Color;
   unitProps: UnitProps;
   skeletonProps: SkeletonProps[];
+  killCount: number;
 }
