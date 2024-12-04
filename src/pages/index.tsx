@@ -52,20 +52,20 @@ export default function HomePage() {
   const [dummy2Health, setDummy2Health] = useState(300);
   const [abilities, setAbilities] = useState<WeaponInfo>({
     [WeaponType.SWORD]: {
-      q: { key: 'q', cooldown: 1.1, currentCooldown: 0, icon: '/icons/q2.svg', maxCooldown: 1, name: 'Sword Q' },
-      e: { key: 'e', cooldown: 4, currentCooldown: 0, icon: '/icons/e2.svg', maxCooldown: 3, name: 'Sword E' }
+      q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q2.svg', maxCooldown: 1, name: 'Sword Q' },
+      e: { key: 'e', cooldown: 5, currentCooldown: 0, icon: '/icons/e2.svg', maxCooldown: 3, name: 'Sword E' }
     },
     [WeaponType.SCYTHE]: {
       q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q' },
       e: { key: 'e', cooldown: 0.5, currentCooldown: 0, icon: '/icons/e1.svg', maxCooldown: 1, name: 'Scythe E' }
     },
     [WeaponType.SABRES]: {
-      q: { key: 'q', cooldown: 0.75, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres Q' },
-      e: { key: 'e', cooldown: 1.5, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
+      q: { key: 'q', cooldown: 0.85, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres Q' },
+      e: { key: 'e', cooldown: 1.25, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
     },
     [WeaponType.SABRES2]: {
-      q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/sabres2_q.svg', maxCooldown: 1, name: 'Sabres2 Q' },
-      e: { key: 'e', cooldown: 3, currentCooldown: 0, icon: '/icons/sabres2_e.svg', maxCooldown: 3, name: 'Sabres2 E' }
+      q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres2 Q' },
+      e: { key: 'e', cooldown: 2.5, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 3, name: 'Sabres2 E' }
     }
   });
 
@@ -232,6 +232,33 @@ export default function HomePage() {
     skeletonProps // Use the memoized skeletonProps
   };
 
+  // Add handleReset function
+  const handleReset = () => {
+    // Reset player health
+    setPlayerHealth(200);
+
+    // Reset dummy health
+    setDummyHealth(300);
+    setDummy2Health(300);
+
+    // Reset skeleton health
+    setSkeletonHealths(Array(NUM_SKELETONS).fill(200));
+
+    // Reset ability cooldowns
+    setAbilities(prev => {
+      const newAbilities = { ...prev };
+      Object.keys(newAbilities).forEach(weapon => {
+        ['q', 'e'].forEach(ability => {
+          newAbilities[weapon as WeaponType][ability as 'q' | 'e'].currentCooldown = 0;
+        });
+      });
+      return newAbilities;
+    });
+
+    // Reset last hit time
+    setLastHitTime(0);
+  };
+
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
       <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
@@ -255,6 +282,7 @@ export default function HomePage() {
         playerHealth={playerHealth}
         maxHealth={200}
         abilities={abilities}
+        onReset={handleReset}
       />
     </div>
   );
