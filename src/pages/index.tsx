@@ -11,6 +11,8 @@ import { Vector3 } from 'three';
 import { SceneProps } from '@/types/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 
+// SLOPPY CLEAN
+// SHOULD BE  app/page.tsx for Next??!** water WE Doin
 interface AbilityButton {
   key: string;
   cooldown: number;
@@ -29,7 +31,7 @@ interface WeaponInfo {
 
 // SKELE SPAWN POINTS
 const generateRandomPosition = () => {
-  const radius = 30; // Increased radius for more spread
+  const radius = 50; // Increased radius for more spread
   const angle = Math.random() * Math.PI * 2;
   const distance = Math.sqrt(Math.random()) * radius; // Using sqrt for more even distribution
   return new Vector3(
@@ -39,8 +41,8 @@ const generateRandomPosition = () => {
   );
 };
 
-// Modify the number of skeletons
-const NUM_SKELETONS = 5;  // Changed from 30 to 5
+
+const NUM_SKELETONS = 5;  // start with 5 skeletons
 
 // Home Component
 export default function HomePage() {
@@ -52,20 +54,20 @@ export default function HomePage() {
   const [dummy2Health, setDummy2Health] = useState(300);
   const [abilities, setAbilities] = useState<WeaponInfo>({
     [WeaponType.SWORD]: {
-      q: { key: 'q', cooldown: 1.15, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1, name: 'Sword Q' },
-      e: { key: 'e', cooldown: 4, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 3, name: 'Sword E' }
+      q: { key: 'q', cooldown: 1.08, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q' },
+      e: { key: 'e', cooldown: 3.86, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E' }
     },
     [WeaponType.SCYTHE]: {
       q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q' },
-      e: { key: 'e', cooldown: 0.4, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 1, name: 'Scythe E' }
+      e: { key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.75, name: 'Scythe E' }
     },
     [WeaponType.SABRES]: {
-      q: { key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 1, name: 'Sabres Q' },
-      e: { key: 'e', cooldown: 1.25, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
+      q: { key: 'q', cooldown: 0.9, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q' },
+      e: { key: 'e', cooldown: 1, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
     },
     [WeaponType.SABRES2]: {
-      q: { key: 'q', cooldown: 1.5, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 1, name: 'Sabres2 Q' },
-      e: { key: 'e', cooldown: 1.25, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 3, name: 'Sabres2 E' }
+      q: { key: 'q', cooldown: 1.5, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 1.5, name: 'Sabres2 Q' },
+      e: { key: 'e', cooldown: 6, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 6, name: 'Sword E' }
     }
   });
 
@@ -141,13 +143,13 @@ export default function HomePage() {
         Object.keys(newAbilities).forEach(weapon => {
           ['q', 'e'].forEach(ability => {
             if (newAbilities[weapon as WeaponType][ability as 'q' | 'e'].currentCooldown > 0) {
-              newAbilities[weapon as WeaponType][ability as 'q' | 'e'].currentCooldown -= 0.1;
+              newAbilities[weapon as WeaponType][ability as 'q' | 'e'].currentCooldown -= 0.15; //global cd?
             }
           });
         });
         return newAbilities;
       });
-    }, 100);
+    }, 150);
 
     return () => clearInterval(interval);
   }, []);
@@ -159,7 +161,7 @@ export default function HomePage() {
     console.log(`Dummy 1 Health: ${dummyHealth}`);
   }, [dummyHealth]);
 
-  // Update the skeleton health state to handle skeletons
+  // dis sposed to be here?
   const [skeletonHealths, setSkeletonHealths] = useState(() => 
     Array(NUM_SKELETONS).fill(200) // Create an array of skeletons with 200 health each
   );
@@ -215,7 +217,7 @@ export default function HomePage() {
       onAbilityUse: handleAbilityUse,
       onPositionUpdate: (newPosition: THREE.Vector3) => {
         unitPosition.copy(newPosition);
-      },
+      }, //DORMANT
       enemyData: [
         {
           id: 'dummy1',
@@ -299,7 +301,7 @@ export default function HomePage() {
       left: 0
     }}>
       <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
-        <ambientLight intensity={0.3} />
+        <ambientLight intensity={0.2} />
         <Scene {...sceneProps} />
         <OrbitControls
           ref={controlsRef}

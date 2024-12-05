@@ -103,22 +103,22 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
     // Start at center
     shape.moveTo(0, 0);
     
-    // Narrow guard shape
-    shape.lineTo(-0.25, 0.15);  
+    // Left side guard (fixed symmetry)
+    shape.lineTo(-0.25, 0.25);  
     shape.lineTo(-0.15, -0.15); 
     shape.lineTo(0, 0);
     
-    // Mirror for right side
-    shape.lineTo(0.25, 0.15);
+    // Right side guard (matches left exactly)
+    shape.lineTo(0.25, 0.25);
     shape.lineTo(0.15, -0.15);
     shape.lineTo(0, 0);
     
-    // Narrow blade shape
+    // Blade shape with improved symmetry
     shape.lineTo(0, 0.12);    
     shape.lineTo(0.25, 0.25);   
-    shape.quadraticCurveTo(1.0, 0.2, 1.5, 0.25);  // Reduced height
-    shape.quadraticCurveTo(2.0, 0.15, 2.2, 0);    // Reduced height
-    shape.quadraticCurveTo(2.0, -0.15, 1.5, -0.25);
+    shape.quadraticCurveTo(1.0, 0.2, 1.5, 0.25);
+    shape.quadraticCurveTo(2.0, 0.15, 2.2, 0);    // Center point
+    shape.quadraticCurveTo(2.0, -0.15, 1.5, -0.25); // Mirror of upper curve
     shape.quadraticCurveTo(1.0, -0.2, 0.25, -0.25);
     shape.lineTo(0, -0.12);
     shape.lineTo(0, 0);
@@ -133,22 +133,22 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
     // Start at center
     shape.moveTo(0, 0);
     
-    // Match outer guard shape but slightly smaller
+    // Left side guard (fixed symmetry)
     shape.lineTo(-0.2, 0.12);
     shape.lineTo(-0.12, -0.12);
     shape.lineTo(0, 0);
     
-    // Mirror for right side
+    // Right side guard (matches left exactly)
     shape.lineTo(0.2, 0.12);
     shape.lineTo(0.12, -0.12);
     shape.lineTo(0, 0);
     
-    // Match outer blade shape but slightly smaller
+    // Blade shape with improved symmetry
     shape.lineTo(0, 0.1);
     shape.lineTo(0.2, 0.2);
     shape.quadraticCurveTo(1.0, 0.15, 1.5, 0.2);
-    shape.quadraticCurveTo(2.0, 0.12, 2.2, 0);
-    shape.quadraticCurveTo(2.0, -0.12, 1.5, -0.2);
+    shape.quadraticCurveTo(2.0, 0.12, 2.2, 0);    // Center point
+    shape.quadraticCurveTo(2.0, -0.12, 1.5, -0.2); // Mirror of upper curve
     shape.quadraticCurveTo(1.0, -0.15, 0.2, -0.2);
     shape.lineTo(0, -0.1);
     shape.lineTo(0, 0);
@@ -162,15 +162,17 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
     bevelEnabled: true,
     bevelThickness: 0.01,
     bevelSize: 0.02,
+    bevelOffset: 0,
     bevelSegments: 3
   };
 
   const innerBladeExtrudeSettings = {
     ...bladeExtrudeSettings,
-    depth: 0.05,           // Slightly thinner
-    bevelThickness: 0.01,  // Smaller bevel
-    bevelSize: 0.01,       // Smaller bevel size
-    bevelOffset: 0         // Ensure it's centered
+    depth: 0.05,
+    bevelThickness: 0.02,
+    bevelSize: 0.02,
+    bevelOffset: 0,
+    bevelSegments: 3
   };
 
   return (

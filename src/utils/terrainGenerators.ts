@@ -10,7 +10,7 @@ export interface GeneratedTree {
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 45; 
+  const numberOfMountains = 60; 
 
   for (let i = 0; i < numberOfMountains; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -44,7 +44,7 @@ export const generateTrees = (): GeneratedTree[] => {
     { position: new Vector3(15, 0, -9.5), scale: 0.8, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
     { position: new Vector3(16.5, 0, -6.5), scale: 0.75, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
     
-    // Back forest cluster (more spread out)
+    // Back forest cluster 
     { position: new Vector3(-20, 0, -20), scale: 0.95, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]) },
     { position: new Vector3(-10, 0, -22), scale: 0.9, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     { position: new Vector3(0, 0, -23), scale: 0.95, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },

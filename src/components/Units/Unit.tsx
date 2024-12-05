@@ -45,9 +45,9 @@ export interface UnitProps {
 
 const calculateDamage = (baseAmount: number, isFullyCharged: boolean = false): { damage: number; isCritical: boolean } => {
   if (isFullyCharged) {
-    return { damage: 40, isCritical: false }; // Fixed damage for fully charged bow
+    return { damage: 40, isCritical: false }; // OVERWRITTEN
   }
-  const isCritical = Math.random() < 0.15; // 15% chance
+  const isCritical = Math.random() < 0.20; // 20% chance
   const damage = isCritical ? baseAmount * 2 : baseAmount;
   return { damage, isCritical };
 };
@@ -128,7 +128,7 @@ export default function Unit({
   const [isSwinging, setIsSwinging] = useState(false);
   const [fireballs, setFireballs] = useState<FireballData[]>([]);
   const nextFireballId = useRef(0);
-  const speed = 0.175; // MOVEMENT SPEED
+  const speed = 0.15; // MOVEMENT SPEED
   const { camera } = useThree();
   const keys = useRef({
     w: false,
@@ -214,7 +214,7 @@ export default function Unit({
     // Add hit cooldown check
     const now = Date.now();
     const lastHitTime = hitCountThisSwing[`${targetId}_time`] || 0;
-    const hitCooldown = 100; // 100ms cooldown between hits
+    const hitCooldown = 500; // double attack detection
     
     if (now - lastHitTime < hitCooldown) return;
 
@@ -250,7 +250,7 @@ export default function Unit({
       
       // Smite initial hit damage (10)
       if (isSmiting && currentWeapon === WeaponType.SWORD) {
-        baseDamage = 10;
+        baseDamage = 17;
         const { damage, isCritical } = calculateDamage(baseDamage, false);
         onHit(target.id, damage);
 
@@ -264,9 +264,9 @@ export default function Unit({
             isCritical
           }]);
 
-          // Add delayed lightning damage only if target is still alive
-          setTimeout(() => {
-            const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(25, false);
+          // Use requestAnimationFrame instead of setTimeout for smoother animation
+          const applyLightningDamage = () => {
+            const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(20, false);
             
             // Get latest target health before applying lightning damage
             const currentTarget = enemyData.find(e => e.id === target.id);
@@ -280,12 +280,27 @@ export default function Unit({
               setDamageNumbers(prev => [...prev, {
                 id: nextDamageNumberId.current++,
                 damage: lightningDamage,
-                position: target.position.clone(),
+                position: currentTarget.position.clone(),
                 isCritical: lightningCrit,
                 isLightning: true
               }]);
             }
-          }, 250);
+          };
+
+          // Use requestAnimationFrame for better animation timing
+          const frameCount = 15; // Approximately 250ms at 60fps
+          let currentFrame = 0;
+          
+          const animate = () => {
+            if (currentFrame === frameCount) {
+              applyLightningDamage();
+              return;
+            }
+            currentFrame++;
+            requestAnimationFrame(animate);
+          };
+          
+          requestAnimationFrame(animate);
         }
 
         return;
@@ -302,7 +317,7 @@ export default function Unit({
       if (targetAfterDamage > 0) {
         // Special handling for Sabres to offset damage numbers
         if (currentWeapon === WeaponType.SABRES) {
-          const offset = currentHits === 0 ? -0.4 : 0.4;
+          const offset = currentHits === 0 ? -0.3 : 0.3;
           setDamageNumbers(prev => [...prev, {
             id: nextDamageNumberId.current++,
             damage,
@@ -370,7 +385,7 @@ export default function Unit({
     }
 
     if (isSwinging && groupRef.current) {
-      // Handle hits for training dummies
+      // DORMANT DUMIES
       handleWeaponHit('dummy1');
       handleWeaponHit('dummy2');
       
@@ -486,8 +501,8 @@ export default function Unit({
     if (!groupRef.current) return;
 
     // Calculate damage based on charge time
-    const baseDamage = 5;
-    const maxDamage = 75;
+    const baseDamage = 10;
+    const maxDamage = 115;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * power);
     const unitPosition = groupRef.current.position.clone();
     unitPosition.y += 1;
@@ -701,7 +716,7 @@ export default function Unit({
     const target = enemy || dummy;
     if (!target) return;
 
-    const { damage, isCritical } = calculateDamage(24, false); // Fixed fireball damage
+    const { damage, isCritical } = calculateDamage(30, false); // Fixed fireball damage
     
     onHit(target.id, damage);
 

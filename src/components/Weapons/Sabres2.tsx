@@ -185,7 +185,7 @@ interface SabreProps {
       steps: 2,
       depth: 0.024,           // Increased from 0.02
       bevelEnabled: true,
-      bevelThickness: 0.006,  // Increased from 0.005
+      bevelThickness: 0.0015,  // Increased from 0.005
       bevelSize: 0.012,       // Increased from 0.01
       bevelSegments: 2,
     };
@@ -193,7 +193,7 @@ interface SabreProps {
     const innerBladeExtrudeSettings = {
       ...bladeExtrudeSettings,
       depth: 0.036,           // Increased from 0.03
-      bevelThickness: 0.006,  // Increased from 0.005
+      bevelThickness: 0.002,  // Increased from 0.005
       bevelSize: 0.006,       // Increased from 0.005
       bevelOffset: 0,
     };

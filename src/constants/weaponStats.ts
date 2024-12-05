@@ -1,12 +1,12 @@
 import { WeaponType, WeaponDamages, WeaponCooldowns } from '../types/weapons';
 
 export const WEAPON_DAMAGES: WeaponDamages = {
-  [WeaponType.SWORD]: { normal: 14, special: 25 },
-  [WeaponType.SCYTHE]: { normal: 10, special: 16 },
-  [WeaponType.SABRES]: { normal: 7, special: 40 },
-  [WeaponType.SABRES2]: { normal: 12, special: 40 }
+  [WeaponType.SWORD]: { normal: 17, special: 20 },
+  [WeaponType.SCYTHE]: { normal: 12, special: 16 },
+  [WeaponType.SABRES]: { normal: 10, special: 50 },
+  [WeaponType.SABRES2]: { normal: 15, special: 25 }
 };
-
+//unused
 export const WEAPON_COOLDOWNS: WeaponCooldowns = {
   [WeaponType.SCYTHE]: {
     primary: 0.75,
