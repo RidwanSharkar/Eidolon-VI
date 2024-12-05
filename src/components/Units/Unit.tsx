@@ -211,9 +211,23 @@ export default function Unit({
   const handleWeaponHit = (targetId: string) => {
     if (!groupRef.current || !isSwinging) return;
 
+    // Add hit cooldown check
+    const now = Date.now();
+    const lastHitTime = hitCountThisSwing[`${targetId}_time`] || 0;
+    const hitCooldown = 100; // 100ms cooldown between hits
+    
+    if (now - lastHitTime < hitCooldown) return;
+
     const target = enemyData.find(e => e.id === targetId) || 
                    (targetId === 'dummy1' || targetId === 'dummy2' ? { id: targetId, position: new Vector3(), health: 1, maxHealth: 1 } : null);
     if (!target) return;
+
+    // When updating hit count, also store the hit time
+    setHitCountThisSwing(prev => ({
+      ...prev,
+      [target.id]: (prev[target.id] || 0) + 1,
+      [`${target.id}_time`]: now
+    }));
 
     const isEnemy = target.id.startsWith('enemy');
     const isDummy = target.id.startsWith('dummy');
@@ -232,11 +246,6 @@ export default function Unit({
     const weaponRange = (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) ? 5.0 : 4.5;
 
     if (distance <= weaponRange) {
-      setHitCountThisSwing(prev => ({
-        ...prev,
-        [target.id]: (prev[target.id] || 0) + 1
-      }));
-
       let baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
       
       // Smite initial hit damage (10)
