@@ -20,7 +20,11 @@
     ],
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": [
+      "three",
+      "@types/three"
+    ]
   },
   "include": ["src", "three-extensions.d.ts"],
   "exclude": ["node_modules"]
