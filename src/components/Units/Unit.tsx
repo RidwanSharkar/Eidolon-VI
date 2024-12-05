@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { Mesh, Vector3, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import Fireball from '../Spells/Fireball';
-import OrbitControlsImpl from 'three/examples/jsm/controls/OrbitControls';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'; //impl??
 import Scythe from '../Weapons/Scythe';
 import Sword from '../Weapons/Sword';
 import GhostTrail from '../Effects/GhostTrail';
@@ -175,7 +175,7 @@ export default function Unit({
     { id: 7, available: true, cooldownStartTime: null },
     { id: 8, available: true, cooldownStartTime: null }
   ]);
-  const [collectedBones, setCollectedBones] = useState<number>(15); // Start with 15 bones for testing
+  const [collectedBones, ] = useState<number>(15); // LATER
 
   const shootFireball = useCallback(() => {
     if (!groupRef.current) return;
@@ -711,11 +711,6 @@ export default function Unit({
     handleFireballImpact(fireballId);
   };
 
-  const handleEnemyDefeat = useCallback((enemyId: string) => {
-    // Increment collected bones (max 30)
-    setCollectedBones(prev => Math.min(prev + 1, 30));
-
-  }, []);
 
   useFrame(() => {
     if (groupRef.current) {

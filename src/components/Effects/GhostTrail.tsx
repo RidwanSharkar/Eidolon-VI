@@ -20,7 +20,7 @@ export default function GhostTrail({ parentRef }: GhostTrailProps) {
       positions.current = Array(trailCount).fill(0).map(() => initialPos.clone());
       setIsInitialized(true);
     }
-  }, []);
+  }, [ parentRef ]); // missed dis for a while
 
   useFrame(() => {
     if (!parentRef.current || !isInitialized) return;

@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls as DreiOrbitControls } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 import Scene from '../components/Scene/Scene';
@@ -8,8 +8,8 @@ import { WeaponType } from '../types/weapons';
 import { trunkColors, leafColors } from '@/utils/colors';
 import { generateMountains, generateTrees, generateMushrooms } from '@/utils/terrainGenerators';
 import { Vector3 } from 'three';
-import OrbitControls from 'three/examples/jsm/controls/OrbitControls';
 import { SceneProps } from '@/types/SceneProps';
+import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 
 interface AbilityButton {
   key: string;
@@ -45,7 +45,7 @@ const NUM_SKELETONS = 5;  // Changed from 30 to 5
 // Home Component
 export default function HomePage() {
   const [currentWeapon, setCurrentWeapon] = useState<WeaponType>(WeaponType.SCYTHE);
-  const controlsRef = useRef<OrbitControls>(null) as React.MutableRefObject<OrbitControls | null>;
+  const controlsRef = useRef<OrbitControlsType>(null);
   const [playerHealth, setPlayerHealth] = useState(200);
   const [dummyHealth, setDummyHealth] = useState(300);
   const [lastHitTime, setLastHitTime] = useState(0);
@@ -155,14 +155,13 @@ export default function HomePage() {
   // Add unit position state
   const [unitPosition] = useState(new THREE.Vector3(0, 0, 0));
 
-
   useEffect(() => {
     console.log(`Dummy 1 Health: ${dummyHealth}`);
   }, [dummyHealth]);
 
-  // Update the skeleton health state to handle 30 skeletons
+  // Update the skeleton health state to handle skeletons
   const [skeletonHealths, setSkeletonHealths] = useState(() => 
-    Array(NUM_SKELETONS).fill(200) // Create an array of 30 skeletons with 200 health each
+    Array(NUM_SKELETONS).fill(200) // Create an array of skeletons with 200 health each
   );
 
   // Initialize skeletonProps once
@@ -230,7 +229,7 @@ export default function HomePage() {
           health: dummy2Health,
           maxHealth: 300,
         },
-        // Generate 30 skeletons with random positions
+        // Generate skeletons with random positions
         ...Array(NUM_SKELETONS).fill(null).map((_, index) => ({
           id: `skeleton-${index}`,
           position: generateRandomPosition(),
@@ -243,7 +242,7 @@ export default function HomePage() {
     },
 
     skeletonProps, // Use the memoized skeletonProps
-    killCount: killCount, // Add this to pass to Scene
+    killCount: killCount, // Pass killCount to Scene
   };
 
   // Add handleReset function
@@ -302,7 +301,7 @@ export default function HomePage() {
       <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
         <ambientLight intensity={0.3} />
         <Scene {...sceneProps} />
-        <DreiOrbitControls
+        <OrbitControls
           ref={controlsRef}
           enablePan={false}
           maxPolarAngle={Math.PI / 2.2}

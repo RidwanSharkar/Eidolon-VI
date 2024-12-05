@@ -1,6 +1,6 @@
 // src/types/UnitProps.ts
 
-import OrbitControls from 'three/examples/jsm/controls/OrbitControls';
+import type { OrbitControls } from 'three-stdlib';
 import { WeaponType, WeaponInfo } from './weapons';
 import { TargetId } from './TargetId';
 import * as THREE from 'three';
