@@ -129,12 +129,11 @@ export default function EnemyUnit({
                 <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
               </mesh>
               <Text
-                position={[0, 0, 0.002]}
+                position={[0, 0, 0]}
                 fontSize={0.2}
-                color="#ffffff"
+                color="white"
                 anchorX="center"
                 anchorY="middle"
-                fontWeight="bold"
               >
                 {`${Math.ceil(health)}/${maxHealth}`}
               </Text>
