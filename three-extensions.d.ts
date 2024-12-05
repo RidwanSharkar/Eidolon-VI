@@ -1,7 +1,9 @@
    // src/three-extensions.d.ts
 
    declare module '@react-three/drei' {
-    import { Camera, EventDispatcher, MOUSE, TOUCH, Vector3 } from 'three';
+    import { Camera, EventDispatcher, MOUSE, TOUCH, Vector3, Material, Color } from 'three';
+    import React from 'react';
+    import { TextProps as DreiTextProps } from '@react-three/drei';
 
     export interface OrbitControlsProps {
       makeDefault?: boolean;
@@ -27,40 +29,38 @@
       ref?: React.RefObject<OrbitControls>;
     }
 
+    export interface BillboardProps {
+      follow?: boolean;
+      lockX?: boolean;
+      lockY?: boolean;
+      lockZ?: boolean;
+      position?: [number, number, number];
+      children?: React.ReactNode;
+    }
+
+    export interface TextProps extends DreiTextProps {
+      children?: React.ReactNode;
+      color?: string | Color;
+      fontSize?: number;
+      maxWidth?: number;
+      lineHeight?: number;
+      letterSpacing?: number;
+      textAlign?: 'left' | 'right' | 'center' | 'justify';
+      font?: string;
+      anchorX?: number | 'left' | 'center' | 'right';
+      anchorY?: number | 'top' | 'center' | 'middle' | 'bottom';
+      position?: [number, number, number];
+      material?: Material;
+      characters?: string;
+      outlineWidth?: number;
+    }
+
+    export const Text: React.FC<TextProps>;
+
     export class OrbitControls extends EventDispatcher {
       constructor(object: Camera, domElement?: HTMLElement);
-      
-      // Add static property for props
-      static defaultProps: OrbitControlsProps;
-      props: OrbitControlsProps;
-
       object: Camera;
       domElement: HTMLElement | Document;
-
-      // Drei-specific properties
-      reverseHorizontalOrbit: boolean;
-      reverseVerticalOrbit: boolean;
-      reverseOrbit: boolean;
-      reverseZoom: boolean;
-      reverseDragRotate: boolean;
-      reverseDragPan: boolean;
-      reverseKeys: boolean;
-      reverseWheel: boolean;
-
-      // Mouse buttons
-      mouseButtons: {
-        LEFT?: MOUSE | null;
-        MIDDLE?: MOUSE | null;
-        RIGHT?: MOUSE | null;
-      };
-
-      // Touch fingers
-      touches: {
-        ONE?: TOUCH | null;
-        TWO?: TOUCH | null;
-      };
-
-      // All other properties
       enabled: boolean;
       target: Vector3;
       minDistance: number;
@@ -83,15 +83,14 @@
       keyPanSpeed: number;
       autoRotate: boolean;
       autoRotateSpeed: number;
+      enableKeys: boolean;
       keys: { LEFT: string; UP: string; RIGHT: string; BOTTOM: string };
-      
-      // Methods
-      update(): boolean;
-      dispose(): void;
-      getDistance(): number;
-      listenToKeyEvents(domElement: HTMLElement | Window): void;
-      saveState(): void;
-      reset(): void;
-      stopAutoRotate(): void;
+      mouseButtons: { LEFT: MOUSE; MIDDLE: MOUSE; RIGHT: MOUSE };
+      touches: { ONE: TOUCH; TWO: TOUCH };
     }
+
+    export const Billboard: React.ForwardRefExoticComponent<BillboardProps>;
+    export const Text: React.ForwardRefExoticComponent<TextProps>;
+    export const Text3D: React.ForwardRefExoticComponent<TextProps>;
+    export const OrbitControls: React.ForwardRefExoticComponent<OrbitControlsProps>;
   }

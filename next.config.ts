@@ -10,6 +10,20 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  webpack: (config) => {
+    // Ensure that .js files in node_modules are transpiled if necessary
+    config.module.rules.push({
+      test: /\.js$/,
+      include: /node_modules\/@react-three\/drei/,
+      use: {
+        loader: 'babel-loader',
+        options: {
+          presets: ['@babel/preset-env'],
+        },
+      },
+    });
+    return config;
+  },
 };
 
 export default nextConfig;

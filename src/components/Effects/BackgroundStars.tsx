@@ -36,13 +36,13 @@ const BackgroundStars: React.FC = () => {
     <points ref={points}>
       <bufferGeometry {...geometry} />
       <pointsMaterial
-        size={0.7}
+        size={1.5}
         sizeAttenuation
         transparent
-        alphaMap={new THREE.TextureLoader().load('/circle.png')}
-        alphaTest={0.001}
-        color="#ffffff"
-        fog={false}
+        opacity={0.8}
+        color="#4dff90"
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
       />
     </points>
   );

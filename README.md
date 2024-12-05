@@ -1,6 +1,11 @@
 # Eidolon
 
+Cast upon a drifting isle in the void, Death has granted you the opportunity to ascend to dragonhood, or be condemned to drift endlessly toward Eidolon.
+
 ![bloomscythe](https://github.com/user-attachments/assets/242617d9-403b-4d6b-b380-9c3c36c3945c)
+
+
+
 
 
 
