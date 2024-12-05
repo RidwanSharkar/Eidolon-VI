@@ -1,51 +1,18 @@
-import React, { useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import React from 'react';
+import { Stars } from '@react-three/drei';
 
 const BackgroundStars: React.FC = () => {
-  const points = useRef<THREE.Points>(null);
-  
-  // Generate random positions for stars
-  const particles = useMemo(() => {
-    const temp = [];
-    for (let i = 0; i < 1000; i++) {
-      const x = (Math.random() - 0.5) * 100;
-      const y = (Math.random() - 0.5) * 100;
-      const z = (Math.random() - 0.5) * 100;
-      temp.push(x, y, z);
-    }
-    return new Float32Array(temp);
-  }, []);
-
-  // Create and memoize the geometry
-  const geometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(particles, 3));
-    return geo;
-  }, [particles]);
-
-  // Animate the stars
-  useFrame((state) => {
-    if (points.current) {
-      points.current.rotation.x = state.clock.getElapsedTime() * 0.05;
-      points.current.rotation.y = state.clock.getElapsedTime() * 0.03;
-    }
-  });
-
   return (
-    <points ref={points}>
-      <bufferGeometry {...geometry} />
-      <pointsMaterial
-        size={1.5}
-        sizeAttenuation
-        transparent
-        opacity={0.8}
-        color="#4dff90"
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
+    <Stars
+      radius={500}
+      depth={200}
+      count={5000}
+      factor={3}
+      saturation={0}
+      fade={true}
+      speed={0.2}
+    />
   );
 };
 
-export default BackgroundStars;
+export default BackgroundStars; 

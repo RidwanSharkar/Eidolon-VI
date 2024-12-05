@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls as DreiOrbitControls } from '@react-three/drei';
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 import Scene from '../components/Scene/Scene';
@@ -8,10 +8,8 @@ import { WeaponType } from '../types/weapons';
 import { trunkColors, leafColors } from '@/utils/colors';
 import { generateMountains, generateTrees, generateMushrooms } from '@/utils/terrainGenerators';
 import { Vector3 } from 'three';
+import OrbitControls from 'three/examples/jsm/controls/OrbitControls';
 import { SceneProps } from '@/types/SceneProps';
-
-// Add this type for OrbitControls
-type OrbitControlsType = typeof OrbitControls;
 
 interface AbilityButton {
   key: string;
@@ -47,7 +45,7 @@ const NUM_SKELETONS = 5;  // Changed from 30 to 5
 // Home Component
 export default function HomePage() {
   const [currentWeapon, setCurrentWeapon] = useState<WeaponType>(WeaponType.SCYTHE);
-  const controlsRef = useRef<OrbitControlsType>(null);
+  const controlsRef = useRef<OrbitControls>(null) as React.MutableRefObject<OrbitControls | null>;
   const [playerHealth, setPlayerHealth] = useState(200);
   const [dummyHealth, setDummyHealth] = useState(300);
   const [lastHitTime, setLastHitTime] = useState(0);
@@ -304,7 +302,7 @@ export default function HomePage() {
       <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
         <ambientLight intensity={0.3} />
         <Scene {...sceneProps} />
-        <OrbitControls
+        <DreiOrbitControls
           ref={controlsRef}
           enablePan={false}
           maxPolarAngle={Math.PI / 2.2}
