@@ -238,7 +238,7 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
               >
                 <div className={styles.keyBind}>{index + 1}</div>
                 <Image 
-                  src={`/icons/${index + 1}.svg`} 
+                  src={`/Eidolon/icons/${index + 1}.svg`} 
                   alt={weapon} 
                   width={50} 
                   height={50} 

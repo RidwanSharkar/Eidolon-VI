@@ -52,20 +52,20 @@ export default function HomePage() {
   const [dummy2Health, setDummy2Health] = useState(300);
   const [abilities, setAbilities] = useState<WeaponInfo>({
     [WeaponType.SWORD]: {
-      q: { key: 'q', cooldown: 1.15, currentCooldown: 0, icon: '/icons/q2.svg', maxCooldown: 1, name: 'Sword Q' },
-      e: { key: 'e', cooldown: 4, currentCooldown: 0, icon: '/icons/e2.svg', maxCooldown: 3, name: 'Sword E' }
-    }, // SMITE glitched/OP but dont care yet
+      q: { key: 'q', cooldown: 1.15, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1, name: 'Sword Q' },
+      e: { key: 'e', cooldown: 4, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 3, name: 'Sword E' }
+    },
     [WeaponType.SCYTHE]: {
-      q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q' },
-      e: { key: 'e', cooldown: 0.4, currentCooldown: 0, icon: '/icons/e1.svg', maxCooldown: 1, name: 'Scythe E' }
+      q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q' },
+      e: { key: 'e', cooldown: 0.4, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 1, name: 'Scythe E' }
     },
     [WeaponType.SABRES]: {
-      q: { key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres Q' },
-      e: { key: 'e', cooldown: 1.25, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
+      q: { key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 1, name: 'Sabres Q' },
+      e: { key: 'e', cooldown: 1.25, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
     },
     [WeaponType.SABRES2]: {
-      q: { key: 'q', cooldown: 1.5, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 1, name: 'Sabres2 Q' },
-      e: { key: 'e', cooldown: 1.25, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 3, name: 'Sabres2 E' }
+      q: { key: 'q', cooldown: 1.5, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 1, name: 'Sabres2 Q' },
+      e: { key: 'e', cooldown: 1.25, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 3, name: 'Sabres2 E' }
     }
   });
 
