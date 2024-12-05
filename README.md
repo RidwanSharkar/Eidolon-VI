@@ -10,7 +10,7 @@ Linger in an ossuary for the restless, eternally locked in combat - where ambiti
 
 OR
 
-Devour the essence of unwitting tributes that challenge your claim - their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny - a being forged from the echoes of those who dared to dream, ascended to scale the jagged peaks that imprison the souls to this stygian ark. 
+Devour the essence of unwitting tributes that challenge your claim - their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny - a being forged from the echoes of those who dared to dream, ascended to scale the jagged peaks that anchor the souls to this stygian ark. 
 
 
 ## v0.2

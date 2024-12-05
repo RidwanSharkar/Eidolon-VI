@@ -58,7 +58,7 @@ export default function Home() {
         >
           <Image
             aria-hidden="true"
-            src="/Eidolon/icon.png"
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH}/icon.png`}
             alt="Eidolon Icon"
             width={16}
             height={16}
