@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   title: "Eidolon",
   description: "Prototype Roguelike",
   icons: {
-    icon: '/Eidolon/icon.png',
-    shortcut: '/Eidolon/icon.png',
-    apple: '/Eidolon/icon.png',
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
   }
 };
 
