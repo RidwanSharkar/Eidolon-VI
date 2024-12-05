@@ -45,7 +45,7 @@ export interface UnitProps {
 
 const calculateDamage = (baseAmount: number, isFullyCharged: boolean = false): { damage: number; isCritical: boolean } => {
   if (isFullyCharged) {
-    return { damage: 40, isCritical: false }; // Fixed damage for fully charged bow
+    return { damage: 40, isCritical: false }; // OVERWRITTEN ELSEWHERE at 75
   }
   const isCritical = Math.random() < 0.15; // 15% chance
   const damage = isCritical ? baseAmount * 2 : baseAmount;
@@ -110,7 +110,6 @@ interface FireballData {
   maxDistance: number;
 }
 
-// NEEDS COLLOSAL REFACTORING hamie
 export default function Unit({
   onHit,
   controlsRef,
@@ -176,6 +175,7 @@ export default function Unit({
     { id: 8, available: true, cooldownStartTime: null }
   ]);
   const [collectedBones, ] = useState<number>(15); // LATER
+  const lastHitTime = useRef<Record<string, number>>({});
 
   const shootFireball = useCallback(() => {
     if (!groupRef.current) return;
@@ -211,28 +211,13 @@ export default function Unit({
   const handleWeaponHit = (targetId: string) => {
     if (!groupRef.current || !isSwinging) return;
 
-    // Add hit cooldown check
-    const now = Date.now();
-    const lastHitTime = hitCountThisSwing[`${targetId}_time`] || 0;
-    const hitCooldown = 100; // 100ms cooldown between hits
-    
-    if (now - lastHitTime < hitCooldown) return;
-
     const target = enemyData.find(e => e.id === targetId) || 
                    (targetId === 'dummy1' || targetId === 'dummy2' ? { id: targetId, position: new Vector3(), health: 1, maxHealth: 1 } : null);
     if (!target) return;
 
-    // When updating hit count, also store the hit time
-    setHitCountThisSwing(prev => ({
-      ...prev,
-      [target.id]: (prev[target.id] || 0) + 1,
-      [`${target.id}_time`]: now
-    }));
-
     const isEnemy = target.id.startsWith('enemy');
     const isDummy = target.id.startsWith('dummy');
     
-    if (isEnemy && isDummy) return;
     if (!isEnemy && !isDummy) return;
 
     const maxHits = isEnemy 
@@ -246,6 +231,11 @@ export default function Unit({
     const weaponRange = (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) ? 5.0 : 4.5;
 
     if (distance <= weaponRange) {
+      setHitCountThisSwing(prev => ({
+        ...prev,
+        [target.id]: (prev[target.id] || 0) + 1
+      }));
+
       let baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
       
       // Smite initial hit damage (10)
@@ -370,13 +360,19 @@ export default function Unit({
     }
 
     if (isSwinging && groupRef.current) {
-      // Handle hits for training dummies
-      handleWeaponHit('dummy1');
-      handleWeaponHit('dummy2');
-      
-      // Handle hits for enemy units
-      enemyData.forEach(enemy => {
-        handleWeaponHit(enemy.id);
+      const currentTime = Date.now();
+      const allTargets = [
+        { id: 'dummy1', position: new Vector3(5, 1.5, 5) },
+        { id: 'dummy2', position: new Vector3(-5, 1.5, 5) },
+        ...enemyData
+      ];
+
+      allTargets.forEach(target => {
+        const lastHit = lastHitTime.current[target.id] || 0;
+        if (currentTime - lastHit > 450) { // fix double hit
+          handleWeaponHit(target.id);
+          lastHitTime.current[target.id] = currentTime;
+        }
       });
     }
 
@@ -563,6 +559,37 @@ export default function Unit({
     onAbilityUse(currentWeapon, 'e');
   }, [currentWeapon, groupRef, onHit, setDamageNumbers, setActiveProjectiles, onAbilityUse, enemyData]);
 
+  const handleSmiteHit = useCallback((smitePosition: Vector3) => {
+    const smiteRadius = 3.0;
+    
+    const allTargets = [
+      { id: 'dummy1', position: new Vector3(5, 1.5, 5) },
+      { id: 'dummy2', position: new Vector3(-5, 1.5, 5) },
+      ...enemyData
+    ];
+
+    allTargets.forEach(target => {
+      const distanceToSmite = target.position.distanceTo(smitePosition);
+      
+      if (distanceToSmite <= smiteRadius) {
+        // Check if the target is alive before applying damage
+        const currentTarget = enemyData.find(e => e.id === target.id);
+        if (!currentTarget || currentTarget.health <= 0) return;
+
+        const { damage, isCritical } = calculateDamage(25, false);
+        onHit(target.id, damage);
+
+        setDamageNumbers(prev => [...prev, {
+          id: nextDamageNumberId.current++,
+          damage,
+          position: target.position.clone(),
+          isCritical,
+          isLightning: true
+        }]);
+      }
+    });
+  }, [enemyData, onHit, setDamageNumbers]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
@@ -591,9 +618,9 @@ export default function Unit({
               id: nextSmiteId.current++, 
               position: targetPos 
             }]);
+            handleSmiteHit(targetPos);
             onAbilityUse(currentWeapon, 'e');
           } else if ((currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) && !isBowCharging) {
-            // Only start charging if we're not already charging
             setIsBowCharging(true);
             bowChargeStartTime.current = Date.now();
           } else if (!(currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2)) {
@@ -641,7 +668,7 @@ export default function Unit({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [shootFireball, isSwinging, onWeaponSelect, isSmiting, currentWeapon, abilities, onAbilityUse, isBowCharging, bowChargeProgress, releaseBowShot]);
+  }, [handleSmiteHit, shootFireball, isSwinging, onWeaponSelect, isSmiting, currentWeapon, abilities, onAbilityUse, isBowCharging, bowChargeProgress, releaseBowShot]);
 
   const handleSmiteComplete = () => {
     setIsSmiting(false);
@@ -719,7 +746,6 @@ export default function Unit({
     // Remove the fireball
     handleFireballImpact(fireballId);
   };
-
 
   useFrame(() => {
     if (groupRef.current) {
