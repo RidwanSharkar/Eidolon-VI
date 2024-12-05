@@ -9,7 +9,13 @@
       object: Camera;
       domElement: HTMLElement | Document;
 
-      // Limits
+      // Additional properties from @react-three/drei
+      screenSpacePanning: boolean;
+      keyPanSpeed: number;
+      zoomToCursor: boolean;
+      reverseOrbit: boolean;
+
+      // Existing properties
       minDistance: number;
       maxDistance: number;
       minZoom: number;
@@ -18,26 +24,18 @@
       maxPolarAngle: number;
       minAzimuthAngle: number;
       maxAzimuthAngle: number;
-
-      // Enable/disable features
       enabled: boolean;
       enableZoom: boolean;
       enableRotate: boolean;
       enablePan: boolean;
       enableDamping: boolean;
-
-      // Rotation
       autoRotate: boolean;
       autoRotateSpeed: number;
       rotateSpeed: number;
-
-      // Panning
       target: Vector3;
       target0: Vector3;
       position0: Vector3;
       zoom0: number;
-
-      // Damping
       dampingFactor: number;
       zoomSpeed: number;
       panSpeed: number;

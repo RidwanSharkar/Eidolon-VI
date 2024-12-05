@@ -45,7 +45,7 @@ const NUM_SKELETONS = 5;  // Changed from 30 to 5
 // Home Component
 export default function HomePage() {
   const [currentWeapon, setCurrentWeapon] = useState<WeaponType>(WeaponType.SCYTHE);
-  const controlsRef = useRef<OrbitControls>(null) as React.MutableRefObject<OrbitControls | null>;
+  const controlsRef = useRef<OrbitControls>(null);
   const [playerHealth, setPlayerHealth] = useState(200);
   const [dummyHealth, setDummyHealth] = useState(300);
   const [lastHitTime, setLastHitTime] = useState(0);
