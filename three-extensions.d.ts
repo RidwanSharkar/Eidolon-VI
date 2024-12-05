@@ -3,16 +3,52 @@
    declare module 'three/examples/jsm/controls/OrbitControls' {
     import { Camera, EventDispatcher, Vector3 } from 'three';
 
-    class OrbitControls extends EventDispatcher {
-      constructor(object: Camera, domElement: HTMLElement);
+    export class OrbitControls extends EventDispatcher {
+      constructor(object: Camera, domElement?: HTMLElement);
 
+      object: Camera;
+      domElement: HTMLElement | Document;
+
+      // Limits
+      minDistance: number;
+      maxDistance: number;
+      minZoom: number;
+      maxZoom: number;
+      minPolarAngle: number;
+      maxPolarAngle: number;
+      minAzimuthAngle: number;
+      maxAzimuthAngle: number;
+
+      // Enable/disable features
       enabled: boolean;
+      enableZoom: boolean;
+      enableRotate: boolean;
+      enablePan: boolean;
+      enableDamping: boolean;
+
+      // Rotation
+      autoRotate: boolean;
+      autoRotateSpeed: number;
+      rotateSpeed: number;
+
+      // Panning
       target: Vector3;
+      target0: Vector3;
+      position0: Vector3;
+      zoom0: number;
+
+      // Damping
+      dampingFactor: number;
+      zoomSpeed: number;
+      panSpeed: number;
 
       // Methods
       update(): boolean;
       dispose(): void;
-
+      getDistance(): number;
+      listenToKeyEvents(domElement: HTMLElement | Window): void;
+      saveState(): void;
+      reset(): void;
     }
 
     export default OrbitControls;
