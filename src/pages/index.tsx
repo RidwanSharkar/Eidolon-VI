@@ -1,8 +1,6 @@
-"use client";
-
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
-import dynamic from 'next/dynamic';
 import * as THREE from 'three';
 import Scene from '../components/Scene/Scene';
 import Panel from '../components/UI/Panel';
@@ -12,7 +10,6 @@ import { generateMountains, generateTrees, generateMushrooms } from '@/utils/ter
 import { Vector3 } from 'three';
 import { SceneProps } from '@/types/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
-import Image from "next/image";
 
 interface AbilityButton {
   key: string;
@@ -44,11 +41,6 @@ const generateRandomPosition = () => {
 
 // Modify the number of skeletons
 const NUM_SKELETONS = 5;  // Changed from 30 to 5
-
-// Dynamically import Canvas with no SSR
-const Canvas = dynamic(() => import('@react-three/fiber').then(mod => mod.Canvas), {
-  ssr: false
-});
 
 // Home Component
 export default function HomePage() {
@@ -297,56 +289,39 @@ export default function HomePage() {
     };
   }, []);
 
-  // Logo section at the top
   return (
-    <>
-      <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-        <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-          <Image
-            className="dark:invert"
-            src={`${process.env.NEXT_PUBLIC_BASE_PATH}/icon.png`}
-            alt="Eidolon"
-            width={180}
-            height={38}
-            priority
-          />
-        </main>
-      </div>
-
-      {/* Game section */}
-      <div style={{ 
-        width: '100vw', 
-        height: '100vh', 
-        overflow: 'hidden',
-        position: 'fixed',
-        top: 0,
-        left: 0
-      }}>
-        <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
-          <ambientLight intensity={0.3} />
-          <Scene {...sceneProps} />
-          <OrbitControls
-            ref={controlsRef}
-            enablePan={false}
-            maxPolarAngle={Math.PI / 2.2}
-            maxDistance={75}
-            mouseButtons={{
-              LEFT: undefined,
-              MIDDLE: undefined,
-              RIGHT: THREE.MOUSE.ROTATE,
-            }}
-          />
-        </Canvas>
-        <Panel
-          currentWeapon={currentWeapon}
-          onWeaponSelect={handleWeaponSelect}
-          playerHealth={playerHealth}
-          maxHealth={200}
-          abilities={abilities}
-          onReset={handleReset}
-          killCount={killCount}
+    <div style={{ 
+      width: '100vw', 
+      height: '100vh', 
+      overflow: 'hidden',
+      position: 'fixed',
+      top: 0,
+      left: 0
+    }}>
+      <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
+        <ambientLight intensity={0.3} />
+        <Scene {...sceneProps} />
+        <OrbitControls
+          ref={controlsRef}
+          enablePan={false}
+          maxPolarAngle={Math.PI / 2.2}
+          maxDistance={75}
+          mouseButtons={{
+            LEFT: undefined,
+            MIDDLE: undefined,
+            RIGHT: THREE.MOUSE.ROTATE,
+          }}
         />
-      </div>
-    </>
+      </Canvas>
+      <Panel
+        currentWeapon={currentWeapon}
+        onWeaponSelect={handleWeaponSelect}
+        playerHealth={playerHealth}
+        maxHealth={200}
+        abilities={abilities}
+        onReset={handleReset}
+        killCount={killCount}
+      />
+    </div>
   );
 }

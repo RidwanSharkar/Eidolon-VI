@@ -21,11 +21,12 @@ export default function HealthBar({ current, max, position }: HealthBarProps) {
         <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
       </mesh>
       <Text
-        position={[0, 0, 0]}
-        fontSize={0.2}
-        color="white"
+        position={[0, 0, 0.002]}
+        fontSize={0.15}
+        color="#ffffff"
         anchorX="center"
         anchorY="middle"
+        fontWeight="bold"
       >
         {`${current}/${max}`}
       </Text>

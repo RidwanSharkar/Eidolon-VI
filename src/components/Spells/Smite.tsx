@@ -51,7 +51,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
     >
       {/* Core lightning bolt */}
       <mesh>
-        <cylinderGeometry args={[0.45, 0.45, 25, 20]} />
+        <cylinderGeometry args={[0.35, 0.35, 20, 16]} />
         <meshStandardMaterial
           color="#ff6600"
           emissive="#ff4400"
@@ -63,7 +63,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
 
       {/* Inner glow */}
       <mesh>
-        <cylinderGeometry args={[0.95, 0.95, 30, 22]} />
+        <cylinderGeometry args={[0.7, 0.7, 20, 16]} />
         <meshStandardMaterial
           color="#ff6600"
           emissive="#ff4400"

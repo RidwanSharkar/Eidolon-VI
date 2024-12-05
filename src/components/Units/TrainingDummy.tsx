@@ -81,11 +81,12 @@ export default function TrainingDummy({ id, position, health, maxHealth, onHit }
         </mesh>
         {/* Health text */}
         <Text
-          position={[0, 0, 0]}
-          fontSize={0.2}
-          color="white"
+          position={[0, 0, 0.002]}
+          fontSize={0.15}
+          color="#ffffff"
           anchorX="center"
           anchorY="middle"
+          fontWeight="bold"
         >
           {`${health}/${maxHealth}`}
         </Text>
