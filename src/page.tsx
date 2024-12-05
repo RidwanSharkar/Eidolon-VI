@@ -57,9 +57,9 @@ export default function Home() {
           rel="noopener noreferrer"
         >
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
+            aria-hidden="true"
+            src="/Eidolon/icon.png"
+            alt="Eidolon Icon"
             width={16}
             height={16}
           />
@@ -72,7 +72,7 @@ export default function Home() {
           rel="noopener noreferrer"
         >
           <Image
-            aria-hidden
+            aria-hidden="true"
             src="/window.svg"
             alt="Window icon"
             width={16}
@@ -87,7 +87,7 @@ export default function Home() {
           rel="noopener noreferrer"
         >
           <Image
-            aria-hidden
+            aria-hidden="true"
             src="/globe.svg"
             alt="Globe icon"
             width={16}
