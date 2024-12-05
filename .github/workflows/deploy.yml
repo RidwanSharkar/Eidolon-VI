@@ -28,9 +28,6 @@ jobs:
         env:
           NEXT_PUBLIC_BASE_PATH: /Eidolon
 
-      - name: Export Static Files
-        run: npm run export
-
       - name: Add .nojekyll File
         run: touch ./out/.nojekyll
 
