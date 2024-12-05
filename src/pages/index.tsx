@@ -8,8 +8,8 @@ import { WeaponType } from '../types/weapons';
 import { trunkColors, leafColors } from '@/utils/colors';
 import { generateMountains, generateTrees, generateMushrooms } from '@/utils/terrainGenerators';
 import { Vector3 } from 'three';
-import OrbitControls from 'three/examples/jsm/controls/OrbitControls';
 import { SceneProps } from '@/types/SceneProps';
+import type { OrbitControls as DreiOrbitControlsImpl } from '@react-three/drei';
 
 interface AbilityButton {
   key: string;
@@ -45,7 +45,7 @@ const NUM_SKELETONS = 5;  // Changed from 30 to 5
 // Home Component
 export default function HomePage() {
   const [currentWeapon, setCurrentWeapon] = useState<WeaponType>(WeaponType.SCYTHE);
-  const controlsRef = useRef<OrbitControls>(null);
+  const controlsRef = useRef<DreiOrbitControlsImpl>(null);
   const [playerHealth, setPlayerHealth] = useState(200);
   const [dummyHealth, setDummyHealth] = useState(300);
   const [lastHitTime, setLastHitTime] = useState(0);
