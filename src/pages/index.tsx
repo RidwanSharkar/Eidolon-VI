@@ -1,35 +1,20 @@
-import { Canvas } from '@react-three/fiber';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { OrbitControls } from '@react-three/drei';
-import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
-import * as THREE from 'three';
-import Scene from '../components/Scene/Scene';
-import Panel from '../components/UI/Panel';
-import { WeaponType } from '../types/weapons';
-import { trunkColors, leafColors } from '@/utils/colors';
-import { generateMountains, generateTrees, generateMushrooms } from '@/utils/terrainGenerators';
 import { Vector3 } from 'three';
-import { SceneProps } from '@/types/SceneProps';
+import Scene from '../Scene/Scene';
+import Scene2 from '../Scene/Scene2';
+import Panel from '../Interface/Panel';
+import { WeaponType } from '../Weapons/weapons';
+import { trunkColors, leafColors } from '../Environment/treeColors';  
+import { generateMountains, generateTrees, generateMushrooms } from '../Environment/terrainGenerators';
+import { SceneProps, SkeletonProps } from '../Scene/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
+import { DEFAULT_WEAPON_ABILITIES } from '../Weapons/weapons';
+import * as THREE from 'three';
+import { Canvas } from '@react-three/fiber';
+import { WeaponInfo } from '../Unit/UnitProps';
 
-// SLOPPY CLEAN
-// SHOULD BE  app/page.tsx for Next??!** water WE Doin
-interface AbilityButton {
-  key: string;
-  cooldown: number;
-  currentCooldown: number;
-  icon: string;
-  maxCooldown: number;
-  name: string;
-}
-
-interface WeaponInfo {
-  [key: string]: {
-    q: AbilityButton;
-    e: AbilityButton;
-  };
-}
-
-// SKELE SPAWN POINTS
+// SKELETON SPAWN POINTS
 const generateRandomPosition = () => {
   const radius = 50; // Increased radius for more spread
   const angle = Math.random() * Math.PI * 2;
@@ -41,35 +26,18 @@ const generateRandomPosition = () => {
   );
 };
 
-
 const NUM_SKELETONS = 5;  // start with 5 skeletons
 
 // Home Component
 export default function HomePage() {
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [, setShowLevelUp] = useState(false);
+
   const [currentWeapon, setCurrentWeapon] = useState<WeaponType>(WeaponType.SCYTHE);
   const controlsRef = useRef<OrbitControlsType>(null);
   const [playerHealth, setPlayerHealth] = useState(200);
-  const [dummyHealth, setDummyHealth] = useState(300);
   const [lastHitTime, setLastHitTime] = useState(0);
-  const [dummy2Health, setDummy2Health] = useState(300);
-  const [abilities, setAbilities] = useState<WeaponInfo>({
-    [WeaponType.SWORD]: {
-      q: { key: 'q', cooldown: 1.08, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q' },
-      e: { key: 'e', cooldown: 3.86, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E' }
-    },
-    [WeaponType.SCYTHE]: {
-      q: { key: 'q', cooldown: 1, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q' },
-      e: { key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.75, name: 'Scythe E' }
-    },
-    [WeaponType.SABRES]: {
-      q: { key: 'q', cooldown: 0.9, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q' },
-      e: { key: 'e', cooldown: 1, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E' }
-    },
-    [WeaponType.SABRES2]: {
-      q: { key: 'q', cooldown: 1.5, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 1.5, name: 'Sabres2 Q' },
-      e: { key: 'e', cooldown: 6, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 6, name: 'Sword E' }
-    }
-  });
+  const [abilities, setAbilities] = useState<WeaponInfo>(() => DEFAULT_WEAPON_ABILITIES as WeaponInfo);
 
   // Define the main tree position
   const treePositions = useMemo(() => ({
@@ -86,52 +54,37 @@ export default function HomePage() {
   const mushroomData = useMemo(() => generateMushrooms(), []);
 
   // Assign consistent colors to the interactive tree using useMemo
-  const interactiveTrunkColor = useMemo(() => 
-    new THREE.Color(trunkColors[Math.floor(Math.random() * trunkColors.length)]),
-    []
-  );
-  const interactiveLeafColor = useMemo(() => 
-    new THREE.Color(leafColors[Math.floor(Math.random() * leafColors.length)]),
-    []
-  );
+  const [interactiveTrunkColor, setInteractiveTrunkColor] = useState<THREE.Color>();
+  const [interactiveLeafColor, setInteractiveLeafColor] = useState<THREE.Color>();
+
+  useEffect(() => {
+    setInteractiveTrunkColor(new THREE.Color(trunkColors[Math.floor(Math.random() * trunkColors.length)]));
+    setInteractiveLeafColor(new THREE.Color(leafColors[Math.floor(Math.random() * leafColors.length)]));
+  }, []);
 
   const handleWeaponSelect = (weapon: WeaponType) => {
     setCurrentWeapon(weapon);
   };
 
-  const handleHit = (targetId: string, damage: number) => {
+  const handleHit = useCallback((targetId: string, damage: number) =>{
     const currentTime = Date.now();
-    if (currentTime - lastHitTime > 100) { // 100ms cooldown
-      if (targetId === 'dummy1') {
-        if (dummyHealth > 0) {
-          const newHealth = Math.max(0, dummyHealth - damage);
-          setDummyHealth(newHealth);
-        }
-      } else if (targetId === 'dummy2') {
-        if (dummy2Health > 0) {
-          const newHealth = Math.max(0, dummy2Health - damage);
-          setDummy2Health(newHealth);
-        }
-      } else if (targetId.startsWith('skeleton-')) {
+    if (currentTime - lastHitTime > 100) {
+      if (targetId.startsWith('skeleton-')) {
         const skeletonIndex = parseInt(targetId.split('-')[1]);
-        if (skeletonHealths[skeletonIndex] > 0) {
-          const newHealth = Math.max(0, skeletonHealths[skeletonIndex] - damage);
-          setSkeletonHealths(prev => {
-            const newHealths = [...prev];
-            newHealths[skeletonIndex] = newHealth;
-            return newHealths;
-          });
-        }
+        setSkeletonHealths(prev => {
+          const newHealths = [...prev];
+          newHealths[skeletonIndex] = Math.max(0, prev[skeletonIndex] - damage);
+          return newHealths;
+        });
       }
-
       setLastHitTime(currentTime);
     }
-  };
+  }, [lastHitTime]);
 
-  const handleAbilityUse = (weapon: WeaponType, ability: 'q' | 'e') => {
+  const handleAbilityUse = (weapon: WeaponType, abilityKey: 'q' | 'e') => {
     setAbilities(prev => {
       const newAbilities = { ...prev };
-      newAbilities[weapon][ability].currentCooldown = newAbilities[weapon][ability].cooldown;
+      newAbilities[weapon][abilityKey].currentCooldown = newAbilities[weapon][abilityKey].cooldown;
       return newAbilities;
     });
   };
@@ -140,10 +93,11 @@ export default function HomePage() {
     const interval = setInterval(() => {
       setAbilities((prev: WeaponInfo) => {
         const newAbilities = { ...prev };
-        Object.keys(newAbilities).forEach(weapon => {
+        (Object.keys(newAbilities) as WeaponType[]).forEach(weapon => {
           ['q', 'e'].forEach(ability => {
-            if (newAbilities[weapon as WeaponType][ability as 'q' | 'e'].currentCooldown > 0) {
-              newAbilities[weapon as WeaponType][ability as 'q' | 'e'].currentCooldown -= 0.15; //global cd?
+            const key = ability as 'q' | 'e';
+            if (newAbilities[weapon][key].currentCooldown > 0) {
+              newAbilities[weapon][key].currentCooldown -= 0.15;
             }
           });
         });
@@ -157,28 +111,30 @@ export default function HomePage() {
   // Add unit position state
   const [unitPosition] = useState(new THREE.Vector3(0, 0, 0));
 
-  useEffect(() => {
-    console.log(`Dummy 1 Health: ${dummyHealth}`);
-  }, [dummyHealth]);
-
-  // dis sposed to be here?
-  const [skeletonHealths, setSkeletonHealths] = useState(() => 
+  // Disposed to be here?
+  const [, setSkeletonHealths] = useState(() => 
     Array(NUM_SKELETONS).fill(200) // Create an array of skeletons with 200 health each
   );
 
   // Initialize skeletonProps once
-  const [skeletonProps] = useState(() => 
-    Array(NUM_SKELETONS).fill(null).map((_, index) => ({
-      id: `skeleton-${index}`,
-      initialPosition: generateRandomPosition(),
-      health: 200,
-      maxHealth: 200,
-      onTakeDamage: (id: string, damage: number) => {
-        setSkeletonHealths(prev => prev.map((health, i) => 
-          i === index ? Math.max(0, health - damage) : health
-        ));
-      }
-    }))
+  const [skeletonProps, setSkeletonProps] = useState<SkeletonProps[]>(() => 
+    Array.from({ length: NUM_SKELETONS }, (_, index) => {
+      const initialPosition = generateRandomPosition();
+      return {
+        id: `skeleton-${index}`,
+        initialPosition,
+        position: initialPosition.clone(),
+        health: 200,
+        maxHealth: 200,
+        onTakeDamage: (id: string, damage: number) => {
+          setSkeletonProps(prev => prev.map(skeleton => 
+            skeleton.id === id 
+              ? { ...skeleton, health: Math.max(0, skeleton.health - damage) } 
+              : skeleton
+          ));
+        }
+      };
+    })
   );
 
   const handlePlayerDamage = (damage: number) => {
@@ -187,7 +143,7 @@ export default function HomePage() {
 
   const [killCount, setKillCount] = useState(0);
 
-  // Add this handler function
+  // KILL COUNTER
   const handleEnemyDeath = useCallback(() => {
     console.log("Enemy death registered in HomePage");
     setKillCount(prev => {
@@ -197,15 +153,44 @@ export default function HomePage() {
     });
   }, []);
 
+  const handleFireballDamage = useCallback((targetId: string, damage: number, isCritical: boolean) => {
+    // Update skeleton health
+    setSkeletonProps(prev => prev.map(skeleton => 
+      skeleton.id === targetId 
+        ? { ...skeleton, health: Math.max(0, skeleton.health - damage) } 
+        : skeleton
+    ));
+    
+    // Handle critical hit effects
+    if (isCritical) {
+      // Add visual or sound effects for critical hits
+      console.log(`Critical hit on ${targetId} for ${damage} damage!`);
+    }
+  }, []);
+
+  // Define handleSmiteDamage in HomePage
+  const handleSmiteDamage = useCallback(
+    (targetId: string, damage: number, isCritical: boolean, position: Vector3) => {
+      console.log(`Smite hit ${targetId} for ${damage} damage (Critical: ${isCritical}) at position:`, position);
+      handleHit(targetId, damage);
+    },
+    [handleHit]
+  );
+
+  // Add this near the top of the component with other refs
+  const fireballManagerRef = useRef<{ shootFireball: () => void }>(null);
+
   // Prepare props for Scene component
   const sceneProps: SceneProps = {
     mountainData,
     treeData,
     mushroomData,
     treePositions,
-    interactiveTrunkColor,
-    interactiveLeafColor,
+    interactiveTrunkColor: interactiveTrunkColor as THREE.Color,
+    interactiveLeafColor: interactiveLeafColor as THREE.Color,
     unitProps: {
+      onFireballDamage: handleFireballDamage,
+      onSmiteDamage: handleSmiteDamage,
       onHit: handleHit,
       controlsRef,
       currentWeapon,
@@ -214,47 +199,33 @@ export default function HomePage() {
       maxHealth: 200,
       isPlayer: true,
       abilities,
-      onAbilityUse: handleAbilityUse,
+      onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r') => {
+        handleAbilityUse(weapon, abilityKey as 'q' | 'e');
+      },
       onPositionUpdate: (newPosition: THREE.Vector3) => {
         unitPosition.copy(newPosition);
-      }, //DORMANT
-      enemyData: [
-        {
-          id: 'dummy1',
-          position: new Vector3(5, 0, 5),
-          health: dummyHealth,
-          maxHealth: 300,
-        },
-        {
-          id: 'dummy2',
-          position: new Vector3(-5, 0, 5),
-          health: dummy2Health,
-          maxHealth: 300,
-        },
-        // Generate skeletons with random positions
-        ...Array(NUM_SKELETONS).fill(null).map((_, index) => ({
-          id: `skeleton-${index}`,
-          position: generateRandomPosition(),
-          health: skeletonHealths[index],
-          maxHealth: 200,
-        })),
-      ],
+      },
+      enemyData: skeletonProps.map(skeleton => ({
+        id: skeleton.id,
+        position: skeleton.position,
+        initialPosition: skeleton.initialPosition,
+        currentPosition: skeleton.position.clone(),
+        health: skeleton.health,
+        maxHealth: skeleton.maxHealth
+      })),
       onDamage: handlePlayerDamage,
       onEnemyDeath: handleEnemyDeath,
+      fireballManagerRef: fireballManagerRef,
     },
-
-    skeletonProps, // Use the memoized skeletonProps
-    killCount: killCount, // Pass killCount to Scene
+    skeletonProps,
+    killCount,
+    onFireballDamage: handleFireballDamage,
   };
 
   // Add handleReset function
   const handleReset = () => {
     // Reset player health
     setPlayerHealth(200);
-
-    // Reset dummy health
-    setDummyHealth(300);
-    setDummy2Health(300);
 
     // Reset skeleton health
     setSkeletonHealths(Array(NUM_SKELETONS).fill(200));
@@ -291,27 +262,44 @@ export default function HomePage() {
     };
   }, []);
 
+    // GAME STATE HANDLER
+  const handleLevelComplete = () => {
+    if (currentLevel === 1) {
+      setShowLevelUp(true);
+      setTimeout(() => {
+        setCurrentLevel(2);
+        setShowLevelUp(false);
+        handleReset(); // Reset game state for level 2
+      }, 15000); // 15 second intermission
+    }
+  };
+
+  // Use CurrentSceneComponent based on level
+  const CurrentSceneComponent = useMemo(() => {
+    return currentLevel === 1 ? Scene : Scene2;
+  }, [currentLevel]);
+
   return (
-    <div style={{ 
-      width: '100vw', 
-      height: '100vh', 
-      overflow: 'hidden',
-      position: 'fixed',
-      top: 0,
-      left: 0
-    }}>
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'fixed', top: 0, left: 0 }}>
       <Canvas shadows camera={{ position: [0, 10, 20], fov: 60 }}>
         <ambientLight intensity={0.2} />
-        <Scene {...sceneProps} />
+        {interactiveTrunkColor && interactiveLeafColor && (
+          <CurrentSceneComponent 
+            {...sceneProps} 
+            onLevelComplete={handleLevelComplete}
+            spawnInterval={currentLevel === 2 ? 10000 : undefined}
+            maxSkeletons={currentLevel === 2 ? 20 : undefined}
+          />
+        )}
         <OrbitControls
           ref={controlsRef}
           enablePan={false}
           maxPolarAngle={Math.PI / 2.2}
           maxDistance={75}
           mouseButtons={{
-            LEFT: undefined,
-            MIDDLE: undefined,
-            RIGHT: THREE.MOUSE.ROTATE,
+            LEFT: THREE.MOUSE.ROTATE,   // Enabled left-click for rotation
+            MIDDLE: undefined,          // Disabled middle-click actions
+            RIGHT: THREE.MOUSE.ROTATE,  // Enabled right-click for rotation
           }}
         />
       </Canvas>

@@ -1,0 +1,11 @@
+export interface DamageResult {
+  damage: number;
+  isCritical: boolean;
+}
+
+export function calculateDamage(baseAmount: number): DamageResult {
+  const isCritical = Math.random() < 0.20;
+  const damage = isCritical ? baseAmount * 2 : baseAmount;
+  return { damage, isCritical };
+}
+  

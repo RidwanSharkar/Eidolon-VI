@@ -1,0 +1,51 @@
+.gameOverContainer {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+  z-index: 1000;
+  color: #fff;
+  border: 2px solid #67f2b9;
+  box-shadow: 0 0 20px #67f2b9;
+}
+
+.gameOverTitle {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #67f2b9;
+  text-shadow: 0 0 10px #67f2b9;
+}
+
+.gameOverSubtitle {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: #fff;
+  white-space: pre-line;
+}
+
+.retryButton {
+  background-color: #67f2b9;
+  color: black;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+}
+
+.retryButton:hover {
+  background-color: #39ff14;
+  transform: scale(1.05);
+}
+
+.killCounter {
+  font-size: 1.2rem;
+  color: #67f2b9;
+  margin-top: 1rem;
+} 
