@@ -10,7 +10,7 @@ interface RapidfireProps {
 export default function Rapidfire({ parentRef, isActive }: RapidfireProps) {
   const effectRef = useRef<Group>(null);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (!effectRef.current || !parentRef.current) return;
     
     // Update position to follow parent

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Scene from '../Scene/Scene';
 import Scene2 from '../Scene/Scene2';
 import LevelUpNotification from './LevelUpNotification';
-import { SceneProps } from '@/consistent/SceneProps';
+import { SceneProps } from '../Scene/SceneProps';
 
 interface LevelManagerProps {
   sceneProps: SceneProps;

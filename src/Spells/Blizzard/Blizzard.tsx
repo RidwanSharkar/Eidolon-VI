@@ -8,7 +8,7 @@ interface BlizzardProps {
   onHit?: (targetId: string) => void;
 }
 
-export default function Blizzard({ position, onComplete, onHit }: BlizzardProps) {
+export default function Blizzard({ position, onComplete }: Omit<BlizzardProps, 'onHit'>) {
   const stormRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const duration = 3.0;

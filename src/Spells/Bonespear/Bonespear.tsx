@@ -6,10 +6,9 @@ interface BonespearProps {
   position: Vector3;
   direction: Vector3;
   onComplete: () => void;
-  onHit?: (targetId: string) => void;
 }
 
-export default function Bonespear({ position, direction, onComplete, onHit }: BonespearProps) {
+export default function Bonespear({ position, direction, onComplete }: Omit<BonespearProps, 'onHit'>) {
   const spearRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const speed = 0.8;

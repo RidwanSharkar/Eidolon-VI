@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { WeaponType } from '@/Weapons/weapons';
 
 interface AbilityButton {
-  key: string;
+  key: 'q' | 'e' | 'r' | 'passive';
   cooldown: number;
   currentCooldown: number;
   icon: string;
@@ -16,11 +16,19 @@ interface AbilityButton {
   name: string;
 }
 
+interface WeaponAbilities {
+  q: AbilityButton;
+  e: AbilityButton;
+  r: AbilityButton;
+  passive: AbilityButton;
+}
+
 interface WeaponInfo {
-  [key: string]: {
-    q: AbilityButton;
-    e: AbilityButton;
-  };
+  scythe: WeaponAbilities;
+  sword: WeaponAbilities;
+  sabres: WeaponAbilities;
+  sabres2: WeaponAbilities;
+  etherealBow: WeaponAbilities;
 }
 
 interface GameWrapperProps {

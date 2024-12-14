@@ -8,7 +8,7 @@ interface RetributeProps {
   onHit?: (targetId: string) => void;
 }
 
-export default function Retribute({ position, onComplete, onHit }: RetributeProps) {
+export default function Retribute({ position, onComplete }: Omit<RetributeProps, 'onHit'>) {
   const effectRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const duration = 1.5;

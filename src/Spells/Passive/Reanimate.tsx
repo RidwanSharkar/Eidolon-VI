@@ -9,7 +9,7 @@ interface ReanimateProps {
 export default function Reanimate({ parentRef }: ReanimateProps) {
   const effectRef = useRef<Group>(null);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (!effectRef.current || !parentRef.current) return;
     
     // Update position to follow parent

@@ -10,11 +10,13 @@ interface TerrainProps {
 }
 
 export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness = 0.1 }: TerrainProps) {
+  // All hooks must be at the top level
   const terrainRef = useRef<Mesh>(null);
   const bonesRef = useRef<InstancedMesh>(null);
+  const octagonRef = useRef<Shape | null>(null);
   
-  // Create custom snow shader material
-  const snowMaterial = new THREE.ShaderMaterial({
+  // Create the shader material
+  const snowMaterial = useRef(new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
       scale: { value: 20.0 },
@@ -96,8 +98,8 @@ export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness 
         
         // Colors
         vec3 snowColor = vec3(0.92, 0.93, 0.95);
-        vec3 blightColor = vec3(0.25, 0.22, 0.20); // Slightly browner tone, was (0.15, 0.13, 0.12)
-        vec3 glowColor = vec3(0.3, 0.8, 0.2); // Keeping the same sickly green glow
+        vec3 blightColor = vec3(0.25, 0.22, 0.20);
+        vec3 glowColor = vec3(0.3, 0.8, 0.2);
         
         // Create sharp transitions between snow and ground
         float blend = smoothstep(0.0, 0.1, groundPattern);
@@ -117,41 +119,57 @@ export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness 
       }
     `,
     side: DoubleSide,
-  });
+  })).current;
+
+  // Initialize octagon shape
+  useEffect(() => {
+    if (!octagonRef.current) {
+      const shape = new Shape();
+      const radius = 50;
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+        if (i === 0) shape.moveTo(x, z);
+        else shape.lineTo(x, z);
+      }
+      shape.closePath();
+      octagonRef.current = shape;
+    }
+  }, []);
 
   // Animate snow sparkle
   useFrame(({ clock }) => {
-    snowMaterial.uniforms.time.value = clock.getElapsedTime();
+    if (snowMaterial.uniforms) {
+      snowMaterial.uniforms.time.value = clock.getElapsedTime();
+    }
   });
 
-  // Create octagon shape for the ground
-  const octagon = new Shape();
-  const radius = 50;
-  for (let i = 0; i < 8; i++) {
-    const angle = (i / 8) * Math.PI * 2;
-    const x = radius * Math.cos(angle);
-    const z = radius * Math.sin(angle);
-    if (i === 0) octagon.moveTo(x, z);
-    else octagon.lineTo(x, z);
-  }
-  octagon.closePath();
-
-  // Scatter bones across the terrain
+  // Scatter bones
   useEffect(() => {
     if (bonesRef.current) {
       const matrix = new Matrix4();
       const numBones = 200;
+      const positions: Array<[number, number, number]> = [];
 
+      // Pre-calculate all positions
       for (let i = 0; i < numBones; i++) {
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.random() * 45;
-        const x = distance * Math.cos(angle);
-        const z = distance * Math.sin(angle);
+        positions.push([
+          distance * Math.cos(angle),
+          0.01,
+          distance * Math.sin(angle)
+        ]);
+      }
+
+      // Set matrices for all bones
+      positions.forEach((pos, i) => {
         const scale = 0.1 + Math.random() * 0.15;
         const rotation = Math.random() * Math.PI * 2;
 
         matrix.compose(
-          new THREE.Vector3(x, 0.01, z),
+          new THREE.Vector3(pos[0], pos[1], pos[2]),
           new THREE.Quaternion().setFromEuler(new THREE.Euler(
             Math.random() * 0.3,
             rotation,
@@ -159,9 +177,12 @@ export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness 
           )),
           new THREE.Vector3(scale, scale, scale)
         );
-        bonesRef.current.setMatrixAt(i, matrix);
+        bonesRef.current?.setMatrixAt(i, matrix);
+      });
+
+      if (bonesRef.current) {
+        bonesRef.current.instanceMatrix.needsUpdate = true;
       }
-      bonesRef.current.instanceMatrix.needsUpdate = true;
     }
   }, []);
 
@@ -169,7 +190,7 @@ export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness 
     <group>
       {/* Main terrain */}
       <mesh ref={terrainRef} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <shapeGeometry args={[octagon]} />
+        {octagonRef.current && <shapeGeometry args={[octagonRef.current]} />}
         <primitive object={snowMaterial} attach="material" />
       </mesh>
 
@@ -203,7 +224,7 @@ export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness 
         />
       </mesh>
 
-      {/* Subtle ground glow for undead atmosphere */}
+      {/* Subtle ground glow */}
       <pointLight
         position={[0, 0.1, 0]}
         color="#304050"
