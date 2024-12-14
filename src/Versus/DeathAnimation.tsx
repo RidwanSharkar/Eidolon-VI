@@ -6,6 +6,7 @@ import * as THREE from 'three';
 interface BoneVortexProps {
   position: Vector3;
   onComplete?: () => void;
+  isSpawning?: boolean;
 }
 
 const createVortexSegment = () => (
@@ -23,7 +24,7 @@ const createVortexSegment = () => (
   </group>
 );
 
-export default function BoneVortex({ position, onComplete }: BoneVortexProps) {
+export default function BoneVortex({ position, onComplete, isSpawning = false }: BoneVortexProps) {
   const segmentsRef = useRef<Mesh[]>([]);
   const layerCount = 12;
   const segmentsPerLayer = 8;
@@ -39,15 +40,17 @@ export default function BoneVortex({ position, onComplete }: BoneVortexProps) {
     const elapsed = Date.now() - startTime.current;
     const progress = Math.min(elapsed / animationDuration, 1);
     
+    const effectiveProgress = isSpawning ? 1 - progress : progress;
+    
     groupRef.current.position.copy(position);
     
     segmentsRef.current.forEach((segment, i) => {
       const layer = Math.floor(i / segmentsPerLayer);
       const layerProgress = layer / (layerCount - 1);
       
-      const radiusMultiplier = progress < 0.5 
-        ? progress * 2 
-        : 2 - (progress * 2);
+      const radiusMultiplier = effectiveProgress < 0.5 
+        ? effectiveProgress * 2 
+        : 2 - (effectiveProgress * 2);
       const radius = maxRadius * layerProgress * radiusMultiplier;
       
       const rotationSpeed = 0.006 * (1 + layerProgress * 3);
@@ -66,7 +69,7 @@ export default function BoneVortex({ position, onComplete }: BoneVortexProps) {
       segment.rotation.x = Math.sin(elapsed * 0.004 + i) * 0.2;
       
       const material = segment.material as THREE.MeshStandardMaterial;
-      material.opacity = Math.max(0, 0.7 - layerProgress * 0.4 - (progress > 0.7 ? (progress - 0.7) * 3 : 0));
+      material.opacity = Math.max(0, 0.7 - layerProgress * 0.4 - (effectiveProgress > 0.7 ? (effectiveProgress - 0.7) * 3 : 0));
       material.emissiveIntensity = 0.5 + Math.sin(elapsed * 0.004 + i) * 0.3;
       
       const scale = 1 + Math.sin(elapsed * 0.003 + i * 0.5) * 0.2;

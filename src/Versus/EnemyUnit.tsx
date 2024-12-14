@@ -34,14 +34,15 @@ export default function EnemyUnit({
   const [isAttacking, setIsAttacking] = useState(false);
   const [showDeathEffect, setShowDeathEffect] = useState(false);
   const [isDead, setIsDead] = useState(false);
+  const [isSpawning, setIsSpawning] = useState(true);
 
   // Initialize with initialPosition if position is undefined
   const currentPosition = useRef(initialPosition.clone());
   const targetPosition = useRef(initialPosition.clone());
 
-  const ATTACK_RANGE = 2.23;
+  const ATTACK_RANGE = 2.25;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.8;
+  const MOVEMENT_SPEED = 0.95;
   const SMOOTHING_FACTOR = 0.005; // Add smoothing for movement
   const ATTACK_DAMAGE = 5;
 
@@ -119,7 +120,7 @@ export default function EnemyUnit({
     <>
       <group 
         ref={enemyRef} 
-        visible={health > 0}
+        visible={!isSpawning && health > 0}
         position={currentPosition.current}
         onClick={(e) => {
           e.stopPropagation();
@@ -172,12 +173,23 @@ export default function EnemyUnit({
         </Billboard>
       </group>
 
+      {isSpawning && (
+        <BoneVortex 
+          position={currentPosition.current}
+          onComplete={() => {
+            setIsSpawning(false);
+          }}
+          isSpawning={true}
+        />
+      )}
+
       {showDeathEffect && (
         <BoneVortex 
           position={currentPosition.current}
           onComplete={() => {
             setShowDeathEffect(false);
           }}
+          isSpawning={false}
         />
       )}
     </>

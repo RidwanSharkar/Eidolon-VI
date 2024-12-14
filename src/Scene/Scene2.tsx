@@ -97,7 +97,7 @@ export default function Scene2({
     setEnemies(prevEnemies =>
       prevEnemies.map(enemy =>
         enemy.id === id.replace('enemy-', '')
-          ? { ...enemy, currentPosition: newPosition.clone() }
+          ? { ...enemy, position: newPosition.clone() }
           : enemy
       )
     );
