@@ -39,9 +39,9 @@ export default function EnemyUnit({
   const currentPosition = useRef(initialPosition.clone());
   const targetPosition = useRef(initialPosition.clone());
 
-  const ATTACK_RANGE = 2.4;
+  const ATTACK_RANGE = 2.23;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.9;
+  const MOVEMENT_SPEED = 0.8;
   const SMOOTHING_FACTOR = 0.005; // Add smoothing for movement
   const ATTACK_DAMAGE = 5;
 

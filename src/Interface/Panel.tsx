@@ -118,6 +118,16 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
     setDamageNotifications(prev => prev.filter(n => n.id !== id));
   };
 
+  const getLevel = (kills: number) => Math.floor(kills / 15) + 1;
+  const getRequiredKills = (level: number) => level === 1 ? 15 : 25;
+  const getExpProgress = (kills: number) => {
+    const level = getLevel(kills);
+    const requiredKills = getRequiredKills(level);
+    const baseKills = (level - 1) * 15; // Kills from previous levels
+    const currentLevelKills = kills - baseKills;
+    return (currentLevelKills / requiredKills) * 100;
+  };
+
   return (
     <>
       <div className={styles.bottomPanel}>
@@ -132,15 +142,9 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
               onComplete={() => handleNotificationComplete(notification.id)}
             />
           ))}
+          
+          {/* Health Bar */}
           <div className={styles.healthBarContainer}>
-            <div className={styles.healthBarDecoration}>
-              <div className={styles.healthBarOrnamentLeft} />
-              <div className={styles.healthBarOrnamentRight}>
-                <span className={styles.killCountText}>
-                  {killCount}
-                </span>
-              </div>
-            </div>
             <div className={styles.healthBar}>
               <div className={styles.healthBarBackground} />
               <div 
@@ -156,99 +160,116 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
               <span className={styles.healthMax}>{maxHealth}</span>
             </span>
           </div>
+
+          {/* Experience Bar */}
+          <div className={styles.experienceBarContainer}>
+            <div className={styles.experienceBarOrnamentLeft}>
+              <span className={styles.levelText}>{getLevel(killCount)}</span>
+            </div>
+            <div className={styles.experienceBar}>
+              <div 
+                className={styles.xpFill} 
+                style={{ width: `${getExpProgress(killCount)}%` }} 
+              />
+            </div>
+            <div className={styles.experienceBarOrnamentRight}>
+              <span className={styles.killCountText}>{killCount}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Abilities Section */}
-        <div className={styles.abilitiesSection}>
-          {abilities[currentWeapon] && (
-            <>
-              <div className={styles.ability}>
-                <div className={styles.keyBind}>Q</div>
-                <Image 
-                  src={abilities[currentWeapon].q.icon} 
-                  alt="Q ability" 
-                  width={50}
-                  height={50}
-                  className={styles.abilityIcon}
-                />
-                {abilities[currentWeapon].q.currentCooldown > 0 && (
-                  <div className={styles.cooldownOverlay}>
-                    <RoundedSquareProgress
-                      size={50}
-                      strokeWidth={4}
-                      percentage={(abilities[currentWeapon].q.currentCooldown / abilities[currentWeapon].q.cooldown) * 100}
-                      borderRadius={8}
-                    />
-                    <span className={styles.cooldownText}>
-                      {Math.ceil(abilities[currentWeapon].q.currentCooldown)}
-                    </span>
-                  </div>
-                )}
-              </div>
+        {/* Abilities Section - Now first inside bottomPanel */}
+        {abilities[currentWeapon] && (
+          <div className={styles.abilitiesSection}>
 
-              <div className={styles.ability}>
-                <div className={styles.keyBind}>E</div>
-                <Image 
-                  src={abilities[currentWeapon].e.icon} 
-                  alt="E ability" 
-                  width={50}
-                  height={50}
-                  className={styles.abilityIcon}
-                />
-                {abilities[currentWeapon].e.currentCooldown > 0 && (
-                  <div className={styles.cooldownOverlay}>
-                    <RoundedSquareProgress
-                      size={50}
-                      strokeWidth={4}
-                      percentage={(abilities[currentWeapon].e.currentCooldown / abilities[currentWeapon].e.cooldown) * 100}
-                      borderRadius={8}
-                    />
-                    <span className={styles.cooldownText}>
-                      {Math.ceil(abilities[currentWeapon].e.currentCooldown)}
-                    </span>
-                  </div>
-                )}
-              </div>
+            <div className={styles.ability}>
+              <div className={styles.keyBind}>P</div>
+              <Image 
+                src={abilities[currentWeapon].passive.icon} 
+                alt="Passive ability" 
+                width={40}
+                height={40}
+                className={styles.abilityIcon}
+              />
+            </div>
 
-              <div className={styles.ability}>
-                <div className={styles.keyBind}>R</div>
-                <Image 
-                  src={abilities[currentWeapon].r.icon} 
-                  alt="R ability" 
-                  width={50}
-                  height={50}
-                  className={styles.abilityIcon}
-                />
-                {abilities[currentWeapon].r.currentCooldown > 0 && (
-                  <div className={styles.cooldownOverlay}>
-                    <RoundedSquareProgress
-                      size={50}
-                      strokeWidth={4}
-                      percentage={(abilities[currentWeapon].r.currentCooldown / abilities[currentWeapon].r.cooldown) * 100}
-                      borderRadius={8}
-                    />
-                    <span className={styles.cooldownText}>
-                      {Math.ceil(abilities[currentWeapon].r.currentCooldown)}
-                    </span>
-                  </div>
-                )}
-              </div>
+            <div className={styles.ability}>
+              <div className={styles.keyBind}>Q</div>
+              <Image 
+                src={abilities[currentWeapon].q.icon} 
+                alt="Q ability" 
+                width={40}
+                height={40}
+                className={styles.abilityIcon}
+              />
+              {abilities[currentWeapon].q.currentCooldown > 0 && (
+                <div className={styles.cooldownOverlay}>
+                  <RoundedSquareProgress
+                    size={50}
+                    strokeWidth={4}
+                    percentage={(abilities[currentWeapon].q.currentCooldown / abilities[currentWeapon].q.cooldown) * 100}
+                    borderRadius={8}
+                  />
+                  <span className={styles.cooldownText}>
+                    {Math.ceil(abilities[currentWeapon].q.currentCooldown)}
+                  </span>
+                </div>
+              )}
+            </div>
 
-              <div className={styles.ability}>
-                <div className={styles.keyBind}>P</div>
-                <Image 
-                  src={abilities[currentWeapon].passive.icon} 
-                  alt="Passive ability" 
-                  width={50}
-                  height={50}
-                  className={styles.abilityIcon}
-                />
-              </div>
-            </>
-          )}
-        </div>
+            <div className={styles.ability}>
+              <div className={styles.keyBind}>E</div>
+              <Image 
+                src={abilities[currentWeapon].e.icon} 
+                alt="E ability" 
+                width={40}
+                height={40}
+                className={styles.abilityIcon}
+              />
+              {abilities[currentWeapon].e.currentCooldown > 0 && (
+                <div className={styles.cooldownOverlay}>
+                  <RoundedSquareProgress
+                    size={50}
+                    strokeWidth={4}
+                    percentage={(abilities[currentWeapon].e.currentCooldown / abilities[currentWeapon].e.cooldown) * 100}
+                    borderRadius={8}
+                  />
+                  <span className={styles.cooldownText}>
+                    {Math.ceil(abilities[currentWeapon].e.currentCooldown)}
+                  </span>
+                </div>
+              )}
+            </div>
 
-        {/* Weapons Section */}
+            <div className={styles.ability}>
+              <div className={styles.keyBind}>R</div>
+              <Image 
+                src={abilities[currentWeapon].r.icon} 
+                alt="R ability" 
+                width={40}
+                height={40}
+                className={styles.abilityIcon}
+              />
+              {abilities[currentWeapon].r.currentCooldown > 0 && (
+                <div className={styles.cooldownOverlay}>
+                  <RoundedSquareProgress
+                    size={50}
+                    strokeWidth={4}
+                    percentage={(abilities[currentWeapon].r.currentCooldown / abilities[currentWeapon].r.cooldown) * 100}
+                    borderRadius={8}
+                  />
+                  <span className={styles.cooldownText}>
+                    {Math.ceil(abilities[currentWeapon].r.currentCooldown)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+
+          </div>
+        )}
+
+        {/* Weapons Section - inside bottomPanel */}
         <div className={styles.weaponIcons}>
           {Object.values(WeaponType)
             .filter((_, index) => index < 3)
@@ -262,8 +283,8 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
                 <Image 
                   src={`/Eidolon/icons/${index + 1}.svg`} 
                   alt={weapon} 
-                  width={50} 
-                  height={50} 
+                  width={70} 
+                  height={70} 
                   className={styles.weaponIcon}
                 />
               </div>

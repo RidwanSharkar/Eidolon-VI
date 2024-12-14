@@ -395,8 +395,10 @@ export default function Unit({
             .multiplyScalar(speed)
         );
     
-        // Check enemy collisions
+        // Check enemy collisions - only with living enemies
         for (const enemy of enemyData) {
+          if (enemy.health <= 0) continue; // Skip dead enemies
+          
           const enemyPos = enemy.position.clone();
           enemyPos.y = 1.5;
           if (fireball.position.distanceTo(enemyPos) < 1.5) {

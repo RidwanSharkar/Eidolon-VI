@@ -31,7 +31,7 @@ export default function Scene({
   unitProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 8000,
+  spawnInterval = 10000,
   maxSkeletons = 15,
   initialSkeletons = 5,
 }: ScenePropsWithCallback) {
