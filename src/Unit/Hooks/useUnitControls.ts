@@ -17,7 +17,7 @@ export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.065, // Matching the original speed constant
+  speed = 0.04, // Matching the original speed constant
   onPositionUpdate,
 }: UseUnitControlsProps) {
   const keys = useRef({
