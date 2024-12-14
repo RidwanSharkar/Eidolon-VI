@@ -99,7 +99,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
     depth: 0.02,
     bevelEnabled: true,
     bevelThickness: 0.01,
-    bevelSize: 0.01,
+    bevelSize: 0.02,
     bevelSegments: 3
   };
 

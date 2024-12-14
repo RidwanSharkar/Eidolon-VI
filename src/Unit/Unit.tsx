@@ -24,12 +24,7 @@ import { UnitProps } from './UnitProps';
 import { useUnitControls } from '@/Unit/Hooks/useUnitControls';
 import { calculateDamage } from '@/Weapons/damage';
 
-// DISGUSTING FILE
-
-
-
-
-
+// DISGUSTING FILE REFACCOTR AF
 
 const FIREBALL_COOLDOWN = 9000; // orb cooldown
 
@@ -250,35 +245,42 @@ export default function Unit({
 
           //SMITE DAMAGE
           const applyLightningDamage = () => {
-            const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(46);
-            
             // Get latest target health before applying lightning damage
             const currentTarget = enemyData.find(e => e.id === target.id);
-            if (!currentTarget || currentTarget.health <= 0) {
+            
+            // Additional validation
+            if (!currentTarget || 
+                currentTarget.health <= 0 || 
+                !pendingLightningTargets.current.has(target.id)) {
               pendingLightningTargets.current.delete(target.id);
               return;
             }
             
+            const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(46);
+            
+            // Apply lightning damage
             onHit(target.id, lightningDamage);
 
-            // Check target's health after lightning damage
-            const targetAfterLightning = currentTarget.health - lightningDamage;
-            if (targetAfterLightning > 0) {
+            // Recheck target's state after damage
+            const updatedTarget = enemyData.find(e => e.id === target.id);
+            if (updatedTarget && updatedTarget.health > 0) {
               setDamageNumbers(prev => [...prev, {
                 id: nextDamageNumberId.current++,
                 damage: lightningDamage,
-                position: currentTarget.position.clone(),
+                position: updatedTarget.position.clone(),
                 isCritical: lightningCrit,
                 isLightning: true
               }]);
             }
 
-            // Remove from pending targets after lightning hits
             pendingLightningTargets.current.delete(target.id);
           };
 
-          // Use setTimeout instead of requestAnimationFrame for more consistent timing
-          setTimeout(applyLightningDamage, 350);
+          // Use a more reliable timing mechanism
+          const lightningTimer = setTimeout(applyLightningDamage, 200);
+          
+          // Clean up timer if component unmounts
+          return () => clearTimeout(lightningTimer);
         }
 
         return;

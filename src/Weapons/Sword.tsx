@@ -214,9 +214,9 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
         <mesh>
           <sphereGeometry args={[0.09, 16, 16]} />
           <meshStandardMaterial
-            color="#ff9900"           // Much warmer yellow/orange
-            emissive="#ff8800"        // Even warmer emissive
-            emissiveIntensity={30}    // Dramatically increased intensity
+            color="#ff9900"           
+            emissive="#ff8800"        
+            emissiveIntensity={30}    
             transparent
             opacity={0.95}
           />

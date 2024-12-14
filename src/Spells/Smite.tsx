@@ -13,9 +13,9 @@ interface SmiteProps {
 export default function Smite({ position, onComplete }: SmiteProps) {
   const lightningRef = useRef<Group>(null);
   const progressRef = useRef(0);
-  const animationDuration = 1.0; // Fixed animation duration (in seconds)
+  const animationDuration = 0.75; // Fixed animation duration (in seconds)
   const delayTimer = useRef(0);
-  const startDelay = 0.15; // Same initial delay
+  const startDelay = 0.05; // Same initial delay
 
   useFrame((_, delta) => {
     if (!lightningRef.current) return;

@@ -32,7 +32,7 @@ export default function Sabre({ isSwinging, onSwingComplete, onLeftSwingStart, o
         if (leftSwingProgress.current === 0) {
           onLeftSwingStart();
         }
-        leftSwingProgress.current += delta * 7; // Slightly faster swing
+        leftSwingProgress.current += delta * 9; // Slightly faster swing
 
         const swingPhase = Math.min(leftSwingProgress.current / Math.PI, 1);
 
