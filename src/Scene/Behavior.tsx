@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Behavior.module.css';
 
-interface GameOverMessage {
+export interface GameOverMessage {
   title: string;
   subtitle: string;
 }
 
-interface GameOverContentProps {
-  onReset: () => void;
-  killCount: number;
-}
-
-const GAME_OVER_MESSAGES: GameOverMessage[] = [
+export const GAME_OVER_MESSAGES: GameOverMessage[] = [
   { title: "The Darkness Claims Another", subtitle: "Your soul joins the eternal dance..." },
   { title: "Fallen to Shadow", subtitle: "The necropolis grows stronger..." },
   { title: "Death's Embrace", subtitle: "The bones welcome their kin..." },
@@ -27,24 +22,6 @@ const GAME_OVER_MESSAGES: GameOverMessage[] = [
   { title: "Rejected by Fire", subtitle: "The dragon's flame finds you unworthy..." }
 ];
 
-function GameOverContent({ onReset, killCount }: GameOverContentProps) {
-  // Randomly select a message
-  const message = GAME_OVER_MESSAGES[Math.floor(Math.random() * GAME_OVER_MESSAGES.length)];
-
-  return (
-    <>
-      <h1 className={styles.gameOverTitle}>{message.title}</h1>
-      <p className={styles.gameOverSubtitle}>{message.subtitle}</p>
-      <button className={styles.retryButton} onClick={onReset}>
-        RETRY
-      </button>
-      <div className={styles.killCounter}>
-        Skeletons Defeated: {killCount}
-      </div>
-    </>
-  );
-}
-
 interface BehaviorProps {
   playerHealth: number;
   onReset: () => void;
@@ -57,31 +34,44 @@ export default function Behavior({
   playerHealth,
   onReset,
   killCount,
-  onEnemiesDefeated,
-  maxSkeletons = 15
 }: BehaviorProps) {
   const [isGameOver, setIsGameOver] = useState(false);
+  const [gameOverMessage, setGameOverMessage] = useState<GameOverMessage | null>(null);
 
-  // Handle player death
   useEffect(() => {
     if (playerHealth <= 0 && !isGameOver) {
+      const randomMessage = GAME_OVER_MESSAGES[Math.floor(Math.random() * GAME_OVER_MESSAGES.length)];
+      setGameOverMessage(randomMessage);
       setIsGameOver(true);
     }
   }, [playerHealth, isGameOver]);
 
-  // Notify when all skeletons are defeated
-  useEffect(() => {
-    if (!isGameOver && killCount >= maxSkeletons) {
-      console.log("Level complete! Kill count:", killCount, "MAX_SKELETONS:", maxSkeletons);
-      onEnemiesDefeated();
-    }
-  }, [isGameOver, killCount, maxSkeletons, onEnemiesDefeated]);
+  const handleReset = () => {
+    console.log("Behavior: Reset triggered");
+    setIsGameOver(false);
+    setGameOverMessage(null);
+    onReset();
+  };
 
   return (
     <>
-      {playerHealth <= 0 && (
-        <div className={styles.gameOverContainer}>
-          <GameOverContent onReset={onReset} killCount={killCount} />
+      {isGameOver && gameOverMessage && (
+        <div 
+          className={styles.gameOverContainer}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <h1 className={styles.gameOverTitle}>{gameOverMessage.title}</h1>
+          <p className={styles.gameOverSubtitle}>{gameOverMessage.subtitle}</p>
+          <button 
+            className={styles.retryButton}
+            onClick={handleReset}
+          >
+            RETRY
+          </button>
+          <div className={styles.killCounter}>
+            Skeletons Defeated: {killCount}
+          </div>
         </div>
       )}
     </>

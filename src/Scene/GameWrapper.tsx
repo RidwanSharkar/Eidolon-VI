@@ -9,6 +9,7 @@ import { WeaponType } from '@/Weapons/weapons';
 import { WeaponInfo } from '../Unit/UnitProps';
 import WeaponSelectionPanel from '../Interface/WeaponSelectionPanel';
 import LevelCompletionPanel from '../Interface/LevelCompletionPanel';
+import Behavior from './Behavior';
 
 interface GameWrapperProps {
   sceneProps: SceneProps;
@@ -64,7 +65,11 @@ export default function GameWrapper({
   }, [selectedIcon, onAbilityUnlock]);
 
   const handleReset = useCallback(() => {
+    console.log("GameWrapper: Reset triggered");
     setGameStarted(false);
+    setCurrentLevel(1);
+    setShowLevelPanel(false);
+    setSelectedIcon(null);
     onReset();
   }, [onReset]);
 
@@ -81,7 +86,6 @@ export default function GameWrapper({
 
   return (
     <>
-      {/* 3D Canvas */}
       <div style={{ 
         width: '100vw', 
         height: '100vh', 
@@ -91,10 +95,7 @@ export default function GameWrapper({
         left: 0,
         touchAction: 'none'
       }}>
-        <Canvas 
-          shadows 
-          camera={{ position: [0, 10, 20], fov: 60 }}
-        >
+        <Canvas>
           <ambientLight intensity={0.2} />
           {gameStarted && (
             <LevelManager 
@@ -125,7 +126,14 @@ export default function GameWrapper({
         </Canvas>
       </div>
 
-      {/* UI Overlays - Outside of Canvas */}
+      <Behavior
+        playerHealth={playerHealth}
+        onReset={handleReset}
+        killCount={killCount}
+        onEnemiesDefeated={() => {}}
+        maxSkeletons={15}
+      />
+
       <div style={{ 
         position: 'absolute', 
         top: 0, 
@@ -164,3 +172,4 @@ export default function GameWrapper({
     </>
   );
 } 
+

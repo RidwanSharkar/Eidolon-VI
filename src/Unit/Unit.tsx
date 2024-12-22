@@ -78,8 +78,9 @@ export default function Unit({
   const { keys: movementKeys } = useUnitControls({
     groupRef,
     controlsRef,
-    camera,
-    onPositionUpdate
+    camera: camera!,
+    onPositionUpdate,
+    health
   });
 
   // SMITE 

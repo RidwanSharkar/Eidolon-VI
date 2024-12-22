@@ -26,7 +26,7 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
       
       if (smitePhase < 0.5) {
         // Wind-up phase: pull back and up, with more movement towards center
-        const windupPhase = smitePhase * 1.75;
+        const windupPhase = smitePhase * 1.25;
         rotationX = -Math.PI/3 - (windupPhase * Math.PI/3);
         rotationY = windupPhase * Math.PI/4;
         

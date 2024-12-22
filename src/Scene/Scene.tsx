@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Vector3 } from 'three';
+import { Vector3, Group } from 'three';
 import Terrain from '../Environment/Terrain';
 import Mountain from '../Environment/Mountain';
 import Tree from '../Environment/Tree';
@@ -7,11 +7,9 @@ import Mushroom from '../Environment/Mushroom';
 import Unit from '../Unit/Unit';
 import EnemyUnit from '../Versus/EnemyUnit';
 import { SceneProps as SceneType } from './SceneProps';
-import { Group } from 'three';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
-import Behavior from '../Versus/Behavior';
 import DriftingSouls from '../Environment/DriftingSouls';
 import BackgroundStars from '../Environment/Stars';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
@@ -34,7 +32,6 @@ export default function Scene({
   interactiveTrunkColor,
   interactiveLeafColor,
   unitProps,
-  killCount,
   onLevelComplete,
   spawnInterval = 5000,
   maxSkeletons = 15,
@@ -107,20 +104,6 @@ export default function Scene({
     );
   }, []);
 
-  // Add reset function
-  const handleReset = useCallback(() => {
-    setPlayerHealth(unitProps.maxHealth);
-    setEnemies(Array.from({ length: initialSkeletons }, (_, index) => {
-      const spawnPosition = generateRandomPosition();
-      return {
-        id: `skeleton-${index}`,
-        position: spawnPosition.clone(),
-        initialPosition: spawnPosition.clone(),
-        health: 175,
-        maxHealth: 175,
-      };
-    }));
-  }, [initialSkeletons, unitProps.maxHealth]);
 
   // Update unitComponentProps to use playerHealth
   const unitComponentProps: UnitProps = {
@@ -205,13 +188,7 @@ export default function Scene({
   return (
     <>
       <group>
-        <Behavior 
-          playerHealth={playerHealth}
-          onReset={handleReset}
-          killCount={killCount}
-          onEnemiesDefeated={onLevelComplete}
-          maxSkeletons={maxSkeletons}
-        />
+
 
         {/* Background Environment */}
         <BackgroundStars />

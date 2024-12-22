@@ -200,13 +200,9 @@ export default function HomePage() {
 
   // Move handleReset up, before sceneProps
   const handleReset = () => {
-    // Reset player health
+    console.log("HomePage: Reset triggered");
     setPlayerHealth(250);
-
-    // Reset skeleton health
-    setSkeletonHealths(Array(NUM_SKELETONS).fill(200));
-
-    // Reset ability cooldowns
+    setSkeletonHealths(Array(NUM_SKELETONS).fill(175));
     setAbilities(prev => {
       const newAbilities = { ...prev };
       Object.keys(newAbilities).forEach(weapon => {
@@ -216,12 +212,13 @@ export default function HomePage() {
       });
       return newAbilities;
     });
-
-    // Reset last hit time
     setLastHitTime(0);
-
-    // Reset kill count
     setKillCount(0);
+    setCurrentWeapon(null);  // FORCES WEAPON RESELECTION
+    setUnlockedAbilities({
+      r: false,
+      passive: false
+    });
   };
 
   // Now declare sceneProps after handleReset

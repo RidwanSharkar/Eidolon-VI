@@ -5,6 +5,7 @@ import styles from './Panel.module.css';
 import Image from 'next/image';
 import DamageNotification from './DamageNotification';
 
+
 interface PanelProps {
   currentWeapon: WeaponType;
   onWeaponSelect: (weapon: WeaponType) => void;
@@ -20,28 +21,6 @@ interface DamageNotificationData {
   damage: number;
   timestamp: number;
 }
-
-interface GameOverMessage {
-  title: string;
-  subtitle: string;
-}
-
-// MAKE DEZE BETTER LATER 
-const GAME_OVER_MESSAGES: GameOverMessage[] = [
-  { title: "The Darkness Claims Another", subtitle: "Your soul joins the eternal dance..." },
-  { title: "Fallen to Shadow", subtitle: "The necropolis grows stronger..." },
-  { title: "Death's Embrace", subtitle: "The bones welcome their kin..." },
-  { title: "The Last Stand", subtitle: "Your light fades into the abyss..." },
-  { title: "Eternal Rest", subtitle: "The skeleton army claims victory..." },
-  { title: "Denied Ascension", subtitle: "The dragons turn their backs on another unworthy soul..." },
-  { title: "Draconic Disappointment", subtitle: "Your flames were not strong enough to join their ranks..." },
-  { title: "Failed Wyrm", subtitle: "The ancient dragons scoff at your weakness..." },
-  { title: "Wingless One", subtitle: "You'll never know the freedom of dragon flight..." },
-  { title: "Mortal Chains", subtitle: "Forever bound to walk while dragons soar above..." },
-  { title: "Lost Heritage", subtitle: "The dragon blood within you grows cold..." },
-  { title: "Fading Ember", subtitle: "Your draconic spark extinguishes in darkness..." },
-  { title: "Rejected by Fire", subtitle: "The dragon's flame finds you unworthy..." }
-];
 
 /**
  * RoundedSquareProgress Component
@@ -83,11 +62,11 @@ const RoundedSquareProgress: React.FC<{
   );
 };
 
-export default function Panel({ currentWeapon, playerHealth, maxHealth, abilities, onReset, killCount }: PanelProps) {
+export default function Panel({ currentWeapon, playerHealth, maxHealth, abilities, killCount }: PanelProps) {
   const [damageNotifications, setDamageNotifications] = useState<DamageNotificationData[]>([]);
   const nextNotificationId = useRef(0);
   const prevHealth = useRef(playerHealth);
-  const [gameOverMessage, setGameOverMessage] = useState<GameOverMessage | null>(null);
+
 
   useEffect(() => {
     if (playerHealth < prevHealth.current) {
@@ -99,19 +78,10 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
           damage,
           timestamp: Date.now()
         }
-      ].slice(-3)); // Keep only the last 3 notifications
+      ].slice(-4)); // Keep only the last 3 notifications
     }
     
     prevHealth.current = playerHealth;
-  }, [playerHealth]);
-
-  useEffect(() => {
-    if (playerHealth <= 0) {
-      const randomMessage = GAME_OVER_MESSAGES[Math.floor(Math.random() * GAME_OVER_MESSAGES.length)];
-      setGameOverMessage(randomMessage);
-    } else {
-      setGameOverMessage(null);
-    }
   }, [playerHealth]);
 
   const handleNotificationComplete = (id: number) => {
@@ -120,7 +90,7 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
 
   const getLevel = (kills: number) => {
     if (kills < 15) return 1;
-    if (kills < 40) return 2;  // 15 kills for level 1->2, then need 25 more for 2->3
+    if (kills < 40) return 2;  // 15 kills for level 1-> 2, then need 25 more for 2->3
     return 3;
   };
 
@@ -279,23 +249,8 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
           </div>
         )}
 
-        {/* Weapons Section - inside bottomPanel */}
        
       </div>
-
-      {/* Game Over Overlay */}
-      {gameOverMessage && (
-        <div className={styles.gameOverOverlay}>
-          <h1 className={styles.gameOverTitle}>{gameOverMessage.title}</h1>
-          <p className={styles.gameOverSubtitle}>{gameOverMessage.subtitle}</p>
-          <button 
-            className={styles.retryButton}
-            onClick={onReset}
-          >
-            RETRY
-          </button>
-        </div>
-      )}
     </>
   );
 }

@@ -67,8 +67,22 @@ export function useAbilityKeys({
   // Add a ref to track the last Q usage time
   const lastQUsageTime = useRef(0);
 
+  // Add ref to track if game is over
+  const isGameOver = useRef(false);
+
+  // Update isGameOver when health reaches 0
+  useEffect(() => {
+    if (health <= 0) {
+      isGameOver.current = true;
+    } else {
+      isGameOver.current = false;
+    }
+  }, [health]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isGameOver.current) return; // Early return if game is over
+      
       const key = e.key.toLowerCase();
 
       // Prevent repeated keydown events while holding
@@ -176,6 +190,8 @@ export function useAbilityKeys({
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      if (isGameOver.current) return; // Early return if game is over
+      
       const key = e.key.toLowerCase();
 
       if (key in keys.current) {
@@ -222,16 +238,17 @@ export function useAbilityKeys({
     onHealthChange
   ]);
 
+  // Modify the mouse event handlers to check game over state
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
-      // Only handle left click (button 0)
+      if (isGameOver.current) return; // Ignore mouse events if game is over
       if (e.button === 0) {
         keys.current['mouse0'] = true;
       }
     };
 
     const handleMouseUp = (e: MouseEvent) => {
-      // Only handle left click (button 0)
+      if (isGameOver.current) return; // Ignore mouse events if game is over
       if (e.button === 0) {
         keys.current['mouse0'] = false;
       }
@@ -246,9 +263,11 @@ export function useAbilityKeys({
     };
   }, [keys]);
 
-  // Add a useEffect for handling the attack logic
+  // Modify the attack interval to properly respect game over state
   useEffect(() => {
     const attackInterval = setInterval(() => {
+      if (isGameOver.current || !keys.current) return; // Check both conditions
+      
       if (keys.current['mouse0'] || keys.current['q']) {
         const qAbility = abilities[currentWeapon].q;
         if (qAbility.currentCooldown <= 0 && !isSwinging) {
@@ -257,7 +276,7 @@ export function useAbilityKeys({
           onAbilityUse(currentWeapon, 'q');
         }
       }
-    }, 50); // Check every 50ms for held mouse/key
+    }, 50);
 
     return () => clearInterval(attackInterval);
   }, [setIsSwinging, keys, abilities, currentWeapon, isSwinging, onAbilityUse]);

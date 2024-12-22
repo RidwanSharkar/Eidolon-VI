@@ -11,14 +11,16 @@ interface UseUnitControlsProps {
   camera: Camera;
   speed?: number;
   onPositionUpdate: (position: Vector3) => void;
+  health: number;
 }
 
 export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.075, 
+  speed = 0.075,
   onPositionUpdate,
+  health
 }: UseUnitControlsProps) {
   const keys = useRef({
     w: false,
@@ -27,9 +29,24 @@ export function useUnitControls({
     d: false
   });
 
-  // Handle movement in useFrame
+  const isGameOver = useRef(false);
+
+  useEffect(() => {
+    if (health <= 0) {
+      isGameOver.current = true;
+      keys.current = {
+        w: false,
+        a: false,
+        s: false,
+        d: false
+      };
+    } else {
+      isGameOver.current = false;
+    }
+  }, [health]);
+
   useFrame(() => {
-    if (!groupRef.current) return;
+    if (!groupRef.current || isGameOver.current) return;
 
     const cameraDirection = new Vector3();
     camera.getWorldDirection(cameraDirection);
@@ -65,9 +82,9 @@ export function useUnitControls({
     onPositionUpdate(groupRef.current.position.clone());
   });
 
-  // Handle key events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isGameOver.current) return;
       const key = e.key.toLowerCase();
       if (key in keys.current) {
         keys.current[key as keyof typeof keys.current] = true;
@@ -91,6 +108,6 @@ export function useUnitControls({
   }, []);
 
   return {
-    keys // Expose keys ref in case it's needed externally
+    keys
   };
 } 

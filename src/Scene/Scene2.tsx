@@ -10,7 +10,6 @@ import { SceneProps as SceneType } from './SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
-import Behavior from '../Versus/Behavior';
 import DriftingSouls from '../Environment/DriftingSouls';
 import BackgroundStars from '../Environment/Stars';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
@@ -36,7 +35,7 @@ export default function Scene2({
   initialSkeletons = 10,
   spawnCount = 2,
 }: ScenePropsWithCallback) {
-  const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 5);
+  const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 5); // y 5 here
 
   // State for enemies (with Scene2-specific health values)
   const [enemies, setEnemies] = useState<Enemy[]>(() => 
@@ -103,19 +102,6 @@ export default function Scene2({
     );
   }, []);
 
-  // Add reset function
-  const handleReset = useCallback(() => {
-    setPlayerHealth(unitProps.maxHealth);
-    setEnemies(skeletonProps.map((skeleton, index) => ({
-      id: `skeleton-${index}`,
-      position: skeleton.initialPosition.clone(),
-      initialPosition: skeleton.initialPosition.clone(),
-      currentPosition: skeleton.initialPosition.clone(),
-      health: 225, // Scene2-specific health
-      maxHealth: 225, // Scene2-specific max health
-    })));
-  }, [skeletonProps, unitProps.maxHealth]);
-
   // Update unitComponentProps to use playerHealth
   const unitComponentProps: UnitProps = {
     onHit: handleTakeDamage,
@@ -171,10 +157,10 @@ export default function Scene2({
 
   // Modify the spawn logic to include the delay
   useEffect(() => {
-    // First, set a 10-second delay before allowing spawns
+    // First, set a 15-second delay before allowing spawns
     const initialDelay = setTimeout(() => {
       setSpawnStarted(true);
-    }, 10000);
+    }, 15000);
 
     return () => clearTimeout(initialDelay);
   }, []);
@@ -212,13 +198,6 @@ export default function Scene2({
 
   return (
     <>
-      <Behavior 
-        playerHealth={playerHealth}
-        onReset={handleReset}
-        killCount={killCount}
-        onEnemiesDefeated={onLevelComplete}
-        maxSkeletons={maxSkeletons}
-      />
 
       {/* Background Environment */}
       <BackgroundStars />
