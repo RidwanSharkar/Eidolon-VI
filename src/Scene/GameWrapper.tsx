@@ -80,49 +80,52 @@ export default function GameWrapper({
   }, []);
 
   return (
-    <div style={{ 
-      width: '100vw', 
-      height: '100vh', 
-      overflow: 'hidden',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      touchAction: 'none'
-    }}>
-      <Canvas 
-        shadows 
-        camera={{ position: [0, 10, 20], fov: 60 }}
-      >
-        <ambientLight intensity={0.2} />
-        {gameStarted && (
-          <LevelManager 
-            sceneProps={{
-              ...sceneProps,
-              onReset: handleReset
+    <>
+      {/* 3D Canvas */}
+      <div style={{ 
+        width: '100vw', 
+        height: '100vh', 
+        overflow: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        touchAction: 'none'
+      }}>
+        <Canvas 
+          shadows 
+          camera={{ position: [0, 10, 20], fov: 60 }}
+        >
+          <ambientLight intensity={0.2} />
+          {gameStarted && (
+            <LevelManager 
+              sceneProps={{
+                ...sceneProps,
+                onReset: handleReset
+              }}
+              onAbilityUnlock={onAbilityUnlock}
+              onLevelTransition={handleLevelTransition}
+              currentLevel={currentLevel}
+            />
+          )}
+          <OrbitControls
+            ref={sceneProps.unitProps.controlsRef}
+            enablePan={false}
+            maxPolarAngle={Math.PI / 2.2}
+            maxDistance={75}
+            mouseButtons={{
+              LEFT: THREE.MOUSE.ROTATE,
+              MIDDLE: undefined,
+              RIGHT: THREE.MOUSE.ROTATE
             }}
-            onAbilityUnlock={onAbilityUnlock}
-            onLevelTransition={handleLevelTransition}
-            currentLevel={currentLevel}
+            minDistance={5}
+            rotateSpeed={0.5}
+            enableDamping={true}
+            dampingFactor={0.05}
           />
-        )}
-        <OrbitControls
-          ref={sceneProps.unitProps.controlsRef}
-          enablePan={false}
-          maxPolarAngle={Math.PI / 2.2}
-          maxDistance={75}
-          mouseButtons={{
-            LEFT: THREE.MOUSE.ROTATE,
-            MIDDLE: undefined,
-            RIGHT: THREE.MOUSE.ROTATE
-          }}
-          minDistance={5}
-          rotateSpeed={0.5}
-          enableDamping={true}
-          dampingFactor={0.05}
-        />
-      </Canvas>
-      
-      {/* UI Overlays */}
+        </Canvas>
+      </div>
+
+      {/* UI Overlays - Outside of Canvas */}
       <div style={{ 
         position: 'absolute', 
         top: 0, 
@@ -158,6 +161,6 @@ export default function GameWrapper({
           />
         )}
       </div>
-    </div>
+    </>
   );
 } 
