@@ -281,6 +281,29 @@ export function useAbilityKeys({
     return () => clearInterval(attackInterval);
   }, [setIsSwinging, keys, abilities, currentWeapon, isSwinging, onAbilityUse]);
 
+  useEffect(() => {
+    const handleGameOver = () => {
+      isGameOver.current = true;
+      // Clear any ongoing abilities or effects
+      if (firebeamIntervalRef.current) {
+        clearInterval(firebeamIntervalRef.current);
+      }
+      isDivineShieldActiveRef.current = false;
+    };
+
+    const handleGameReset = () => {
+      isGameOver.current = false;
+    };
+
+    window.addEventListener('gameOver', handleGameOver);
+    window.addEventListener('gameReset', handleGameReset);
+
+    return () => {
+      window.removeEventListener('gameOver', handleGameOver);
+      window.removeEventListener('gameReset', handleGameReset);
+    };
+  }, []);
+
   return {
     isDivineShieldActive: isDivineShieldActiveRef.current
   };

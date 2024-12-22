@@ -43,6 +43,7 @@ export default function Behavior({
       const randomMessage = GAME_OVER_MESSAGES[Math.floor(Math.random() * GAME_OVER_MESSAGES.length)];
       setGameOverMessage(randomMessage);
       setIsGameOver(true);
+      window.dispatchEvent(new CustomEvent('gameOver'));
     }
   }, [playerHealth, isGameOver]);
 
@@ -50,6 +51,7 @@ export default function Behavior({
     console.log("Behavior: Reset triggered");
     setIsGameOver(false);
     setGameOverMessage(null);
+    window.dispatchEvent(new CustomEvent('gameReset'));
     onReset();
   };
 

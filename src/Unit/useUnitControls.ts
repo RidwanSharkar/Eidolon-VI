@@ -45,6 +45,30 @@ export function useUnitControls({
     }
   }, [health]);
 
+  useEffect(() => {
+    const handleGameOver = () => {
+      isGameOver.current = true;
+      keys.current = {
+        w: false,
+        a: false,
+        s: false,
+        d: false
+      };
+    };
+
+    const handleGameReset = () => {
+      isGameOver.current = false;
+    };
+
+    window.addEventListener('gameOver', handleGameOver);
+    window.addEventListener('gameReset', handleGameReset);
+
+    return () => {
+      window.removeEventListener('gameOver', handleGameOver);
+      window.removeEventListener('gameReset', handleGameReset);
+    };
+  }, []);
+
   useFrame(() => {
     if (!groupRef.current || isGameOver.current) return;
 

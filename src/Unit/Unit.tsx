@@ -487,8 +487,21 @@ export default function Unit({
   //=====================================================================================================
 
   // SABRE BOW SHOT 
+    // Add at the top with other state
+    const [isProcessingAbility, setIsProcessingAbility] = useState(false);
+
+    // Add at the top with other state declarations
+    const [lastBowShotTime, setLastBowShotTime] = useState<number>(0);
+
   const releaseBowShot = useCallback((power: number) => {
     if (!groupRef.current) return;
+    
+    const now = Date.now();
+    const timeSinceLastShot = now - lastBowShotTime;
+    if (timeSinceLastShot < 250) { // 250ms cooldown between shots
+        return;
+    }
+    setLastBowShotTime(now);
     
     const unitPosition = groupRef.current.position.clone();
     unitPosition.y += 1;
@@ -498,25 +511,23 @@ export default function Unit({
 
     const maxRange = 25;
     const rayStart = unitPosition.clone();
-    
-
 
     // Add projectile with max range limit
     setActiveProjectiles(prev => [...prev, {
-      id: Date.now(),
-      position: rayStart.clone(),
-      direction: direction.clone(),
-      power,
-      startTime: Date.now(),
-      maxDistance: maxRange,
-      startPosition: rayStart.clone()
+        id: Date.now(),
+        position: rayStart.clone(),
+        direction: direction.clone(),
+        power,
+        startTime: Date.now(),
+        maxDistance: maxRange,
+        startPosition: rayStart.clone()
     }]);
 
     setIsBowCharging(false);
     setBowChargeProgress(0);
     bowChargeStartTime.current = null;
     onAbilityUse(currentWeapon, 'e');
-  }, [currentWeapon, groupRef, setActiveProjectiles, onAbilityUse]);
+}, [currentWeapon, groupRef, setActiveProjectiles, onAbilityUse, lastBowShotTime]);
 
   //=====================================================================================================
 
@@ -603,31 +614,36 @@ export default function Unit({
     const enemy = enemyData.find(e => e.id === targetId);
     if (!enemy) return;
 
-    // Restore the power-based damage calculation
+    // Skip if projectile has already hit this target
+    const hitKey = `${projectileId}_${targetId}`;
+    if (hitCountThisSwing[hitKey]) {
+        return;
+    }
+
+    // Mark this specific projectile-target combination as hit
+    setHitCountThisSwing(prev => ({
+        ...prev,
+        [hitKey]: 1
+    }));
+
     const baseDamage = 3;
     const maxDamage = 97;
-    // Exponential scaling (power of 2) plus bonus for full charge
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
-    
-    // Add bonus damage for full charge (power >= 0.99)
     const fullChargeDamage = power >= 0.99 ? 20 : 0;
     const finalDamage = scaledDamage + fullChargeDamage;
     
     onHit(targetId, finalDamage);
 
-    // Check if target is still alive before adding damage number
     const targetAfterDamage = enemy.health - finalDamage;
     if (targetAfterDamage > 0) {
-      setDamageNumbers(prev => [...prev, {
-        id: nextDamageNumberId.current++,
-        damage: finalDamage,
-        position: enemy.position.clone(),
-        isCritical: power >= 0.99 // Only fully charged shots are critical
-      }]);
+        setDamageNumbers(prev => [...prev, {
+            id: nextDamageNumberId.current++,
+            damage: finalDamage,
+            position: enemy.position.clone(),
+            isCritical: power >= 0.99
+        }]);
     }
-
-    // No projectile removal - allows piercing
-  };
+};
 
   //=====================================================================================================
 
@@ -685,12 +701,10 @@ export default function Unit({
     setCharges={setFireballCharges}
   />
 
-  // DIVINESHIELD
 
   
 
-  // Add at the top with other state
-  const [isProcessingAbility, setIsProcessingAbility] = useState(false);
+
 
   return (
     <>
