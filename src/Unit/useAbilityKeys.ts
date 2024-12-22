@@ -222,6 +222,46 @@ export function useAbilityKeys({
     onHealthChange
   ]);
 
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      // Only handle left click (button 0)
+      if (e.button === 0) {
+        keys.current['mouse0'] = true;
+      }
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      // Only handle left click (button 0)
+      if (e.button === 0) {
+        keys.current['mouse0'] = false;
+      }
+    };
+
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [keys]);
+
+  // Add a useEffect for handling the attack logic
+  useEffect(() => {
+    const attackInterval = setInterval(() => {
+      if (keys.current['mouse0'] || keys.current['q']) {
+        const qAbility = abilities[currentWeapon].q;
+        if (qAbility.currentCooldown <= 0 && !isSwinging) {
+          lastQUsageTime.current = Date.now();
+          setIsSwinging(true);
+          onAbilityUse(currentWeapon, 'q');
+        }
+      }
+    }, 50); // Check every 50ms for held mouse/key
+
+    return () => clearInterval(attackInterval);
+  }, [setIsSwinging, keys, abilities, currentWeapon, isSwinging, onAbilityUse]);
+
   return {
     isDivineShieldActive: isDivineShieldActiveRef.current
   };

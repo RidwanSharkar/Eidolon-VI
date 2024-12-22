@@ -15,7 +15,7 @@ Devour the essence of unwitting tributes that challenge your claim - their fadin
 
 ## Controls
 - Movement - WASD
-- Camera - Hold Click
+- Camera - Right Hold Click
 - Zoom - Scroll Wheel
 - Swap Weapon - 123 
     - 1 - Scythe 

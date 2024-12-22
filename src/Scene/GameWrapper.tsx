@@ -113,7 +113,7 @@ export default function GameWrapper({
             maxPolarAngle={Math.PI / 2.2}
             maxDistance={75}
             mouseButtons={{
-              LEFT: THREE.MOUSE.ROTATE,
+              LEFT: undefined,
               MIDDLE: undefined,
               RIGHT: THREE.MOUSE.ROTATE
             }}

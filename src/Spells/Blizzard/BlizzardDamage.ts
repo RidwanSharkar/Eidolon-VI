@@ -2,8 +2,8 @@
 import { Vector3 } from 'three';
 import { calculateDamage } from '@/Weapons/damage';
 
-const BLIZZARD_BASE_DAMAGE = 17;
-const BLIZZARD_RADIUS = 4;
+const BLIZZARD_BASE_DAMAGE = 19;
+const BLIZZARD_RADIUS = 4.5;
 
 interface BlizzardHitResult {
   targetId: string;
