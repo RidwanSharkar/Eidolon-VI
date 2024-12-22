@@ -489,15 +489,6 @@ export default function Unit({
   // SABRE BOW SHOT 
   const releaseBowShot = useCallback((power: number) => {
     if (!groupRef.current) return;
-
-    const baseDamage = 3;
-    const maxDamage = 97;
-    // Exponential scaling (power of 2) plus bonus for full charge
-    const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
-    
-    // Add bonus damage for full charge (power >= 0.99)
-    const fullChargeDamage = power >= 0.99 ? 20 : 0;
-    const finalDamage = scaledDamage + fullChargeDamage;
     
     const unitPosition = groupRef.current.position.clone();
     unitPosition.y += 1;
@@ -508,50 +499,7 @@ export default function Unit({
     const maxRange = 25;
     const rayStart = unitPosition.clone();
     
-    // Create a ray for hit detection
-    const ray = new THREE.Ray(rayStart, direction.normalize());
 
-    // Prepare targets including dynamic enemies
-    const targets: Array<{ position: Vector3; id: string }> = [
-      // Dynamic enemy targets
-      ...enemyData.map(enemy => ({
-        position: enemy.position.clone(),
-        id: enemy.id
-      }))
-    ];
-
-    targets.forEach(target => {
-      const targetPos = target.position.clone();
-      targetPos.y = 1;
-      
-      const distanceToRay = ray.distanceToPoint(targetPos);
-      const distanceAlongRay = ray.direction.dot(targetPos.clone().sub(rayStart));
-
-      // Hit detection
-      const hitRadius = 1.5;
-      if (distanceToRay < hitRadius && distanceAlongRay > 0 && distanceAlongRay < maxRange) {
-        // Apply the scaled damage directly without additional calculations
-        const isCritical = power >= 1; // Only fully charged shots are critical
-        
-        onHit(target.id, finalDamage);
-
-        // Find the target's current health
-        const enemy = enemyData.find(e => e.id === target.id);
-        if (!enemy) return;
-
-        const targetAfterDamage = enemy.health - finalDamage;
-
-        // Only display damage number if target is still alive
-        if (targetAfterDamage > 0) {
-          setDamageNumbers(prev => [...prev, {
-            id: nextDamageNumberId.current++,
-            damage: finalDamage,
-            position: target.position.clone(),
-            isCritical: isCritical
-          }]);
-        }
-      }
-    });
 
     // Add projectile with max range limit
     setActiveProjectiles(prev => [...prev, {
@@ -561,14 +509,14 @@ export default function Unit({
       power,
       startTime: Date.now(),
       maxDistance: maxRange,
-      startPosition: rayStart.clone() // Store initial position to track distance traveled
+      startPosition: rayStart.clone()
     }]);
 
     setIsBowCharging(false);
     setBowChargeProgress(0);
     bowChargeStartTime.current = null;
     onAbilityUse(currentWeapon, 'e');
-  }, [currentWeapon, groupRef, onHit, setDamageNumbers, setActiveProjectiles, onAbilityUse, enemyData]);
+  }, [currentWeapon, groupRef, setActiveProjectiles, onAbilityUse]);
 
   //=====================================================================================================
 

@@ -47,8 +47,8 @@ const FireballTrail: React.FC<FireballTrailProps> = ({
       positionsRef.current[i * 3 + 1] = positionsRef.current[(i - 1) * 3 + 1];
       positionsRef.current[i * 3 + 2] = positionsRef.current[(i - 1) * 3 + 2];
 
-      opacitiesRef.current[i] = Math.pow((1 - i / particlesCount), 2) * 0.5 * opacity;
-      scalesRef.current[i] = size * 0.8 * Math.pow((1 - i / particlesCount), 0.5);
+      opacitiesRef.current[i] = Math.pow((1 - i / particlesCount), 2) * 0.6 * opacity;
+      scalesRef.current[i] = size * 0.5 * Math.pow((1 - i / particlesCount), 0.5);
     }
 
     positionsRef.current[0] = x;

@@ -121,7 +121,7 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
       </mesh>
       <group ref={impactGroup} visible={false}>
         <mesh>
-          <sphereGeometry args={[size * 1.75, 16, 16]} />
+          <sphereGeometry args={[size * 1.25, 16, 16]} />
           <meshStandardMaterial
             color={color}
             emissive={color}
