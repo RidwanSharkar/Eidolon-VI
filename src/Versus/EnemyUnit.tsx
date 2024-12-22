@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
@@ -35,66 +35,100 @@ export default function EnemyUnit({
   const [showDeathEffect, setShowDeathEffect] = useState(false);
   const [isDead, setIsDead] = useState(false);
   const [isSpawning, setIsSpawning] = useState(true);
-
-  // Initialize with initialPosition if position is undefined
+  const [isMoving, setIsMoving] = useState(false);
+  
+  // Use refs for position tracking
   const currentPosition = useRef(initialPosition.clone());
   const targetPosition = useRef(initialPosition.clone());
+  const lastUpdateTime = useRef(Date.now());
+  const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 2.25;
+  const ATTACK_RANGE = 2.0;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.95;
-  const SMOOTHING_FACTOR = 0.005; // Add smoothing for movement
+  const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.15;
+  const POSITION_UPDATE_THRESHOLD = 0.1;
+  const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 5;
 
-  // Update current position when position prop changes
+  // Sync health changes
+  useEffect(() => {
+    currentHealth.current = health;
+  }, [health]);
+
+  // Handle damage with proper synchronization
+  const handleDamage = useCallback((damage: number) => {
+    if (currentHealth.current <= 0) return;
+    
+    const newHealth = Math.max(0, currentHealth.current - damage);
+    onTakeDamage(`enemy-${id}`, damage);
+    
+    if (newHealth === 0 && currentHealth.current > 0) {
+      setIsDead(true);
+      setShowDeathEffect(true);
+    }
+  }, [id, onTakeDamage]);
+
+  // Immediately sync with provided position
   useEffect(() => {
     if (position) {
-      currentPosition.current = position.clone();
+      currentPosition.current.copy(position);
+      targetPosition.current.copy(position);
+      if (enemyRef.current) {
+        enemyRef.current.position.copy(position);
+      }
     }
   }, [position]);
 
-  useEffect(() => {
-    if (enemyRef.current) {
-      enemyRef.current.position.copy(currentPosition.current);
+  useFrame((_, delta) => {
+    if (!enemyRef.current || currentHealth.current <= 0 || !playerPosition) {
+      setIsMoving(false);
+      return;
     }
-  }, []);
-
-  useFrame(() => {
-    if (!enemyRef.current || health <= 0 || !playerPosition) return;
-
-    const direction = new Vector3()
-      .subVectors(playerPosition, currentPosition.current)
-      .normalize();
 
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
 
-    if (distanceToPlayer > ATTACK_RANGE && health > 0) {
+    if (distanceToPlayer > ATTACK_RANGE && currentHealth.current > 0) {
       setIsAttacking(false);
-      
+      setIsMoving(true);
+
+      // Calculate direction to player
+      const direction = new Vector3()
+        .subVectors(playerPosition, currentPosition.current)
+        .normalize();
+
       // Update target position
-      targetPosition.current.copy(currentPosition.current).add(
-        direction.multiplyScalar(MOVEMENT_SPEED)
-      );
-      
-      // Smooth movement with controlled lerp
+      const movement = direction.multiplyScalar(MOVEMENT_SPEED * delta * 60);
+      targetPosition.current.copy(currentPosition.current).add(movement);
+
+      // Smooth movement
       currentPosition.current.lerp(targetPosition.current, SMOOTHING_FACTOR);
-      
-      // Update position only once
-      if (enemyRef.current) {
-        enemyRef.current.position.copy(currentPosition.current);
-        
-        // Smooth rotation separately
-        const lookTarget = new Vector3()
-          .copy(playerPosition)
-          .setY(currentPosition.current.y); // Keep Y level consistent
-        enemyRef.current.lookAt(lookTarget);
+
+      // Apply position to mesh
+      enemyRef.current.position.copy(currentPosition.current);
+
+      // Handle rotation smoothly
+      const lookTarget = new Vector3()
+        .copy(playerPosition)
+        .setY(currentPosition.current.y);
+      enemyRef.current.lookAt(lookTarget);
+
+      // Update position with rate limiting
+      const now = Date.now();
+      if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL) {
+        if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD) {
+          onPositionUpdate(id, currentPosition.current.clone());
+          lastUpdateTime.current = now;
+        }
       }
-      
-      // Only update position if it has changed significantly
-      if (currentPosition.current.distanceTo(position) > 0.01) {
-        onPositionUpdate(id, currentPosition.current.clone());
-      }
-    } else if (health > 0) {
+    } else {
+      setIsMoving(false);
+      // Smoothly stop at current position
+      targetPosition.current.copy(currentPosition.current);
+    }
+
+    // Attack logic
+    if (distanceToPlayer <= ATTACK_RANGE && currentHealth.current > 0) {
       const currentTime = Date.now();
       if (currentTime - lastAttackTime.current >= ATTACK_COOLDOWN) {
         setIsAttacking(true);
@@ -109,36 +143,31 @@ export default function EnemyUnit({
   });
 
   useEffect(() => {
-    if (health === 0 && !isDead) {
+    if (currentHealth.current === 0 && !isDead) {
       console.log(`Enemy ${id} died`);
       setIsDead(true);
       setShowDeathEffect(true);
     }
-  }, [health, id, isDead]);
+  }, [currentHealth, id, isDead]);
 
   return (
     <>
       <group 
         ref={enemyRef} 
-        visible={!isSpawning && health > 0}
+        visible={!isSpawning && currentHealth.current > 0}
         position={currentPosition.current}
         onClick={(e) => {
           e.stopPropagation();
-          if (health > 0) {
-            console.log(`Clicked enemy ${id}`);
-            onTakeDamage(`enemy-${id}`, 10);
+          if (currentHealth.current > 0) {
+            handleDamage(10);
           }
         }}
       >
         <CustomSkeleton
           position={[0, 0, 0]}
           isAttacking={isAttacking}
-          isWalking={!isAttacking && health > 0}
-          onHit={(damage: number) => {
-            if (health > 0) {
-              onTakeDamage(`enemy-${id}`, damage);
-            }
-          }}
+          isWalking={isMoving && currentHealth.current > 0}
+          onHit={handleDamage}
         />
 
         <Billboard
@@ -148,14 +177,14 @@ export default function EnemyUnit({
           lockY={false}
           lockZ={false}
         >
-          {health > 0 && (
+          {currentHealth.current > 0 && (
             <>
               <mesh position={[0, 0, 0]}>
                 <planeGeometry args={[2.0, 0.25]} />
                 <meshBasicMaterial color="#333333" opacity={0.8} transparent />
               </mesh>
-              <mesh position={[-1.0 + (health / maxHealth), 0, 0.001]}>
-                <planeGeometry args={[(health / maxHealth) * 2.0, 0.23]} />
+              <mesh position={[-1.0 + (currentHealth.current / maxHealth), 0, 0.001]}>
+                <planeGeometry args={[(currentHealth.current / maxHealth) * 2.0, 0.23]} />
                 <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
               </mesh>
               <Text
@@ -166,7 +195,7 @@ export default function EnemyUnit({
                 anchorY="middle"
                 fontWeight="bold"
               >
-                {`${Math.ceil(health)}/${maxHealth}`}
+                {`${Math.ceil(currentHealth.current)}/${maxHealth}`}
               </Text>
             </>
           )}

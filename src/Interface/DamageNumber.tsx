@@ -8,6 +8,9 @@ interface DamageNumberProps {
   position: Vector3;
   isCritical?: boolean;
   isLightning?: boolean;
+  isBlizzard?: boolean;
+  isHealing?: boolean;
+  isBoneclaw?: boolean;
   onComplete: () => void;
 }
 
@@ -18,7 +21,8 @@ interface TextMesh extends Mesh {
   };
 }
 
-export default function DamageNumber({ damage, position, isCritical = false, isLightning = false, onComplete }: DamageNumberProps) {
+export default function DamageNumber({ damage, position, isCritical = false, isLightning = false, isBlizzard = false, isHealing = false, isBoneclaw = false, onComplete }: DamageNumberProps) {
+  console.log('DamageNumber props:', { damage, isCritical, isBlizzard, isLightning, isHealing, isBoneclaw });
   const textRef = useRef<TextMesh>(null);
   const startTime = useRef(Date.now());
   const startY = position.y + 3.5;
@@ -60,12 +64,22 @@ export default function DamageNumber({ damage, position, isCritical = false, isL
     textRef.current.material.opacity = Math.min(1, 3 * (1 - progress));
   });
 
+  // Determine text color based on all possible states
+  const getTextColor = () => {
+    if (isHealing) return "#338C66";
+    if (isBoneclaw) return "#39ff14";
+    if (isCritical) return "#ff0000";
+    if (isLightning) return "#ffff00";
+    if (isBlizzard) return "#61EDFF";
+    return "#ffffff";
+  };
+
   return (
     <Text
       ref={textRef}
       position={[position.x, startY, position.z]}
       fontSize={0.5}
-      color={isCritical ? "#ff0000" : (isLightning ? "#ffff00" : "#ffffff")}
+      color={getTextColor()}
       anchorX="center"
       anchorY="middle"
       outlineWidth={0.1}
@@ -73,7 +87,7 @@ export default function DamageNumber({ damage, position, isCritical = false, isL
       material-transparent={true}
       material-depthTest={false}
     >
-      {damage}
+      {isHealing ? `+${damage}` : damage}
     </Text>
   );
 } 

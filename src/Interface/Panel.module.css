@@ -525,3 +525,15 @@
   background: linear-gradient(90deg, #39ff14, #2db80e);
   transition: width 0.3s ease;
 }
+
+.locked {
+  opacity: 0.5;
+  filter: grayscale(100%);
+  pointer-events: none;
+}
+
+.locked .keyBind {
+  background: rgba(0,0,0,0.5) !important;
+  color: #666 !important;
+  border-color: rgba(102,102,102,0.3) !important;
+}

@@ -1,0 +1,255 @@
+.panel {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.97),
+    rgba(0, 15, 5, 0.95)
+  );
+  padding: 0rem;
+  color: #b3ffd9;
+  text-align: center;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Remove the float animation */
+.iconContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  pointer-events: auto;
+}
+
+/* Add protection against right-click and other interactions */
+.panel * {
+  pointer-events: none;
+}
+
+/* Allow clicks only on interactive elements */
+.icon, .startButton {
+  pointer-events: auto;
+}
+
+/* Prevent context menu on the entire panel */
+.panel {
+  oncontextmenu: 'return false';
+}
+
+.panel h2 {
+  font-size: 4rem;
+  margin-bottom: 3rem;
+  font-family: 'Times New Roman', serif;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(0, 255, 128, 0.6);
+  position: relative;
+  font-weight: 700;
+  color: #00ffaa;
+}
+
+
+.panel h2::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 255, 128, 0.4), 
+    rgba(0, 255, 128, 1),
+    rgba(0, 255, 128, 0.4),
+    transparent
+  );
+}
+
+.iconSelection {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+  margin: 2rem 0;
+  width: 100%;
+  padding: 0 2rem;
+}
+
+.icon {
+  background: rgba(0, 40, 20, 0.6);
+  cursor: pointer;
+  transition: all 0.4s ease;
+  width: 280px;
+  height: 320px;
+  position: relative;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+}
+
+.icon::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: rgba(0, 15, 7, 0.95);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  z-index: -1;
+}
+
+.icon::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid rgba(0, 255, 128, 0.1);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  transition: all 0.4s ease;
+}
+
+.selected {
+  background: rgba(0, 255, 128, 0.2);
+}
+
+.selected::before {
+  background: rgba(0, 40, 20, 0.95);
+}
+
+@keyframes spinHex {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.selected::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    #00ff8888,
+    #00ff9988
+  );
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  z-index: -1;
+  filter: blur(8px);
+  animation: spinHex 8s linear infinite;
+}
+
+.selected .iconContent img {
+  filter: drop-shadow(0 0 25px rgba(0, 255, 128, 0.8));
+  transform: scale(1.05);
+}
+
+.icon:hover {
+  background: rgba(0, 255, 128, 0.08);
+  transform: translateY(-4px);
+}
+
+.icon:hover::after {
+  border-color: rgba(0, 255, 128, 0.3);
+  box-shadow: 0 0 30px rgba(0, 255, 128, 0.1);
+}
+
+.startButton {
+  background: rgba(0, 255, 128, 0.15);
+  border: none;
+  padding: 1.4rem 4rem;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 7px;
+  margin-top: 3rem;
+  transition: all 0.4s ease;
+  color: #00ffaa;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(15px 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0 50%);
+}
+
+.startButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 255, 128, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.startButton:hover::before {
+  left: 100%;
+}
+
+.startButton:hover:not(:disabled) {
+  background: rgba(0, 255, 128, 0.25);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 0 40px rgba(0, 255, 128, 0.3),
+              0 0 80px rgba(0, 255, 128, 0.2);
+  letter-spacing: 5px;
+  color: #00ffaa;
+}
+
+.startButton:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+}
+
+/* Add pulsing glow effect to icons */
+@keyframes pulseGlow {
+  0% { filter: drop-shadow(0 0 15px rgba(0, 255, 128, 0.4)); }
+  50% { filter: drop-shadow(0 0 25px rgba(0, 255, 128, 0.7)); }
+  100% { filter: drop-shadow(0 0 15px rgba(0, 255, 128, 0.4)); }
+}
+
+.iconContent img {
+  width: 230px;
+  height: 230px;
+  object-fit: contain;
+  animation: pulseGlow 3s ease-in-out infinite;
+  transition: all 0.4s ease;
+}
+
+/* Hexagonal border effect for start button */
+.startButton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    #3bf89d44,
+    #00ff9944
+  );
+  clip-path: polygon(15px 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0 50%);
+  z-index: -1;
+  filter: blur(4px);
+}

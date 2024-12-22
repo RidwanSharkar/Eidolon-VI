@@ -9,7 +9,7 @@ interface TerrainProps {
   metalness?: number;
 }
 
-export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness = 0.1 }: TerrainProps) {
+export default function Terrain({ color = "#4a1c2c", roughness = 0.5, metalness = 0.1 }: TerrainProps) {
   // All hooks must be at the top level
   const terrainRef = useRef<Mesh>(null);
   const bonesRef = useRef<InstancedMesh>(null);
@@ -191,7 +191,13 @@ export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness 
       {/* Main terrain */}
       <mesh ref={terrainRef} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         {octagonRef.current && <shapeGeometry args={[octagonRef.current]} />}
-        <primitive object={snowMaterial} attach="material" />
+        <meshStandardMaterial 
+          color="#304050"  // Light off-white base color
+          roughness={0.7}
+          metalness={0.1}
+          emissive="#304050"  // Subtle blue-ish glow
+          emissiveIntensity={1.3}
+        />
       </mesh>
 
       {/* Scattered bones */}
@@ -207,7 +213,7 @@ export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness 
           roughness={0.7}
           metalness={0.2}
           emissive="#304050"
-          emissiveIntensity={0.1}
+          emissiveIntensity={0.5}
         />
       </instancedMesh>
 
@@ -216,8 +222,8 @@ export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness 
         <planeGeometry args={[100, 100]} />
         <meshStandardMaterial
           transparent
-          opacity={0.4}
-          color="#b8c6db"
+          opacity={0.1}
+          color="#4a1c2c"
           fog={true}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
@@ -228,7 +234,7 @@ export default function Terrain({ color = "#ffffff", roughness = 0.5, metalness 
       <pointLight
         position={[0, 0.1, 0]}
         color="#304050"
-        intensity={0.5}
+        intensity={4}
         distance={10}
         decay={2}
       />

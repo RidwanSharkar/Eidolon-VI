@@ -31,9 +31,9 @@ export default function Scene2({
   skeletonProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 10000,
+  spawnInterval = 5000,
   maxSkeletons = 25,
-  initialSkeletons = 5,
+  initialSkeletons = 10,
   spawnCount = 2,
 }: ScenePropsWithCallback) {
   const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 5);
@@ -45,8 +45,8 @@ export default function Scene2({
       position: skeleton.initialPosition.clone(),
       initialPosition: skeleton.initialPosition.clone(),
       currentPosition: skeleton.initialPosition.clone(),
-      health: 250, // Scene2-specific health
-      maxHealth: 250, // Scene2-specific max health
+      health: 225, // Scene2-specific health
+      maxHealth: 225, // Scene2-specific max health
     }))
   );
 
@@ -111,8 +111,8 @@ export default function Scene2({
       position: skeleton.initialPosition.clone(),
       initialPosition: skeleton.initialPosition.clone(),
       currentPosition: skeleton.initialPosition.clone(),
-      health: 250, // Scene2-specific health
-      maxHealth: 250, // Scene2-specific max health
+      health: 225, // Scene2-specific health
+      maxHealth: 225, // Scene2-specific max health
     })));
   }, [skeletonProps, unitProps.maxHealth]);
 
@@ -128,6 +128,20 @@ export default function Scene2({
     abilities: unitProps.abilities,
     onAbilityUse: unitProps.onAbilityUse,
     onPositionUpdate: handlePlayerPositionUpdate,
+    onHealthChange: (newHealth: number | ((current: number) => number)) => {
+      if (typeof newHealth === 'function') {
+        // If it's a function, pass it the current health
+        setPlayerHealth(current => {
+          const nextHealth = newHealth(current);
+          unitProps.onHealthChange?.(nextHealth);
+          return nextHealth;
+        });
+      } else {
+        // If it's a direct value
+        setPlayerHealth(newHealth);
+        unitProps.onHealthChange?.(newHealth);
+      }
+    },
     enemyData: enemies.map((enemy) => ({
       id: `enemy-${enemy.id}`,
       position: enemy.position,
@@ -136,7 +150,9 @@ export default function Scene2({
       maxHealth: enemy.maxHealth
     })),
     onDamage: unitProps.onDamage,
-    onEnemyDeath: unitProps.onEnemyDeath,
+    onEnemyDeath: () => {
+      console.log("Kill counted in Scene");  // Debug log
+    },
     onFireballDamage: unitProps.onFireballDamage,
     fireballManagerRef: unitProps.fireballManagerRef,
     onSmiteDamage: unitProps.onSmiteDamage
@@ -145,14 +161,27 @@ export default function Scene2({
   // Monitor enemies to determine level completion
   useEffect(() => {
     const allEnemiesDefeated = enemies.every(enemy => enemy.health <= 0);
-    if (allEnemiesDefeated && killCount >= 25) { // 25 total kills for level 2
+    if (allEnemiesDefeated && killCount >= 25) { 
       onLevelComplete();
     }
   }, [enemies, killCount, onLevelComplete]);
 
-  // Modified spawn logic for Scene2 (spawns multiple at once)
+  // Add new state for delayed start
+  const [spawnStarted, setSpawnStarted] = useState(false);
+
+  // Modify the spawn logic to include the delay
   useEffect(() => {
-    if (totalSpawned >= maxSkeletons) return;
+    // First, set a 10-second delay before allowing spawns
+    const initialDelay = setTimeout(() => {
+      setSpawnStarted(true);
+    }, 10000);
+
+    return () => clearTimeout(initialDelay);
+  }, []);
+
+  // Modify the spawn effect to check for spawnStarted
+  useEffect(() => {
+    if (!spawnStarted || totalSpawned >= maxSkeletons) return;
 
     const spawnTimer = setInterval(() => {
       setEnemies(prev => {
@@ -168,8 +197,8 @@ export default function Scene2({
             position: spawnPosition.clone(),
             initialPosition: spawnPosition.clone(),
             currentPosition: spawnPosition.clone(),
-            health: 250, // Scene2-specific health
-            maxHealth: 250, // Scene2-specific max health
+            health: 225, // Scene2-specific health
+            maxHealth: 225, // Scene2-specific max health
           };
         });
         
@@ -179,7 +208,7 @@ export default function Scene2({
     }, spawnInterval);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval, spawnCount]);
+  }, [totalSpawned, maxSkeletons, spawnInterval, spawnCount, spawnStarted]);
 
   return (
     <>
@@ -199,7 +228,7 @@ export default function Scene2({
 
       {/* Ground Environment with desert-like terrain */}
       <Terrain 
-        color="#8B4513" // Brown/desert color
+        color="#4a1c2c" // Brown/desert color
         roughness={0.9} 
         metalness={0.1}
       />

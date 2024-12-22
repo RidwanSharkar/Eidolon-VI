@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { Mesh, Vector3, Group } from 'three';
+import { Vector3, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import Fireball from '../Spells/Fireball/Fireball';
 import * as THREE from 'three';
@@ -8,10 +8,9 @@ import { WeaponType, WEAPON_DAMAGES } from '../Weapons/weapons';
 import Scythe from '@/Weapons/Scythe';
 import Sword from '@/Weapons/Sword';
 import Sabres from '@/Weapons/Sabres';
-import Sabres2 from '@/Weapons/Sabres2';
-import EtherealBow from '@/Weapons/EtherealBow';
+import EtherealBow from '@/Weapons/EtherBow';
 
-import Smite from '@/Spells/Smite';
+import Smite from '@/Spells/Smite/Smite';
 import DamageNumber from '@/Interface/DamageNumber';
 import Billboard from '@/Interface/Billboard';
 import GhostTrail from '@/Gear/GhostTrail';
@@ -21,63 +20,30 @@ import BonePlate from '@/Gear/BonePlate';
 import BoneTail from '@/Gear/BoneTail';
 import BoneVortex from '@/Gear/BoneVortex';
 import { UnitProps } from './UnitProps';
-import { useUnitControls } from '@/Unit/Hooks/useUnitControls';
+import { useUnitControls } from '@/Unit/useUnitControls';
 import { calculateDamage } from '@/Weapons/damage';
+import Boneclaw from '@/Spells/Boneclaw/Boneclaw';
+import Blizzard from '@/Spells/Blizzard/Blizzard';
+import Retribute from '@/Spells/Retribute/Retribute';
+import { useRetribute } from '@/Spells/Retribute/useRetribute';
+import { useAbilityKeys } from './useAbilityKeys';
+import { useFirebeamManager } from './useFirebeamManager';
+import Firebeam from '../Spells/Firebeam/Firebeam';
+import Staff from '@/Weapons/Staff';
+import ChargedOrbitals, { ORBITAL_COOLDOWN } from '@/Unit/ChargedOrbitals';
+import Reanimate, { ReanimateRef } from '../Spells/Passive/Reanimate';
 
-// DISGUSTING FILE REFACCOTR AF
 
-const FIREBALL_COOLDOWN = 9000; // orb cooldown
+// DISGUSTING FILE REFACTOR AF 
+// ISOLATE BEFORE SPLITTING: SMITE- >FIREBALL -> , BOW 
 
-const OrbitalParticles = ({ parentRef, fireballCharges }: { 
-  parentRef: React.RefObject<Group>;
-  fireballCharges: Array<{ id: number; available: boolean; cooldownStartTime: number | null }>;
-}) => {
-  const particlesRef = useRef<Mesh[]>([]);
-  const particleCount = 8;
-  const orbitRadius = 0.6;
-  const orbitSpeed = 1.2;
-  const particleSize = 0.09;
+//=====================================================================================================
 
-  useFrame(() => {
-    if (!parentRef.current) return;
+//  ORBITAL CHARGES 
 
-    particlesRef.current.forEach((particle, i) => {
-      const angle = (i / particleCount) * Math.PI * 2 + Date.now() * 0.001 * orbitSpeed;
-      const x = Math.cos(angle) * orbitRadius;
-      const z = Math.sin(angle) * orbitRadius;
-      const y = Math.sin(Date.now() * 0.002 + i) * 0.1;
+//=====================================================================================================
 
-      particle.position.set(x, y, z);
-    });
-  });
-
-  return (
-    <>
-      {Array.from({ length: particleCount }).map((_, i) => {
-        const chargeStatus = fireballCharges[i];
-        
-        return (
-          <mesh
-            key={i}
-            ref={(el) => {
-              if (el) particlesRef.current[i] = el;
-            }}
-          >
-            <sphereGeometry args={[particleSize, 8, 8]} />
-            <meshStandardMaterial
-              color={chargeStatus?.available ? "#00ff44" : "#333333"}
-              emissive={chargeStatus?.available ? "#00ff44" : "#333333"}
-              emissiveIntensity={chargeStatus?.available ? 2 : 0.5}
-              transparent
-              opacity={chargeStatus?.available ? 0.8 : 0.4}
-            />
-          </mesh>
-        );
-      })}
-    </>
-  );
-};
-
+// FIREBALL INTERFACE 
 interface FireballData {
   id: number;
   position: Vector3;
@@ -86,12 +52,15 @@ interface FireballData {
   maxDistance: number;
 }
 
-// NEEDS COLLOSAL REFACTORING hamie
+//=====================================================================================================
+//=====================================================================================================
+//=====================================================================================================
+
+// EXPORT UNIT
 export default function Unit({
   onHit,
   controlsRef,
   currentWeapon,
-  onWeaponSelect,
   health,
   maxHealth,
   isPlayer = false,
@@ -99,21 +68,26 @@ export default function Unit({
   onAbilityUse,
   onPositionUpdate,
   enemyData,
+  onHealthChange,
 }: UnitProps) {
   const groupRef = useRef<Group>(null);
   const [isSwinging, setIsSwinging] = useState(false);
   const [fireballs, setFireballs] = useState<FireballData[]>([]);
   const nextFireballId = useRef(0);
   const { camera } = useThree();
-  const { keys } = useUnitControls({
+  const { keys: movementKeys } = useUnitControls({
     groupRef,
     controlsRef,
     camera,
     onPositionUpdate
   });
+
+  // SMITE 
   const [isSmiting, setIsSmiting] = useState(false);
   const [smiteEffects, setSmiteEffects] = useState<{ id: number; position: Vector3 }[]>([]);
   const nextSmiteId = useRef(0);
+
+  // DAMAGE NUMBERS 
   const [damageNumbers, setDamageNumbers] = useState<{
     id: number;
     damage: number;
@@ -123,10 +97,14 @@ export default function Unit({
   }[]>([]);
   const nextDamageNumberId = useRef(0);
   const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
+
+  // BOW CHARGES 
   const [isBowCharging, setIsBowCharging] = useState(false);
   const [bowChargeProgress, setBowChargeProgress] = useState(0);
   const bowChargeStartTime = useRef<number | null>(null);
   const bowChargeLineOpacity = useRef(0);
+
+  // PROJECTILES 
   const [activeProjectiles, setActiveProjectiles] = useState<Array<{
     id: number;
     position: Vector3;
@@ -135,7 +113,11 @@ export default function Unit({
     startTime: number;
     maxDistance: number;
     startPosition: Vector3;
+    hasCollided?: boolean;
   }>>([]);
+
+
+  // FIREBALL ORBITAL CHARGES
   const [fireballCharges, setFireballCharges] = useState<Array<{
     id: number;
     available: boolean;
@@ -151,8 +133,59 @@ export default function Unit({
     { id: 8, available: true, cooldownStartTime: null }
   ]);
   const [collectedBones, ] = useState<number>(15); // LATER
-  const pendingLightningTargets = useRef<Set<string>>(new Set());
 
+
+
+  const pendingLightningTargets = useRef<Set<string>>(new Set()); // WHAT THIS FOR? 
+
+
+  const [activeEffects, setActiveEffects] = useState<Array<{
+    id: number;
+    type: string;
+    position: Vector3;
+    direction: Vector3;
+  }>>([]);
+
+
+  // RETRIBUTE - TO AVOID RECURSION
+  const handleRetributeComplete = useCallback(() => {
+    console.log('Retribute has completed.');
+    // dditional logic needed after Retribute completes
+  }, []);
+  const { isRetributing, startRetribute, stopRetribute } = useRetribute({
+    maxHealth,
+    onHealthChange: (newHealth) => {
+      console.log('Health Changed:', newHealth);
+      if (onHealthChange) {
+        if (typeof newHealth === 'function') {
+          const nextHealth = newHealth(health);
+          console.log('Updated Health:', nextHealth);
+          onHealthChange(nextHealth);
+        } else {
+          console.log('Set Health To:', newHealth);
+          onHealthChange(newHealth);
+        }
+      }
+    },
+    duration: 5, // 5 seconds duration
+    onHeal: (amount, isHealing) => {
+      setDamageNumbers(prev => [
+        ...prev,
+        {
+          id: nextDamageNumberId.current++,
+          damage: amount,
+          position: groupRef.current?.position.clone().add(new Vector3(0, 1, 0)) || new Vector3(),
+          isCritical: false,
+          isHealing: isHealing
+        }
+      ]);
+    },
+    onComplete: handleRetributeComplete
+  });
+
+  //=====================================================================================================
+
+  // FIREBALL SHOOTING 
   const shootFireball = useCallback(() => {
     if (!groupRef.current) return;
 
@@ -184,20 +217,22 @@ export default function Unit({
     setFireballs(prev => prev.filter(fireball => fireball.id !== id));
   };
 
+  //=====================================================================================================
+
+  // SMITE LOGIC
   const handleWeaponHit = (targetId: string) => {
     if (!groupRef.current || !isSwinging) return;
 
-    // Add hit cooldown check
     const now = Date.now();
     const lastHitTime = hitCountThisSwing[`${targetId}_time`] || 0;
-    const hitCooldown = 350; // double attack detection
+    const hitCooldown = 240; // double attack detection
     
     if (now - lastHitTime < hitCooldown) return;
 
     const target = enemyData.find(e => e.id === targetId);
     if (!target) return;
 
-    // When updating hit count, also store the hit time
+    // store the hit time
     setHitCountThisSwing(prev => ({
       ...prev,
       [target.id]: (prev[target.id] || 0) + 1,
@@ -218,75 +253,93 @@ export default function Unit({
     const weaponRange = (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) ? 5.0 : 4.5;
 
     if (distance <= weaponRange) {
+      // Add new angle check ONLY for Sabres
+      if (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) {
+        const toTarget = new Vector3()
+          .subVectors(target.position, groupRef.current.position)
+          .normalize();
+        const forward = new Vector3(0, 0, 1)
+          .applyQuaternion(groupRef.current.quaternion);
+        
+        const angle = toTarget.angleTo(forward);
+        // Restrict hit detection to a narrower arc (about 60 degrees total)
+        if (Math.abs(angle) > Math.PI / 6) {
+          return;
+        }
+      }
+
       let baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
       
-      // Smite initial hit damage (10)
+      // SMITE LOGIC
       if (isSmiting && currentWeapon === WeaponType.SWORD) {
-        if (pendingLightningTargets.current.has(target.id)) {
+        if (pendingLightningTargets.current.has(target.id) || isProcessingAbility) {
+          return;
+        }
+        
+        setIsProcessingAbility(true);
+        
+        // Initial hit
+        baseDamage = 31;
+        const { damage, isCritical } = calculateDamage(baseDamage);
+        onHit(target.id, damage);
+        
+        // Revalidate target after initial hit
+        const updatedTarget = enemyData.find(e => e.id === target.id);
+        if (!updatedTarget || updatedTarget.health <= 0) {
           return;
         }
 
-        baseDamage = 17;
-        const { damage, isCritical } = calculateDamage(baseDamage);
-        onHit(target.id, damage);
+        // Show initial damage number
+        setDamageNumbers(prev => [...prev, {
+          id: nextDamageNumberId.current++,
+          damage,
+          position: updatedTarget.position.clone(),
+          isCritical
+        }]);
 
-        // Check target's health after initial hit
-        const targetAfterInitialDamage = target.health - damage;
-        if (targetAfterInitialDamage > 0) {
-          setDamageNumbers(prev => [...prev, {
-            id: nextDamageNumberId.current++,
-            damage,
-            position: target.position.clone(),
-            isCritical
-          }]);
+        // Track pending lightning
+        pendingLightningTargets.current.add(target.id);
 
-          // Track that this target is waiting for lightning
-          pendingLightningTargets.current.add(target.id);
-
-          //SMITE DAMAGE
-          const applyLightningDamage = () => {
-            // Get latest target health before applying lightning damage
-            const currentTarget = enemyData.find(e => e.id === target.id);
-            
-            // Additional validation
-            if (!currentTarget || 
-                currentTarget.health <= 0 || 
-                !pendingLightningTargets.current.has(target.id)) {
-              pendingLightningTargets.current.delete(target.id);
-              return;
-            }
-            
-            const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(46);
-            
-            // Apply lightning damage
-            onHit(target.id, lightningDamage);
-
-            // Recheck target's state after damage
-            const updatedTarget = enemyData.find(e => e.id === target.id);
-            if (updatedTarget && updatedTarget.health > 0) {
-              setDamageNumbers(prev => [...prev, {
-                id: nextDamageNumberId.current++,
-                damage: lightningDamage,
-                position: updatedTarget.position.clone(),
-                isCritical: lightningCrit,
-                isLightning: true
-              }]);
-            }
-
+        // Schedule lightning damage
+        setTimeout(() => {
+          // Final validation before lightning
+          const finalTarget = enemyData.find(e => e.id === target.id);
+          if (!finalTarget || 
+              finalTarget.health <= 0 || 
+              !pendingLightningTargets.current.has(target.id)) {
             pendingLightningTargets.current.delete(target.id);
-          };
+            return;
+          }
 
-          // Use a more reliable timing mechanism
-          const lightningTimer = setTimeout(applyLightningDamage, 200);
-          
-          // Clean up timer if component unmounts
-          return () => clearTimeout(lightningTimer);
-        }
+          // Apply lightning damage
+          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(47);
+          onHit(target.id, lightningDamage);
+
+          // Show lightning damage number if target survived
+          const afterLightningTarget = enemyData.find(e => e.id === target.id);
+          if (afterLightningTarget && afterLightningTarget.health > 0) {
+            setDamageNumbers(prev => [...prev, {
+              id: nextDamageNumberId.current++,
+              damage: lightningDamage,
+              position: afterLightningTarget.position.clone(),
+              isCritical: lightningCrit,
+              isLightning: true
+            }]);
+          }
+
+          pendingLightningTargets.current.delete(target.id);
+        }, 200);
+
+        setTimeout(() => {
+          setIsProcessingAbility(false);
+        }, 250); // Slightly longer than your lightning delay
 
         return;
       }
 
-      // Normal weapon hit handling
+      //=====================================================================================================
+
+      // NORMAL WEAPON HIT HANDLING
       const { damage, isCritical } = calculateDamage(baseDamage);
       onHit(target.id, damage);
 
@@ -340,7 +393,9 @@ export default function Unit({
       });
     }
 
-    // Use delta for smoother bow charging
+    //=====================================================================================================
+
+    // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
       const progress = Math.min(chargeTime / 2, 1); // 2 seconds for full charge
@@ -349,14 +404,14 @@ export default function Unit({
       // Smooth charge line opacity using delta
       const targetOpacity = progress;
       const currentOpacity = bowChargeLineOpacity.current;
-      bowChargeLineOpacity.current += (targetOpacity - currentOpacity) * delta * 5;
+      bowChargeLineOpacity.current += (targetOpacity - currentOpacity) * delta * 15;
 
       if (progress >= 1) {
         releaseBowShot(1);
       }
     }
 
-    // Update projectiles with range limit and collision detection
+    // Update projectiles with piercing behavior
     setActiveProjectiles(prev => prev.map(projectile => {
       // Calculate distance traveled
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
@@ -369,11 +424,11 @@ export default function Unit({
             .multiplyScalar(speed)
         );
 
-        // Check for collisions with enemies
+        // Check for collisions with enemies but don't remove projectile
         enemyData.forEach(enemy => {
           const distanceToEnemy = projectile.position.distanceTo(enemy.position);
-          if (distanceToEnemy < 1.5) { // Hit radius
-            handleProjectileHit(projectile.id, enemy.id);
+          if (distanceToEnemy < 1.4) { // Hit radius
+            handleProjectileHit(projectile.id, enemy.id, projectile.power);
           }
         });
         
@@ -382,10 +437,12 @@ export default function Unit({
       return projectile;
     }).filter(projectile => {
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
-      return distanceTraveled < projectile.maxDistance;
+      return distanceTraveled < projectile.maxDistance; // Only remove when max distance reached
     }));
-    
-    // Update fireballs with collision detection
+
+    //=====================================================================================================
+
+    // FIREBALLS 
     setFireballs(prev => prev.map(fireball => {
       const distanceTraveled = fireball.position.distanceTo(fireball.startPosition);
       
@@ -418,7 +475,7 @@ export default function Unit({
     setFireballCharges(prev => prev.map(charge => {
       if (!charge.available && charge.cooldownStartTime) {
         const elapsedTime = Date.now() - charge.cooldownStartTime;
-        if (elapsedTime >= FIREBALL_COOLDOWN) {
+        if (elapsedTime >= ORBITAL_COOLDOWN) {
           return { ...charge, available: true, cooldownStartTime: null };
         }
       }
@@ -426,13 +483,21 @@ export default function Unit({
     }));
   });
 
+  //=====================================================================================================
+
+  // SABRE BOW SHOT 
   const releaseBowShot = useCallback((power: number) => {
     if (!groupRef.current) return;
 
-    // Calculate damage based on charge time
-    const baseDamage = 5;
-    const maxDamage = 80;
-    const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * power);
+    const baseDamage = 3;
+    const maxDamage = 97;
+    // Exponential scaling (power of 2) plus bonus for full charge
+    const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
+    
+    // Add bonus damage for full charge (power >= 0.99)
+    const fullChargeDamage = power >= 0.99 ? 20 : 0;
+    const finalDamage = scaledDamage + fullChargeDamage;
+    
     const unitPosition = groupRef.current.position.clone();
     unitPosition.y += 1;
 
@@ -465,7 +530,6 @@ export default function Unit({
       const hitRadius = 1.5;
       if (distanceToRay < hitRadius && distanceAlongRay > 0 && distanceAlongRay < maxRange) {
         // Apply the scaled damage directly without additional calculations
-        const finalDamage = scaledDamage;
         const isCritical = power >= 1; // Only fully charged shots are critical
         
         onHit(target.id, finalDamage);
@@ -505,86 +569,55 @@ export default function Unit({
     onAbilityUse(currentWeapon, 'e');
   }, [currentWeapon, groupRef, onHit, setDamageNumbers, setActiveProjectiles, onAbilityUse, enemyData]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
+  //=====================================================================================================
 
-      if (key in keys.current) {
-        keys.current[key as keyof typeof keys.current] = true;
-      }
+  // Move this up, before the first useAbilityKeys call
+  const {  startFirebeam, stopFirebeam } = useFirebeamManager({
+    parentRef: groupRef,
+    onHit,
+    enemyData,
+    setActiveEffects,
+    charges: fireballCharges,
+    setCharges: setFireballCharges
+  });
 
-      if (key === 'q') {
-        const qAbility = abilities[currentWeapon].q;
-        if (qAbility.currentCooldown <= 0 && !isSwinging) {
-          setIsSwinging(true);
-          onAbilityUse(currentWeapon, 'q');
-        }
-      }
+  // ABILITY KEYS 
+  const reanimateRef = useRef<ReanimateRef>(null);
 
-      if (key === 'e') {
-        const eAbility = abilities[currentWeapon].e;
-        if (eAbility.currentCooldown <= 0) {
-          if (currentWeapon === WeaponType.SWORD && !isSmiting) {
-            setIsSmiting(true);
-            setIsSwinging(true);
-            const targetPos = groupRef.current!.position.clone();
-            targetPos.add(new Vector3(0, 0, 3.5).applyQuaternion(groupRef.current!.quaternion));
-            setSmiteEffects(prev => [...prev, { 
-              id: nextSmiteId.current++, 
-              position: targetPos 
-            }]);
-            onAbilityUse(currentWeapon, 'e');
-          } else if ((currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) && !isBowCharging) {
-            // Only start charging if we're not already charging
-            setIsBowCharging(true);
-            bowChargeStartTime.current = Date.now();
-          } else if (!(currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2)) {
-            shootFireball();
-            onAbilityUse(currentWeapon, 'e');
-          }
-        }
-      }
+  useAbilityKeys({
+    keys: movementKeys,
+    groupRef,
+    currentWeapon,
+    abilities,
+    isSwinging,
+    isSmiting,
+    isBowCharging,
+    bowChargeProgress,
+    nextSmiteId,
+    setIsSwinging,
+    setIsSmiting,
+    setIsBowCharging,
+    setBowChargeStartTime: (value) => { bowChargeStartTime.current = value; },
+    setSmiteEffects,
+    setActiveEffects,
+    onAbilityUse,
+    startRetribute,
+    shootFireball,
+    releaseBowShot,
+    startFirebeam,
+    stopFirebeam,
+    castReanimate: () => {
+      reanimateRef.current?.castReanimate();
+    },
+    reanimateRef,
+    health,
+    maxHealth,
+    onHealthChange
+  });
 
-      // Weapon selection using number keys
-      switch (key) {
-        case '1':
-          onWeaponSelect(WeaponType.SCYTHE);
-          break;
-        case '2':
-          onWeaponSelect(WeaponType.SWORD);
-          break;
-        case '3':
-          onWeaponSelect(WeaponType.SABRES);
-          break;
-        case '4':
-          onWeaponSelect(WeaponType.SABRES2);
-          break;
-        default:
-          break;
-      }
-    };
+  //=====================================================================================================
 
-    const handleKeyUp = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-
-      if (key in keys.current) {
-        keys.current[key as keyof typeof keys.current] = false;
-      }
-
-      if (key === 'e' && isBowCharging) {
-        releaseBowShot(bowChargeProgress);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [keys, shootFireball, isSwinging, onWeaponSelect, isSmiting, currentWeapon, abilities, onAbilityUse, isBowCharging, bowChargeProgress, releaseBowShot]);
-
+  // SMITE COMPLETE 
   const handleSmiteComplete = () => {
     setIsSmiting(false);
     setIsSwinging(false);
@@ -595,43 +628,61 @@ export default function Unit({
     setSmiteEffects(prev => prev.filter(effect => effect.id !== id));
   };
 
+  //=====================================================================================================
+
+  // DAMAGE NUMBERS COMPLETE 
   const handleDamageNumberComplete = (id: number) => {
     setDamageNumbers(prev => prev.filter(dn => dn.id !== id));
   };
 
+  //=====================================================================================================
+
+  // SABRE DOUBLE HIT
   useEffect(() => {
     if (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) {
       setHitCountThisSwing({});
     }
   }, [currentWeapon]);
 
-  const handleProjectileHit = (projectileId: number, targetId: string) => {
+  //=====================================================================================================
+
+  //BOW PROJECTILE HIT 
+  const handleProjectileHit = (projectileId: number, targetId: string, power: number) => {
     const isEnemy = targetId.startsWith('enemy');
-    if (!isEnemy) return; // Only hit enemies with projectiles
+    if (!isEnemy) return;
 
     const enemy = enemyData.find(e => e.id === targetId);
     if (!enemy) return;
 
-    const baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
-    const { damage, isCritical } = calculateDamage(baseDamage);
+    // Restore the power-based damage calculation
+    const baseDamage = 3;
+    const maxDamage = 97;
+    // Exponential scaling (power of 2) plus bonus for full charge
+    const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
     
-    onHit(targetId, damage);
+    // Add bonus damage for full charge (power >= 0.99)
+    const fullChargeDamage = power >= 0.99 ? 20 : 0;
+    const finalDamage = scaledDamage + fullChargeDamage;
+    
+    onHit(targetId, finalDamage);
 
     // Check if target is still alive before adding damage number
-    const targetAfterDamage = enemy.health - damage;
+    const targetAfterDamage = enemy.health - finalDamage;
     if (targetAfterDamage > 0) {
       setDamageNumbers(prev => [...prev, {
         id: nextDamageNumberId.current++,
-        damage,
+        damage: finalDamage,
         position: enemy.position.clone(),
-        isCritical
+        isCritical: power >= 0.99 // Only fully charged shots are critical
       }]);
     }
 
-    // Remove the projectile
-    setActiveProjectiles(prev => prev.filter(p => p.id !== projectileId));
+    // No projectile removal - allows piercing
   };
 
+  //=====================================================================================================
+
+  // FIREBALL HIT 
   const handleFireballHit = (fireballId: number, targetId: string) => {
     const isEnemy = targetId.startsWith('enemy');
     if (!isEnemy) return;
@@ -639,7 +690,7 @@ export default function Unit({
     const enemy = enemyData.find(e => e.id === targetId);
     if (!enemy) return;
 
-    const { damage, isCritical } = calculateDamage(40); // Fixed fireball damage
+    const { damage, isCritical } = calculateDamage(41); // Fixed fireball damage
     
     onHit(targetId, damage);
 
@@ -658,7 +709,9 @@ export default function Unit({
     handleFireballImpact(fireballId);
   };
 
+  //=====================================================================================================
 
+  // POSITION UPDATE 
   useFrame(() => {
     if (groupRef.current) {
       const position = groupRef.current.position.clone();
@@ -666,14 +719,38 @@ export default function Unit({
     }
   });
 
+  //=====================================================================================================
+
+  const handleHealthChange = useCallback((healAmount: number) => {
+    if (onHealthChange) {
+      onHealthChange(Math.min(maxHealth, health + healAmount));
+    }
+  }, [onHealthChange, health, maxHealth]);
+
+  // REANIMATE - RENAME
+  <Reanimate
+    ref={reanimateRef}
+    parentRef={groupRef}
+    onHealthChange={handleHealthChange}
+    charges={fireballCharges}
+    setCharges={setFireballCharges}
+  />
+
+  // DIVINESHIELD
+
+  
+
+  // Add at the top with other state
+  const [isProcessingAbility, setIsProcessingAbility] = useState(false);
+
   return (
     <>
       <group ref={groupRef} position={[0, 1, 0]}>
         {/* HEAD - core sphere with striped pattern */}
         <mesh>
-          <sphereGeometry args={[0.45, 32, 32]} />
+          <sphereGeometry args={[0.15, 32, 32]} />
           <meshPhongMaterial
-            color="#67f2b9"
+            color="#EAC4D5"
             transparent
             opacity={0.2}
             shininess={80}
@@ -684,7 +761,7 @@ export default function Unit({
         <mesh scale={1.3}>
           <sphereGeometry args={[0.45, 32, 32]} />
           <meshBasicMaterial
-            color="#39ff14"
+            color="#EAC4D5"
             transparent
             opacity={0.1}
             depthWrite={false}
@@ -695,10 +772,10 @@ export default function Unit({
         <mesh position={[0, 0.2, 0.3]} scale={0.35}>
           <sphereGeometry args={[0.4, 32, 32]} />
           <meshPhongMaterial
-            color="#67f2b9"
+            color="#EAC4D5"
             transparent
             opacity={0.6}
-            emissive="#67f2b9"
+            emissive="#EAC4D5"
             emissiveIntensity={0.3}
           />
         </mesh>
@@ -724,24 +801,26 @@ export default function Unit({
           </group>
         </group>
 
-        <OrbitalParticles parentRef={groupRef} fireballCharges={fireballCharges} />
+        <ChargedOrbitals 
+          parentRef={groupRef} 
+          charges={fireballCharges}
+        />
         <BonePlate />
         <BoneTail />
         
-        {currentWeapon === WeaponType.SABRES2 ? (
-          <Sabres2 
-            isSwinging={isSwinging} 
-            onSwingComplete={handleSwingComplete}
-            onLeftSwingStart={() => {}}
-            onRightSwingStart={() => {}}
-          />
-        ) : currentWeapon === WeaponType.SABRES ? (
+        {currentWeapon === WeaponType.SABRES ? (
           <Sabres 
             isSwinging={isSwinging} 
             onSwingComplete={handleSwingComplete}
             onLeftSwingStart={() => {}}
             onRightSwingStart={() => {}}
             isBowCharging={isBowCharging}
+          />
+        ) : currentWeapon === WeaponType.STAFF ? (
+          <Staff 
+            isSwinging={isSwinging}
+            onSwingComplete={handleSwingComplete}
+            parentRef={groupRef}
           />
         ) : currentWeapon === WeaponType.SCYTHE ? (
           <Scythe 
@@ -770,9 +849,8 @@ export default function Unit({
               <planeGeometry args={[1, 0.1]} />
               <meshBasicMaterial color="#333333" />
             </mesh>
-            <mesh position={[-0.5 + (health / maxHealth) * 0.5, 0, 0.001]}>
+            <mesh position={[0.5 + (health / maxHealth) * 0.5, 0, 0.001]}>
               <planeGeometry args={[(health / maxHealth), 0.08]} />
-              <meshBasicMaterial color="#ff3333" />
             </mesh>
           </Billboard>
         )}
@@ -813,7 +891,7 @@ export default function Unit({
 
       {(currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) && isBowCharging && (
         <EtherealBow
-          position={groupRef.current?.position.clone().add(new Vector3(0, 1, 0)) || new Vector3()}
+          position={groupRef.current?.position.clone().add(new Vector3(0, 1  , 0)) || new Vector3()}
           direction={new Vector3(0, 0, 1).applyQuaternion(groupRef.current?.quaternion || new THREE.Quaternion())}
           chargeProgress={bowChargeProgress}
           isCharging={isBowCharging}
@@ -832,18 +910,18 @@ export default function Unit({
             ]}
           >
             <mesh rotation={[Math.PI/2, 0, 0]}>
-              <cylinderGeometry args={[0.2, 0.4, 1.2, 8]} />
+              <cylinderGeometry args={[0.005, 0.1, 1.2, 8]} />
               <meshStandardMaterial
                 color="#00ffff"
                 emissive="#00ffff"
-                emissiveIntensity={5}
+                emissiveIntensity={2.5}
                 transparent
                 opacity={0.9}
               />
             </mesh>
 
             <mesh rotation={[Math.PI/2, 0, 0]}>
-              <sphereGeometry args={[0.3, 16, 16]} />
+              <sphereGeometry args={[0.00025, 16, 16]} />
               <meshStandardMaterial
                 color="#ffffff"
                 emissive="#ffffff"
@@ -853,19 +931,8 @@ export default function Unit({
               />
             </mesh>
 
-            <mesh scale={[1.2, 1.2, 1.5]}>
-              <sphereGeometry args={[0.4, 16, 16]} />
-              <meshStandardMaterial
-                color="#80ffff"
-                emissive="#40ffff"
-                emissiveIntensity={3}
-                transparent
-                opacity={0.3}
-                blending={THREE.AdditiveBlending}
-              />
-            </mesh>
 
-            {[...Array(4)].map((_, i) => (
+            {[...Array(6)].map((_, i) => (
               <mesh
                 key={i}
                 position={[
@@ -874,7 +941,7 @@ export default function Unit({
                   -i * 0.3
                 ]}
               >
-                <sphereGeometry args={[0.15 - i * 0.03, 8, 8]} />
+                <sphereGeometry args={[0.05 - i * 0.03, 8, 8]} />
                 <meshStandardMaterial
                   color="#00ffff"
                   emissive="#00ffff"
@@ -888,10 +955,10 @@ export default function Unit({
             {[...Array(3)].map((_, i) => (
               <mesh
                 key={`ring-${i}`}
-                position={[0, 0, -i * 0.4]}
-                rotation={[Math.PI / 2, 0, Date.now() * 0.003 + i * Math.PI / 3]}
+                position={[0, 0, -i * 0.45-0.5]}
+                rotation={[Math.PI , 0, Date.now() * 0.003 + i * Math.PI / 3]}
               >
-                <torusGeometry args={[0.5 + i * 0.1, 0.05, 8, 16]} />
+                <torusGeometry args={[0.2 + i * 0.1, 0.05, 8, 16]} />
                 <meshStandardMaterial
                   color="#00ffff"
                   emissive="#00ffff"
@@ -918,7 +985,9 @@ export default function Unit({
             />
           </group>
 
-          {projectile.power >= 1 && (
+          {projectile.power >= 1 && 
+           projectile.position.distanceTo(projectile.startPosition) < projectile.maxDistance && 
+           !projectile.hasCollided && (
             <group
               position={projectile.position.toArray()}
               rotation={[
@@ -927,30 +996,30 @@ export default function Unit({
                 0
               ]}
             >
-              {[...Array(12)].map((_, i) => {
-                const scale = 1 - (i * 0.08);
-                const opacity = 0.8 - (i * 0.06);
-                const offset = -i * 0.5;
+              {[...Array(10)].map((_, i) => {
+                const scale = (i * 0.15);
+                const opacity = 1 - (i * 0.09);
+                const offset = -i * 0.6 + 0.25;
                 
                 return (
                   <group 
                     key={`power-trail-${i}`}
                     position={[0, 0, offset]}
-                    scale={[scale * 0.6, scale * 0.6, 1]}
+                    scale={[scale *0.3 , scale *0.3, 1]}
                   >
                     <mesh>
-                      <torusGeometry args={[0.5, 0.15, 8, 16]} />
+                      <torusGeometry args={[0.15, 0.15, 8, 16]} />
                       <meshStandardMaterial
                         color="#00ffff"
                         emissive="#00ffff"
-                        emissiveIntensity={8}
+                        emissiveIntensity={7}
                         transparent
                         opacity={opacity}
                         blending={THREE.AdditiveBlending}
                       />
                     </mesh>
 
-                    <mesh scale={1.2}>
+                    <mesh scale={1.5}>
                       <torusGeometry args={[0.5, 0.2, 8, 16]} />
                       <meshStandardMaterial
                         color="#ffffff"
@@ -978,6 +1047,104 @@ export default function Unit({
 
       <BoneVortex parentRef={groupRef} />
       <BoneAura parentRef={groupRef} />
+
+      {activeEffects.map(effect => {
+        if (effect.type === 'boneclaw') {
+          return (
+            <Boneclaw
+              key={effect.id}
+              position={effect.position}
+              direction={effect.direction}
+              parentRef={groupRef}
+              enemyData={enemyData}
+              onComplete={() => {
+                setActiveEffects(prev => 
+                  prev.filter(e => e.id !== effect.id)
+                );
+              }}
+              onHitTarget={(targetId, damage, isCritical, position, isBoneclaw) => {
+                onHit(targetId, damage);
+                setDamageNumbers(prev => [...prev, {
+                  id: nextDamageNumberId.current++,
+                  damage,
+                  position: position.clone(),
+                  isCritical,
+                  isBoneclaw
+                }]);
+              }}
+            />
+          );
+        } else if (effect.type === 'blizzard') {
+          return (
+            <Blizzard
+              key={effect.id}
+              position={effect.position}
+              enemyData={enemyData}
+              parentRef={groupRef}
+              onHitTarget={(targetId, damage, isCritical, position, isBlizzard) => {
+                console.log('Creating blizzard damage number:', { damage, isCritical, isBlizzard });
+                onHit(targetId, damage);
+                setDamageNumbers(prev => [...prev, {
+                  id: nextDamageNumberId.current++,
+                  damage,
+                  position: position.clone(),
+                  isCritical,
+                  isBlizzard: true
+                }]);
+              }}
+              onComplete={() => {
+                setActiveEffects(prev => 
+                  prev.filter(e => e.id !== effect.id)
+                );
+              }}
+            />
+          );
+        } else if (effect.type === 'firebeam') {
+          return (
+            <Firebeam
+              key={effect.id}
+              position={effect.position}
+              direction={effect.direction}
+              onComplete={() => {
+                setActiveEffects(prev => 
+                  prev.filter(e => e.id !== effect.id)
+                );
+              }}
+            />
+          );
+        }
+        return null;
+      })}
+
+      {isRetributing && (
+        <Retribute
+          position={groupRef.current?.position || new Vector3()}
+          parentRef={groupRef}
+          onComplete={stopRetribute}
+          onHeal={(amount, isHealing) => {
+            console.log(`Healing: +${amount} health`);
+            // Utilize isHealing to differentiate between healing and damage
+            setDamageNumbers(prev => [
+              ...prev,
+              {
+                id: nextDamageNumberId.current++,
+                damage: amount,
+                position: groupRef.current?.position.clone().add(new Vector3(0, 1, 0)) || new Vector3(),
+                isCritical: false,
+                isHealing: isHealing // Use the parameter instead of hardcoding
+              }
+            ]);
+          }}
+        />
+      )}
+
+      <Reanimate
+        ref={reanimateRef}
+        parentRef={groupRef}
+        onHealthChange={handleHealthChange}
+        charges={fireballCharges}
+        setCharges={setFireballCharges}
+      />
     </>
   );
 }

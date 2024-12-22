@@ -10,7 +10,7 @@ interface SabreProps {
     onRightSwingStart: () => void;
     isBowCharging: boolean;
   }
-  
+
   import { useRef } from 'react';
   import { Group, Shape } from 'three';
   import { useFrame } from '@react-three/fiber';
@@ -211,7 +211,7 @@ interface SabreProps {
       return shape;
     };
   
-    // Make inner blade shape match outer blade shape more closely
+    // Make inner blade shape match outer blade
     const createInnerBladeShape = () => {
       const shape = new Shape();
   
@@ -255,7 +255,7 @@ interface SabreProps {
       depth: 0.02, // Even thinner blade
       bevelEnabled: true,
       bevelThickness: 0.004,
-      bevelSize: 0.008,
+      bevelSize: 0.01,
       bevelSegments: 3,
     };
   
@@ -269,7 +269,7 @@ interface SabreProps {
   
     return (
       <group 
-        position={[0, 0, 0]} 
+        position={[0, 0, 0.]} 
         rotation={[0, 0, 0]}
         scale={[0.8, 0.8, 0.8]}
       >
@@ -281,7 +281,7 @@ interface SabreProps {
           scale={[1, 1, 1]}
         >
           {/* Handle */}
-          <group position={[0, -0.2, 0]} rotation={[0, 0, -Math.PI]}>
+          <group position={[0, -0.125, 0]} rotation={[0, 0, -Math.PI]}>
             <mesh>
               <cylinderGeometry args={[0.015, 0.02, 0.45, 12]} />
               <meshStandardMaterial color="#2a3b4c" roughness={0.7} />
@@ -302,8 +302,8 @@ interface SabreProps {
             <mesh>
               <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
               <meshStandardMaterial 
-                color="#0066ff"  // Deeper blue base
-                emissive="#0088ff"  // Slightly lighter blue emission
+                color="#0066ff"
+                emissive="#0088ff"
                 emissiveIntensity={3}
                 metalness={0.9}
                 roughness={0.2}
@@ -312,39 +312,12 @@ interface SabreProps {
               />
             </mesh>
             
-            {/* Inner glow - super bright blue core */}
-            <mesh>
-              <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
-              <meshStandardMaterial 
-                color="#0044ff"
-                emissive="#0088ff"
-                emissiveIntensity={15}
-                metalness={0.9}
-                roughness={0.1}
-                opacity={0.95}
-                transparent
-              />
-            </mesh>
+
             
-            {/* Middle ethereal layer */}
-            <mesh>
-              <extrudeGeometry args={[createInnerBladeShape(), {
-                ...innerBladeExtrudeSettings,
-                depth: 0.04
-              }]} />
-              <meshStandardMaterial 
-                color="#0055ff"
-                emissive="#0077ff"
-                emissiveIntensity={10}
-                metalness={0.8}
-                roughness={0.1}
-                opacity={0.7}
-                transparent
-              />
-            </mesh>
+
             
             {/* Outer ethereal glow */}
-            <mesh>
+            <mesh position={[0, 0, -0.02]}>  {/* Offset to center */}
               <extrudeGeometry args={[createInnerBladeShape(), {
                 ...innerBladeExtrudeSettings,
                 depth: 0.06
@@ -360,27 +333,12 @@ interface SabreProps {
               />
             </mesh>
             
-            {/* Additional outer glow */}
-            <mesh>
-              <extrudeGeometry args={[createInnerBladeShape(), {
-                ...innerBladeExtrudeSettings,
-                depth: 0.08
-              }]} />
-              <meshStandardMaterial 
-                color="#0022ff"
-                emissive="#0044ff"
-                emissiveIntensity={6}
-                metalness={0.6}
-                roughness={0.1}
-                opacity={0.2}
-                transparent
-              />
-            </mesh>
+
             
             {/* Point light for local illumination */}
             <pointLight
               color="#0088ff"
-              intensity={5}
+              intensity={1}
               distance={2}
               decay={2}
             />
@@ -395,7 +353,7 @@ interface SabreProps {
           scale={[1, 1, 1]}
         >
           {/* Handle */}
-          <group position={[0, -0.2, 0]} rotation={[0, 0, -Math.PI]}>
+          <group position={[0, -0.125, 0]} rotation={[0, 0, -Math.PI]}>
             <mesh>
               <cylinderGeometry args={[0.015, 0.02, 0.45, 12]} />
               <meshStandardMaterial color="#2a3b4c" roughness={0.7} />
@@ -411,13 +369,13 @@ interface SabreProps {
           </group>
           
           {/* Blade */}
-          <group position={[0, 0.3, 0.0]} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+          <group position={[0, 0.3, 0.]} rotation={[0, Math.PI / 2, Math.PI / 2]}>
             {/* Base blade */}
             <mesh>
               <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
               <meshStandardMaterial 
-                color="#0066ff"  // Deeper blue base
-                emissive="#0088ff"  // Slightly lighter blue emission
+                color="#0066ff"
+                emissive="#0088ff"
                 emissiveIntensity={3}
                 metalness={0.9}
                 roughness={0.2}
@@ -426,39 +384,9 @@ interface SabreProps {
               />
             </mesh>
             
-            {/* Inner glow - super bright blue core */}
-            <mesh>
-              <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
-              <meshStandardMaterial 
-                color="#0044ff"
-                emissive="#0088ff"
-                emissiveIntensity={15}
-                metalness={0.9}
-                roughness={0.1}
-                opacity={0.95}
-                transparent
-              />
-            </mesh>
-            
-            {/* Middle ethereal layer */}
-            <mesh>
-              <extrudeGeometry args={[createInnerBladeShape(), {
-                ...innerBladeExtrudeSettings,
-                depth: 0.04
-              }]} />
-              <meshStandardMaterial 
-                color="#0055ff"
-                emissive="#0077ff"
-                emissiveIntensity={10}
-                metalness={0.8}
-                roughness={0.1}
-                opacity={0.7}
-                transparent
-              />
-            </mesh>
             
             {/* Outer ethereal glow */}
-            <mesh>
+            <mesh position={[0, 0, -0.02]}>  {/* Offset to center */}
               <extrudeGeometry args={[createInnerBladeShape(), {
                 ...innerBladeExtrudeSettings,
                 depth: 0.06
@@ -473,28 +401,12 @@ interface SabreProps {
                 transparent
               />
             </mesh>
-            
-            {/* Additional outer glow */}
-            <mesh>
-              <extrudeGeometry args={[createInnerBladeShape(), {
-                ...innerBladeExtrudeSettings,
-                depth: 0.08
-              }]} />
-              <meshStandardMaterial 
-                color="#0022ff"
-                emissive="#0044ff"
-                emissiveIntensity={6}
-                metalness={0.6}
-                roughness={0.1}
-                opacity={0.2}
-                transparent
-              />
-            </mesh>
+
             
             {/* Point light for local illumination */}
             <pointLight
               color="#0088ff"
-              intensity={5}
+              intensity={2}
               distance={2}
               decay={2}
             />

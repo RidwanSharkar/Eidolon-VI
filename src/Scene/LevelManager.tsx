@@ -1,61 +1,39 @@
-import React, { useState } from 'react';
+// src/Scene/LevelManager.tsx
+import React, { useCallback } from 'react';
 import Scene from './Scene';
 import Scene2 from './Scene2';   
-import LevelUpNotification from '../Interface/LevelUpNotification';
 import { SceneProps } from './SceneProps';
 
 interface LevelManagerProps {
-  sceneProps: SceneProps;
+  sceneProps: SceneProps & {
+    spawnInterval?: number;
+    maxSkeletons?: number;
+    initialSkeletons?: number;
+  };
+  onAbilityUnlock: (abilityType: 'r' | 'passive') => void;
+  onLevelTransition: (level: number, showPanel: boolean) => void;
+  currentLevel: number;
 }
 
-export default function LevelManager({ sceneProps }: LevelManagerProps) {
-  const [currentLevel, setCurrentLevel] = useState(1);
-  const [showLevelUp, setShowLevelUp] = useState(false);
-
-  const handleLevelComplete = () => {
+export default function LevelManager({ 
+  sceneProps, 
+  onLevelTransition,
+  currentLevel 
+}: LevelManagerProps) {
+  const handleLevelComplete = useCallback(() => {
     if (currentLevel === 1) {
-      setShowLevelUp(true);
-      
-      // Wait 15 seconds before starting level 2
-      setTimeout(() => {
-        setCurrentLevel(2);
-        setShowLevelUp(false);
-      }, 20000);
+      onLevelTransition(2, true);
+    } else if (currentLevel === 2) {
+      onLevelTransition(3, true);
     }
-  };
-
-  const sceneCommonProps = {
-    ...sceneProps,
-    onLevelComplete: handleLevelComplete,
-    spawnInterval: 10000,
-  };
+  }, [currentLevel, onLevelTransition]);
 
   return (
     <>
       {currentLevel === 1 ? (
-        <Scene
-          {...sceneCommonProps}
-          maxSkeletons={15}
-          initialSkeletons={5}
-        />
+        <Scene {...sceneProps} onLevelComplete={handleLevelComplete} />
       ) : (
-        <Scene2
-          {...sceneCommonProps}
-          maxSkeletons={25}
-          initialSkeletons={5}
-          spawnCount={2}
-        />
-      )}
-      {showLevelUp && (
-        <div style={{ 
-          position: 'fixed', 
-          top: '20px', 
-          left: '50%', 
-          transform: 'translateX(-50%)',
-          zIndex: 1000 
-        }}>
-          <LevelUpNotification level={2} />
-        </div>
+        <Scene2 {...sceneProps} onLevelComplete={handleLevelComplete} />
       )}
     </>
   );

@@ -13,7 +13,7 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
   const swordRef = useRef<Group>(null);
   const swingProgress = useRef(0);
   const smiteProgress = useRef(0);
-  const basePosition = [-1.33, 0.75, 0.75] as const;
+  const basePosition = [-1.2, 0.45, 0.75] as const;
   
   useFrame((_, delta) => {
     if (!swordRef.current) return;
@@ -26,7 +26,7 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
       
       if (smitePhase < 0.5) {
         // Wind-up phase: pull back and up, with more movement towards center
-        const windupPhase = smitePhase * 2;
+        const windupPhase = smitePhase * 1.75;
         rotationX = -Math.PI/3 - (windupPhase * Math.PI/3);
         rotationY = windupPhase * Math.PI/4;
         
@@ -64,7 +64,7 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
     }
 
     if (isSwinging) {
-      swingProgress.current += delta * 7;
+      swingProgress.current += delta * 8;
       const swingPhase = Math.min(swingProgress.current / Math.PI, 1);
       
       const pivotX = basePosition[0] + Math.sin(swingPhase * Math.PI) * 2.5;
@@ -133,15 +133,7 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
     // Start at center
     shape.moveTo(0, 0);
     
-    // Left side guard (fixed symmetry)
-    shape.lineTo(-0.2, 0.12);
-    shape.lineTo(-0.12, -0.12);
-    shape.lineTo(0, 0);
-    
-    // Right side guard (matches left exactly)
-    shape.lineTo(0.2, 0.12);
-    shape.lineTo(0.12, -0.12);
-    shape.lineTo(0, 0);
+
     
     // Blade shape with improved symmetry
     shape.lineTo(0, 0.1);
@@ -157,24 +149,25 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
   };
 
   const bladeExtrudeSettings = {
-    steps: 2,
+    steps: 4,
     depth: 0.04,
     bevelEnabled: true,
-    bevelThickness: 0.01,
-    bevelSize: 0.02,
+    bevelThickness: 0.015,
+    bevelSize: 0.025,
     bevelOffset: 0,
-    bevelSegments: 3
+    bevelSegments: 6
   };
 
   const innerBladeExtrudeSettings = {
     ...bladeExtrudeSettings,
-    depth: 0.05,
-    bevelThickness: 0.02,
-    bevelSize: 0.02,
+    depth: 0.06,
+    bevelThickness: 0.03,
+    bevelSize: 0.025,
     bevelOffset: 0,
-    bevelSegments: 3
+    bevelSegments: 6
   };
 
+  
   return (
     <group 
       ref={swordRef} 
@@ -191,15 +184,15 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
         
         {/* Handle wrappings */}
         {[...Array(8)].map((_, i) => (
-          <mesh key={i} position={[0, 0.35 - i * 0.13, 0]}>
-            <torusGeometry args={[0.045, 0.008, 8, 16]} />
+          <mesh key={i} position={[0, 0.35 - i * 0.11, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.045, 0.016, 8, 16]} />
             <meshStandardMaterial color="#1a2b3c" metalness={0.6} roughness={0.4} />
           </mesh>
         ))}
       </group>
       
-      {/* Circular guard centerpiece */}
-      <group position={[0, 0.15, 0]} rotation={[Math.PI, 1.5, Math.PI]}>
+      {/* CIRCLE CONNECTION POINT */}
+      <group position={[-0.025, 0.28, 0]} rotation={[Math.PI, 1.5, Math.PI]}>
         {/* Larger torus */}
         <mesh>
           <torusGeometry args={[0.25, 0.07, 16, 32]} />
@@ -209,6 +202,26 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
             roughness={0.1}
           />
         </mesh>
+        
+        {/* Decorative spikes around torus */}
+        {[...Array(8)].map((_, i) => (
+          <mesh 
+            key={`spike-${i}`} 
+            position={[
+              0.25 * Math.cos(i * Math.PI / 4),
+              0.25 * Math.sin(i * Math.PI / 4),
+              0
+            ]}
+            rotation={[0, 0, i * Math.PI / 4 + Math.PI / 2]}
+          >
+            <coneGeometry args={[0.05, 0.25, 3]} />
+            <meshStandardMaterial 
+              color="#4a5b6c"
+              metalness={0.9}
+              roughness={0.1}
+            />
+          </mesh>
+        ))}
         
         {/* Core orb -   yellow */}
         <mesh>
@@ -235,7 +248,7 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
         </mesh>
         
         <mesh>
-          <sphereGeometry args={[0.12, 16, 16]} />
+          <sphereGeometry args={[0.145, 16, 16]} />
           <meshStandardMaterial
             color="#ff9900"
             emissive="#ff8800"
@@ -246,7 +259,7 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
         </mesh>
         
         <mesh>
-          <sphereGeometry args={[0.15, 16, 16]} />
+          <sphereGeometry args={[.175, 16, 16]} />
           <meshStandardMaterial
             color="#ff9900"
             emissive="#ff8800"

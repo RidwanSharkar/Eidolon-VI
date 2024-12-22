@@ -83,7 +83,7 @@ const RoundedSquareProgress: React.FC<{
   );
 };
 
-export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, maxHealth, abilities, onReset, killCount }: PanelProps) {
+export default function Panel({ currentWeapon, playerHealth, maxHealth, abilities, onReset, killCount }: PanelProps) {
   const [damageNotifications, setDamageNotifications] = useState<DamageNotificationData[]>([]);
   const nextNotificationId = useRef(0);
   const prevHealth = useRef(playerHealth);
@@ -118,14 +118,21 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
     setDamageNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  const getLevel = (kills: number) => Math.floor(kills / 15) + 1;
-  const getRequiredKills = (level: number) => level === 1 ? 15 : 25;
+  const getLevel = (kills: number) => {
+    if (kills < 15) return 1;
+    if (kills < 40) return 2;  // 15 kills for level 1->2, then need 25 more for 2->3
+    return 3;
+  };
+
   const getExpProgress = (kills: number) => {
     const level = getLevel(kills);
-    const requiredKills = getRequiredKills(level);
-    const baseKills = (level - 1) * 15; // Kills from previous levels
-    const currentLevelKills = kills - baseKills;
-    return (currentLevelKills / requiredKills) * 100;
+    
+    if (level === 1) {
+      return (kills / 15) * 100;
+    } else if (level === 2) {
+      return ((kills - 15) / 25) * 100;
+    }
+    return 100;
   };
 
   return (
@@ -178,21 +185,12 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
           </div>
         </div>
 
-        {/* Abilities Section - Now first inside bottomPanel */}
+        {/* Abilities Section */}
         {abilities[currentWeapon] && (
           <div className={styles.abilitiesSection}>
 
-            <div className={styles.ability}>
-              <div className={styles.keyBind}>P</div>
-              <Image 
-                src={abilities[currentWeapon].passive.icon} 
-                alt="Passive ability" 
-                width={40}
-                height={40}
-                className={styles.abilityIcon}
-              />
-            </div>
 
+            {/* Q Ability - Always unlocked */}
             <div className={styles.ability}>
               <div className={styles.keyBind}>Q</div>
               <Image 
@@ -217,6 +215,7 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
               )}
             </div>
 
+            {/* E Ability - Always unlocked */}
             <div className={styles.ability}>
               <div className={styles.keyBind}>E</div>
               <Image 
@@ -241,7 +240,8 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
               )}
             </div>
 
-            <div className={styles.ability}>
+            {/* R Ability */}
+            <div className={`${styles.ability} ${!abilities[currentWeapon].r.isUnlocked ? styles.locked : ''}`}>
               <div className={styles.keyBind}>R</div>
               <Image 
                 src={abilities[currentWeapon].r.icon} 
@@ -250,7 +250,7 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
                 height={40}
                 className={styles.abilityIcon}
               />
-              {abilities[currentWeapon].r.currentCooldown > 0 && (
+              {abilities[currentWeapon].r.currentCooldown > 0 && abilities[currentWeapon].r.isUnlocked && (
                 <div className={styles.cooldownOverlay}>
                   <RoundedSquareProgress
                     size={50}
@@ -264,32 +264,23 @@ export default function Panel({ currentWeapon, onWeaponSelect, playerHealth, max
                 </div>
               )}
             </div>
-
-
+            
+              {/* Passive Ability */}
+              <div className={`${styles.ability} ${!abilities[currentWeapon].passive.isUnlocked ? styles.locked : ''}`}>
+              <div className={styles.keyBind}>1</div>
+              <Image 
+                src={abilities[currentWeapon].passive.icon} 
+                alt="Ability Slot 1" 
+                width={40}
+                height={40}
+                className={styles.abilityIcon}
+              />
+            </div>
           </div>
         )}
 
         {/* Weapons Section - inside bottomPanel */}
-        <div className={styles.weaponIcons}>
-          {Object.values(WeaponType)
-            .filter((_, index) => index < 3)
-            .map((weapon, index) => (
-              <div 
-                key={weapon}
-                className={`${styles.weaponSlot} ${currentWeapon === weapon ? styles.activeWeapon : ''}`}
-                onClick={() => onWeaponSelect(weapon)}
-              >
-                <div className={styles.keyBind}>{index + 1}</div>
-                <Image 
-                  src={`/Eidolon/icons/${index + 1}.svg`} 
-                  alt={weapon} 
-                  width={70} 
-                  height={70} 
-                  className={styles.weaponIcon}
-                />
-              </div>
-            ))}
-        </div>
+       
       </div>
 
       {/* Game Over Overlay */}

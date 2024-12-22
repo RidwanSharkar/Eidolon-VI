@@ -65,11 +65,11 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
     return curve;
   };
 
-  return (
+  return ( // BOW SHAPE
     <group ref={bowRef} position={position.toArray()}>
       {/* Bow frame */}
       <mesh rotation={[Math.PI/2, 0, 0]}>
-        <tubeGeometry args={[createBowCurve(), 64, 0.02, 8, false]} />
+        <tubeGeometry args={[createBowCurve(), 64, 0.035, 8, false]} />
         <meshStandardMaterial 
           color="#00ffff"
           emissive="#00ffff"
@@ -81,7 +81,7 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
 
       {/* Bow string */}
       <mesh>
-        <tubeGeometry args={[createStringCurve(chargeProgress), 32, 0.005, 8, false]} />
+        <tubeGeometry args={[createStringCurve(chargeProgress), 32, 0.02, 8, false]} />
         <meshStandardMaterial 
           color="#ffffff"
           emissive="#ffffff"
@@ -126,7 +126,7 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
         >
           {/* Arrow shaft - increased length from 0.5 to 0.7 */}
           <mesh>
-            <cylinderGeometry args={[0.01, 0.01, 0.7, 8]} />
+            <cylinderGeometry args={[0.002, 0.02, 0.7, 8]} />
             <meshStandardMaterial 
               color="#00ffff"
               emissive="#00ffff"
@@ -151,7 +151,7 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
 
       {/* Charge indicator line */}
       {isCharging && (
-        <mesh rotation={[Math.PI/2, 0, 0]}>
+        <mesh rotation={[-Math.PI/2, -Math.PI, 0]}>
           <tubeGeometry args={[
             new THREE.LineCurve3(
               new THREE.Vector3(0, 0, 0),

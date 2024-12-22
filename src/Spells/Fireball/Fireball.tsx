@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Mesh, Vector3, Clock, Color } from 'three';
+import { Mesh, Vector3, Clock, Color, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import FireballTrail from '@/Spells/Fireball/FireballTrail';
 import * as THREE from 'three'
@@ -13,12 +13,16 @@ interface FireballProps {
 export default function Fireball({ position, direction, onImpact }: FireballProps) {
   const fireballRef = useRef<Mesh>(null);
   const clock = useRef(new Clock());
-  const speed = 0.5;
+  const speed = 0.4;
   const lifespan = 10;
   const currentPosition = useRef(position.clone());
   const { scene } = useThree();
   const size = 0.3;
   const color = new Color('#00ff44');
+  const impactGroup = useRef<Group>(null);
+  const isExploding = useRef(false);
+  const explosionStartTime = useRef(0);
+  const explosionDuration = 1.0; // Duration in seconds
 
   const checkCollision = (nextPosition: Vector3): boolean => {
     const raycaster = new THREE.Raycaster();
@@ -54,6 +58,13 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
     return false;
   };
 
+  const createExplosionEffect = (position: Vector3) => {
+    if (!impactGroup.current) return;
+    isExploding.current = true;
+    explosionStartTime.current = clock.current.getElapsedTime();
+    impactGroup.current.position.copy(position);
+  };
+
   useFrame((_, delta) => {
     if (!fireballRef.current) return;
 
@@ -67,12 +78,33 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
 
     if (checkCollision(nextPosition)) {
       if (fireballRef.current) {
+        createExplosionEffect(currentPosition.current);
         fireballRef.current.removeFromParent();
       }
       onImpact();
     } else {
       currentPosition.current.copy(nextPosition);
       fireballRef.current.position.copy(currentPosition.current);
+    }
+
+    // Handle explosion animation
+    if (isExploding.current && impactGroup.current) {
+      const explosionProgress = (clock.current.getElapsedTime() - explosionStartTime.current) / explosionDuration;
+      
+      if (explosionProgress >= 1) {
+        isExploding.current = false;
+        impactGroup.current.scale.set(1, 1, 1);
+        impactGroup.current.visible = false;
+      } else {
+        const scale = 1 + explosionProgress * 2;
+        impactGroup.current.scale.set(scale, scale, scale);
+        impactGroup.current.visible = true;
+        // Fade out the opacity
+        const mesh = impactGroup.current.children[0] as THREE.Mesh;
+        if (mesh.material instanceof THREE.MeshStandardMaterial) {
+          mesh.material.opacity = 1 - explosionProgress;
+        }
+      }
     }
   });
 
@@ -85,8 +117,22 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
           emissiveIntensity={2}
           toneMapped={false}
         />
-        <pointLight color={color} intensity={8} distance={12} />
+        <pointLight color={color} intensity={5} distance={12} />
       </mesh>
+      <group ref={impactGroup} visible={false}>
+        <mesh>
+          <sphereGeometry args={[size * 1.75, 16, 16]} />
+          <meshStandardMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={2}
+            transparent={true}
+            opacity={1}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      </group>
       <FireballTrail
         color={color}
         size={size}

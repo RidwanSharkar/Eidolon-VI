@@ -3,15 +3,6 @@ import { WeaponType } from '../Weapons/weapons';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { Enemy } from '../Versus/enemy';
 
-export interface AbilityInfo {
-  key: 'q' | 'e' | 'r' | 'passive';
-  cooldown: number;
-  currentCooldown: number;
-  icon: string;
-  maxCooldown: number;
-  name: string;
-}
-
 export interface AbilityButton {
   key: 'q' | 'e' | 'r' | 'passive';
   cooldown: number;
@@ -19,6 +10,7 @@ export interface AbilityButton {
   icon: string;
   maxCooldown: number;
   name: string;
+  isUnlocked: boolean;
 }
 
 export interface WeaponAbilities {
@@ -32,6 +24,7 @@ export type WeaponInfo = Record<WeaponType, WeaponAbilities>;
 
 export interface UnitProps {
   onHit: (targetId: string, damage: number) => void;
+  onHealthChange?: (newHealth: number) => void;
   controlsRef: React.RefObject<OrbitControlsImpl>;
   currentWeapon: WeaponType;
   onWeaponSelect: (weapon: WeaponType) => void;

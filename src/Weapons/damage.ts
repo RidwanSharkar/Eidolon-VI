@@ -4,7 +4,7 @@ export interface DamageResult {
 }
 
 export function calculateDamage(baseAmount: number): DamageResult {
-  const isCritical = Math.random() < 0.20;
+  const isCritical = Math.random() < 0.11;
   const damage = isCritical ? baseAmount * 2 : baseAmount;
   return { damage, isCritical };
 }

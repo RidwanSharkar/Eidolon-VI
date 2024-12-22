@@ -16,9 +16,14 @@ import DriftingSouls from '../Environment/DriftingSouls';
 import BackgroundStars from '../Environment/Stars';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
+//import BossUnit from '../Versus/BossUnit';
+//const BOSS_SPAWN_POSITION = new Vector3(10, 0, 10); // Fixed position for testing
 
-interface ScenePropsWithCallback extends SceneType {
+interface SceneProps extends SceneType {
   onLevelComplete: () => void;
+  spawnInterval?: number;
+  maxSkeletons?: number;
+  initialSkeletons?: number;
 }
 
 export default function Scene({
@@ -31,10 +36,10 @@ export default function Scene({
   unitProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 10000,
+  spawnInterval = 5000,
   maxSkeletons = 15,
   initialSkeletons = 5,
-}: ScenePropsWithCallback) {
+}: SceneProps) {
   // State for enemies (with Scene1-specific health values)
   const [enemies, setEnemies] = useState<Enemy[]>(() => {
     // Initialize with initial skeletons
@@ -44,8 +49,8 @@ export default function Scene({
         id: `skeleton-${index}`,
         position: spawnPosition.clone(),
         initialPosition: spawnPosition.clone(),
-        health: 200,
-        maxHealth: 200,
+        health: 175,
+        maxHealth: 175,
       };
     });
   });
@@ -111,8 +116,8 @@ export default function Scene({
         id: `skeleton-${index}`,
         position: spawnPosition.clone(),
         initialPosition: spawnPosition.clone(),
-        health: 200,
-        maxHealth: 200,
+        health: 175,
+        maxHealth: 175,
       };
     }));
   }, [initialSkeletons, unitProps.maxHealth]);
@@ -129,6 +134,20 @@ export default function Scene({
     abilities: unitProps.abilities,
     onAbilityUse: unitProps.onAbilityUse,
     onPositionUpdate: handlePlayerPositionUpdate,
+    onHealthChange: (newHealth: number | ((current: number) => number)) => {
+      if (typeof newHealth === 'function') {
+        // If it's a function, pass it the current health
+        setPlayerHealth(current => {
+          const nextHealth = newHealth(current);
+          unitProps.onHealthChange?.(nextHealth);
+          return nextHealth;
+        });
+      } else {
+        // If it's a direct value
+        setPlayerHealth(newHealth);
+        unitProps.onHealthChange?.(newHealth);
+      }
+    },
     enemyData: enemies.map((enemy) => ({
       id: `enemy-${enemy.id}`,
       position: enemy.position,
@@ -150,7 +169,7 @@ export default function Scene({
     if (totalSpawned >= maxSkeletons) return;
 
     const spawnTimer = setInterval(() => {
-      setEnemies(prev => {
+      setEnemies((prev: Enemy[]) => {
         if (totalSpawned >= maxSkeletons) {
           clearInterval(spawnTimer);
           return prev;
@@ -161,11 +180,11 @@ export default function Scene({
           id: `skeleton-${totalSpawned}`,
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
-          health: 200, // Scene1-specific health
-          maxHealth: 200, // Scene1-specific max health
+          health: 175,
+          maxHealth: 175,
         };
         
-        setTotalSpawned(prev => prev + 1);
+        setTotalSpawned((prev: number) => prev + 1);
         return [...prev, newEnemy];
       });
     }, spawnInterval);
@@ -185,70 +204,91 @@ export default function Scene({
 
   return (
     <>
-      <Behavior 
-        playerHealth={playerHealth}
-        onReset={handleReset}
-        killCount={killCount}
-        onEnemiesDefeated={onLevelComplete}
-        maxSkeletons={maxSkeletons}
-      />
-
-      {/* Background Environment */}
-      <BackgroundStars />
-      <DriftingSouls />
-      <CustomSky />
-      <Planet />
-
-      {/* Ground Environment */}
-      <Terrain />
-      {mountainData.map((data, index) => (
-        <Mountain key={`mountain-${index}`} position={data.position} scale={data.scale} />
-      ))}
-
-      {/* Render all trees */}
-      {treeData.map((data, index) => (
-        <Tree
-          key={`tree-${index}`}
-          position={data.position}
-          scale={data.scale}
-          trunkColor={data.trunkColor}
-          leafColor={data.leafColor}
+      <group>
+        <Behavior 
+          playerHealth={playerHealth}
+          onReset={handleReset}
+          killCount={killCount}
+          onEnemiesDefeated={onLevelComplete}
+          maxSkeletons={maxSkeletons}
         />
-      ))}
 
-      {/* Render all mushrooms */}
-      {mushroomData.map((data, index) => (
-        <Mushroom key={`mushroom-${index}`} position={data.position} scale={data.scale} />
-      ))}
+        {/* Background Environment */}
+        <BackgroundStars />
+        <DriftingSouls />
+        <CustomSky />
+        <Planet />
 
-      {/* Render the main interactive tree */}
-      <Tree
-        position={treePositions.mainTree}
-        scale={1}
-        trunkColor={interactiveTrunkColor}
-        leafColor={interactiveLeafColor}
-      />
+        {/* Ground Environment */}
+        <Terrain 
+          color="#4a1c2c"
+          roughness={0.5}
+          metalness={0.1}
+        />
+        {mountainData.map((data, index) => (
+          <Mountain key={`mountain-${index}`} position={data.position} scale={data.scale} />
+        ))}
 
-      {/* Player Unit with ref */}
-      <group ref={playerRef}>
-        <Unit {...unitComponentProps} />
-      </group>
+        {/* Render all trees */}
+        {treeData.map((data, index) => (
+          <Tree
+            key={`tree-${index}`}
+            position={data.position}
+            scale={data.scale}
+            trunkColor={data.trunkColor}
+            leafColor={data.leafColor}
+          />
+        ))}
 
-      {/* Enemy Units (Skeletons only) */}
-      {enemies.map((enemy) => (
-        <EnemyUnit
-          key={enemy.id}
-          id={enemy.id}
-          initialPosition={enemy.initialPosition}
-          position={enemy.position}
-          health={enemy.health}
-          maxHealth={enemy.maxHealth}
+        {/* Render all mushrooms */}
+        {mushroomData.map((data, index) => (
+          <Mushroom key={`mushroom-${index}`} position={data.position} scale={data.scale} />
+        ))}
+
+        {/* Render the main interactive tree */}
+        <Tree
+          position={treePositions.mainTree}
+          scale={1}
+          trunkColor={interactiveTrunkColor}
+          leafColor={interactiveLeafColor}
+        />
+
+        {/* Player Unit with ref */}
+        <group ref={playerRef}>
+          <Unit {...unitComponentProps} />
+        </group>
+
+        {/* Enemy Units (Skeletons only) */}
+        {enemies.map((enemy) => (
+          <EnemyUnit
+            key={enemy.id}
+            id={enemy.id}
+            initialPosition={enemy.initialPosition}
+            position={enemy.position}
+            health={enemy.health}
+            maxHealth={enemy.maxHealth}
+            onTakeDamage={handleTakeDamage}
+            onPositionUpdate={handleEnemyPositionUpdate}
+            playerPosition={playerPosition}
+            onAttackPlayer={handlePlayerDamage}
+          />
+        ))}
+
+        {/* Boss Unit 
+        <BossUnit
+          key="boss-1"
+          id="boss-1"
+          initialPosition={BOSS_SPAWN_POSITION}
+          position={BOSS_SPAWN_POSITION}
+          health={1000}
+          maxHealth={1000}
           onTakeDamage={handleTakeDamage}
           onPositionUpdate={handleEnemyPositionUpdate}
           playerPosition={playerPosition}
           onAttackPlayer={handlePlayerDamage}
         />
-      ))}
+        */}
+      </group>
     </>
   );
 }
