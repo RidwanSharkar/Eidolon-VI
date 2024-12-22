@@ -201,7 +201,7 @@ export default function HomePage() {
   // Move handleReset up, before sceneProps
   const handleReset = () => {
     // Reset player health
-    setPlayerHealth(200);
+    setPlayerHealth(250);
 
     // Reset skeleton health
     setSkeletonHealths(Array(NUM_SKELETONS).fill(200));

@@ -17,7 +17,7 @@ export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.07, 
+  speed = 0.075, 
   onPositionUpdate,
 }: UseUnitControlsProps) {
   const keys = useRef({

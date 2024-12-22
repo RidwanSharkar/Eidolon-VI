@@ -46,7 +46,7 @@ export const useRetribute = ({ maxHealth, onHealthChange, duration, onHeal, onCo
       
       totalHealingRef.current += healAmount;
       onHeal(healAmount, true);
-    }, 1000);
+    }, 5); 
 
     setTimeout(() => {
       stopRetribute();

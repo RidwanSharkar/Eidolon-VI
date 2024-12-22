@@ -19,15 +19,9 @@ export default function WeaponSelectionPanel({
       onContextMenu={(e) => e.preventDefault()}
     >
       <h2>Eidolon</h2>
+
+      
       <div className={styles.iconSelection}>
-        <div 
-          className={`${styles.icon} ${selectedWeapon === WeaponType.SCYTHE ? styles.selected : ''}`}
-          onClick={() => onWeaponSelect(WeaponType.SCYTHE)}
-        >
-          <div className={styles.iconContent}>
-            <img src="/Eidolon/icons/1.svg" alt="Scythe" />
-          </div>
-        </div>
         <div 
           className={`${styles.icon} ${selectedWeapon === WeaponType.SWORD ? styles.selected : ''}`}
           onClick={() => onWeaponSelect(WeaponType.SWORD)}
@@ -36,6 +30,16 @@ export default function WeaponSelectionPanel({
             <img src="/Eidolon/icons/2.svg" alt="Sword" />
           </div>
         </div>
+
+        <div 
+          className={`${styles.icon} ${selectedWeapon === WeaponType.SCYTHE ? styles.selected : ''}`}
+          onClick={() => onWeaponSelect(WeaponType.SCYTHE)}
+        >
+          <div className={styles.iconContent}>
+            <img src="/Eidolon/icons/1.svg" alt="Scythe" />
+          </div>
+        </div>
+
         <div 
           className={`${styles.icon} ${selectedWeapon === WeaponType.SABRES ? styles.selected : ''}`}
           onClick={() => onWeaponSelect(WeaponType.SABRES)}
@@ -45,6 +49,7 @@ export default function WeaponSelectionPanel({
           </div>
         </div>
       </div>
+
       <button 
         className={styles.startButton}
         onClick={onStart}
