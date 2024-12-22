@@ -198,7 +198,33 @@ export default function HomePage() {
   // FIREBALL MANAGER
   const fireballManagerRef = useRef<{ shootFireball: () => void }>(null);
 
-  // Prepare props for Scene component
+  // Move handleReset up, before sceneProps
+  const handleReset = () => {
+    // Reset player health
+    setPlayerHealth(200);
+
+    // Reset skeleton health
+    setSkeletonHealths(Array(NUM_SKELETONS).fill(200));
+
+    // Reset ability cooldowns
+    setAbilities(prev => {
+      const newAbilities = { ...prev };
+      Object.keys(newAbilities).forEach(weapon => {
+        ['q', 'e'].forEach(ability => {
+          newAbilities[weapon as WeaponType][ability as 'q' | 'e'].currentCooldown = 0;
+        });
+      });
+      return newAbilities;
+    });
+
+    // Reset last hit time
+    setLastHitTime(0);
+
+    // Reset kill count
+    setKillCount(0);
+  };
+
+  // Now declare sceneProps after handleReset
   const sceneProps: SceneProps = {
     mountainData,
     treeData,
@@ -206,6 +232,7 @@ export default function HomePage() {
     treePositions,
     interactiveTrunkColor: interactiveTrunkColor as THREE.Color,
     interactiveLeafColor: interactiveLeafColor as THREE.Color,
+    onReset: handleReset, // Now handleReset is defined before being used
     unitProps: {
       onFireballDamage: handleFireballDamage,
       onSmiteDamage: handleSmiteDamage,
@@ -259,32 +286,6 @@ export default function HomePage() {
     killCount,
     onFireballDamage: handleFireballDamage,
     onWeaponSelect: handleWeaponSelect
-  };
-
-  //============================
-  const handleReset = () => {
-    // Reset player health
-    setPlayerHealth(200);
-
-    // Reset skeleton health
-    setSkeletonHealths(Array(NUM_SKELETONS).fill(200));
-
-    // Reset ability cooldowns
-    setAbilities(prev => {
-      const newAbilities = { ...prev };
-      Object.keys(newAbilities).forEach(weapon => {
-        ['q', 'e'].forEach(ability => {
-          newAbilities[weapon as WeaponType][ability as 'q' | 'e'].currentCooldown = 0;
-        });
-      });
-      return newAbilities;
-    });
-
-    // Reset last hit time
-    setLastHitTime(0);
-
-    // Reset kill count
-    setKillCount(0);
   };
 
   useEffect(() => {

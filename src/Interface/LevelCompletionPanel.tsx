@@ -20,15 +20,16 @@ export default function LevelCompletionPanel({
   const getAbilityIcons = () => {
     switch (currentWeapon) {
       case WeaponType.SCYTHE:
-        return { r: '/icons/r1.svg', p: '/icons/p1.svg' };
+        return { r: '/Eidolon/icons/r1.svg', p: '/Eidolon/icons/p1.svg' };
       case WeaponType.SWORD:
-        return { r: '/icons/r2.svg', p: '/icons/p2.svg' };
+        return { r: '/Eidolon/icons/r2.svg', p: '/Eidolon/icons/p2.svg' };
       case WeaponType.SABRES:
-        return { r: '/icons/r3.svg', p: '/icons/p3.svg' };
+        return { r: '/Eidolon/icons/r3.svg', p: '/Eidolon/icons/p3.svg' };
       case WeaponType.SABRES2:
-        return { r: '/icons/r4.svg', p: '/icons/p4.svg' };
+        return { r: '/Eidolon/icons/r4.svg', p: '/Eidolon/icons/p4.svg' };
     }
   };
+
 
   const icons = getAbilityIcons();
 

@@ -69,33 +69,33 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 // reduntant current cooldown /max?
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
-    q: { key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 0.7, currentCooldown: 0, icon: '/icons/e1.svg', maxCooldown: 0.65, name: 'Scythe E', isUnlocked: true },
-    r: { key: 'r', cooldown: 2.5, currentCooldown: 0, icon: '/icons/r1.svg', maxCooldown: 1, name: 'Boneclaw', isUnlocked: false },
-    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
+    q: { key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 0.7, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.65, name: 'Scythe E', isUnlocked: true },
+    r: { key: 'r', cooldown: 2.5, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1, name: 'Boneclaw', isUnlocked: false },
+    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },
   [WeaponType.SWORD]: {
-    q: { key: 'q', cooldown: 1., currentCooldown: 0, icon: '/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 3., currentCooldown: 0, icon: '/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
-    r: { key: 'r', cooldown: 25, currentCooldown: 0, icon: '/icons/r2.svg', maxCooldown: 5, name: 'Retribute', isUnlocked: false },
-    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
+    q: { key: 'q', cooldown: 1., currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 3., currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
+    r: { key: 'r', cooldown: 25, currentCooldown: 0, icon: '/Eidolon/icons/r2.svg', maxCooldown: 5, name: 'Retribute', isUnlocked: false },
+    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },
   [WeaponType.SABRES]: {
-    q: { key: 'q', cooldown: 0.65, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 0.50, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
-    r: { key: 'r', cooldown: 9.5, currentCooldown: 0, icon: '/icons/r3.svg', maxCooldown: 5, name: 'Blizzard', isUnlocked: false },
-    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
+    q: { key: 'q', cooldown: 0.65, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 0.50, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
+    r: { key: 'r', cooldown: 9.5, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 5, name: 'Blizzard', isUnlocked: false },
+    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },
   [WeaponType.SABRES2]: {
-    q: { key: 'q', cooldown: 0.70, currentCooldown: 0, icon: '/icons/q4.svg', maxCooldown: 1.5, name: 'Sabres2 Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 1.5, currentCooldown: 0, icon: '/icons/e4.svg', maxCooldown: 6, name: 'Firebeam', isUnlocked: true },
-    r: { key: 'r', cooldown: 15, currentCooldown: 0, icon: '/icons/r4.svg', maxCooldown: 15, name: 'Blizzard', isUnlocked: false },
-    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
+    q: { key: 'q', cooldown: 0.70, currentCooldown: 0, icon: '/Eidolon/icons/q4.svg', maxCooldown: 1.5, name: 'Sabres2 Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 1.5, currentCooldown: 0, icon: '/Eidolon/icons/e4.svg', maxCooldown: 6, name: 'Firebeam', isUnlocked: true },
+    r: { key: 'r', cooldown: 15, currentCooldown: 0, icon: '/Eidolon/icons/r4.svg', maxCooldown: 15, name: 'Blizzard', isUnlocked: false },
+    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },
   [WeaponType.STAFF]: {
-    q: { key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/icons/q4.svg', maxCooldown: 1.0, name: 'Staff Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 2, currentCooldown: 0, icon: '/icons/e4.svg', maxCooldown: 0, name: 'Firebeam', isUnlocked: true },
-    r: { key: 'r', cooldown: 15, currentCooldown: 0, icon: '/icons/r4.svg', maxCooldown: 15, name: 'Blizzard', isUnlocked: false },
-    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
+    q: { key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q4.svg', maxCooldown: 1.0, name: 'Staff Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 2, currentCooldown: 0, icon: '/Eidolon/icons/e4.svg', maxCooldown: 0, name: 'Firebeam', isUnlocked: true },
+    r: { key: 'r', cooldown: 15, currentCooldown: 0, icon: '/Eidolon/icons/r4.svg', maxCooldown: 15, name: 'Blizzard', isUnlocked: false },
+    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   }
 }; 
