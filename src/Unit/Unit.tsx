@@ -31,7 +31,7 @@ import { useFirebeamManager } from '../Spells/Firebeam/useFirebeamManager';
 import Firebeam from '../Spells/Firebeam/Firebeam';
 import Staff from '@/Weapons/Staff';
 import ChargedOrbitals, { ORBITAL_COOLDOWN } from '@/Unit/ChargedOrbitals';
-import Reanimate, { ReanimateRef } from '../Spells/Restore/RestoreAnimation';
+import Reanimate, { ReanimateRef } from '../Spells/Reanimate/Reanimate';
 
 
 // DISGUSTING FILE REFACTOR AF 
@@ -657,7 +657,7 @@ export default function Unit({
     const enemy = enemyData.find(e => e.id === targetId);
     if (!enemy) return;
 
-    const { damage, isCritical } = calculateDamage(41); // Fixed fireball damage
+    const { damage, isCritical } = calculateDamage(43); // Fixed fireball damage
     
     onHit(targetId, damage);
 

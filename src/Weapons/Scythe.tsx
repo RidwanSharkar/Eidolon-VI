@@ -25,11 +25,20 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       swingProgress.current += delta * 6;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
+      // Complete swing earlier to prevent extra rotation
+      if (swingProgress.current >= Math.PI * 0.85) {
+        swingProgress.current = 0;
+        scytheRef.current.rotation.set(0, 0, 0);
+        scytheRef.current.position.set(...basePosition);
+        onSwingComplete();
+        return;
+      }
+      
       // SWING ANIMATION
       const forwardPhase = swingPhase <= 0.25
-      ? swingPhase * 2// Scale to reach 1.0 at midpoint
-      : (1 - (swingPhase - 0.125) * 2); // Smooth return from 1.0 to 0
-    
+        ? swingPhase * 2
+        : (0.75 - (swingPhase - 0.125) * 1.7);
+      
       const pivotX = basePosition[0] + Math.sin(forwardPhase * Math.PI) * 2.5;
       const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -1.5;
       const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 1.1;
@@ -41,13 +50,6 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       const rotationZ = Math.sin(forwardPhase * Math.PI) * (Math.PI / 3);
       
       scytheRef.current.rotation.set(rotationX, rotationY, rotationZ);
-      
-      if (swingProgress.current >= Math.PI) {
-        swingProgress.current = 0;
-        scytheRef.current.rotation.set(0, 0, 0);
-        scytheRef.current.position.set(...basePosition);
-        onSwingComplete();
-      }
     } else if (!isSwinging && scytheRef.current) {
       scytheRef.current.rotation.x *= 0.85;
       scytheRef.current.rotation.y *= 0.85;

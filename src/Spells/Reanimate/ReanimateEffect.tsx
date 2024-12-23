@@ -1,6 +1,6 @@
 import React, { useImperativeHandle, forwardRef, useState } from 'react';
 import { Group, Vector3 } from 'three';
-import { useReanimateManager } from './useRestoreManager';
+import { useReanimateManager } from './useReanimateManager';  
 import { useFrame } from '@react-three/fiber';
 
 interface ReanimateProps {

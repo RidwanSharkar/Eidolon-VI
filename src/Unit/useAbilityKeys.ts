@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Vector3, Group } from 'three';
 import { WeaponType, WeaponInfo } from '../Weapons/weapons';
-import { ReanimateRef } from '../Spells/Restore/Restore';
+import { ReanimateRef } from '../Spells/Reanimate/Reanimate';
 
 export const HEALTH_BOOST = 100; // Define the health boost constant
 
