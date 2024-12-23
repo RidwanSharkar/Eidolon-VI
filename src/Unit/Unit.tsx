@@ -13,12 +13,12 @@ import EtherealBow from '@/Weapons/EtherBow';
 import Smite from '@/Spells/Smite/Smite';
 import DamageNumber from '@/Interface/DamageNumber';
 import Billboard from '@/Interface/Billboard';
-import GhostTrail from '@/Gear/GhostTrail';
-import BoneWings from '@/Gear/BoneWings';
-import BoneAura from '@/Gear/BoneAura';
-import BonePlate from '@/Gear/BonePlate';
-import BoneTail from '@/Gear/BoneTail';
-import BoneVortex from '@/Gear/BoneVortex';
+import GhostTrail from '@/Unit/GhostTrail';
+import BoneWings from '@/Unit/Gear/BoneWings';
+import BoneAura from '@/Unit/Gear/BoneAura';
+import BonePlate from '@/Unit/Gear/BonePlate';
+import BoneTail from '@/Unit/Gear/BoneTail';
+import BoneVortex from '@/Unit/Gear/BoneVortex';
 import { UnitProps } from './UnitProps';
 import { useUnitControls } from '@/Unit/useUnitControls';
 import { calculateDamage } from '@/Weapons/damage';
@@ -27,11 +27,11 @@ import Blizzard from '@/Spells/Blizzard/Blizzard';
 import Retribute from '@/Spells/Retribute/Retribute';
 import { useRetribute } from '@/Spells/Retribute/useRetribute';
 import { useAbilityKeys } from './useAbilityKeys';
-import { useFirebeamManager } from './useFirebeamManager';
+import { useFirebeamManager } from '../Spells/Firebeam/useFirebeamManager';
 import Firebeam from '../Spells/Firebeam/Firebeam';
 import Staff from '@/Weapons/Staff';
 import ChargedOrbitals, { ORBITAL_COOLDOWN } from '@/Unit/ChargedOrbitals';
-import Reanimate, { ReanimateRef } from '../Spells/Passive/Reanimate';
+import Reanimate, { ReanimateRef } from '../Spells/Restore/RestoreAnimation';
 
 
 // DISGUSTING FILE REFACTOR AF 
@@ -95,6 +95,9 @@ export default function Unit({
     position: Vector3;
     isCritical: boolean;
     isLightning?: boolean;
+    isBlizzard?: boolean;
+    isBoneclaw?: boolean;
+    isSmite?: boolean;
   }[]>([]);
   const nextDamageNumberId = useRef(0);
   const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
@@ -264,7 +267,7 @@ export default function Unit({
         
         const angle = toTarget.angleTo(forward);
         // Restrict hit detection to a narrower arc (about 60 degrees total)
-        if (Math.abs(angle) > Math.PI / 6) {
+        if (Math.abs(angle) > Math.PI / 5) {
           return;
         }
       }
@@ -316,7 +319,7 @@ export default function Unit({
           const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(47);
           onHit(target.id, lightningDamage);
 
-          // Show lightning damage number if target survived
+          // Show lightning damage number
           const afterLightningTarget = enemyData.find(e => e.id === target.id);
           if (afterLightningTarget && afterLightningTarget.health > 0) {
             setDamageNumbers(prev => [...prev, {
@@ -487,10 +490,7 @@ export default function Unit({
   //=====================================================================================================
 
   // SABRE BOW SHOT 
-    // Add at the top with other state
     const [isProcessingAbility, setIsProcessingAbility] = useState(false);
-
-    // Add at the top with other state declarations
     const [lastBowShotTime, setLastBowShotTime] = useState<number>(0);
 
   const releaseBowShot = useCallback((power: number) => {
@@ -498,7 +498,7 @@ export default function Unit({
     
     const now = Date.now();
     const timeSinceLastShot = now - lastBowShotTime;
-    if (timeSinceLastShot < 250) { // 250ms cooldown between shots
+    if (timeSinceLastShot < 500) { // 250ms cooldown between shots
         return;
     }
     setLastBowShotTime(now);
@@ -509,7 +509,7 @@ export default function Unit({
     const direction = new Vector3(0, 0, 1);
     direction.applyQuaternion(groupRef.current.quaternion);
 
-    const maxRange = 25;
+    const maxRange = 50;
     const rayStart = unitPosition.clone();
 
     // Add projectile with max range limit
@@ -531,7 +531,7 @@ export default function Unit({
 
   //=====================================================================================================
 
-  // Move this up, before the first useAbilityKeys call
+  // FIREBEAM 
   const {  startFirebeam, stopFirebeam } = useFirebeamManager({
     parentRef: groupRef,
     onHit,
@@ -540,6 +540,8 @@ export default function Unit({
     charges: fireballCharges,
     setCharges: setFireballCharges
   });
+
+  //=====================================================================================================
 
   // ABILITY KEYS 
   const reanimateRef = useRef<ReanimateRef>(null);
@@ -699,6 +701,8 @@ export default function Unit({
     onHealthChange={handleHealthChange}
     charges={fireballCharges}
     setCharges={setFireballCharges}
+    setDamageNumbers={setDamageNumbers}
+    nextDamageNumberId={nextDamageNumberId}
   />
 
 
@@ -711,7 +715,7 @@ export default function Unit({
       <group ref={groupRef} position={[0, 1, 0]}>
         {/* HEAD - core sphere with striped pattern */}
         <mesh>
-          <sphereGeometry args={[0.15, 32, 32]} />
+          <sphereGeometry args={[0.10, 32, 32]} />
           <meshPhongMaterial
             color="#EAC4D5"
             transparent
@@ -722,7 +726,7 @@ export default function Unit({
         
         {/* Enhanced outer glow */}
         <mesh scale={1.3}>
-          <sphereGeometry args={[0.45, 32, 32]} />
+          <sphereGeometry args={[0.35, 32, 32]} />
           <meshBasicMaterial
             color="#EAC4D5"
             transparent
@@ -767,6 +771,7 @@ export default function Unit({
         <ChargedOrbitals 
           parentRef={groupRef} 
           charges={fireballCharges}
+          weaponType={currentWeapon}
         />
         <BonePlate />
         <BoneTail />
@@ -820,7 +825,7 @@ export default function Unit({
       </group>
 
       {/* Add ghost trail effect */}
-      <GhostTrail parentRef={groupRef} />
+      <GhostTrail parentRef={groupRef} weaponType={currentWeapon} />
 
       {/* Fireballs with updated color */}
       {fireballs.map(fireball => (
@@ -1045,14 +1050,13 @@ export default function Unit({
               enemyData={enemyData}
               parentRef={groupRef}
               onHitTarget={(targetId, damage, isCritical, position, isBlizzard) => {
-                console.log('Creating blizzard damage number:', { damage, isCritical, isBlizzard });
                 onHit(targetId, damage);
                 setDamageNumbers(prev => [...prev, {
                   id: nextDamageNumberId.current++,
                   damage,
                   position: position.clone(),
                   isCritical,
-                  isBlizzard: true
+                  isBlizzard
                 }]);
               }}
               onComplete={() => {
@@ -1107,6 +1111,8 @@ export default function Unit({
         onHealthChange={handleHealthChange}
         charges={fireballCharges}
         setCharges={setFireballCharges}
+        setDamageNumbers={setDamageNumbers}
+        nextDamageNumberId={nextDamageNumberId}
       />
     </>
   );

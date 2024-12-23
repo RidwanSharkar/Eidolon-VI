@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Mesh, Group } from 'three';
 import { useFrame } from '@react-three/fiber';
+import { WeaponType } from '../Weapons/weapons';
 
 export const ORBITAL_COOLDOWN = 9000; // Moved cooldown constant here
 
@@ -10,6 +11,8 @@ interface ChargeStatus {
   cooldownStartTime: number | null;
 }
 
+
+
 interface ChargedOrbitalsProps {
   parentRef: React.RefObject<Group>;
   charges: Array<ChargeStatus>;
@@ -17,12 +20,7 @@ interface ChargedOrbitalsProps {
   orbitSpeed?: number;
   particleSize?: number;
   particleCount?: number;
-  activeColor?: string;
-  inactiveColor?: string;
-  activeEmissiveIntensity?: number;
-  inactiveEmissiveIntensity?: number;
-  activeOpacity?: number;
-  inactiveOpacity?: number;
+  weaponType: WeaponType;
 }
 
 export default function ChargedOrbitals({ 
@@ -32,14 +30,25 @@ export default function ChargedOrbitals({
   orbitSpeed = 1.2,
   particleSize = 0.09,
   particleCount = 8,
-  activeColor = "#00ff44",
-  inactiveColor = "#333333",
-  activeEmissiveIntensity = 2,
-  inactiveEmissiveIntensity = 0.5,
-  activeOpacity = 0.8,
-  inactiveOpacity = 0.4
+  weaponType
 }: ChargedOrbitalsProps) {
   const particlesRef = useRef<Mesh[]>([]);
+
+  const getOrbitalColor = () => {
+    switch (weaponType) {
+      case WeaponType.SCYTHE:
+        return '#00ff44';
+      case WeaponType.SWORD:
+        return '#E0CA3C';
+      case WeaponType.SABRES:
+      case WeaponType.SABRES2:
+        return '#73EEDC';
+      default:
+        return '#00ff44';  // Default to scythe color
+    }
+  };
+
+  const activeColor = getOrbitalColor();
 
   useFrame(() => {
     if (!parentRef.current) return;
@@ -68,11 +77,11 @@ export default function ChargedOrbitals({
           >
             <sphereGeometry args={[particleSize, 8, 8]} />
             <meshStandardMaterial
-              color={chargeStatus?.available ? activeColor : inactiveColor}
-              emissive={chargeStatus?.available ? activeColor : inactiveColor}
-              emissiveIntensity={chargeStatus?.available ? activeEmissiveIntensity : inactiveEmissiveIntensity}
+              color={chargeStatus?.available ? activeColor : "#333333"}
+              emissive={chargeStatus?.available ? activeColor : "#333333"}
+              emissiveIntensity={chargeStatus?.available ? 2 : 0.5}
               transparent
-              opacity={chargeStatus?.available ? activeOpacity : inactiveOpacity}
+              opacity={chargeStatus?.available ? 0.8 : 0.4}
             />
           </mesh>
         );

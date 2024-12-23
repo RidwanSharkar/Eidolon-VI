@@ -2,12 +2,14 @@ import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Vector3, Color } from 'three';
 import * as THREE from 'three';
+import { WeaponType } from '../Weapons/weapons';
 
 interface GhostTrailProps {
   parentRef: React.RefObject<THREE.Group>;
+  weaponType: WeaponType;
 }
 
-export default function GhostTrail({ parentRef }: GhostTrailProps) {
+export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
   const trailsRef = useRef<Mesh[]>([]);
   const positions = useRef<Vector3[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -21,6 +23,20 @@ export default function GhostTrail({ parentRef }: GhostTrailProps) {
       setIsInitialized(true);
     }
   }, [ parentRef ]); // missed dis for a while
+
+  const getTrailColor = () => {
+    switch (weaponType) {
+      case WeaponType.SCYTHE:
+        return '#39ff14';
+      case WeaponType.SWORD:
+        return '#E0CA3C';
+      case WeaponType.SABRES:
+      case WeaponType.SABRES2:
+        return '#58FCEC';
+      default:
+        return '#39ff14';  // Default to scythe color
+    }
+  };
 
   useFrame(() => {
     if (!parentRef.current || !isInitialized) return;
@@ -60,7 +76,7 @@ export default function GhostTrail({ parentRef }: GhostTrailProps) {
         >
           <sphereGeometry args={[0.5, 32, 32]} />
           <meshBasicMaterial
-            color={new Color('#39ff14')}
+            color={new Color(getTrailColor())}
             transparent
             opacity={0.3}
             depthWrite={false}

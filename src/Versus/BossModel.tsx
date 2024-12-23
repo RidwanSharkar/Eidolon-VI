@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
 import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import BoneTail from '../Gear/BoneTail';
-import BonePlate from '../Gear/BonePlate';
-import BoneWings from '../Gear/BoneWings';
+import BoneTail from '../Unit/Gear/BoneTail';
+import BonePlate from '../Unit/Gear/BonePlate';
+import BoneWings from '../Unit/Gear/BoneWings';
 import BossBoneVortex from './BossBoneVortex';
 import DragonSkull from '../Versus/DragonSkull';
 

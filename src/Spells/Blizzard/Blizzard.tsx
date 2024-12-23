@@ -21,7 +21,7 @@ export default function Blizzard({
   const stormRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const lastDamageTime = useRef(0);
-  const duration = 6.0;
+  const duration = 7.0;
   const [shards, setShards] = useState<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
 
   const ORBITAL_RADIUS = 1.01;        // Radius of the orbital shard spawn area
@@ -53,7 +53,7 @@ export default function Blizzard({
         Math.sin(angle) * spawnRadius
       );
 
-      setShards(prev => [...prev.slice(-20), { // Keep only last 15 shards
+      setShards(prev => [...prev.slice(-40), { // Keep only last 15 shards
         id: Date.now() + Math.random(),
         position: orbitalPosition,
         type: 'orbital'
@@ -70,7 +70,7 @@ export default function Blizzard({
         Math.sin(angle) * spawnRadius
       );
 
-      setShards(prev => [...prev.slice(-120), { // Keep only last 15 shards
+      setShards(prev => [...prev.slice(-100), { // Keep only last 15 shards
         id: Date.now() + Math.random(),
         position: fallingPosition,
         type: 'falling'
@@ -85,7 +85,13 @@ export default function Blizzard({
       if (enemyData && onHitTarget) {
         const hits = calculateBlizzardDamage(parentPosition, enemyData);
         hits.forEach(hit => {
-          onHitTarget(hit.targetId, hit.damage, hit.isCritical, hit.position, true);
+          onHitTarget(
+            hit.targetId, 
+            hit.damage, 
+            hit.isCritical, 
+            hit.position, 
+            true  // isBlizzard flag
+          );
         });
       }
     }

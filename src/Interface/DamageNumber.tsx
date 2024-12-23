@@ -11,6 +11,11 @@ interface DamageNumberProps {
   isBlizzard?: boolean;
   isHealing?: boolean;
   isBoneclaw?: boolean;
+  isSmite?: boolean;
+  isSword?: boolean;
+  isSabres?: boolean;
+  isSabres2?: boolean;
+  isStaff?: boolean;
   onComplete: () => void;
 }
 
@@ -21,7 +26,16 @@ interface TextMesh extends Mesh {
   };
 }
 
-export default function DamageNumber({ damage, position, isCritical = false, isLightning = false, isBlizzard = false, isHealing = false, isBoneclaw = false, onComplete }: DamageNumberProps) {
+export default function DamageNumber({ 
+  damage, 
+  position, 
+  isCritical = false, 
+  isLightning = false, 
+  isBlizzard, 
+  isHealing = false, 
+  isBoneclaw = false, 
+  onComplete 
+}: DamageNumberProps) {
   console.log('DamageNumber props:', { damage, isCritical, isBlizzard, isLightning, isHealing, isBoneclaw });
   const textRef = useRef<TextMesh>(null);
   const startTime = useRef(Date.now());

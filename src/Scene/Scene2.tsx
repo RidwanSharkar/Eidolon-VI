@@ -30,26 +30,25 @@ export default function Scene2({
   skeletonProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 5000,
-  maxSkeletons = 25,
+  spawnInterval = 4000,
+  maxSkeletons = 29,
   initialSkeletons = 10,
   spawnCount = 2,
 }: ScenePropsWithCallback) {
-  const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 5); // y 5 here
-
-  // State for enemies (with Scene2-specific health values)
+  const [spawnStarted, setSpawnStarted] = useState(false);
+  const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 10);
   const [enemies, setEnemies] = useState<Enemy[]>(() => 
     skeletonProps.map((skeleton, index) => ({
       id: `skeleton-${index}`,
       position: skeleton.initialPosition.clone(),
       initialPosition: skeleton.initialPosition.clone(),
       currentPosition: skeleton.initialPosition.clone(),
-      health: 225, // Scene2-specific health
-      maxHealth: 225, // Scene2-specific max health
+      health: 225,
+      maxHealth: 225,
     }))
   );
 
-  // Update playerHealth state to be used with HealthBar
+  // State for enemies (with Scene2-specific health values)
   const [playerHealth, setPlayerHealth] = useState<number>(unitProps.health);
 
   // Ref to track player position
@@ -147,20 +146,18 @@ export default function Scene2({
   // Monitor enemies to determine level completion
   useEffect(() => {
     const allEnemiesDefeated = enemies.every(enemy => enemy.health <= 0);
-    if (allEnemiesDefeated && killCount >= 25) { 
+    const hasStartedSpawning = spawnStarted && totalSpawned > initialSkeletons;
+    if (allEnemiesDefeated && hasStartedSpawning && killCount >= 40) {
       onLevelComplete();
     }
-  }, [enemies, killCount, onLevelComplete]);
-
-  // Add new state for delayed start
-  const [spawnStarted, setSpawnStarted] = useState(false);
+  }, [enemies, killCount, onLevelComplete, spawnStarted, totalSpawned, initialSkeletons]);
 
   // Modify the spawn logic to include the delay
   useEffect(() => {
-    // First, set a 15-second delay before allowing spawns
+    // First, set a 5-second delay before allowing spawns
     const initialDelay = setTimeout(() => {
       setSpawnStarted(true);
-    }, 15000);
+    }, 5000);
 
     return () => clearTimeout(initialDelay);
   }, []);
@@ -194,7 +191,7 @@ export default function Scene2({
     }, spawnInterval);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval, spawnCount, spawnStarted]);
+  }, [spawnStarted, totalSpawned, maxSkeletons, spawnInterval, spawnCount]);
 
   return (
     <>

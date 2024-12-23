@@ -40,8 +40,17 @@ export default function LevelCompletionPanel({
     onAbilityUnlock(abilityType);
   };
 
+  // Add event handler for right click
+  const preventRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+  };
+
   return (
-    <div className={styles.panel} style={{ pointerEvents: 'auto' }}>
+    <div 
+      className={styles.panel} 
+      style={{ pointerEvents: 'auto' }}
+      onContextMenu={preventRightClick}
+    >
       <h2>Level Complete!</h2>
       <p>Choose an ability to unlock:</p>
       <div className={styles.iconSelection}>
@@ -50,7 +59,7 @@ export default function LevelCompletionPanel({
           onClick={() => handleIconSelect(1)}
         >
           <div className={styles.iconContent}>
-            <img src={icons?.r} alt="R Ability" style={{ width: '50px', height: '50px' }} />
+            <img src={icons?.r} alt="R Ability" style={{ width: '75px', height: '75px' }} />
             <p>(R) Ability</p>
           </div>
         </div>
@@ -59,7 +68,7 @@ export default function LevelCompletionPanel({
           onClick={() => handleIconSelect(2)}
         >
           <div className={styles.iconContent}>
-            <img src={icons?.p} alt="Passive Ability" style={{ width: '50px', height: '50px' }} />
+            <img src={icons?.p} alt="Passive Ability" style={{ width: '75px', height: '75px' }} />
             <p> (1) Restore </p>
           </div>
         </div>

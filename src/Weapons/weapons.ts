@@ -45,7 +45,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SCYTHE]: {
     normal: 17,
-    range: 4,
+    range: 4.5,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
@@ -81,7 +81,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
     passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },
   [WeaponType.SABRES]: {
-    q: { key: 'q', cooldown: 0.65, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    q: { key: 'q', cooldown: 0.575, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
     e: { key: 'e', cooldown: 0.50, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
     r: { key: 'r', cooldown: 9.5, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 5, name: 'Blizzard', isUnlocked: false },
     passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }

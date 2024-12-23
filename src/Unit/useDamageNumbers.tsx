@@ -8,6 +8,12 @@ export interface DamageNumber {
   isCritical: boolean;
   isLightning?: boolean;
   isHealing?: boolean;
+  isBlizzard?: boolean;
+  isBoneclaw?: boolean;
+  isSmite?: boolean;
+  isSword?: boolean;
+  isSabres?: boolean;
+  isStaff?: boolean; 
 }
 
 export function useDamageNumbers() {

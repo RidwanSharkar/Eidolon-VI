@@ -48,7 +48,7 @@ export default function GameWrapper({
 
   const handleLevelTransition = useCallback((level: number, show: boolean) => {
     setCurrentLevel(level);
-    setShowLevelPanel(show && level === 2);
+    setShowLevelPanel(show);
   }, []);
 
   const handleContinue = useCallback(() => {
@@ -58,7 +58,7 @@ export default function GameWrapper({
       } else if (selectedIcon === 2) {
         onAbilityUnlock('passive');
       }
-      setCurrentLevel(prev => prev + 1);
+      setCurrentLevel(2);
       setShowLevelPanel(false);
       setSelectedIcon(null);
     }

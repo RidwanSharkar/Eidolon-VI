@@ -1,6 +1,6 @@
-import React, { useImperativeHandle, forwardRef, useState } from 'react';
+import React, { useImperativeHandle, forwardRef, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
-import { useReanimateManager } from '../../Unit/useReanimateManager';
+import { useReanimateManager } from './useRestoreManager';
 import { useFrame } from '@react-three/fiber';
 
 interface ReanimateProps {
@@ -16,6 +16,14 @@ interface ReanimateProps {
     available: boolean;
     cooldownStartTime: number | null;
   }>>>;
+  setDamageNumbers: React.Dispatch<React.SetStateAction<Array<{
+    id: number;
+    damage: number;
+    position: Vector3;
+    isCritical: boolean;
+    isHealing?: boolean;
+  }>>>;
+  nextDamageNumberId: React.MutableRefObject<number>;
 }
 
 export interface ReanimateRef {
@@ -114,7 +122,9 @@ const Reanimate = forwardRef<ReanimateRef, ReanimateProps>(({
   parentRef,
   onHealthChange,
   charges,
-  setCharges
+  setCharges,
+  setDamageNumbers,
+  nextDamageNumberId
 }, ref) => {
   const [showHealingEffect, setShowHealingEffect] = useState(false);
 
@@ -122,14 +132,22 @@ const Reanimate = forwardRef<ReanimateRef, ReanimateProps>(({
     parentRef,
     charges,
     setCharges,
-    onHealthChange: (health) => {
-      setShowHealingEffect(true);
-      onHealthChange(health);
-    }
+    onHealthChange,
+    setDamageNumbers,
+    nextDamageNumberId
   });
 
+  // Wrap the castReanimate function to handle the animation
+  const handleCastRestore = useCallback(() => {
+    const success = castReanimate();
+    if (success) {
+      setShowHealingEffect(true);
+    }
+    return success;
+  }, [castReanimate]);
+
   useImperativeHandle(ref, () => ({
-    castReanimate
+    castReanimate: handleCastRestore
   }));
 
   return showHealingEffect && parentRef.current ? (

@@ -294,7 +294,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking }: Cus
     if (isAttacking) {
       setAttackCycle((prev) => prev + delta * attackSpeed);
       const progress = Math.min(attackCycle, Math.PI / 2);
-      const armAngle = Math.sin(progress) * Math.PI / 2;
+      const armAngle = Math.sin(progress) * Math.PI ;
 
       const rightArm = groupRef.current.getObjectByName('RightArm') as Mesh;
       if (rightArm) {

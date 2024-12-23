@@ -44,12 +44,12 @@ export default function EnemyUnit({
   const currentHealth = useRef(health);
 
   const ATTACK_RANGE = 1.9;
-  const ATTACK_COOLDOWN = 2000;
+  const ATTACK_COOLDOWN = 1500;
   const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
   const SMOOTHING_FACTOR = 0.15;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 4;
+  const ATTACK_DAMAGE = 0;
 
   // Sync health changes
   useEffect(() => {
@@ -143,12 +143,11 @@ export default function EnemyUnit({
   });
 
   useEffect(() => {
-    if (currentHealth.current === 0 && !isDead) {
-      console.log(`Enemy ${id} died`);
+    if (health === 0 && !isDead) {
       setIsDead(true);
       setShowDeathEffect(true);
     }
-  }, [currentHealth, id, isDead]);
+  }, [health, isDead]);
 
   return (
     <>

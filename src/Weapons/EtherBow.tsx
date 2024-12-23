@@ -94,7 +94,7 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
       {/* Decorative wing elements */}
       <group>
         {/* Left wing */}
-        <mesh position={[-0.3, 0, 0.32]} rotation={[Math.PI/2, 0, Math.PI/6]}>
+        <mesh position={[-0.4, 0, 0.32]} rotation={[Math.PI/2, 0, Math.PI/6]}>
           <boxGeometry args={[0.6, 0.02, 0.05]} />
           <meshStandardMaterial 
             color="#00ffff"
@@ -106,7 +106,7 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
         </mesh>
 
         {/* Right wing */}
-        <mesh position={[0.3, 0, 0.32]} rotation={[Math.PI/2, 0, -Math.PI/6]}>
+        <mesh position={[0.4, 0, 0.32]} rotation={[Math.PI/2, 0, -Math.PI/6]}>
           <boxGeometry args={[0.6, 0.02, 0.05]} />
           <meshStandardMaterial 
             color="#00ffff"
@@ -126,7 +126,7 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
         >
           {/* Arrow shaft - increased length from 0.5 to 0.7 */}
           <mesh>
-            <cylinderGeometry args={[0.002, 0.02, 0.7, 8]} />
+            <cylinderGeometry args={[0.01, 0.02, 0.7, 8]} />
             <meshStandardMaterial 
               color="#00ffff"
               emissive="#00ffff"
@@ -137,7 +137,7 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
           </mesh>
           {/* Arrow head - adjusted position for longer shaft */}
           <mesh position={[0, 0.35, 0]}>  
-            <coneGeometry args={[0.03, 0.1, 8]} />
+            <coneGeometry args={[0.03, 0.175, 8]} />
             <meshStandardMaterial 
               color="#00ffff"
               emissive="#00ffff"
@@ -151,14 +151,17 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
 
       {/* Charge indicator line */}
       {isCharging && (
-        <mesh rotation={[-Math.PI/2, -Math.PI, 0]}>
+        <mesh 
+          rotation={[0, Math.PI - 2* Math.PI/2, Math.PI]}
+          position={[0, 0, 0.65]}
+        >
           <tubeGeometry args={[
             new THREE.LineCurve3(
               new THREE.Vector3(0, 0, 0),
-              new THREE.Vector3(0, 0, 10)
+              new THREE.Vector3(0, 0, 20)
             ),
             64,
-            0.01,
+            0.025,
             8,
             false
           ]} />
