@@ -44,9 +44,9 @@ export default function EnemyUnit({
   const currentHealth = useRef(health);
 
   const ATTACK_RANGE = 1.9;
-  const ATTACK_COOLDOWN = 1800;
-  const MOVEMENT_SPEED = 0.14;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.14;
+  const ATTACK_COOLDOWN = 1900;
+  const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.15;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 3;

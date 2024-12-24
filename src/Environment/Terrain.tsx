@@ -1,4 +1,4 @@
-import { Mesh, Shape, DoubleSide, InstancedMesh, Matrix4 } from 'three';
+import { Mesh, Shape, DoubleSide, } from 'three';
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -12,7 +12,6 @@ interface TerrainProps {
 export default function Terrain({ color = "#4a1c2c", roughness = 0.5, metalness = 0.1 }: TerrainProps) {
   // All hooks must be at the top level
   const terrainRef = useRef<Mesh>(null);
-  const bonesRef = useRef<InstancedMesh>(null);
   const octagonRef = useRef<Shape | null>(null);
   
   // Create the shader material
@@ -145,46 +144,6 @@ export default function Terrain({ color = "#4a1c2c", roughness = 0.5, metalness 
     }
   });
 
-  // Scatter bones
-  useEffect(() => {
-    if (bonesRef.current) {
-      const matrix = new Matrix4();
-      const numBones = 200;
-      const positions: Array<[number, number, number]> = [];
-
-      // Pre-calculate all positions
-      for (let i = 0; i < numBones; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * 45;
-        positions.push([
-          distance * Math.cos(angle),
-          0.01,
-          distance * Math.sin(angle)
-        ]);
-      }
-
-      // Set matrices for all bones
-      positions.forEach((pos, i) => {
-        const scale = 0.1 + Math.random() * 0.15;
-        const rotation = Math.random() * Math.PI * 2;
-
-        matrix.compose(
-          new THREE.Vector3(pos[0], pos[1], pos[2]),
-          new THREE.Quaternion().setFromEuler(new THREE.Euler(
-            Math.random() * 0.3,
-            rotation,
-            Math.random() * 0.3
-          )),
-          new THREE.Vector3(scale, scale, scale)
-        );
-        bonesRef.current?.setMatrixAt(i, matrix);
-      });
-
-      if (bonesRef.current) {
-        bonesRef.current.instanceMatrix.needsUpdate = true;
-      }
-    }
-  }, []);
 
   return (
     <group>
@@ -201,6 +160,16 @@ export default function Terrain({ color = "#4a1c2c", roughness = 0.5, metalness 
       </mesh>
 
 
+
+
+      {/* Subtle ground glow */}
+      <pointLight
+        position={[0, 0.1, 0]}
+        color="#304050"
+        intensity={4}
+        distance={10}
+        decay={2}
+      />
     </group>
   );
 }
