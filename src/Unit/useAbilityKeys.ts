@@ -22,7 +22,6 @@ interface UseAbilityKeysProps {
   setSmiteEffects: (callback: (prev: Array<{ id: number; position: Vector3 }>) => Array<{ id: number; position: Vector3 }>) => void;
   setActiveEffects: (callback: (prev: Array<{ id: number; type: string; position: Vector3; direction: Vector3 }>) => Array<{ id: number; type: string; position: Vector3; direction: Vector3 }>) => void;
   onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r') => void;
-  startRetribute: () => void;
   shootFireball: () => void;
   releaseBowShot: (progress: number) => void;
   startFirebeam?: () => NodeJS.Timeout | undefined;
@@ -51,7 +50,6 @@ export function useAbilityKeys({
   setSmiteEffects,
   setActiveEffects,
   onAbilityUse,
-  startRetribute,
   shootFireball,
   releaseBowShot,
   startFirebeam,
@@ -170,10 +168,6 @@ export function useAbilityKeys({
               }]);
               break;
 
-            case WeaponType.SWORD:
-              startRetribute();
-              break;
-
             case WeaponType.SABRES:
             case WeaponType.SABRES2:
               // Add blizzard effect
@@ -183,6 +177,22 @@ export function useAbilityKeys({
                 position: groupRef.current!.position.clone(),
                 direction: new Vector3(0, 0, 0) // Blizzard doesn't need direction
               }]);
+              break;
+
+            case WeaponType.SWORD:
+              if (abilities[WeaponType.SWORD].r.isUnlocked) {
+                // Add oathstrike effect
+                const direction = new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion);
+                setActiveEffects(prev => [...prev, {
+                  id: Math.random(),
+                  type: 'oathstrike',
+                  position: groupRef.current!.position.clone(),
+                  direction: direction
+                }]);
+                
+                // Trigger the swing animation
+                setIsSwinging(true);
+              }
               break;
           }
         }
@@ -225,7 +235,6 @@ export function useAbilityKeys({
     setSmiteEffects,
     setActiveEffects,
     onAbilityUse,
-    startRetribute,
     shootFireball,
     releaseBowShot,
     nextSmiteId,

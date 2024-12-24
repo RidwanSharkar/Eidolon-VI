@@ -8,29 +8,29 @@ interface BoneAuraProps {
 }
 
 const createBonePiece = () => (
-  <group rotation={[Math.PI / 3, 0, 0]}>
+  <group rotation={[Math.PI / 4, 0, 0]}>
     {/* Main bone shaft - thinner and more angular */}
     <mesh>
       <cylinderGeometry args={[0.02, 0.015, 0.2, 4]} />
       <meshStandardMaterial 
-        color="#e8e8e8"
+        color="#BEB2C8"
         roughness={0.4}
         metalness={0.3}
       />
     </mesh>
     
     {/* Bone joints - more pronounced */}
-    <mesh position={new THREE.Vector3(0, 0.1, 0)} rotation={new THREE.Euler(0, 0, Math.PI / 6)}>
-      <sphereGeometry args={[0.025, 4, 4]} />
+    <mesh position={new THREE.Vector3(0, 0.135, 0)} rotation={new THREE.Euler(0, 0, Math.PI / 6)}>
+      <sphereGeometry args={[0.03, 4, 4]} />
       <meshStandardMaterial 
-        color="#d8d8d8"
+        color="#BEB2C8"
         roughness={0.5}
         metalness={0.2}
       />
     </mesh>
 
     <mesh position={new THREE.Vector3(0, -0.1, 0)} rotation={new THREE.Euler(0, 0, -Math.PI / 6)}>
-      <sphereGeometry args={[0.02, 4, 4]} />
+      <sphereGeometry args={[0.03, 4, 4]} />
       <meshStandardMaterial 
         color="#d8d8d8"
         roughness={0.5}
@@ -42,8 +42,8 @@ const createBonePiece = () => (
 
 export default function BoneAura({ parentRef }: BoneAuraProps) {
   const bonesRef = useRef<Mesh[]>([]);
-  const boneCount = 12;
-  const radius = 0.55;
+  const boneCount = 16;
+  const radius = 0.5;
   const groupRef = useRef<Group>(null);
   
   useFrame(() => {
@@ -56,10 +56,10 @@ export default function BoneAura({ parentRef }: BoneAuraProps) {
       const angle = (i / boneCount) * Math.PI * 2 + Date.now() * 0.001;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      const y = Math.sin(Date.now() * 0.002 + i) * 0.08;
+      const y = Math.sin(Date.now() * 0.002 + i) * 0.01;
       
-      bone.position.set(x, y + 0.1, z);
-      bone.rotation.y = angle + Math.PI / 2;
+      bone.position.set(x, y + 0.13, z);
+      bone.rotation.y = angle + Math.PI / 3;
     });
   });
 

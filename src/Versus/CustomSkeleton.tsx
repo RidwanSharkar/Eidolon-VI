@@ -308,7 +308,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking }: Cus
   });
 
   return (
-    <group ref={groupRef} position={[position[0], position[1] + .6, position[2]]}>
+    <group ref={groupRef} position={[position[0], position[1] + 1, position[2]]}>
       {/* Ribcage/Torso - keep current position */}
       <group name="Body" position={[0, 1.45, 0]} scale={0.85}>
         {/* Spine */}

@@ -200,44 +200,7 @@ export default function Terrain({ color = "#4a1c2c", roughness = 0.5, metalness 
         />
       </mesh>
 
-      {/* Scattered bones */}
-      <instancedMesh
-        ref={bonesRef}
-        args={[undefined, undefined, 200]}
-        castShadow
-        receiveShadow
-      >
-        <cylinderGeometry args={[0.02, 0.02, 0.3, 4]} />
-        <meshStandardMaterial
-          color="#e8e8e8"
-          roughness={0.7}
-          metalness={0.2}
-          emissive="#304050"
-          emissiveIntensity={0.5}
-        />
-      </instancedMesh>
 
-      {/* Ground fog effect */}
-      <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial
-          transparent
-          opacity={0.1}
-          color="#4a1c2c"
-          fog={true}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-
-      {/* Subtle ground glow */}
-      <pointLight
-        position={[0, 0.1, 0]}
-        color="#304050"
-        intensity={4}
-        distance={10}
-        decay={2}
-      />
     </group>
   );
 }

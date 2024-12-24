@@ -13,7 +13,7 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
   const swordRef = useRef<Group>(null);
   const swingProgress = useRef(0);
   const smiteProgress = useRef(0);
-  const basePosition = [-1.2, 0.45, 0.75] as const;
+  const basePosition = [-1.1, 0.45, 0.75] as const;
   
   useFrame((_, delta) => {
     if (!swordRef.current) return;

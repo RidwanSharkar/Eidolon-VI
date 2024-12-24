@@ -13,23 +13,23 @@ const createVortexPiece = () => (
     <mesh>
       <boxGeometry args={[0.15, 0.03, 0.03]} />
       <meshStandardMaterial 
-        color="#67f2b9"
+        color="#BEB2C8"
         transparent
         opacity={0.6}
-        emissive="#67f2b9"
+        emissive="#BEB2C8"
         emissiveIntensity={0.5}
       />
     </mesh>
     
     {/* Glowing core */}
     <mesh>
-      <sphereGeometry args={[0.02, 8, 8]} />
+      <sphereGeometry args={[0.035, 9, 9]} />
       <meshStandardMaterial 
-        color="#39ff14"
-        emissive="#39ff14"
-        emissiveIntensity={2}
+        color="#D6EADF"
+        emissive="#D6EADF"
+        emissiveIntensity={1.5}
         transparent
-        opacity={0.5}
+        opacity={0.4}
       />
     </mesh>
   </group>
@@ -37,8 +37,8 @@ const createVortexPiece = () => (
 
 export default function BoneVortex({ parentRef }: BoneVortexProps) {
   const vortexPiecesRef = useRef<(Group | null)[]>([]);
-  const pieceCount = 25;
-  const baseRadius = 0.5;
+  const pieceCount = 30;
+  const baseRadius = 0.47;
   const groupRef = useRef<Group>(null);
   
   useFrame(({ clock }) => {
@@ -51,8 +51,8 @@ export default function BoneVortex({ parentRef }: BoneVortexProps) {
       if (!piece) return;
       
       const time = clock.getElapsedTime();
-      const heightOffset = ((i / pieceCount) * 0.6);
-      const radiusMultiplier = 1 - (heightOffset * 0.8);
+      const heightOffset = ((i / pieceCount) * 0.55);
+      const radiusMultiplier = 1 - (heightOffset * 0.7);
       
       const angle = (i / pieceCount) * Math.PI * 4 + time * 2;
       const radius = baseRadius * radiusMultiplier;
@@ -89,7 +89,7 @@ export default function BoneVortex({ parentRef }: BoneVortexProps) {
       ))}
       
       <pointLight 
-        color="#67f2b9"
+        color="#BEB2C8"
         intensity={1}
         distance={1.2}
         position={[0, 0.25, 0]}

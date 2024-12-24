@@ -2,8 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import BossModel from '@/Versus/BossModel';
-import { Enemy } from './enemy';
+import BossModel from './BossModel';
+import { Enemy } from '../enemy';
 
 interface BossUnitProps {
   id: string;

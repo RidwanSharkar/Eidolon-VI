@@ -7,9 +7,7 @@ Death offers an alluring covenant laced with grotesque mockery... moths entrance
 
 Linger in an ossuary for the restless, eternally locked in combat - where ambition and despair intertwine. And where the fallen fuel the ascent of the those hungrier to covet hope - the sole treasure these abyssal riptides conspire to ensure sinks through the cracks of the broken. 
 
-### OR
-
-Devour the essence of unwitting tributes that challenge your claim - their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny - a being forged from the echoes of those who dared to dream, ascended to scale the jagged peaks that anchor the souls to this stygian ark. 
+Or devour the essence of unwitting tributes that challenge your claim - their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny - a being forged from the echoes of those who dared to dream, ascended to scale the jagged peaks that anchor the souls to this stygian ark. 
 
 ![EidolonCover2](https://github.com/user-attachments/assets/ab21c879-3dcf-4c63-b71a-4d41af848805)
 

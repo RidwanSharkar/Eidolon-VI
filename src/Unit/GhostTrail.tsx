@@ -13,7 +13,7 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
   const trailsRef = useRef<Mesh[]>([]);
   const positions = useRef<Vector3[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const trailCount = 12;
+  const trailCount = 35;
   
   useEffect(() => {
     if (parentRef.current) {
@@ -29,9 +29,9 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
       case WeaponType.SCYTHE:
         return '#39ff14';
       case WeaponType.SWORD:
-        return '#E0CA3C';
+        return '#8783D1';
       case WeaponType.SABRES:
-      case WeaponType.SABRES2:
+      case WeaponType.STAFF:
         return '#58FCEC';
       default:
         return '#39ff14';  // Default to scythe color
@@ -52,11 +52,11 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
         trail.position.copy(positions.current[i]);
         
         // Scale and opacity based on trail position
-        const scale = 1 - (i / trailCount) * 0.3;
+        const scale = 1 - (i / trailCount) * 0.6;
         trail.scale.setScalar(scale);
         
         if (trail.material && trail.material instanceof THREE.MeshBasicMaterial) {
-          trail.material.opacity = (1 - i / trailCount) * 0.3;
+          trail.material.opacity = (1 - i / trailCount) * 0.2;
         }
       }
     });
@@ -74,7 +74,7 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
             if (el) trailsRef.current[i] = el;
           }}
         >
-          <sphereGeometry args={[0.5, 32, 32]} />
+          <sphereGeometry args={[0.43, 32, 32]} />
           <meshBasicMaterial
             color={new Color(getTrailColor())}
             transparent

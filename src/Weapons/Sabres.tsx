@@ -269,7 +269,7 @@ interface SabreProps {
   
     return (
       <group 
-        position={[0, 0, 0.]} 
+        position={[0, -0.25, -0.1]} 
         rotation={[0, 0, 0]}
         scale={[0.8, 0.8, 0.8]}
       >

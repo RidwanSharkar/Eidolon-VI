@@ -26,9 +26,9 @@ interface ChargedOrbitalsProps {
 export default function ChargedOrbitals({ 
   parentRef,
   charges,
-  orbitRadius = 0.6,
-  orbitSpeed = 1.2,
-  particleSize = 0.09,
+  orbitRadius = 0.55,
+  orbitSpeed = 0.8,
+  particleSize = 0.08,
   particleCount = 8,
   weaponType
 }: ChargedOrbitalsProps) {
@@ -39,7 +39,7 @@ export default function ChargedOrbitals({
       case WeaponType.SCYTHE:
         return '#00ff44';
       case WeaponType.SWORD:
-        return '#E0CA3C';
+        return '#8783D1';
       case WeaponType.SABRES:
       case WeaponType.SABRES2:
         return '#73EEDC';
@@ -57,7 +57,7 @@ export default function ChargedOrbitals({
       const angle = (i / particleCount) * Math.PI * 2 + Date.now() * 0.001 * orbitSpeed;
       const x = Math.cos(angle) * orbitRadius;
       const z = Math.sin(angle) * orbitRadius;
-      const y = Math.sin(Date.now() * 0.002 + i) * 0.1;
+      const y = Math.sin(Date.now() * 0.002 + i) * 0.05;
 
       particle.position.set(x, y, z);
     });

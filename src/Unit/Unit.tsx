@@ -24,14 +24,13 @@ import { useUnitControls } from '@/Unit/useUnitControls';
 import { calculateDamage } from '@/Weapons/damage';
 import Boneclaw from '@/Spells/Boneclaw/Boneclaw';
 import Blizzard from '@/Spells/Blizzard/Blizzard';
-import Retribute from '@/Spells/Retribute/Retribute';
-import { useRetribute } from '@/Spells/Retribute/useRetribute';
 import { useAbilityKeys } from './useAbilityKeys';
 import { useFirebeamManager } from '../Spells/Firebeam/useFirebeamManager';
 import Firebeam from '../Spells/Firebeam/Firebeam';
 import Staff from '@/Weapons/Staff';
 import ChargedOrbitals, { ORBITAL_COOLDOWN } from '@/Unit/ChargedOrbitals';
 import Reanimate, { ReanimateRef } from '../Spells/Reanimate/Reanimate';
+import Oathstrike from '@/Spells/Oathstrike/Oathstrike';
 
 
 // DISGUSTING FILE REFACTOR AF 
@@ -39,11 +38,7 @@ import Reanimate, { ReanimateRef } from '../Spells/Reanimate/Reanimate';
 
 //=====================================================================================================
 
-//  ORBITAL CHARGES 
-
-//=====================================================================================================
-
-// FIREBALL INTERFACE 
+//  ORBITAL CHARGES FIREBALL INTERFACE 
 interface FireballData {
   id: number;
   position: Vector3;
@@ -140,9 +135,7 @@ export default function Unit({
 
 
 
-  const pendingLightningTargets = useRef<Set<string>>(new Set()); // WHAT THIS FOR? 
-
-
+  const pendingLightningTargets = useRef<Set<string>>(new Set()); 
   const [activeEffects, setActiveEffects] = useState<Array<{
     id: number;
     type: string;
@@ -151,41 +144,7 @@ export default function Unit({
   }>>([]);
 
 
-  // RETRIBUTE - TO AVOID RECURSION
-  const handleRetributeComplete = useCallback(() => {
-    console.log('Retribute has completed.');
-    // dditional logic needed after Retribute completes
-  }, []);
-  const { isRetributing, startRetribute, stopRetribute } = useRetribute({
-    maxHealth,
-    onHealthChange: (newHealth) => {
-      console.log('Health Changed:', newHealth);
-      if (onHealthChange) {
-        if (typeof newHealth === 'function') {
-          const nextHealth = newHealth(health);
-          console.log('Updated Health:', nextHealth);
-          onHealthChange(nextHealth);
-        } else {
-          console.log('Set Health To:', newHealth);
-          onHealthChange(newHealth);
-        }
-      }
-    },
-    duration: 5, // 5 seconds duration
-    onHeal: (amount, isHealing) => {
-      setDamageNumbers(prev => [
-        ...prev,
-        {
-          id: nextDamageNumberId.current++,
-          damage: amount,
-          position: groupRef.current?.position.clone().add(new Vector3(0, 1, 0)) || new Vector3(),
-          isCritical: false,
-          isHealing: isHealing
-        }
-      ]);
-    },
-    onComplete: handleRetributeComplete
-  });
+
 
   //=====================================================================================================
 
@@ -509,7 +468,7 @@ export default function Unit({
     const direction = new Vector3(0, 0, 1);
     direction.applyQuaternion(groupRef.current.quaternion);
 
-    const maxRange = 50;
+    const maxRange = 80;
     const rayStart = unitPosition.clone();
 
     // Add projectile with max range limit
@@ -563,7 +522,6 @@ export default function Unit({
     setSmiteEffects,
     setActiveEffects,
     onAbilityUse,
-    startRetribute,
     shootFireball,
     releaseBowShot,
     startFirebeam,
@@ -706,26 +664,15 @@ export default function Unit({
   />
 
 
-  
-
-
 
   return (
     <>
       <group ref={groupRef} position={[0, 1, 0]}>
         {/* HEAD - core sphere with striped pattern */}
-        <mesh>
-          <sphereGeometry args={[0.10, 32, 32]} />
-          <meshPhongMaterial
-            color="#EAC4D5"
-            transparent
-            opacity={0.2}
-            shininess={80}
-          />
-        </mesh>
+
         
         {/* Enhanced outer glow */}
-        <mesh scale={1.3}>
+        <mesh scale={1.1}>
           <sphereGeometry args={[0.35, 32, 32]} />
           <meshBasicMaterial
             color="#EAC4D5"
@@ -736,21 +683,21 @@ export default function Unit({
         </mesh>
 
         {/* Skull decoration - made smaller and more ethereal */}
-        <mesh position={[0, 0.2, 0.3]} scale={0.35}>
-          <sphereGeometry args={[0.4, 32, 32]} />
+        <mesh position={[0, 0.2, 0.25]} scale={0.35}>
+          <sphereGeometry args={[0.25, 32, 32]} />
           <meshPhongMaterial
             color="#EAC4D5"
             transparent
-            opacity={0.6}
+            opacity={0.3}
             emissive="#EAC4D5"
-            emissiveIntensity={0.3}
+            emissiveIntensity={0.1}
           />
         </mesh>
 
         {/* Add Bone Wings with proper position/rotation vectors */}
         <group position={[0, 0.2, -0.2]}>
           {/* Left Wing */}
-          <group rotation={[0, Math.PI / 8, 0]}>
+          <group rotation={[0, Math.PI / 5.5, 0]}>
             <BoneWings 
               collectedBones={collectedBones} 
               isLeftWing={true}
@@ -759,7 +706,7 @@ export default function Unit({
           </group>
           
           {/* Right Wing */}
-          <group rotation={[0, -Math.PI / 8, 0]}>
+          <group rotation={[0, -Math.PI / 5.5, 0]}>
             <BoneWings 
               collectedBones={collectedBones} 
               isLeftWing={false}
@@ -1079,31 +1026,22 @@ export default function Unit({
               }}
             />
           );
+        } else if (effect.type === 'oathstrike') {
+          return (
+            <Oathstrike
+              key={effect.id}
+              position={effect.position}
+              direction={effect.direction}
+              onComplete={() => {
+                setActiveEffects(prev => 
+                  prev.filter(e => e.id !== effect.id)
+                );
+              }}
+            />
+          );
         }
         return null;
       })}
-
-      {isRetributing && (
-        <Retribute
-          position={groupRef.current?.position || new Vector3()}
-          parentRef={groupRef}
-          onComplete={stopRetribute}
-          onHeal={(amount, isHealing) => {
-            console.log(`Healing: +${amount} health`);
-            // Utilize isHealing to differentiate between healing and damage
-            setDamageNumbers(prev => [
-              ...prev,
-              {
-                id: nextDamageNumberId.current++,
-                damage: amount,
-                position: groupRef.current?.position.clone().add(new Vector3(0, 1, 0)) || new Vector3(),
-                isCritical: false,
-                isHealing: isHealing // Use the parameter instead of hardcoding
-              }
-            ]);
-          }}
-        />
-      )}
 
       <Reanimate
         ref={reanimateRef}
