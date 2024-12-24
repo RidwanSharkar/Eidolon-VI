@@ -3,7 +3,7 @@ import { Mesh, Group } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { WeaponType } from '../Weapons/weapons';
 
-export const ORBITAL_COOLDOWN = 9000; // Moved cooldown constant here
+export const ORBITAL_COOLDOWN = 8000; // Moved cooldown constant here
 
 interface ChargeStatus {
   id: number;

@@ -12,7 +12,7 @@ export const useOathstrikeAnimation = ({
   effectRef,
 }: OathstrikeAnimationProps) => {
   const progressRef = useRef(0);
-  const animationDuration = 0.4; // Match sword swing speed
+  const animationDuration = 0.4;
   const isActive = useRef(true);
 
   useEffect(() => {
@@ -33,11 +33,11 @@ export const useOathstrikeAnimation = ({
     const progress = progressRef.current / animationDuration;
 
     if (progress <= 1) {
-      // Follow sword swing arc
-      const swingAngle = Math.PI * 0.8; // Total swing angle
+      // Horizontal sweep animation
+      const swingAngle = Math.PI * 0.8;
       const currentAngle = -swingAngle/2 + (progress * swingAngle);
       
-      effectRef.current.rotation.y = currentAngle;
+      effectRef.current.rotation.z = currentAngle;
 
       // Scale and fade effects
       const scale = Math.sin(progress * Math.PI) * 1.5;

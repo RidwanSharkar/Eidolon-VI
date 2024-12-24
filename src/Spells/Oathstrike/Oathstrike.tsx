@@ -34,7 +34,7 @@ export default function Oathstrike({ position, direction, onComplete }: Oathstri
     <group
       ref={effectRef}
       position={position.toArray()}
-      rotation={[0, Math.atan2(direction.x, direction.z), 0]}
+      rotation={[Math.PI/2, Math.atan2(direction.x, direction.z), 0]}
     >
       {/* Main flame arc */}
       <group position={[0, 0, 2]}>

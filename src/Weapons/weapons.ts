@@ -40,7 +40,7 @@ export type WeaponInfo = Record<WeaponType, WeaponAbilities>;
 export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   [WeaponType.SWORD]: {
     normal: 29,
-    range: 6.5,
+    range: 6.2,
     maxHitsPerSwing: 1
   },
   [WeaponType.SCYTHE]: {
@@ -75,14 +75,14 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
     passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },
   [WeaponType.SWORD]: {
-    q: { key: 'q', cooldown: 0.875, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
+    q: { key: 'q', cooldown: 0.95, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
     e: { key: 'e', cooldown: 3., currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
-    r: { key: 'r', cooldown: 25, currentCooldown: 0, icon: '/Eidolon/icons/r2.svg', maxCooldown: 5, name: 'Oathstrike', isUnlocked: false },
+    r: { key: 'r', cooldown: 1, currentCooldown: 0, icon: '/Eidolon/icons/r2.svg', maxCooldown: 1.5, name: 'Oathstrike', isUnlocked: false },
     passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },
   [WeaponType.SABRES]: {
-    q: { key: 'q', cooldown: 0.65, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 0.65, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
+    q: { key: 'q', cooldown: 0.6, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
     r: { key: 'r', cooldown: 9.5, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 5, name: 'Blizzard', isUnlocked: false },
     passive: { key: '1', cooldown: 2.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },

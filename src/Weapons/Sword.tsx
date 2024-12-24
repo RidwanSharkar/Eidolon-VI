@@ -13,7 +13,7 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
   const swordRef = useRef<Group>(null);
   const swingProgress = useRef(0);
   const smiteProgress = useRef(0);
-  const basePosition = [-1.1, 0.45, 0.75] as const;
+  const basePosition = [-1.18, 0.45, 0.75] as const;
   
   useFrame((_, delta) => {
     if (!swordRef.current) return;
@@ -113,14 +113,14 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
     shape.lineTo(0.15, -0.15);
     shape.lineTo(0, 0);
     
-    // Blade shape with improved symmetry
-    shape.lineTo(0, 0.12);    
-    shape.lineTo(0.25, 0.25);   
-    shape.quadraticCurveTo(1.0, 0.2, 1.5, 0.25);
-    shape.quadraticCurveTo(2.0, 0.15, 2.2, 0);    // Center point
-    shape.quadraticCurveTo(2.0, -0.15, 1.5, -0.25); // Mirror of upper curve
-    shape.quadraticCurveTo(1.0, -0.2, 0.25, -0.25);
-    shape.lineTo(0, -0.12);
+    // Blade shape with improved symmetry - reduced width values
+    shape.lineTo(0, 0.08);    // Reduced from 0.12
+    shape.lineTo(0.2, 0.2);   // Reduced from 0.25
+    shape.quadraticCurveTo(0.8, 0.15, 1.5, 0.18); // Reduced y values
+    shape.quadraticCurveTo(2.0, 0.1, 2.2, 0);     // Reduced y value
+    shape.quadraticCurveTo(2.0, -0.1, 1.5, -0.18); // Mirror of upper curve
+    shape.quadraticCurveTo(0.8, -0.15, 0.2, -0.2);
+    shape.lineTo(0, -0.08);   // Reduced from -0.12
     shape.lineTo(0, 0);
     
     return shape;
@@ -133,16 +133,14 @@ export default function Sword({ isSwinging, isSmiting, onSwingComplete, onSmiteC
     // Start at center
     shape.moveTo(0, 0);
     
-
-    
-    // Blade shape with improved symmetry
-    shape.lineTo(0, 0.1);
-    shape.lineTo(0.2, 0.2);
-    shape.quadraticCurveTo(1.0, 0.15, 1.5, 0.2);
-    shape.quadraticCurveTo(2.0, 0.12, 2.2, 0);    // Center point
-    shape.quadraticCurveTo(2.0, -0.12, 1.5, -0.2); // Mirror of upper curve
-    shape.quadraticCurveTo(1.0, -0.15, 0.2, -0.2);
-    shape.lineTo(0, -0.1);
+    // Blade shape with improved symmetry - reduced width values
+    shape.lineTo(0, 0.06);    // Reduced from 0.1
+    shape.lineTo(0.15, 0.15); // Reduced from 0.2
+    shape.quadraticCurveTo(0.8, 0.12, 1.5, 0.15); // Reduced y values
+    shape.quadraticCurveTo(2.0, 0.08, 2.2, 0);    // Reduced y value
+    shape.quadraticCurveTo(2.0, -0.08, 1.5, -0.15); // Mirror of upper curve
+    shape.quadraticCurveTo(0.8, -0.12, 0.15, -0.15);
+    shape.lineTo(0, -0.06);   // Reduced from -0.1
     shape.lineTo(0, 0);
     
     return shape;

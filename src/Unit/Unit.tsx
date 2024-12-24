@@ -31,6 +31,7 @@ import Staff from '@/Weapons/Staff';
 import ChargedOrbitals, { ORBITAL_COOLDOWN } from '@/Unit/ChargedOrbitals';
 import Reanimate, { ReanimateRef } from '../Spells/Reanimate/Reanimate';
 import Oathstrike from '@/Spells/Oathstrike/Oathstrike';
+import { useOathstrike } from '../Spells/Oathstrike/useOathstrike';
 
 
 // DISGUSTING FILE REFACTOR AF 
@@ -505,6 +506,21 @@ export default function Unit({
   // ABILITY KEYS 
   const reanimateRef = useRef<ReanimateRef>(null);
 
+  const handleHealthChange = useCallback((healAmount: number) => {
+    if (onHealthChange) {
+      onHealthChange(Math.min(maxHealth, health + healAmount));
+    }
+  }, [onHealthChange, health, maxHealth]);
+
+  const { activateOathstrike } = useOathstrike({
+    parentRef: groupRef,
+    onHit,
+    charges: fireballCharges,
+    setCharges: setFireballCharges,
+    enemyData,
+    onHealthChange: handleHealthChange
+  });
+
   useAbilityKeys({
     keys: movementKeys,
     groupRef,
@@ -532,7 +548,8 @@ export default function Unit({
     reanimateRef,
     health,
     maxHealth,
-    onHealthChange
+    onHealthChange,
+    activateOathstrike,
   });
 
   //=====================================================================================================
@@ -645,25 +662,6 @@ export default function Unit({
   });
 
   //=====================================================================================================
-
-  const handleHealthChange = useCallback((healAmount: number) => {
-    if (onHealthChange) {
-      onHealthChange(Math.min(maxHealth, health + healAmount));
-    }
-  }, [onHealthChange, health, maxHealth]);
-
-  // REANIMATE - RENAME
-  <Reanimate
-    ref={reanimateRef}
-    parentRef={groupRef}
-    onHealthChange={handleHealthChange}
-    charges={fireballCharges}
-    setCharges={setFireballCharges}
-    setDamageNumbers={setDamageNumbers}
-    nextDamageNumberId={nextDamageNumberId}
-  />
-
-
 
   return (
     <>

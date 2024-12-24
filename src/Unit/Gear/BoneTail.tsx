@@ -115,7 +115,7 @@ const BoneTail: React.FC = () => {
 
 
         {/* Connecting joint */}
-        <mesh position={[0, -0.08, -0.01]} rotation={[Math.PI / 2, 0, 0]}>
+        <mesh position={[0, 0.1, +0.01]} rotation={[Math.PI / 2, 0, 0]}>
           <sphereGeometry args={[0.03, 6, 6]} />
           <meshStandardMaterial 
             color="#d8d8d8"
@@ -129,7 +129,7 @@ const BoneTail: React.FC = () => {
   return (
     <group 
       ref={tailRef}
-      position={[0, -0.65, -0.35]}
+      position={[0, -0.7, -0.25]}
       rotation={[-0.1, 0, 0]}
     >
       {[...Array(15)].map((_, index) => (

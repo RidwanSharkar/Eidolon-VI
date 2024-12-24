@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
+import { ORBITAL_COOLDOWN } from '../../Unit/ChargedOrbitals';
 
 interface OathstrikeControllerProps {
   onHit: (targetId: string, damage: number) => void;
@@ -27,26 +28,54 @@ export const useOathstrike = ({
   onHit, 
   charges, 
   setCharges,
-  enemyData 
-}: OathstrikeControllerProps) => {
+  enemyData,
+  onHealthChange
+}: OathstrikeControllerProps & {
+  onHealthChange: (health: number) => void;
+}) => {
   const [isActive, setIsActive] = useState(false);
+  const HEAL_AMOUNT = 15;
 
   const consumeCharges = useCallback(() => {
+    // Find two available charges
     const availableCharges = charges.filter(charge => charge.available);
-    if (availableCharges.length < 2) return false;
+    if (availableCharges.length < 2) {
+      console.log('Not enough charges available for Oathstrike');
+      return false;
+    }
 
+    // Consume two charges
     setCharges(prev => prev.map((charge, index) => {
       if (index === availableCharges[0].id - 1 || index === availableCharges[1].id - 1) {
-        return { ...charge, available: false, cooldownStartTime: Date.now() };
+        return {
+          ...charge,
+          available: false,
+          cooldownStartTime: Date.now()
+        };
       }
       return charge;
     }));
+
+    // Start cooldown recovery for both charges
+    availableCharges.slice(0, 2).forEach(charge => {
+      setTimeout(() => {
+        setCharges(prev => prev.map((c, index) => 
+          index === charge.id - 1
+            ? { ...c, available: true, cooldownStartTime: null }
+            : c
+        ));
+      }, ORBITAL_COOLDOWN);
+    });
 
     return true;
   }, [charges, setCharges]);
 
   const activateOathstrike = useCallback(() => {
-    if (!parentRef.current || !consumeCharges()) return null;
+    if (!parentRef.current) return null;
+    
+    if (!consumeCharges()) {
+      return null;
+    }
 
     const position = parentRef.current.position.clone();
     position.y += 1;
@@ -56,9 +85,12 @@ export const useOathstrike = ({
 
     setIsActive(true);
 
+    // Apply healing
+    onHealthChange(HEAL_AMOUNT);
+
     // Calculate arc for damage
     const forward = direction.clone();
-    const DAMAGE_RANGE = 6.0;
+    const DAMAGE_RANGE = 10.0;
     const ARC_ANGLE = Math.PI * 0.6; // 108-degree arc
 
     // Check enemies in arc
@@ -81,7 +113,7 @@ export const useOathstrike = ({
       direction,
       onComplete: () => setIsActive(false)
     };
-  }, [parentRef, consumeCharges, enemyData, onHit]);
+  }, [parentRef, consumeCharges, enemyData, onHit, onHealthChange]);
 
   const deactivateOathstrike = useCallback(() => {
     setIsActive(false);

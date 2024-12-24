@@ -31,6 +31,7 @@ interface UseAbilityKeysProps {
   health: number;
   maxHealth: number;
   onHealthChange?: (health: number) => void;
+  activateOathstrike: () => { position: Vector3; direction: Vector3; onComplete: () => void } | null;
 }
 
 export function useAbilityKeys({
@@ -57,7 +58,8 @@ export function useAbilityKeys({
   castReanimate,
   health,
   maxHealth,
-  onHealthChange
+  onHealthChange,
+  activateOathstrike
 }: UseAbilityKeysProps) {
   // Track firebeam interval
   const firebeamIntervalRef = useRef<NodeJS.Timeout | null | undefined>(null);
@@ -117,7 +119,7 @@ export function useAbilityKeys({
           if (currentWeapon === WeaponType.SWORD && !isSmiting) {
             // Check time since last Q usage for Sword
             const timeSinceLastQ = Date.now() - lastQUsageTime.current;
-            if (timeSinceLastQ < 1000) { // SMITE BUG TEMP FIX 
+            if (timeSinceLastQ < 500) { // SMITE BUG TEMP FIX 
               console.log('Cannot use Smite so soon after a normal attack');
               return;
             }
@@ -181,17 +183,17 @@ export function useAbilityKeys({
 
             case WeaponType.SWORD:
               if (abilities[WeaponType.SWORD].r.isUnlocked) {
-                // Add oathstrike effect
-                const direction = new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion);
-                setActiveEffects(prev => [...prev, {
-                  id: Math.random(),
-                  type: 'oathstrike',
-                  position: groupRef.current!.position.clone(),
-                  direction: direction
-                }]);
-                
-                // Trigger the swing animation
-                setIsSwinging(true);
+                const result = activateOathstrike();
+                if (result) {
+                  setIsSmiting(true);
+                  setActiveEffects(prev => [...prev, {
+                    id: Math.random(),
+                    type: 'oathstrike',
+                    position: result.position,
+                    direction: result.direction
+                  }]);
+                  onAbilityUse(currentWeapon, 'r');
+                }
               }
               break;
           }
@@ -221,6 +223,7 @@ export function useAbilityKeys({
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [
+    activateOathstrike,
     keys,
     groupRef,
     currentWeapon,
