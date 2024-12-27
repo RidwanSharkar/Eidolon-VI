@@ -10,7 +10,7 @@ export interface GeneratedTree {
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 70; 
+  const numberOfMountains = 66; 
 
   for (let i = 0; i < numberOfMountains; i++) {
     const angle = Math.random() * Math.PI * 2;

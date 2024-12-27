@@ -27,7 +27,7 @@ export default function WeaponSelectionPanel({
           onClick={() => onWeaponSelect(WeaponType.SWORD)}
         >
           <div className={styles.iconContent}>
-            <img src="/Eidolon/icons/2.svg" alt="Sword" />
+            <img src="Eidolon/icons/2.svg" alt="Sword" />
           </div>
         </div>
 
@@ -36,7 +36,7 @@ export default function WeaponSelectionPanel({
           onClick={() => onWeaponSelect(WeaponType.SCYTHE)}
         >
           <div className={styles.iconContent}>
-            <img src="/Eidolon/icons/1.svg" alt="Scythe" />
+            <img src="Eidolon/icons/1.svg" alt="Scythe" />
           </div>
         </div>
 
@@ -45,7 +45,7 @@ export default function WeaponSelectionPanel({
           onClick={() => onWeaponSelect(WeaponType.SABRES)}
         >
           <div className={styles.iconContent}>
-            <img src="/Eidolon/icons/3.svg" alt="Sabres" />
+            <img src="Eidolon/icons/3.svg" alt="Sabres" />
           </div>
         </div>
       </div>

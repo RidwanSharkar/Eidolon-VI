@@ -238,6 +238,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking }: Cus
     if (isWalking) {
       setWalkCycle((prev) => (prev + delta * walkSpeed) % (Math.PI * 2));
       
+      //BUGGED BUT USEFUL FOR RISING FROM GROUND EFFECT
       // Calculate the vertical offset caused by walking
       const walkHeightOffset = Math.abs(Math.sin(walkCycle) * 0.1); // This captures the natural up/down motion
       

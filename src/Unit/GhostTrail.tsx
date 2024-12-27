@@ -22,7 +22,7 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
       positions.current = Array(trailCount).fill(0).map(() => initialPos.clone());
       setIsInitialized(true);
     }
-  }, [ parentRef ]); // missed dis for a while
+  }, [ parentRef ])
 
   const getTrailColor = () => {
     switch (weaponType) {
@@ -31,10 +31,7 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
       case WeaponType.SWORD:
         return '#8783D1';
       case WeaponType.SABRES:
-      case WeaponType.STAFF:
         return '#58FCEC';
-      default:
-        return '#39ff14';  // Default to scythe color
     }
   };
 

@@ -7,6 +7,6 @@ export const trunkColors = [
 ];
 
 export const leafColors = [
-  "#228b22", // Forest green
-  "#3a5f0b", // Dark olive green
+  "#ff69b4", // Forest green
+  "#ff69b4", // Dark olive green
 ]; 

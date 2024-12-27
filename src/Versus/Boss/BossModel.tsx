@@ -6,6 +6,7 @@ import BonePlate from '../../Unit/Gear/BonePlate';
 import BoneWings from '../../Unit/Gear/BoneWings';  
 import BossBoneVortex from './BossBoneVortex';  
 import DragonSkull from './DragonSkull';  
+import BossTrailEffect from './BossTrailEffect';
 
 interface BossModelProps {
   isAttacking: boolean;
@@ -31,17 +32,17 @@ export default function BossModel({ isAttacking, isWalking }: BossModelProps) {
   return (
     <group ref={groupRef}>
       {/* Boss Skull - positioned above the body */}
-      <group position={[0, 3, 0]} rotation={[0.15, 0, 0]}>
+      <group scale={[0.6, 0.6, 0.6]} position={[0, 2.46, 0.1]} rotation={[0.4, 0, 0]}>
         <DragonSkull />
       </group>
 
       {/* Scaled Bone Plate */}
-      <group scale={[2.4, 2.1, 2.5]} position={[0, 1.6, 0]}>
+      <group scale={[1.8 , 1.35, 1.6]} position={[0, 1.7, 0]}>
         <BonePlate />
       </group>
 
       {/* Scaled Wings */}
-      <group scale={[2, 2, 2]} position={[0, 1.75, 0]}>
+      <group scale={[1.9, 1.6, 1.4]} position={[0, 2, 0]}>
         {/* Left Wing */}
         <group rotation={[0, Math.PI / 7, 0]}>
           <BoneWings 
@@ -62,7 +63,7 @@ export default function BossModel({ isAttacking, isWalking }: BossModelProps) {
       </group>
 
       {/* Add Decorative Boneclaws */}
-      <group scale={[0.8, 0.8, 0.8]} position={[0, 1.9, 0]}>
+      <group scale={[0.7, 0.7, 0.7]} position={[0, 1.9, 0]}>
         {/* Left Claw */}
         <group position={[-0.85, 0.25, 0.1]} rotation={[0, Math.PI /-2, 0]}>
           <BossClawModel />
@@ -74,33 +75,17 @@ export default function BossModel({ isAttacking, isWalking }: BossModelProps) {
       </group>
 
       {/* Scaled Tail */}
-      <group scale={[3, 3, 3]} position={[0, 2.2, 0.5]}>
+      <group scale={[2, 2, 2]} position={[0, 1.75, -0.15]}>
         <BoneTail />
       </group>
 
-      {/* Additional Boss-specific effects */}
-      <group position={[0, 2, 0]}>
-        {/* Aura effect */}
-        {[...Array(8)].map((_, i) => (
-          <mesh
-            key={i}
-            position={[0, 0, 0]}
-            rotation={[0, (i / 8) * Math.PI * 2, 0]}
-          >
-            <planeGeometry args={[4, 6]} />
-            <meshStandardMaterial
-              color="#ff0000"
-              transparent
-              opacity={0.1}
-              emissive="#ff0000"
-              emissiveIntensity={0.}
-            />
-          </mesh>
-        ))}
+      {/* Add Glowing Core Effect */}
+      <group position={[0, 2.2, 0]}>
+        <BossTrailEffect parentRef={groupRef} />
       </group>
 
       {/* Add Bone Vortex Effects */}
-      <group scale={[2.15, 2.15, 2.15]}>
+      <group scale={[2.1, 2.25, 2.1]}>
         {/* Front Vortex */}
         <group position={[0, 0, 0.1]} rotation={[0, 0, 0]}>
           <BossBoneVortex parentRef={groupRef} />

@@ -20,13 +20,13 @@ export default function LevelCompletionPanel({
   const getAbilityIcons = () => {
     switch (currentWeapon) {
       case WeaponType.SCYTHE:
-        return { r: '/Eidolon/icons/r1.svg', p: '/Eidolon/icons/p1.svg' };
+        return { r: 'Eidolon/icons/r1.svg', p: 'Eidolon/icons/p1.svg' };
       case WeaponType.SWORD:
-        return { r: '/Eidolon/icons/r2.svg', p: '/Eidolon/icons/p2.svg' };
+        return { r: 'Eidolon/icons/r2.svg', p: 'Eidolon/icons/p2.svg' };
       case WeaponType.SABRES:
-        return { r: '/Eidolon/icons/r3.svg', p: '/Eidolon/icons/p3.svg' };
+        return { r: 'Eidolon/icons/r3.svg', p: 'Eidolon/icons/p3.svg' };
       case WeaponType.SABRES2:
-        return { r: '/Eidolon/icons/r4.svg', p: '/Eidolon/icons/p4.svg' };
+        return { r: 'Eidolon/icons/r4.svg', p: 'Eidolon/icons/p4.svg' };
     }
   };
 
@@ -60,7 +60,7 @@ export default function LevelCompletionPanel({
         >
           <div className={styles.iconContent}>
             <img src={icons?.r} alt="R Ability" style={{ width: '75px', height: '75px' }} />
-            <p>(R) Ability</p>
+            <p>[R] Hotkey</p>
           </div>
         </div>
         <div 
@@ -69,7 +69,7 @@ export default function LevelCompletionPanel({
         >
           <div className={styles.iconContent}>
             <img src={icons?.p} alt="Passive Ability" style={{ width: '75px', height: '75px' }} />
-            <p> (1) Restore </p>
+            <p> [1] Hotkey </p>
           </div>
         </div>
       </div>

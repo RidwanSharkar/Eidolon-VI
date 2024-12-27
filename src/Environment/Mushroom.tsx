@@ -23,13 +23,13 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale }) => {
     <group position={position} scale={scale}>
       {/* Stem */}
       <mesh ref={mushroomRef}>
-        <cylinderGeometry args={[0.05, 0.05, 0.6, 16]} />
-        <meshStandardMaterial color="#d66a95" />
+        <cylinderGeometry args={[0.1, 0.12, 0.8, 16]} />
+        <meshStandardMaterial color="#ff69b4" />
       </mesh>
       {/* Cap */}
-      <mesh position={[0, 0.35, 0]}>
-        <coneGeometry args={[0.2, 0.3, 16]} />
-        <meshStandardMaterial color="#d66a95" />
+      <mesh position={[0, 0.5, 0]}>
+        <sphereGeometry args={[0.3, 32, 32]} />
+        <meshStandardMaterial color="#ff69b4" />
       </mesh>
     </group>
   );

@@ -27,14 +27,14 @@ import Blizzard from '@/Spells/Blizzard/Blizzard';
 import { useAbilityKeys } from './useAbilityKeys';
 import { useFirebeamManager } from '../Spells/Firebeam/useFirebeamManager';
 import Firebeam from '../Spells/Firebeam/Firebeam';
-import Staff from '@/Weapons/Staff';
 import ChargedOrbitals, { ORBITAL_COOLDOWN } from '@/Unit/ChargedOrbitals';
 import Reanimate, { ReanimateRef } from '../Spells/Reanimate/Reanimate';
 import Oathstrike from '@/Spells/Oathstrike/Oathstrike';
 import { useOathstrike } from '../Spells/Oathstrike/useOathstrike';
+import CrusaderAura from '../Spells/CrusaderAura/CrusaderAura';
 
 
-// DISGUSTING FILE REFACTOR AF 
+// refactor maybe
 // ISOLATE BEFORE SPLITTING: SMITE- >FIREBALL -> , BOW 
 
 //=====================================================================================================
@@ -48,8 +48,6 @@ interface FireballData {
   maxDistance: number;
 }
 
-//=====================================================================================================
-//=====================================================================================================
 //=====================================================================================================
 
 // EXPORT UNIT
@@ -144,6 +142,14 @@ export default function Unit({
     direction: Vector3;
   }>>([]);
 
+  // Add to existing state declarations
+  const [isOathstriking, setIsOathstriking] = useState(false);
+  const [hasHealedThisSwing, setHasHealedThisSwing] = useState(false);
+
+  // Add near other refs at top of component
+  const crusaderAuraRef = useRef<{ processHealingChance: () => void }>(null);
+
+
 
 
 
@@ -207,18 +213,18 @@ export default function Unit({
     if (!isEnemy) return;
 
     const maxHits = isEnemy 
-      ? (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2 ? 2 : 1)
+      ? (currentWeapon === WeaponType.SABRES  ? 2 : 1)
       : 1;
     const currentHits = hitCountThisSwing[target.id] || 0;
 
     if (currentHits >= maxHits) return;
 
     const distance = groupRef.current.position.distanceTo(target.position);
-    const weaponRange = (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) ? 5.0 : 4.5;
+    const weaponRange = (currentWeapon === WeaponType.SABRES) ? 5.0 : 4.5;
 
     if (distance <= weaponRange) {
       // Add new angle check ONLY for Sabres
-      if (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) {
+      if (currentWeapon === WeaponType.SABRES ) {
         const toTarget = new Vector3()
           .subVectors(target.position, groupRef.current.position)
           .normalize();
@@ -231,7 +237,6 @@ export default function Unit({
           return;
         }
       }
-
       let baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
       
       // SMITE LOGIC
@@ -243,7 +248,7 @@ export default function Unit({
         setIsProcessingAbility(true);
         
         // Initial hit
-        baseDamage = 31;
+        baseDamage = 37;
         const { damage, isCritical } = calculateDamage(baseDamage);
         onHit(target.id, damage);
         
@@ -293,10 +298,9 @@ export default function Unit({
 
           pendingLightningTargets.current.delete(target.id);
         }, 200);
-
         setTimeout(() => {
           setIsProcessingAbility(false);
-        }, 250); // Slightly longer than your lightning delay
+        }, 250); // Slightly longer than  lightning delay
 
         return;
       }
@@ -305,10 +309,20 @@ export default function Unit({
 
       // NORMAL WEAPON HIT HANDLING
       const { damage, isCritical } = calculateDamage(baseDamage);
-      onHit(target.id, damage);
+      onHit(target.id, damage); 
 
       // Calculate target's health after damage
       const targetAfterDamage = target.health - damage;
+
+      // Add Crusader Aura healing check for Sword Q
+      if (currentWeapon === WeaponType.SWORD && 
+          abilities[WeaponType.SWORD].passive.isUnlocked && 
+          !isSmiting && !isOathstriking && 
+          !hasHealedThisSwing &&
+          targetAfterDamage > 0) {  // Only trigger healing if target is still alive
+        crusaderAuraRef.current?.processHealingChance();
+        setHasHealedThisSwing(true);
+      }
 
       // Only display damage number if target is still alive
       if (targetAfterDamage > 0) {
@@ -345,6 +359,7 @@ export default function Unit({
     setIsSwinging(false);
     setHitCountThisSwing({});
     setIsSmiting(false); // Reset smiting after swing
+    setHasHealedThisSwing(false);
   };
 
   useFrame((_, delta) => {
@@ -362,7 +377,7 @@ export default function Unit({
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 2, 1); // 2 seconds for full charge
+      const progress = Math.min(chargeTime / 1.75, 1); // 2 seconds for full charge
       setBowChargeProgress(progress);
 
       // Smooth charge line opacity using delta
@@ -390,9 +405,20 @@ export default function Unit({
 
         // Check for collisions with enemies but don't remove projectile
         enemyData.forEach(enemy => {
-          const distanceToEnemy = projectile.position.distanceTo(enemy.position);
+          const projectilePos2D = new Vector3(
+            projectile.position.x,
+            0,
+            projectile.position.z
+          );
+          const enemyPos2D = new Vector3(
+            enemy.position.x,
+            0,
+            enemy.position.z
+          );
+          const distanceToEnemy = projectilePos2D.distanceTo(enemyPos2D);
+          
           if (distanceToEnemy < 1.4) { // Hit radius
-            handleProjectileHit(projectile.id, enemy.id, projectile.power);
+            handleProjectileHit(projectile.id, enemy.id, projectile.power, projectile.position);
           }
         });
         
@@ -498,7 +524,9 @@ export default function Unit({
     enemyData,
     setActiveEffects,
     charges: fireballCharges,
-    setCharges: setFireballCharges
+    setCharges: setFireballCharges,
+    setDamageNumbers,
+    nextDamageNumberId
   });
 
   //=====================================================================================================
@@ -508,7 +536,9 @@ export default function Unit({
 
   const handleHealthChange = useCallback((healAmount: number) => {
     if (onHealthChange) {
-      onHealthChange(Math.min(maxHealth, health + healAmount));
+      // Ensure we don't exceed maxHealth
+      const newHealth = Math.min(maxHealth, health + healAmount);
+      onHealthChange(newHealth);
     }
   }, [onHealthChange, health, maxHealth]);
 
@@ -518,7 +548,14 @@ export default function Unit({
     charges: fireballCharges,
     setCharges: setFireballCharges,
     enemyData,
-    onHealthChange: handleHealthChange
+    onHealthChange: (healAmount: number) => {
+      if (onHealthChange) {
+        const newHealth = Math.min(health + healAmount, maxHealth);
+        onHealthChange(newHealth);
+      }
+    },
+    setDamageNumbers,
+    nextDamageNumberId
   });
 
   useAbilityKeys({
@@ -550,6 +587,7 @@ export default function Unit({
     maxHealth,
     onHealthChange,
     activateOathstrike,
+    setIsOathstriking,
   });
 
   //=====================================================================================================
@@ -576,7 +614,7 @@ export default function Unit({
 
   // SABRE DOUBLE HIT
   useEffect(() => {
-    if (currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) {
+    if (currentWeapon === WeaponType.SABRES ) {
       setHitCountThisSwing({});
     }
   }, [currentWeapon]);
@@ -584,7 +622,7 @@ export default function Unit({
   //=====================================================================================================
 
   //BOW PROJECTILE HIT 
-  const handleProjectileHit = (projectileId: number, targetId: string, power: number) => {
+  const handleProjectileHit = (projectileId: number, targetId: string, power: number, projectilePosition: Vector3) => {
     const isEnemy = targetId.startsWith('enemy');
     if (!isEnemy) return;
 
@@ -597,14 +635,30 @@ export default function Unit({
         return;
     }
 
+    // Create 2D positions by ignoring Y axis
+    const projectilePos2D = new Vector3(
+      projectilePosition.x,
+      0,
+      projectilePosition.z
+    );
+    const enemyPos2D = new Vector3(
+      enemy.position.x,
+      0,
+      enemy.position.z
+    );
+
+    // Check distance in 2D space (ignoring Y axis)
+    const distanceToEnemy = projectilePos2D.distanceTo(enemyPos2D);
+    if (distanceToEnemy > 1.4) return; // Hit radius check in 2D
+
     // Mark this specific projectile-target combination as hit
     setHitCountThisSwing(prev => ({
         ...prev,
         [hitKey]: 1
     }));
 
-    const baseDamage = 3;
-    const maxDamage = 97;
+    const baseDamage = 10;
+    const maxDamage = 87;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
     const fullChargeDamage = power >= 0.99 ? 20 : 0;
     const finalDamage = scaledDamage + fullChargeDamage;
@@ -620,7 +674,7 @@ export default function Unit({
             isCritical: power >= 0.99
         }]);
     }
-};
+  };
 
   //=====================================================================================================
 
@@ -632,7 +686,7 @@ export default function Unit({
     const enemy = enemyData.find(e => e.id === targetId);
     if (!enemy) return;
 
-    const { damage, isCritical } = calculateDamage(43); // Fixed fireball damage
+    const { damage, isCritical } = calculateDamage(53); // Fixed fireball damage
     
     onHit(targetId, damage);
 
@@ -662,6 +716,13 @@ export default function Unit({
   });
 
   //=====================================================================================================
+
+  // Add new handler (near other handle*Complete functions)
+  const handleOathstrikeComplete = () => {
+    setIsOathstriking(false);
+    setIsSwinging(false);
+    setHitCountThisSwing({});
+  };
 
   return (
     <>
@@ -718,7 +779,9 @@ export default function Unit({
           charges={fireballCharges}
           weaponType={currentWeapon}
         />
+      <group scale={[1 , 0.85, 1]} position={[0, 0, -0.1]}>
         <BonePlate />
+      </group>
         <BoneTail />
         
         {currentWeapon === WeaponType.SABRES ? (
@@ -728,12 +791,6 @@ export default function Unit({
             onLeftSwingStart={() => {}}
             onRightSwingStart={() => {}}
             isBowCharging={isBowCharging}
-          />
-        ) : currentWeapon === WeaponType.STAFF ? (
-          <Staff 
-            isSwinging={isSwinging}
-            onSwingComplete={handleSwingComplete}
-            parentRef={groupRef}
           />
         ) : currentWeapon === WeaponType.SCYTHE ? (
           <Scythe 
@@ -745,12 +802,14 @@ export default function Unit({
           <Sword
             isSwinging={isSwinging}
             isSmiting={isSmiting}
+            isOathstriking={isOathstriking}
             onSwingComplete={handleSwingComplete}
             onSmiteComplete={handleSmiteComplete}
+            onOathstrikeComplete={handleOathstrikeComplete}
           />
         )}
 
-        {/* Add HP bar if not player */}
+        {/* Enemy HP Bar */}
         {!isPlayer && (
           <Billboard
             position={[0, 2, 0]}
@@ -772,7 +831,7 @@ export default function Unit({
       {/* Add ghost trail effect */}
       <GhostTrail parentRef={groupRef} weaponType={currentWeapon} />
 
-      {/* Fireballs with updated color */}
+      {/* Fireballs  */}
       {fireballs.map(fireball => (
         <Fireball
           key={fireball.id}
@@ -802,7 +861,7 @@ export default function Unit({
         />
       ))}
 
-      {(currentWeapon === WeaponType.SABRES || currentWeapon === WeaponType.SABRES2) && isBowCharging && (
+      {(currentWeapon === WeaponType.SABRES) && isBowCharging && (
         <EtherealBow
           position={groupRef.current?.position.clone().add(new Vector3(0, 1  , 0)) || new Vector3()}
           direction={new Vector3(0, 0, 1).applyQuaternion(groupRef.current?.quaternion || new THREE.Quaternion())}
@@ -958,7 +1017,7 @@ export default function Unit({
         </group>
       ))}
 
-      <BoneVortex parentRef={groupRef} />
+      <BoneVortex parentRef={groupRef} weaponType={currentWeapon} />
       <BoneAura parentRef={groupRef} />
 
       {activeEffects.map(effect => {
@@ -1035,6 +1094,7 @@ export default function Unit({
                   prev.filter(e => e.id !== effect.id)
                 );
               }}
+              parentRef={groupRef}
             />
           );
         }
@@ -1050,6 +1110,17 @@ export default function Unit({
         setDamageNumbers={setDamageNumbers}
         nextDamageNumberId={nextDamageNumberId}
       />
+
+      {currentWeapon === WeaponType.SWORD && 
+       abilities[WeaponType.SWORD].passive.isUnlocked && (
+        <CrusaderAura 
+          ref={crusaderAuraRef}
+          parentRef={groupRef} 
+          onHealthChange={handleHealthChange}
+          setDamageNumbers={setDamageNumbers}
+          nextDamageNumberId={nextDamageNumberId}
+        />
+      )}
     </>
   );
 }

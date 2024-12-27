@@ -16,6 +16,8 @@ interface DamageNumberProps {
   isSabres?: boolean;
   isSabres2?: boolean;
   isStaff?: boolean;
+  isOathstrike?: boolean;
+  isFirebeam?: boolean;
   onComplete: () => void;
 }
 
@@ -34,6 +36,8 @@ export default function DamageNumber({
   isBlizzard, 
   isHealing = false, 
   isBoneclaw = false, 
+  isOathstrike = false,
+  isFirebeam = false,
   onComplete 
 }: DamageNumberProps) {
   console.log('DamageNumber props:', { damage, isCritical, isBlizzard, isLightning, isHealing, isBoneclaw });
@@ -80,6 +84,8 @@ export default function DamageNumber({
 
   // Determine text color based on all possible states
   const getTextColor = () => {
+    if (isFirebeam) return "#58FCEC";
+    if (isOathstrike) return "#8783D1";
     if (isHealing) return "#338C66";
     if (isBoneclaw) return "#39ff14";
     if (isCritical) return "#ff0000";
@@ -92,11 +98,11 @@ export default function DamageNumber({
     <Text
       ref={textRef}
       position={[position.x, startY, position.z]}
-      fontSize={0.5}
+      fontSize={0.6}
       color={getTextColor()}
       anchorX="center"
       anchorY="middle"
-      outlineWidth={0.1}
+      outlineWidth={0.05}
       outlineColor="#000000"
       material-transparent={true}
       material-depthTest={false}

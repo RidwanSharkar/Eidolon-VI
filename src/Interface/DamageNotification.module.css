@@ -1,7 +1,7 @@
 .notification {
   position: absolute;
   left: 50%;
-  top: -10px;
+  top: -60%;
   transform: translateX(-50%);
   color: #ff3333;
   font-weight: bold;

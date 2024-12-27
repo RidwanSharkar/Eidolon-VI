@@ -42,14 +42,61 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
       position={position.toArray()}
       rotation={[0, Math.atan2(direction.x, direction.z), 0]}
     >
-      {/* Core beam - Moved forward */}
-      <group position={[0, -1.25, 10.7]}>
+      {/* Origin point effects */}
+      <group position={[0, -1.1, 0]}>
+        {/* Origin core glow */}
+        <mesh>
+          <sphereGeometry args={[0.4, 16, 16]} />
+          <meshStandardMaterial
+            color="#58FCEC"
+            emissive="#58FCEC"
+            emissiveIntensity={5}
+            transparent
+            opacity={0.7}
+          />
+        </mesh>
+
+        {/* Origin outer glow */}
+        <mesh>
+          <sphereGeometry args={[0.5, 16, 16]} />
+          <meshStandardMaterial
+            color="#58FCEC"
+            emissive="#58FCEC"
+            emissiveIntensity={8}
+            transparent
+            opacity={0.4}
+          />
+        </mesh>
+
+        {/* Origin energy rings */}
+        {[...Array(3)].map((_, i) => (
+          <mesh 
+            key={`ring-${i}`}
+            rotation={[Math.PI / 2, 0, (i * Math.PI) / 3]}
+          >
+            <torusGeometry args={[0.7, 0.10, 8, 32]} />
+            <meshStandardMaterial
+              color="#58FCEC"
+              emissive="#58FCEC"
+              emissiveIntensity={10}
+              transparent
+              opacity={2}
+            />
+          </mesh>
+        ))}
+
+        {/* Origin point light */}
+        <pointLight color="#58FCEC" intensity={20} distance={3} />
+      </group>
+
+      {/* Main beam group */}
+      <group position={[0, -1.1, 10.7]}>
         {/* Core beam */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.1, 0.1, 20, 16]} />
           <meshStandardMaterial
-            color="#ff0000"
-            emissive="#ff1100"
+            color="#58FCEC"
+            emissive="#58FCEC"
             emissiveIntensity={15}
             transparent
             opacity={0.95}
@@ -60,8 +107,8 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.2, 0.2, 20, 16]} />
           <meshStandardMaterial
-            color="#ff2200"
-            emissive="#ff1100"
+            color="#58FCEC"
+            emissive="#58FCEC"
             emissiveIntensity={10}
             transparent
             opacity={0.7}
@@ -72,8 +119,8 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.3, 0.3, 20, 16]} />
           <meshStandardMaterial
-            color="#ff3300"
-            emissive="#ff2200"
+            color="#58FCEC"
+            emissive="#58FCEC"
             emissiveIntensity={8}
             transparent
             opacity={0.4}
@@ -84,13 +131,13 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
         {[...Array(5)].map((_, i) => (
           <mesh 
             key={i} 
-            rotation={[Math.PI / 2, 0, (i * Math.PI) / 1.5]}
+            rotation={[-Math.PI / 4, 0, (i * Math.PI) / -1.5]}
             position={[0, 0, 10]}
           >
             <torusGeometry args={[0.35, 0.05, 8, 32]} />
             <meshStandardMaterial
-              color="#ff2200"
-              emissive="#ff1100"
+              color="#58FCEC"
+              emissive="#58FCEC"
               emissiveIntensity={8}
               transparent
               opacity={0.3}
@@ -103,15 +150,15 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
           <mesh
             key={i}
             position={[
-              Math.cos((i * Math.PI) / 4) * 0.8,
-              Math.sin((i * Math.PI) / 4) * 0.8,
-              i * 2.5,
+              Math.cos((i * Math.PI) / 4) * 0.6,
+              Math.sin((i * Math.PI) / 4) * 0.6,
+              i * 1 -10,
             ]}
           >
-            <sphereGeometry args={[0.15, 8, 8]} />
+            <sphereGeometry args={[0.1, 8, 8]} />
             <meshStandardMaterial
-              color="#ff6600"
-              emissive="#ff4400"
+              color="#58FCEC"
+              emissive="#58FCEC"
               emissiveIntensity={12}
               transparent
               opacity={0.6}
@@ -120,8 +167,14 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
         ))}
 
         {/* Enhanced beam glow */}
-        <pointLight position={[0, 0, 10]} color="#ff4400" intensity={25} distance={12} />
-        <pointLight position={[0, 0, 0]} color="#ff6600" intensity={15} distance={6} />
+        <pointLight position={[0, 0, 7.5]} color="#58FCEC" intensity={15} distance={2} />
+        {/* <pointLight position={[0, 0, 10]} color="#58FCEC" intensity={15} distance={2} /> */}
+        {/* <pointLight position={[0, 0, 5]} color="#58FCEC" intensity={15} distance={2} /> */}
+        {/* <pointLight position={[0, 0, 2.5]} color="#58FCEC" intensity={15} distance={2} /> */}
+        {/* <pointLight position={[0, 0, 0]} color="#58FCEC" intensity={15} distance={2} /> */}
+        {/* <pointLight position={[0, 0, -2.5]} color="#58FCEC" intensity={15} distance={2} /> */}
+        {/* <pointLight position={[0, 0, -5]} color="#58FCEC" intensity={15} distance={2} /> */}
+        {/* <pointLight position={[0, 0, -7.5]} color="#58FCEC" intensity={15} distance={2} /> */}
       </group>
     </group>
   );

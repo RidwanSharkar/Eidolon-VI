@@ -52,17 +52,10 @@ export default function GameWrapper({
   }, []);
 
   const handleContinue = useCallback(() => {
-    if (selectedIcon !== null) {
-      if (selectedIcon === 1) {
-        onAbilityUnlock('r');
-      } else if (selectedIcon === 2) {
-        onAbilityUnlock('passive');
-      }
-      setCurrentLevel(2);
-      setShowLevelPanel(false);
-      setSelectedIcon(null);
-    }
-  }, [selectedIcon, onAbilityUnlock]);
+    setCurrentLevel(2);
+    setShowLevelPanel(false);
+    setSelectedIcon(null);
+  }, []);
 
   const handleReset = useCallback(() => {
     console.log("GameWrapper: Reset triggered");
@@ -112,7 +105,7 @@ export default function GameWrapper({
             ref={sceneProps.unitProps.controlsRef}
             enablePan={false}
             maxPolarAngle={Math.PI / 2.2}
-            maxDistance={75}
+            maxDistance={50}
             mouseButtons={{
               LEFT: undefined,
               MIDDLE: undefined,

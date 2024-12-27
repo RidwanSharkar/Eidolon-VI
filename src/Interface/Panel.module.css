@@ -1,20 +1,124 @@
 .bottomPanel {
   position: fixed;
-  bottom: 15px;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  background: linear-gradient(135deg, rgba(40, 40, 40, 0.95), rgba(60, 60, 60, 0.98));
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 
+    0 0 50px rgba(0,0,0,0.5),
+    inset 0 0 20px rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+}
+
+.weaponSection {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-right: 20px;
+  border-right: 2px solid rgba(255,255,255,0.1);
+}
+
+.weaponIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid #39ff14;
+  padding: 8px;
+  background: rgba(57,255,20,0.1);
+  box-shadow: 
+    0 0 20px rgba(57,255,20,0.2),
+    inset 0 0 15px rgba(57,255,20,0.2);
+  animation: weaponPulse 2s infinite;
+}
+
+.levelBadge {
+  position: absolute;
+  bottom: -10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #39ff14;
+  color: black;
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: linear-gradient(to right, rgba(0,0,0,0.3), rgba(0,0,0,0.7), rgba(0,0,0,0.3));
-  padding: 15px 15px;
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 0 30px rgba(0,0,0,0.5);
-  z-index: 1000;
-  margin-top: 60px;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 0 15px rgba(57,255,20,0.5);
+  animation: badgePulse 2s infinite;
+}
+
+.statsSection {
+  display: flex;
   flex-direction: column;
+  gap: 15px;
+}
+
+.healthBarContainer {
+  position: relative;
+  height: 25px;
+  background: rgba(255,51,51,0.1);
+  border-radius: 15px;
+  overflow: hidden;
+  border: 2px solid rgba(255,51,51,0.3);
+}
+
+.healthBarInner {
+  height: 100%;
+  background: linear-gradient(90deg, #ff3333, #ff6666);
+  position: relative;
+  transition: width 0.3s ease-out;
+}
+
+.experienceBar {
+  height: 12px;
+  background: rgba(57,255,20,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(57,255,20,0.3);
+}
+
+.abilitiesSection {
+  display: grid;
+  grid-template-columns: repeat(4, 50px);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.ability {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.15);
+  border: 2px solid rgba(255,255,255,0.2);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.ability:hover {
+  transform: translateY(-2px);
+  border-color: #39ff14;
+  box-shadow: 0 0 15px rgba(57,255,20,0.3);
+}
+
+@keyframes weaponPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes badgePulse {
+  0% { box-shadow: 0 0 15px rgba(57,255,20,0.5); }
+  50% { box-shadow: 0 0 25px rgba(57,255,20,0.8); }
+  100% { box-shadow: 0 0 15px rgba(57,255,20,0.5); }
 }
 
 .healthBarSection {
@@ -23,12 +127,6 @@
   left: 50.5%;
   transform: translateX(-50%);
   width: 200px;
-}
-
-.healthBarContainer {
-  position: relative;
-  padding: 2px;
-  transform: translateX(-2px);
 }
 
 .healthBarDecoration {
@@ -98,19 +196,6 @@
     rgba(0, 0, 0, 0.3) 10px,
     rgba(0, 0, 0, 0.3) 20px
   );
-}
-
-.healthBarInner {
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    #ff3333,
-    #ff6666 50%,
-    #ff6666 
-  );
-  transition: width 0.3s ease;
-  position: relative;
-  box-shadow: 0 0 15px rgba(255, 51, 51, 0.7);
 }
 
 .healthBarShine {
@@ -470,14 +555,17 @@
   width: 100%;
   margin-top: 0px;
   padding: 2px;
-  transform: translateX(-4px);
+  transform: translateX(0px);
+  height: 12px;
+  display: flex;
+  align-items: center;
 }
 
 .experienceBar {
-  height: 15px;
-  background: rgba(0, 0, 0, 0.7);
-  border: 0px solid #39ff14;
-  border-radius: 7px;
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
   overflow: hidden;
   position: relative;
   box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
@@ -485,33 +573,35 @@
 
 .experienceBarOrnamentLeft {
   position: absolute;
-  width: 35px;
-  height: 35px;
+  width: 24px;
+  height: 24px;
   background: linear-gradient(135deg, #39ff14, #2db80e);
   border-radius: 50%;
   box-shadow: 
     0 0 10px rgba(57, 255, 20, 0.3),
     0 0 20px rgba(57, 255, 20, 0.2);
-  left: -35px;
+  left: -12px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 2;
 }
 
 .experienceBarOrnamentRight {
   position: absolute;
-  width: 35px;
-  height: 35px;
+  width: 24px;
+  height: 24px;
   background: linear-gradient(135deg, #39ff14, #2db80e);
   border-radius: 50%;
-  right: -35px;
+  right: -12px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 2;
   box-shadow: 
     0 0 10px rgba(57, 255, 20, 0.3),
     0 0 20px rgba(57, 255, 20, 0.2);
@@ -522,7 +612,10 @@
   left: 0;
   top: 0;
   height: 100%;
-  background: linear-gradient(90deg, #39ff14, #2db80e);
+  background: linear-gradient(90deg, 
+    rgba(57, 255, 20, 0.8),
+    rgba(45, 184, 14, 0.8)
+  );
   transition: width 0.3s ease;
 }
 
@@ -536,4 +629,30 @@
   background: rgba(0,0,0,0.5) !important;
   color: #666 !important;
   border-color: rgba(102,102,102,0.3) !important;
+}
+
+.weaponLevelIcon {
+  width: 16px !important;
+  height: 16px !important;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.levelText {
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 
+    0 0 4px rgba(0, 0, 0, 0.8),
+    0 0 2px rgba(0, 0, 0, 1);
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  right: -2px;
+  bottom: -2px;
 }

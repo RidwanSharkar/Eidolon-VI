@@ -3,8 +3,6 @@ import { Vector3, Group } from 'three';
 import { WeaponType, WeaponInfo } from '../Weapons/weapons';
 import { ReanimateRef } from '../Spells/Reanimate/Reanimate';
 
-export const HEALTH_BOOST = 100; // Define the health boost constant
-
 interface UseAbilityKeysProps {
   keys: React.MutableRefObject<Record<string, boolean>>;
   groupRef: React.RefObject<Group>;
@@ -21,7 +19,7 @@ interface UseAbilityKeysProps {
   setBowChargeStartTime: (value: number | null) => void;
   setSmiteEffects: (callback: (prev: Array<{ id: number; position: Vector3 }>) => Array<{ id: number; position: Vector3 }>) => void;
   setActiveEffects: (callback: (prev: Array<{ id: number; type: string; position: Vector3; direction: Vector3 }>) => Array<{ id: number; type: string; position: Vector3; direction: Vector3 }>) => void;
-  onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r') => void;
+  onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r' | 'passive') => void;
   shootFireball: () => void;
   releaseBowShot: (progress: number) => void;
   startFirebeam?: () => NodeJS.Timeout | undefined;
@@ -32,6 +30,7 @@ interface UseAbilityKeysProps {
   maxHealth: number;
   onHealthChange?: (health: number) => void;
   activateOathstrike: () => { position: Vector3; direction: Vector3; onComplete: () => void } | null;
+  setIsOathstriking: (value: boolean) => void;
 }
 
 export function useAbilityKeys({
@@ -59,11 +58,9 @@ export function useAbilityKeys({
   health,
   maxHealth,
   onHealthChange,
-  activateOathstrike
+  activateOathstrike,
+  setIsOathstriking
 }: UseAbilityKeysProps) {
-  // Track firebeam interval
-  const firebeamIntervalRef = useRef<NodeJS.Timeout | null | undefined>(null);
-  const isDivineShieldActiveRef = useRef(false);
   // Add a ref to track the last Q usage time
   const lastQUsageTime = useRef(0);
 
@@ -92,22 +89,11 @@ export function useAbilityKeys({
         keys.current[key] = true;
       }
 
-      // Handle Divine Shield toggle (2 key)
-      if (key === '2' && currentWeapon === WeaponType.SWORD && abilities[WeaponType.SWORD].passive.isUnlocked) {
-        isDivineShieldActiveRef.current = !isDivineShieldActiveRef.current;
-        if (isDivineShieldActiveRef.current) {
-          onHealthChange?.(health + HEALTH_BOOST);
-        } else {
-          if (health > maxHealth) {
-            onHealthChange?.(maxHealth);
-          }
-        }
-      }
 
       if (key === 'q') {
         const qAbility = abilities[currentWeapon].q;
         if (qAbility.currentCooldown <= 0 && !isSwinging) {
-          lastQUsageTime.current = Date.now(); // Track when Q was used
+          lastQUsageTime.current = Date.now();
           setIsSwinging(true);
           onAbilityUse(currentWeapon, 'q');
         }
@@ -119,7 +105,7 @@ export function useAbilityKeys({
           if (currentWeapon === WeaponType.SWORD && !isSmiting) {
             // Check time since last Q usage for Sword
             const timeSinceLastQ = Date.now() - lastQUsageTime.current;
-            if (timeSinceLastQ < 500) { // SMITE BUG TEMP FIX 
+            if (timeSinceLastQ < 250) { // SMITE BUG TEMP FIX 
               console.log('Cannot use Smite so soon after a normal attack');
               return;
             }
@@ -134,8 +120,8 @@ export function useAbilityKeys({
             }]);
             onAbilityUse(currentWeapon, 'e');
           } else if ((currentWeapon === WeaponType.SABRES2 || currentWeapon === WeaponType.STAFF) && startFirebeam && stopFirebeam) {
-            // Start firebeam and store the interval
-            firebeamIntervalRef.current = startFirebeam() as NodeJS.Timeout | null;
+            // Remove the interval storage since we're letting the effect manage its own duration
+            startFirebeam();
             onAbilityUse(currentWeapon, 'e');
           } else if (currentWeapon === WeaponType.SABRES && !isBowCharging) {
             setIsBowCharging(true);
@@ -147,29 +133,37 @@ export function useAbilityKeys({
         }
       }
 
-      if (key === '1' && abilities[currentWeapon].passive.isUnlocked) {
-        castReanimate();
+      if (key === '1') {
+        const passiveAbility = abilities[currentWeapon].passive;
+        if (passiveAbility.isUnlocked) {
+          if (currentWeapon === WeaponType.SCYTHE) {
+            castReanimate();
+          } else if (currentWeapon === WeaponType.SABRES && startFirebeam && stopFirebeam) {
+            // Start firebeam and store the interval
+            startFirebeam();
+            onAbilityUse(currentWeapon, 'passive');
+          }
+        }
       }
 
       // Add R ability handling
       if (key === 'r') {
         const rAbility = abilities[currentWeapon].r;
         if (rAbility.isUnlocked && rAbility.currentCooldown <= 0) {
-          onAbilityUse(currentWeapon, 'r');
-          
-          // Handle each weapon's unique R ability
           switch (currentWeapon) {
-            case WeaponType.SCYTHE:
-              // Add boneclaw effect
-              const direction = new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion);
-              setActiveEffects(prev => [...prev, {
-                id: Math.random(),
-                type: 'boneclaw',
-                position: groupRef.current!.position.clone(),
-                direction: direction
-              }]);
+            case WeaponType.SWORD:
+              const result = activateOathstrike();
+              if (result) {
+                setIsOathstriking(true);
+                setActiveEffects(prev => [...prev, {
+                  id: Math.random(),
+                  type: 'oathstrike',
+                  position: result.position,
+                  direction: result.direction
+                }]);
+                onAbilityUse(currentWeapon, 'r');
+              }
               break;
-
             case WeaponType.SABRES:
             case WeaponType.SABRES2:
               // Add blizzard effect
@@ -177,24 +171,19 @@ export function useAbilityKeys({
                 id: Math.random(),
                 type: 'blizzard',
                 position: groupRef.current!.position.clone(),
-                direction: new Vector3(0, 0, 0) // Blizzard doesn't need direction
+                direction: new Vector3(0, 0, 0) // unit origin
               }]);
+              onAbilityUse(currentWeapon, 'r');
               break;
-
-            case WeaponType.SWORD:
-              if (abilities[WeaponType.SWORD].r.isUnlocked) {
-                const result = activateOathstrike();
-                if (result) {
-                  setIsSmiting(true);
-                  setActiveEffects(prev => [...prev, {
-                    id: Math.random(),
-                    type: 'oathstrike',
-                    position: result.position,
-                    direction: result.direction
-                  }]);
-                  onAbilityUse(currentWeapon, 'r');
-                }
-              }
+            case WeaponType.SCYTHE:
+              // Add boneclaw effect
+              setActiveEffects(prev => [...prev, {
+                id: Math.random(),
+                type: 'boneclaw',
+                position: groupRef.current!.position.clone(),
+                direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion)
+              }]);
+              onAbilityUse(currentWeapon, 'r');
               break;
           }
         }
@@ -223,7 +212,6 @@ export function useAbilityKeys({
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [
-    activateOathstrike,
     keys,
     groupRef,
     currentWeapon,
@@ -247,7 +235,9 @@ export function useAbilityKeys({
     castReanimate,
     health,
     maxHealth,
-    onHealthChange
+    onHealthChange,
+    setIsOathstriking,
+    activateOathstrike
   ]);
 
   // Modify the mouse event handlers to check game over state
@@ -297,10 +287,7 @@ export function useAbilityKeys({
     const handleGameOver = () => {
       isGameOver.current = true;
       // Clear any ongoing abilities or effects
-      if (firebeamIntervalRef.current) {
-        clearInterval(firebeamIntervalRef.current);
-      }
-      isDivineShieldActiveRef.current = false;
+
     };
 
     const handleGameReset = () => {
@@ -316,7 +303,4 @@ export function useAbilityKeys({
     };
   }, []);
 
-  return {
-    isDivineShieldActive: isDivineShieldActiveRef.current
-  };
 }

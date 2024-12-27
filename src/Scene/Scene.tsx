@@ -14,8 +14,8 @@ import DriftingSouls from '../Environment/DriftingSouls';
 import BackgroundStars from '../Environment/Stars';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
-//import BossUnit from '../Versus/BossUnit';
-//const BOSS_SPAWN_POSITION = new Vector3(10, 0, 10); // Fixed position for testing
+
+
 
 interface SceneProps extends SceneType {
   onLevelComplete: () => void;
@@ -33,7 +33,7 @@ export default function Scene({
   interactiveLeafColor,
   unitProps,
   onLevelComplete,
-  spawnInterval = 4500,
+  spawnInterval = 5000,
   maxSkeletons = 15,
   initialSkeletons = 5,
 }: SceneProps) {
@@ -251,20 +251,6 @@ export default function Scene({
           />
         ))}
 
-        {/* Boss Unit 
-        <BossUnit
-          key="boss-1"
-          id="boss-1"
-          initialPosition={BOSS_SPAWN_POSITION}
-          position={BOSS_SPAWN_POSITION}
-          health={1000}
-          maxHealth={1000}
-          onTakeDamage={handleTakeDamage}
-          onPositionUpdate={handleEnemyPositionUpdate}
-          playerPosition={playerPosition}
-          onAttackPlayer={handlePlayerDamage}
-        />
-        */}
       </group>
     </>
   );

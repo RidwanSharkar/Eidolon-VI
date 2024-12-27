@@ -12,10 +12,12 @@ export const useFirebeamAnimation = ({
   beamRef,
 }: FirebeamAnimationProps) => {
   const progressRef = useRef(0);
-  const startupDuration = 0.;
+  const startupDuration = 0;
+  const fadeOutDuration = 1.2;
   const delayTimer = useRef(0);
   const startDelay = 0.0;
   const isActive = useRef(true);
+  const isFadingOut = useRef(false);
 
   useEffect(() => {
     const currentBeam = beamRef.current;
@@ -23,22 +25,32 @@ export const useFirebeamAnimation = ({
     return () => {
       isActive.current = false;
       if (currentBeam) {
-        currentBeam.scale.z = 0;
+        isFadingOut.current = true;
+        setTimeout(() => {
+          if (currentBeam) {
+            currentBeam.scale.z = 0;
+          }
+        }, fadeOutDuration * 1000);
       }
     };
   }, [beamRef]);
 
   useFrame((_, delta) => {
-    if (!beamRef.current || !isActive.current) return;
+    if (!beamRef.current) return;
 
     if (delayTimer.current < startDelay) {
       delayTimer.current += delta;
       return;
     }
 
-    if (progressRef.current < startupDuration) {
-      progressRef.current += delta;
-      const progress = Math.min(progressRef.current / startupDuration, 1);
+    if (isFadingOut.current) {
+      progressRef.current -= delta / fadeOutDuration;
+      if (progressRef.current > 0) {
+        beamRef.current.scale.z = progressRef.current;
+      }
+    } else if (progressRef.current < 1) {
+      progressRef.current += delta / startupDuration;
+      const progress = Math.min(progressRef.current, 1);
       beamRef.current.scale.z = progress;
     }
 
@@ -55,9 +67,13 @@ export const useFirebeamAnimation = ({
       progressRef.current = 0;
       delayTimer.current = 0;
       isActive.current = false;
-      if (beamRef.current) {
-        beamRef.current.scale.z = 0;
-      }
+      isFadingOut.current = true;
+      setTimeout(() => {
+        if (beamRef.current) {
+          beamRef.current.scale.z = 0;
+        }
+        isFadingOut.current = false;
+      }, fadeOutDuration * 2000);
     }
   };
 }; 

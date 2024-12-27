@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
@@ -31,19 +31,36 @@ export default function BossUnit({
   const bossRef = useRef<Group>(null);
   const lastAttackTime = useRef<number>(Date.now() + 2000);
   const [isAttacking, setIsAttacking] = useState(false);
-  const [ setShowDeathEffect] = useState(false);
   const [isDead, setIsDead] = useState(false);
   const [isSpawning, setIsSpawning] = useState(true);
 
   const currentPosition = useRef(initialPosition.clone());
   const targetPosition = useRef(initialPosition.clone());
+  const currentHealth = useRef(health);
 
   // Boss-specific constants
-  const ATTACK_RANGE = 3.5; // Larger range than normal enemies
-  const ATTACK_COOLDOWN = 3000;
-  const MOVEMENT_SPEED = 0.01; // Slower but more menacing
+  const ATTACK_RANGE = 15;
+  const ATTACK_COOLDOWN = 10000;
+  const MOVEMENT_SPEED = 0.01;
   const SMOOTHING_FACTOR = 0.003;
-  const ATTACK_DAMAGE = 15; // More damage than normal enemies
+  const ATTACK_DAMAGE = 50;
+
+  // Sync health changes
+  useEffect(() => {
+    currentHealth.current = health;
+  }, [health]);
+
+  // Handle damage with proper synchronization
+  const handleDamage = useCallback((damage: number) => {
+    if (currentHealth.current <= 0) return;
+    
+    const newHealth = Math.max(0, currentHealth.current - damage);
+    onTakeDamage(`boss-${id}`, damage);
+    
+    if (newHealth === 0 && currentHealth.current > 0) {
+      setIsDead(true);
+    }
+  }, [id, onTakeDamage]);
 
   // Position update logic
   useEffect(() => {
@@ -109,7 +126,7 @@ export default function BossUnit({
       console.log(`Boss ${id} died`);
       setIsDead(true);
     }
-  }, [setShowDeathEffect, health, id, isDead]);
+  }, [setIsDead, health, id, isDead]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -125,19 +142,27 @@ export default function BossUnit({
         ref={bossRef} 
         visible={!isSpawning && health > 0}
         position={currentPosition.current}
-        scale={[2, 2, 2]} // Boss is larger than normal enemies
+        scale={[1.5, 1.5, 1.5]}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (currentHealth.current > 0) {
+            handleDamage(10);
+          }
+        }}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          if (currentHealth.current > 0) {
+            handleDamage(10);
+          }
+        }}
       >
         <BossModel
           isAttacking={isAttacking}
           isWalking={!isAttacking && health > 0}
-          onHit={(damage: number) => {
-            if (health > 0) {
-              onTakeDamage(`boss-${id}`, damage);
-            }
-          }}
+          onHit={handleDamage}
         />
 
-        {/* Boss health bar - positioned higher and larger */}
+        {/* Boss health bar */}
         <Billboard
           position={[0, 5, 0]}
           follow={true}
@@ -145,14 +170,14 @@ export default function BossUnit({
           lockY={false}
           lockZ={false}
         >
-          {health > 0 && (
+          {currentHealth.current > 0 && (
             <>
               <mesh position={[0, 0, 0]}>
                 <planeGeometry args={[4.0, 0.4]} />
                 <meshBasicMaterial color="#333333" opacity={0.8} transparent />
               </mesh>
-              <mesh position={[-2.0 + (health / maxHealth) * 2, 0, 0.001]}>
-                <planeGeometry args={[(health / maxHealth) * 4.0, 0.35]} />
+              <mesh position={[-2.0 + (currentHealth.current / maxHealth) * 2, 0, 0.001]}>
+                <planeGeometry args={[(currentHealth.current / maxHealth) * 4.0, 0.35]} />
                 <meshBasicMaterial color="#ff0000" opacity={0.9} transparent />
               </mesh>
               <Text
@@ -163,14 +188,12 @@ export default function BossUnit({
                 anchorY="middle"
                 fontWeight="bold"
               >
-                {`${Math.ceil(health)}/${maxHealth}`}
+                {`${Math.ceil(currentHealth.current)}/${maxHealth}`}
               </Text>
             </>
           )}
         </Billboard>
       </group>
-
-
     </>
   );
 } 

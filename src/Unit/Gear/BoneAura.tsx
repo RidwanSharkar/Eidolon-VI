@@ -13,7 +13,7 @@ const createBonePiece = () => (
     <mesh>
       <cylinderGeometry args={[0.02, 0.015, 0.2, 4]} />
       <meshStandardMaterial 
-        color="#BEB2C8"
+        color="#ffffff"
         roughness={0.4}
         metalness={0.3}
       />
@@ -23,7 +23,7 @@ const createBonePiece = () => (
     <mesh position={new THREE.Vector3(0, 0.135, 0)} rotation={new THREE.Euler(0, 0, Math.PI / 6)}>
       <sphereGeometry args={[0.03, 4, 4]} />
       <meshStandardMaterial 
-        color="#BEB2C8"
+        color="#ffffff"
         roughness={0.5}
         metalness={0.2}
       />
@@ -32,7 +32,7 @@ const createBonePiece = () => (
     <mesh position={new THREE.Vector3(0, -0.1, 0)} rotation={new THREE.Euler(0, 0, -Math.PI / 6)}>
       <sphereGeometry args={[0.03, 4, 4]} />
       <meshStandardMaterial 
-        color="#d8d8d8"
+        color="#a4a4a4"
         roughness={0.5}
         metalness={0.2}
       />

@@ -4,6 +4,7 @@ import { useFirebeam } from './useFirebeam';
 import { Enemy } from '../../Versus/enemy';
 import * as THREE from 'three';
 import { ORBITAL_COOLDOWN } from '../../Unit/ChargedOrbitals';
+import { DamageNumber } from '../../Unit/useDamageNumbers';
 
 interface FirebeamManagerProps {
   parentRef: React.RefObject<THREE.Group>;
@@ -25,6 +26,8 @@ interface FirebeamManagerProps {
     available: boolean;
     cooldownStartTime: number | null;
   }>>>;
+  setDamageNumbers: React.Dispatch<React.SetStateAction<DamageNumber[]>>;
+  nextDamageNumberId: React.MutableRefObject<number>;
 }
 
 export const useFirebeamManager = ({
@@ -33,23 +36,16 @@ export const useFirebeamManager = ({
   enemyData,
   setActiveEffects,
   charges,
-  setCharges
+  setCharges,
+  setDamageNumbers,
+  nextDamageNumberId
 }: FirebeamManagerProps) => {
   const nextEffectId = useRef(0);
   const currentEffectId = useRef<number | null>(null);
-  const damageIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const durationRef = useRef(0);
-  const lastChargeTimeRef = useRef(Date.now());
+  const lastFireTime = useRef(0);
   const { isActive, activateFirebeam, deactivateFirebeam } = useFirebeam({ onHit, parentRef });
 
-  const stopFirebeam = useCallback((damageInterval?: NodeJS.Timeout) => {
-    if (damageInterval) {
-      clearInterval(damageInterval);
-    }
-    if (damageIntervalRef.current) {
-      clearInterval(damageIntervalRef.current);
-      damageIntervalRef.current = null;
-    }
+  const stopFirebeam = useCallback(() => {
     if (currentEffectId.current !== null) {
       setActiveEffects(prev => prev.filter(effect => effect.id !== currentEffectId.current));
       currentEffectId.current = null;
@@ -57,8 +53,6 @@ export const useFirebeamManager = ({
     deactivateFirebeam();
   }, [deactivateFirebeam, setActiveEffects]);
 
-
-  //=====================================================================================================
   const consumeCharge = useCallback(() => {
     const availableChargeIndex = charges.findIndex(charge => charge.available);
     if (availableChargeIndex === -1) {
@@ -71,7 +65,6 @@ export const useFirebeamManager = ({
         : charge
     ));
 
-    // Start cooldown recovery for this charge
     setTimeout(() => {
       setCharges(prev => prev.map((charge, index) => 
         index === availableChargeIndex
@@ -83,8 +76,13 @@ export const useFirebeamManager = ({
     return true;
   }, [charges, setCharges]);
 
+
   const startFirebeam = useCallback(() => {
-    // Check if we have at least one charge available
+    const currentTime = Date.now();
+    if (currentTime - lastFireTime.current < 500) { 
+      return; // Enforce 1-second cooldown between shots
+    }
+
     if (!consumeCharge()) {
       return;
     }
@@ -96,9 +94,9 @@ export const useFirebeamManager = ({
     const effectId = nextEffectId.current++;
 
     currentEffectId.current = effectId;
-    durationRef.current = 0;
-    lastChargeTimeRef.current = Date.now();
+    lastFireTime.current = currentTime;
 
+    // Add visual effect
     setActiveEffects(prev => [...prev, {
       id: effectId,
       type: 'firebeam',
@@ -106,46 +104,40 @@ export const useFirebeamManager = ({
       direction
     }]);
 
-    // Damage interval (every 0.5 seconds)
-    damageIntervalRef.current = setInterval(() => {
-      if (!isActive) {
-        stopFirebeam();
-        return;
+    // Do instant damage to enemies in the beam's path
+    enemyData.forEach(enemy => {
+      if (enemy.health <= 0) return;
+      const enemyDir = enemy.position.clone().sub(position);
+      const angle = direction.angleTo(enemyDir);
+      const distance = enemyDir.length();
+
+      if (angle < 0.3 && distance < 20) {
+        onHit(enemy.id, damage);
+        
+        // Add damage number
+        setDamageNumbers(prev => [...prev, {
+          id: nextDamageNumberId.current++,
+          damage,
+          position: enemy.position.clone(),
+          isCritical: false,
+          isFirebeam: true
+        }]);
       }
+    });
 
-      // Check duration for charge consumption (every 1 second)
-      const currentTime = Date.now();
-      if (currentTime - lastChargeTimeRef.current >= 1000) {
-        if (!consumeCharge()) {
-          stopFirebeam();
-          return;
-        }
-        lastChargeTimeRef.current = currentTime;
-      }
+    // Automatically stop the beam effect after a short duration
+    setTimeout(() => {
+      stopFirebeam();
+    }, 3000); 
 
-      enemyData.forEach(enemy => {
-        if (enemy.health <= 0) return;
-        const enemyDir = enemy.position.clone().sub(position);
-        const angle = direction.angleTo(enemyDir);
-        const distance = enemyDir.length();
-
-        if (angle < 0.3 && distance < 20) {
-          onHit(enemy.id, damage);
-        }
-      });
-    }, 500);
-
-    return damageIntervalRef.current;
-  }, [  stopFirebeam, activateFirebeam, enemyData, onHit, setActiveEffects, isActive, consumeCharge]);
-
+    return undefined; // No longer returning an interval
+  }, [ nextDamageNumberId, setDamageNumbers, activateFirebeam, enemyData, onHit, setActiveEffects, consumeCharge, stopFirebeam]);
 
   useEffect(() => {
     return () => {
-      if (damageIntervalRef.current) {
-        clearInterval(damageIntervalRef.current);
-      }
+      stopFirebeam();
     };
-  }, []);
+  }, [stopFirebeam]);
 
   return {
     isActive,

@@ -5,7 +5,7 @@ import { trunkColors, leafColors } from '../Environment/treeColors';
 import { generateMountains, generateTrees, generateMushrooms } from '../Environment/terrainGenerators';
 import { SceneProps, SkeletonProps } from '../Scene/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
-import { DEFAULT_WEAPON_ABILITIES } from '../Weapons/weapons';
+import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '../Weapons/weapons';
 import * as THREE from 'three';
 import { WeaponInfo } from '../Unit/UnitProps';
 
@@ -13,7 +13,7 @@ import GameWrapper from '../Scene/GameWrapper';
 
 // SKELETON SPAWN POINTS
 const generateRandomPosition = () => {
-  const radius = 32.5; // Increased radius for more spread
+  const radius = 35; // Increased radius for more spread
   const angle = Math.random() * Math.PI * 2;
   const distance = Math.sqrt(Math.random()) * radius; // Using sqrt for more even distribution
   return new Vector3(
@@ -30,9 +30,11 @@ export default function HomePage() {
   const [currentWeapon, setCurrentWeapon] = useState<WeaponType | null>(null);
   const controlsRef = useRef<OrbitControlsType>(null);
   const [playerHealth, setPlayerHealth] = useState(200);
+  const [maxHealth, setMaxHealth] = useState(200);
   const [lastHitTime, setLastHitTime] = useState(0);
   const [abilities, setAbilities] = useState<WeaponInfo>(() => DEFAULT_WEAPON_ABILITIES as WeaponInfo);
 
+  
   // Add state for ability unlocks - moved up before its usage
   const [unlockedAbilities, setUnlockedAbilities] = useState({
     r: false,
@@ -99,10 +101,10 @@ export default function HomePage() {
     }
   }, [lastHitTime]);
 
-  const handleAbilityUse = (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r') => {
+  const handleAbilityUse = (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r' | 'passive') => {
     setAbilities(prev => {
       const newAbilities = { ...prev };
-      newAbilities[weapon][abilityKey].currentCooldown = newAbilities[weapon][abilityKey].cooldown;
+      newAbilities[weapon][abilityKey].currentCooldown = getModifiedCooldown(weapon, abilityKey, prev);
       return newAbilities;
     });
   };
@@ -112,8 +114,8 @@ export default function HomePage() {
       setAbilities((prev: WeaponInfo) => {
         const newAbilities = { ...prev };
         (Object.keys(newAbilities) as WeaponType[]).forEach(weapon => {
-          ['q', 'e', 'r'].forEach(ability => {
-            const key = ability as 'q' | 'e' | 'r';
+          ['q', 'e', 'r', 'passive'].forEach(ability => {
+            const key = ability as 'q' | 'e' | 'r' | 'passive';
             if (newAbilities[weapon][key].currentCooldown > 0) {
               newAbilities[weapon][key].currentCooldown -= 0.15; // GLOBAL COOLDOWN
             }
@@ -167,6 +169,8 @@ export default function HomePage() {
     setKillCount(prev => {
       const newCount = prev + 1;
       console.log("Kill count updated:", newCount);
+      setMaxHealth(200 + newCount);
+      setPlayerHealth(prev => prev + 1);
       return newCount;
     });
   }, []);
@@ -201,7 +205,8 @@ export default function HomePage() {
   // Move handleReset up, before sceneProps
   const handleReset = () => {
     console.log("HomePage: Reset triggered");
-    setPlayerHealth(250);
+    setMaxHealth(200);
+    setPlayerHealth(200);
     setSkeletonHealths(Array(NUM_SKELETONS).fill(175));
     setAbilities(prev => {
       const newAbilities = { ...prev };
@@ -238,7 +243,7 @@ export default function HomePage() {
       currentWeapon: currentWeapon || WeaponType.SCYTHE,
       onWeaponSelect: handleWeaponSelect,
       health: playerHealth,
-      maxHealth: 200,
+      maxHealth: maxHealth,
       isPlayer: true,
       abilities: {
         ...abilities,
@@ -256,9 +261,9 @@ export default function HomePage() {
           }
         } : {})
       },
-      onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r') => {
+      onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r' | 'passive') => {
         if (currentWeapon) {
-          handleAbilityUse(weapon, abilityKey as 'q' | 'e');
+          handleAbilityUse(weapon, abilityKey);
         }
       },
       onPositionUpdate: (newPosition: THREE.Vector3) => {
@@ -306,7 +311,7 @@ export default function HomePage() {
         currentWeapon={currentWeapon as WeaponType}
         onWeaponSelect={handleWeaponSelect}
         playerHealth={playerHealth}
-        maxHealth={200}
+        maxHealth={maxHealth}
         abilities={abilities}
         onReset={handleReset}
         killCount={killCount}

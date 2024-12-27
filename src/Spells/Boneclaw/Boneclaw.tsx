@@ -75,9 +75,9 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
     const parentPosition = parentRef.current.position.clone();
     const parentRotation = parentRef.current.rotation.y;
 
-    const pivotX = -Math.sin(swingPhase * Math.PI) * 1.2 + 2;
-    const pivotY = Math.cos(swingPhase * Math.PI)  + 1;
-    const pivotZ = Math.sin(swingPhase * Math.PI) * 2 - 0.5;
+    const pivotX = -Math.sin(swingPhase * Math.PI) * 2.0 + 2;
+    const pivotY = Math.cos(swingPhase * Math.PI)  + 1.9;
+    const pivotZ = Math.sin(swingPhase * Math.PI) * 2 + 0.5;
 
     const rotatedOffsetX = (pivotX * Math.cos(parentRotation) + pivotZ * Math.sin(parentRotation));
     const rotatedOffsetZ = (-pivotX * Math.sin(parentRotation) + pivotZ * Math.cos(parentRotation));
@@ -88,9 +88,9 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
       parentPosition.z + rotatedOffsetZ
     );
 
-    const rotationX = Math.cos(swingPhase * Math.PI) / (Math.PI / -1);
+    const rotationX = Math.cos(swingPhase * Math.PI) / (Math.PI / -1.5);
     const rotationY = parentRotation + Math.PI / 2 - swingPhase * Math.PI;
-    const rotationZ = -Math.sin(swingPhase * Math.PI) * (Math.PI / 2);
+    const rotationZ = -Math.sin(swingPhase * Math.PI) * (Math.PI / 4);
 
     clawRef.current.rotation.set(
       rotationX,
@@ -98,7 +98,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
       rotationZ
     );
 
-    if (Math.abs(swingPhase - 0.5) < 0.1 && !hasDealtDamage.current) {
+    if (Math.abs(swingPhase - 0.1) < 0.1 && !hasDealtDamage.current) {
       hasDealtDamage.current = true;
       showScratch.current = true;
       
@@ -137,9 +137,9 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
         rotation={[0, Math.atan2(direction.x, direction.z), Math.PI / 4]}
       >
         <group>
-          {createParallelBones(1.0, 0.15)}
+          {createParallelBones(1.15, 0.15)}
           
-          <group position={[0.25, -0.85, 0.21]}> 
+          <group position={[-0.22, -.85, 0.21]}>   { /* ELBOW */}
             <mesh>
               <sphereGeometry args={[0.12, 12, 12]} />
               <meshStandardMaterial 
@@ -149,10 +149,10 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
               />
             </mesh>
             
-            <group rotation={[-0.7, -0, Math.PI / 5]}>
+            <group rotation={[-0.7, -0, -Math.PI / 5]}>
               {createParallelBones(0.8, 0.12)}
               
-              <group position={[0, -0.5, 0]} rotation={[0, 0, Math.PI / 5.5]}>
+              <group position={[0, -0.5, 0]} rotation={[0, 0, 1 - Math.PI / 4]}>
                 {createJoint(0.09)}
                 
                 <group position={[0, -0.1, 0]}>

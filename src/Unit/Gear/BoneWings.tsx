@@ -57,7 +57,7 @@ export default function BoneWings({ collectedBones, isLeftWing }: BoneWingsProps
 
     // Lower wing section
     { 
-      pos: new Vector3(isLeftWing ? -1.15 : 1.15, 0.475, 0.2), 
+      pos: new Vector3(isLeftWing ? -1.13 : 1.13, 0.445, 0.17), 
       rot: new Euler(0.2, 0, isLeftWing ? -Math.PI / -0.45 : Math.PI / -0.45), 
       scale: 0.8 
     },

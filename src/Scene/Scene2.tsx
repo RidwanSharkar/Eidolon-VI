@@ -14,10 +14,13 @@ import DriftingSouls from '../Environment/DriftingSouls';
 import BackgroundStars from '../Environment/Stars';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
+//import BossUnit from '../Versus/Boss/BossUnit';
 
 interface ScenePropsWithCallback extends SceneType {
   onLevelComplete: () => void;
 }
+
+const BOSS_SPAWN_POSITION = new Vector3(0, 0, 0); // Center of the map
 
 export default function Scene2({
   mountainData,
@@ -30,21 +33,21 @@ export default function Scene2({
   skeletonProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 4000,
-  maxSkeletons = 29,
-  initialSkeletons = 10,
+  spawnInterval = 6500,
+  maxSkeletons = 23,
+  initialSkeletons = 5,
   spawnCount = 2,
 }: ScenePropsWithCallback) {
   const [spawnStarted, setSpawnStarted] = useState(false);
-  const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 10);
+  const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 5);
   const [enemies, setEnemies] = useState<Enemy[]>(() => 
     skeletonProps.map((skeleton, index) => ({
       id: `skeleton-${index}`,
       position: skeleton.initialPosition.clone(),
       initialPosition: skeleton.initialPosition.clone(),
       currentPosition: skeleton.initialPosition.clone(),
-      health: 225,
-      maxHealth: 225,
+      health: 250,
+      maxHealth: 250,
     }))
   );
 
@@ -57,9 +60,22 @@ export default function Scene2({
   // State to store player position
   const [playerPosition, setPlayerPosition] = useState<Vector3>(new Vector3(0, 0, 0));
 
+  // Add boss state
+  const [isBossSpawned, setIsBossSpawned] = useState(false);
+  const [bossHealth, setBossHealth] = useState(1000);
+
   // Callback to handle damage to enemies
   const handleTakeDamage = useCallback((targetId: string, damage: number) => {
     console.log(`Target ${targetId} takes ${damage} damage`);
+    
+    // Handle boss damage
+    if (targetId.startsWith('boss-')) {
+      const newHealth = Math.max(0, bossHealth - damage);
+      setBossHealth(newHealth);
+      return;
+    }
+
+    // Handle regular enemy damage
     setEnemies(prevEnemies =>
       prevEnemies.map(enemy => {
         const strippedId = targetId.replace('enemy-', '');
@@ -78,7 +94,7 @@ export default function Scene2({
         return enemy;
       })
     );
-  }, [unitProps]);
+  }, [bossHealth, unitProps]);
 
   // Update handlePlayerDamage to use setPlayerHealth
   const handlePlayerDamage = useCallback((damage: number) => {
@@ -127,13 +143,22 @@ export default function Scene2({
         unitProps.onHealthChange?.(newHealth);
       }
     },
-    enemyData: enemies.map((enemy) => ({
-      id: `enemy-${enemy.id}`,
-      position: enemy.position,
-      initialPosition: enemy.initialPosition,
-      health: enemy.health,
-      maxHealth: enemy.maxHealth
-    })),
+    enemyData: [
+      ...enemies.map((enemy) => ({
+        id: `enemy-${enemy.id}`,
+        position: enemy.position,
+        initialPosition: enemy.initialPosition,
+        health: enemy.health,
+        maxHealth: enemy.maxHealth
+      })),
+      ...(bossHealth > 0 ? [{
+        id: 'boss-1',
+        position: BOSS_SPAWN_POSITION,
+        initialPosition: BOSS_SPAWN_POSITION,
+        health: bossHealth,
+        maxHealth: 4000
+      }] : [])
+    ],
     onDamage: unitProps.onDamage,
     onEnemyDeath: () => {
       console.log("Kill counted in Scene");  // Debug log
@@ -147,10 +172,15 @@ export default function Scene2({
   useEffect(() => {
     const allEnemiesDefeated = enemies.every(enemy => enemy.health <= 0);
     const hasStartedSpawning = spawnStarted && totalSpawned > initialSkeletons;
-    if (allEnemiesDefeated && hasStartedSpawning && killCount >= 40) {
+    const shouldSpawnBoss = allEnemiesDefeated && hasStartedSpawning && killCount >= 24 && !isBossSpawned;
+    
+    if (shouldSpawnBoss) {
+      setIsBossSpawned(true);
+    } else if (allEnemiesDefeated && isBossSpawned && bossHealth <= 0) {
+      // Level complete when boss is defeated
       onLevelComplete();
     }
-  }, [enemies, killCount, onLevelComplete, spawnStarted, totalSpawned, initialSkeletons]);
+  }, [enemies, killCount, onLevelComplete, spawnStarted, totalSpawned, initialSkeletons, isBossSpawned, bossHealth]);
 
   // Modify the spawn logic to include the delay
   useEffect(() => {
@@ -180,8 +210,8 @@ export default function Scene2({
             position: spawnPosition.clone(),
             initialPosition: spawnPosition.clone(),
             currentPosition: spawnPosition.clone(),
-            health: 225, // Scene2-specific health
-            maxHealth: 225, // Scene2-specific max health
+            health: 250, // Scene2-specific health
+            maxHealth: 250, // Scene2-specific max health
           };
         });
         
@@ -257,6 +287,26 @@ export default function Scene2({
           onAttackPlayer={handlePlayerDamage}
         />
       ))}
+
+      {/* Boss Unit 
+      {isBossSpawned && (
+        <BossUnit
+          key="boss-1"
+          id="boss-1"
+          initialPosition={BOSS_SPAWN_POSITION}
+          position={BOSS_SPAWN_POSITION}
+          health={bossHealth}
+          maxHealth={4000}
+          onTakeDamage={(id, damage) => {
+            setBossHealth(prev => Math.max(0, prev - damage));
+          }}
+          onPositionUpdate={handleEnemyPositionUpdate}
+          playerPosition={playerPosition}
+          onAttackPlayer={handlePlayerDamage}
+        />
+      )}
+*/}
+      
     </>
   );
 } 

@@ -32,7 +32,7 @@ export interface UnitProps {
   maxHealth: number;
   isPlayer?: boolean;
   abilities: WeaponInfo;
-  onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r') => void;
+  onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r' | 'passive') => void;
   onPositionUpdate: (pos: Vector3) => void;
   enemyData: Enemy[];
   onFireballDamage: (targetId: string, damage: number, isCritical: boolean, position: Vector3) => void;

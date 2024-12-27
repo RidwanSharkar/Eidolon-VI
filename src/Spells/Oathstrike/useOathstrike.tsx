@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
 import { ORBITAL_COOLDOWN } from '../../Unit/ChargedOrbitals';
+import { calculateDamage } from '@/Weapons/damage';
 
 interface OathstrikeControllerProps {
   onHit: (targetId: string, damage: number) => void;
@@ -21,6 +22,14 @@ interface OathstrikeControllerProps {
     position: Vector3;
     health: number;
   }>;
+  setDamageNumbers: React.Dispatch<React.SetStateAction<Array<{
+    id: number;
+    damage: number;
+    position: Vector3;
+    isCritical: boolean;
+    isOathstrike?: boolean;
+  }>>>;
+  nextDamageNumberId: React.MutableRefObject<number>;
 }
 
 export const useOathstrike = ({ 
@@ -29,24 +38,32 @@ export const useOathstrike = ({
   charges, 
   setCharges,
   enemyData,
-  onHealthChange
+  onHealthChange,
+  setDamageNumbers,
+  nextDamageNumberId
 }: OathstrikeControllerProps & {
-  onHealthChange: (health: number) => void;
+  onHealthChange?: (health: number) => void;
 }) => {
   const [isActive, setIsActive] = useState(false);
-  const HEAL_AMOUNT = 15;
+  const HEAL_AMOUNT = 6;
+  
 
   const consumeCharges = useCallback(() => {
-    // Find two available charges
+    // Find four available charges
     const availableCharges = charges.filter(charge => charge.available);
-    if (availableCharges.length < 2) {
+    if (availableCharges.length < 4) {
       console.log('Not enough charges available for Oathstrike');
       return false;
     }
 
-    // Consume two charges
+    // Consume four charges
     setCharges(prev => prev.map((charge, index) => {
-      if (index === availableCharges[0].id - 1 || index === availableCharges[1].id - 1) {
+      if (
+        index === availableCharges[0].id - 1 || 
+        index === availableCharges[1].id - 1 ||
+        index === availableCharges[2].id - 1 ||
+        index === availableCharges[3].id - 1
+      ) {
         return {
           ...charge,
           available: false,
@@ -56,16 +73,18 @@ export const useOathstrike = ({
       return charge;
     }));
 
-    // Start cooldown recovery for both charges
-    availableCharges.slice(0, 2).forEach(charge => {
-      setTimeout(() => {
-        setCharges(prev => prev.map((c, index) => 
-          index === charge.id - 1
-            ? { ...c, available: true, cooldownStartTime: null }
-            : c
-        ));
-      }, ORBITAL_COOLDOWN);
-    });
+    // Start cooldown recovery for each charge individually
+    for (let i = 0; i < 4; i++) {
+      if (availableCharges[i].id) {
+        setTimeout(() => {
+          setCharges(prev => prev.map((c, index) => 
+            index === availableCharges[i].id - 1
+              ? { ...c, available: true, cooldownStartTime: null }
+              : c
+          ));
+        }, ORBITAL_COOLDOWN);
+      }
+    }
 
     return true;
   }, [charges, setCharges]);
@@ -85,25 +104,37 @@ export const useOathstrike = ({
 
     setIsActive(true);
 
-    // Apply healing
-    onHealthChange(HEAL_AMOUNT);
+    // Apply healing if the callback exists
+    if (onHealthChange) {
+      onHealthChange(HEAL_AMOUNT);
+    }
 
     // Calculate arc for damage
     const forward = direction.clone();
-    const DAMAGE_RANGE = 10.0;
+    const DAMAGE_RANGE = 6.5;
     const ARC_ANGLE = Math.PI * 0.6; // 108-degree arc
 
     // Check enemies in arc
     enemyData.forEach(enemy => {
       if (enemy.health <= 0) return;
-
+  
       const toEnemy = enemy.position.clone().sub(position);
       const distance = toEnemy.length();
-
+  
       if (distance <= DAMAGE_RANGE) {
         const angle = Math.abs(forward.angleTo(toEnemy));
         if (angle <= ARC_ANGLE / 2) {
-          onHit(enemy.id, 50);
+          // Add damage number creation
+          const { damage, isCritical } = calculateDamage(41); // DAMAGE
+          onHit(enemy.id, damage);
+          
+          setDamageNumbers(prev => [...prev, {
+            id: nextDamageNumberId.current++,
+            damage,
+            position: enemy.position.clone(),
+            isCritical,
+            isOathstrike: true  // New flag for Oathstrike damage
+          }]);
         }
       }
     });
@@ -111,17 +142,14 @@ export const useOathstrike = ({
     return {
       position,
       direction,
-      onComplete: () => setIsActive(false)
+      onComplete: () => {
+        setIsActive(false);
+      }
     };
-  }, [parentRef, consumeCharges, enemyData, onHit, onHealthChange]);
-
-  const deactivateOathstrike = useCallback(() => {
-    setIsActive(false);
-  }, []);
+  }, [nextDamageNumberId, setDamageNumbers, parentRef, consumeCharges, enemyData, onHit, onHealthChange]);
 
   return {
     isActive,
-    activateOathstrike,
-    deactivateOathstrike
+    activateOathstrike
   };
 };

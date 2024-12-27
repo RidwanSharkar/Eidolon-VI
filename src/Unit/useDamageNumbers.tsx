@@ -13,7 +13,9 @@ export interface DamageNumber {
   isSmite?: boolean;
   isSword?: boolean;
   isSabres?: boolean;
-  isStaff?: boolean; 
+  isStaff?: boolean;
+  isOathstrike?: boolean;
+  isFirebeam?: boolean;
 }
 
 export function useDamageNumbers() {

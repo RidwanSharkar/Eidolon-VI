@@ -7,9 +7,10 @@ interface OathstrikeProps {
   position: Vector3;
   direction: Vector3;
   onComplete: () => void;
+  parentRef: React.RefObject<Group>;
 }
 
-export default function Oathstrike({ position, direction, onComplete }: OathstrikeProps) {
+export default function Oathstrike({ position, direction, onComplete, parentRef }: OathstrikeProps) {
   const effectRef = useRef<Group>(null);
   
   useEffect(() => {
@@ -21,7 +22,8 @@ export default function Oathstrike({ position, direction, onComplete }: Oathstri
   const { reset } = useOathstrikeAnimation({
     effectRef,
     position,
-    direction
+    direction,
+    parentRef
   });
 
   useEffect(() => {
@@ -37,13 +39,13 @@ export default function Oathstrike({ position, direction, onComplete }: Oathstri
       rotation={[Math.PI/2, Math.atan2(direction.x, direction.z), 0]}
     >
       {/* Main flame arc */}
-      <group position={[0, 0, 2]}>
+      <group position={[0, 0, 0]}>
         {/* Core flame */}
         <mesh>
-          <torusGeometry args={[2, 0.4, 16, 32, Math.PI]} />
+          <torusGeometry args={[3, 0.8, 8, 32, Math.PI]} />
           <meshStandardMaterial
-            color="#ff4400"
-            emissive="#ff2200"
+            color="#6B67A8"
+            emissive="#5B4B99"
             emissiveIntensity={8}
             transparent
             opacity={0.9}
@@ -52,10 +54,10 @@ export default function Oathstrike({ position, direction, onComplete }: Oathstri
 
         {/* Inner glow */}
         <mesh>
-          <torusGeometry args={[2, 0.6, 16, 32, Math.PI]} />
+          <torusGeometry args={[3, 0.4, 16, 32, Math.PI]} />
           <meshStandardMaterial
-            color="#ff6600"
-            emissive="#ff4400"
+            color="#8783D1"
+            emissive="#6B67A8"
             emissiveIntensity={6}
             transparent
             opacity={0.7}
@@ -64,10 +66,10 @@ export default function Oathstrike({ position, direction, onComplete }: Oathstri
 
         {/* Outer glow */}
         <mesh>
-          <torusGeometry args={[2, 0.8, 16, 32, Math.PI]} />
+          <torusGeometry args={[2, 0.9, 16, 32, Math.PI]} />
           <meshStandardMaterial
-            color="#ff8800"
-            emissive="#ff6600"
+            color="#A59FFA"
+            emissive="#8783D1"
             emissiveIntensity={4}
             transparent
             opacity={0.5}
@@ -79,12 +81,12 @@ export default function Oathstrike({ position, direction, onComplete }: Oathstri
           <mesh
             key={i}
             position={[
-              Math.cos((i * Math.PI) / 6) * 2,
-              Math.sin((i * Math.PI) / 6) * 2,
+              Math.cos((i * Math.PI) / 6) * 1.5,
+              Math.sin((i * Math.PI) / 6) * 1.5,
               0
             ]}
           >
-            <sphereGeometry args={[0.2, 8, 8]} />
+            <sphereGeometry args={[0.15, 8, 8]} />
             <meshStandardMaterial
               color="#ff8800"
               emissive="#ff6600"
@@ -96,8 +98,8 @@ export default function Oathstrike({ position, direction, onComplete }: Oathstri
         ))}
 
         {/* Dynamic lighting */}
-        <pointLight color="#ff6600" intensity={15} distance={8} />
-        <pointLight color="#ff4400" intensity={10} distance={12} />
+        <pointLight color="#8783D1" intensity={15} distance={8} />
+        <pointLight color="#6B67A8" intensity={10} distance={12} />
       </group>
     </group>
   );
