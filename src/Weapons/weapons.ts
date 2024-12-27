@@ -69,16 +69,16 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 // reduntant current cooldown /max?
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
-    q: { key: 'q', cooldown: 0.75, currentCooldown: 0, icon: 'Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 0.75, currentCooldown: 0, icon: 'Eidolon/icons/e1.svg', maxCooldown: 0.65, name: 'Scythe E', isUnlocked: true },
-    r: { key: 'r', cooldown: 2.5, currentCooldown: 0, icon: 'Eidolon/icons/r1.svg', maxCooldown: 1, name: 'Boneclaw', isUnlocked: false },
-    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: 'Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
+    q: { key: 'q', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.65, name: 'Scythe E', isUnlocked: true },
+    r: { key: 'r', cooldown: 2.5, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1, name: 'Boneclaw', isUnlocked: false },
+    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },
 
   [WeaponType.SWORD]: {
-    q: { key: 'q', cooldown: 1.05, currentCooldown: 0, icon: 'Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 3., currentCooldown: 0, icon: 'Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
-    r: { key: 'r', cooldown: 1.5, currentCooldown: 0, icon: 'Eidolon/icons/r2.svg', maxCooldown: 1.5, name: 'Oathstrike', isUnlocked: false },
+    q: { key: 'q', cooldown: 1.05, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 3., currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
+    r: { key: 'r', cooldown: 1.5, currentCooldown: 0, icon: '/Eidolon/icons/r2.svg', maxCooldown: 1.5, name: 'Oathstrike', isUnlocked: false },
     passive: { 
       key: 'passive', 
       cooldown: 0, 
