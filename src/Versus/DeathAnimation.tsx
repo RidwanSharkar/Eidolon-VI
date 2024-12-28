@@ -32,7 +32,7 @@ export default function BoneVortex({ position, onComplete, isSpawning = false }:
   const height = 3;
   const groupRef = useRef<Group>(null);
   const startTime = useRef(Date.now());
-  const animationDuration = 1500;
+  const animationDuration = 1250;
   
   useFrame(() => {
     if (!groupRef.current) return;

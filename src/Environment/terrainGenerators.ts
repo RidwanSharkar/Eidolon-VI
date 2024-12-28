@@ -10,11 +10,11 @@ export interface GeneratedTree {
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 61; 
+  const numberOfMountains = 55; 
 
   for (let i = 0; i < numberOfMountains; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const distance = 40 + Math.random() * 30;
+    const distance = 45 + Math.random() * 10;
 
     const x = Math.cos(angle) * distance;
     const z = Math.sin(angle) * distance;

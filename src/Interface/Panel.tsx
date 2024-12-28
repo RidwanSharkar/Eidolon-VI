@@ -133,6 +133,46 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
 
   return (
     <>
+      {/* Left Panel */}
+      <div className={styles.leftPanel}>
+        <div className={styles.controlsSection}>
+          <div className={styles.controlGroup}>
+            <div className={styles.controlKey}>Scroll Wheel</div>
+            <div className={styles.controlLabel}>Zoom</div>
+          </div>
+
+          <div className={styles.controlDivider} />
+
+          <div className={styles.controlGroup}>
+          <div className={styles.controlLabel}>Move</div>
+            <div className={styles.controlKey}>W</div>
+            <div className={styles.controlKey}>A</div>
+            <div className={styles.controlKey}>S</div>
+            <div className={styles.controlKey}>D</div>
+
+          </div>
+        </div>
+
+
+
+        {/* Mouse Controls Row */}
+        <div className={styles.controlsSection}>
+          <div className={styles.controlGroup}>
+            <div className={styles.controlKey}>L-Click Hold</div>
+            <div className={styles.controlLabel}>Auto Attack</div>
+          </div>
+
+          <div className={styles.controlDivider} />
+
+          <div className={styles.controlGroup}>
+
+            <div className={styles.controlLabel}>Camera</div>
+            <div className={styles.controlKey}>R-Click Hold</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Panel */}
       <div className={styles.bottomPanel}>
         {/* Health Bar Section */}
         <div className={styles.healthBarSection}>
@@ -174,8 +214,8 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
                   currentWeapon === WeaponType.SABRES ? '3' : '1'
                 }.svg`}
                 alt={currentWeapon}
-                width={20}
-                height={20}
+                width={30}
+                height={30}
                 className={styles.weaponLevelIcon}
               />
               <span className={styles.levelText}>{getLevel(killCount)}</span>
@@ -234,8 +274,6 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
           x={tooltipPosition.x}
           y={tooltipPosition.y}
         />
-
-       
       </div>
     </>
   );

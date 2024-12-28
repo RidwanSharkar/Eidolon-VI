@@ -176,7 +176,7 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     r: {
       title: "Oathstrike",
-      description: "Consumes 4 Orb Charges to heal and damage enemies in a devastating slash.",
+      description: "Consumes 4 Orb Charges to heal while  damaging enemies in an arc.",
       cost: "50",
       range: "7.0",
       damage: "65"

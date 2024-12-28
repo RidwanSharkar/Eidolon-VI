@@ -1,12 +1,15 @@
 .bottomPanel {
   position: fixed;
-  bottom: 30px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  display: grid;
-  grid-template-columns: auto 1fr;
-  background: linear-gradient(135deg, rgba(40, 40, 40, 0.95), rgba(60, 60, 60, 0.98));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, rgba(78, 78, 78, 0.35), rgba(60, 60, 60, 0.38));
   padding: 10px 20px;
+  padding-top: 15px;
   border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.15);
   box-shadow: 
@@ -86,10 +89,9 @@
 }
 
 .abilitiesSection {
-  display: grid;
-  grid-template-columns: repeat(4, 50px);
+  display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin-bottom: 8px;
 }
 
 .ability {
@@ -119,10 +121,10 @@
 
 .healthBarSection {
   position: absolute;
-  top: -60px;
+  top: -65px;
   left: 50.5%;
   transform: translateX(-50%);
-  width: 200px;
+  width: 300px;
 }
 
 .healthBarDecoration {
@@ -158,7 +160,7 @@
 .healthBarOrnamentRight {
   position: absolute;
   width: 45px;
-  height: 25px;
+  height: 55px;
   background: rgba(0, 0, 0, 0.7);
   border: 2px solid #39ff14;
   border-radius: 8px;
@@ -172,9 +174,9 @@
 }
 
 .healthBar {
-  height: 30px;
+  height: 18px;
   background: rgba(0, 0, 0, 0.7);
-  border: 2px solid #ffd700;
+  border: 3px solid #ffd700;
   border-radius: 10px;
   overflow: hidden;
   position: relative;
@@ -454,7 +456,7 @@
 
 .killCountText {
   color: white;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   z-index: 1;
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
@@ -541,25 +543,26 @@
 
 .levelText {
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
 }
+
 
 .experienceBarContainer {
   position: relative;
   width: 100%;
   margin-top: 0px;
-  padding: 2px;
+  padding: 0px;
   transform: translateX(0px);
-  height: 12px;
+  height: 30px;  
   display: flex;
   align-items: center;
 }
 
 .experienceBar {
   width: 100%;
-  height: 8px;
+  height: 16px;
   background: rgba(0, 0, 0, 0.4);
   border-radius: 4px;
   overflow: hidden;
@@ -569,14 +572,14 @@
 
 .experienceBarOrnamentLeft {
   position: absolute;
-  width: 24px;
-  height: 24px;
+  width: 35px;
+  height: 35px;
   background: linear-gradient(135deg, #39ff14, #2db80e);
   border-radius: 50%;
   box-shadow: 
     0 0 10px rgba(57, 255, 20, 0.3),
     0 0 20px rgba(57, 255, 20, 0.2);
-  left: -12px;
+  left: -25px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -587,11 +590,11 @@
 
 .experienceBarOrnamentRight {
   position: absolute;
-  width: 24px;
-  height: 24px;
+  width: 35px;
+  height: 35px;
   background: linear-gradient(135deg, #39ff14, #2db80e);
   border-radius: 50%;
-  right: -12px;
+  right: -25px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -636,22 +639,18 @@
 
 .levelText {
   position: absolute;
-  color: white;
-  font-size: 12px;
+  color:     rgba(57, 255, 20, 0.8);
+  font-size: 14px;
   font-weight: bold;
-  
-  text-shadow: 
-    0 0 4px rgba(0, 0, 0, 0.8),
-    0 0 2px rgba(0, 0, 0, 1);
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0);
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  right: -2px;
-  bottom: -2px;
+  right: +1px;
+  bottom: 0px;
 }
 
 .tooltip {
@@ -662,4 +661,61 @@
   position: fixed;
   z-index: 1000;
   pointer-events: none;
+}
+
+.controlsSection {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding-right: 0px;
+  padding-left: 0px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  width: 100%;
+}
+
+.controlGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.controlKey {
+  background: rgba(57, 255, 20, 0.1);
+  border: 1px solid rgba(57, 255, 20, 0.3);
+  color: #39ff14;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: bold;
+  min-width: 14px;
+  text-align: center;
+}
+
+.controlLabel {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.controlDivider {
+  width: 2px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 1px;
+  margin-left: 6px;
+}
+
+.leftPanel {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(78, 78, 78, 0.35), rgba(60, 60, 60, 0.38));
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
 }
