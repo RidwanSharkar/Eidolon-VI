@@ -168,7 +168,7 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
           <div className={styles.experienceBarContainer}>
             <div className={styles.experienceBarOrnamentLeft}>
               <Image 
-                src={`${process.env.NEXT_PUBLIC_BASE_PATH}/Eidolon/icons/${
+                src={`/Eidolon/icons/${
                   currentWeapon === WeaponType.SCYTHE ? '1' : 
                   currentWeapon === WeaponType.SWORD ? '2' : 
                   currentWeapon === WeaponType.SABRES ? '3' : '1'

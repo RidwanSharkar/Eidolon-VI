@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BlizzardShard from './BlizzardShard';
@@ -20,9 +20,9 @@ export default function Blizzard({
 }: BlizzardProps) {
   const stormRef = useRef<Group>(null);
   const progressRef = useRef(0);
-  const lastDamageTime = useRef(0);
-  const duration = 7.0;
-  const [shards, setShards] = useState<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
+  const lastDamageTime = useRef<number>(0);
+  const duration = 6.0;
+  const shardsRef = useRef<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
 
   const ORBITAL_RADIUS = 1.01;        // Radius of the orbital shard spawn area
   const FALLING_RADIUS = 2.5;        // Radius of the falling shard spawn area
@@ -53,11 +53,11 @@ export default function Blizzard({
         Math.sin(angle) * spawnRadius
       );
 
-      setShards(prev => [...prev.slice(-40), { // Keep only last 15 shards
+      shardsRef.current.push({
         id: Date.now() + Math.random(),
         position: orbitalPosition,
         type: 'orbital'
-      }]);
+      });
     }
 
     if (Math.random() < 0.5) { // Reduced from 0.3
@@ -70,11 +70,11 @@ export default function Blizzard({
         Math.sin(angle) * spawnRadius
       );
 
-      setShards(prev => [...prev.slice(-100), { // Keep only last 15 shards
+      shardsRef.current.push({
         id: Date.now() + Math.random(),
         position: fallingPosition,
         type: 'falling'
-      }]);
+      });
     }
 
       //BLUE DAMAGE??
@@ -107,13 +107,13 @@ export default function Blizzard({
         decay={2}
       />
 
-      {shards.map(shard => (
+      {shardsRef.current.map(shard => (
         <BlizzardShard
           key={shard.id}
           initialPosition={shard.position}
           type={shard.type}
           onComplete={() => {
-            setShards(prev => prev.filter(s => s.id !== shard.id));
+            shardsRef.current = shardsRef.current.filter(s => s.id !== shard.id);
           }}
         />
       ))}

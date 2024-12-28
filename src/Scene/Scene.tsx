@@ -28,12 +28,9 @@ export default function Scene({
   mountainData,
   treeData,
   mushroomData,
-  treePositions,
-  interactiveTrunkColor,
-  interactiveLeafColor,
   unitProps,
   onLevelComplete,
-  spawnInterval = 4375,
+  spawnInterval = 5250,
   maxSkeletons = 15,
   initialSkeletons = 5,
 }: SceneProps) {
@@ -46,8 +43,8 @@ export default function Scene({
         id: `skeleton-${index}`,
         position: spawnPosition.clone(),
         initialPosition: spawnPosition.clone(),
-        health: 175,
-        maxHealth: 175,
+        health: 200,
+        maxHealth: 200,
       };
     });
   });
@@ -163,8 +160,8 @@ export default function Scene({
           id: `skeleton-${totalSpawned}`,
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
-          health: 175,
-          maxHealth: 175,
+          health: 200,
+          maxHealth: 200,
         };
         
         setTotalSpawned((prev: number) => prev + 1);
@@ -222,13 +219,7 @@ export default function Scene({
           <Mushroom key={`mushroom-${index}`} position={data.position} scale={data.scale} />
         ))}
 
-        {/* Render the main interactive tree */}
-        <Tree
-          position={treePositions.mainTree}
-          scale={1}
-          trunkColor={interactiveTrunkColor}
-          leafColor={interactiveLeafColor}
-        />
+
 
         {/* Player Unit with ref */}
         <group ref={playerRef}>

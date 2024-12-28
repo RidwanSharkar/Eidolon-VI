@@ -18,7 +18,7 @@ export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.075,
+  speed = 0.08,
   onPositionUpdate,
   health
 }: UseUnitControlsProps) {

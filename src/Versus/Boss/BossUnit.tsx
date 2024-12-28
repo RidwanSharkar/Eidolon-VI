@@ -39,20 +39,46 @@ export default function BossUnit({
   const currentHealth = useRef(health);
 
   // Boss-specific constants
-  const ATTACK_RANGE = 15;
-  const ATTACK_COOLDOWN = 10000;
+  const ATTACK_RANGE = 2;
+  const ATTACK_COOLDOWN = 2000;
   const MOVEMENT_SPEED = 0.01;
   const SMOOTHING_FACTOR = 0.003;
-  const ATTACK_DAMAGE = 50;
+  const ATTACK_DAMAGE = 5;
+  const BOSS_HIT_HEIGHT = 2.0;      // Increased from 1.5 to 2.0
+  const BOSS_HIT_RADIUS = 3.0;      // Increased from 2.0 to 3.0
+  const BOSS_HIT_HEIGHT_RANGE = 4.0; // Increased from 3.0 to 4.0
 
   // Sync health changes
   useEffect(() => {
     currentHealth.current = health;
   }, [health]);
 
+  // Add hit detection helper function after the constants
+  const isWithinHitBox = (attackerPosition: Vector3, attackHeight: number = 1.0) => {
+    const bossPosition = currentPosition.current;
+    
+    // Check horizontal distance first (cylindrical collision)
+    const horizontalDist = new Vector3(
+      bossPosition.x - attackerPosition.x,
+      0,
+      bossPosition.z - attackerPosition.z
+    ).length();
+    
+    if (horizontalDist > BOSS_HIT_RADIUS) return false;
+    
+    // Check vertical distance
+    const heightDiff = Math.abs(attackerPosition.y + attackHeight - (bossPosition.y + BOSS_HIT_HEIGHT));
+    return heightDiff <= BOSS_HIT_HEIGHT_RANGE;
+  };
+
   // Handle damage with proper synchronization
-  const handleDamage = useCallback((damage: number) => {
+  const handleDamage = useCallback((damage: number, attackerPosition?: Vector3) => {
     if (currentHealth.current <= 0) return;
+    
+    // Only check hitbox for regular weapon attacks (not abilities)
+    if (attackerPosition && !isWithinHitBox(attackerPosition)) {
+      return;
+    }
     
     const newHealth = Math.max(0, currentHealth.current - damage);
     onTakeDamage(`boss-${id}`, damage);
@@ -131,7 +157,7 @@ export default function BossUnit({
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsSpawning(false);
-    }, 1000); // 1 second delay before showing the boss
+    }, 3000); // 1 second delay before showing the boss
 
     return () => clearTimeout(timer);
   }, []);
@@ -146,12 +172,16 @@ export default function BossUnit({
         onClick={(e) => {
           e.stopPropagation();
           if (currentHealth.current > 0) {
+            const hitPosition = currentPosition.current.clone();
+            hitPosition.y = BOSS_HIT_HEIGHT;
             handleDamage(10);
           }
         }}
         onPointerDown={(e) => {
           e.stopPropagation();
           if (currentHealth.current > 0) {
+            const hitPosition = currentPosition.current.clone();
+            hitPosition.y = BOSS_HIT_HEIGHT;
             handleDamage(10);
           }
         }}

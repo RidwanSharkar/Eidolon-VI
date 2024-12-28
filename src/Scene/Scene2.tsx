@@ -26,14 +26,11 @@ export default function Scene2({
   mountainData,
   treeData,
   mushroomData,
-  treePositions,
-  interactiveTrunkColor,
-  interactiveLeafColor,
   unitProps,
   skeletonProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 6500,
+  spawnInterval = 7500,
   maxSkeletons = 23,
   initialSkeletons = 5,
   spawnCount = 2,
@@ -62,7 +59,7 @@ export default function Scene2({
 
   // Add boss state
   const [isBossSpawned, setIsBossSpawned] = useState(false);
-  const [bossHealth, setBossHealth] = useState(1000);
+  const [bossHealth, setBossHealth] = useState(4000);
 
   // Callback to handle damage to enemies
   const handleTakeDamage = useCallback((targetId: string, damage: number) => {
@@ -187,7 +184,7 @@ export default function Scene2({
     // First, set a 5-second delay before allowing spawns
     const initialDelay = setTimeout(() => {
       setSpawnStarted(true);
-    }, 1000);
+    }, 5000);
 
     return () => clearTimeout(initialDelay);
   }, []);
@@ -234,7 +231,7 @@ export default function Scene2({
 
       {/* Ground Environment with desert-like terrain */}
       <Terrain 
-        color="#4a1c2c" // Brown/desert color
+        color="#4a1c2c" //handled elsewhere 
         roughness={0.9} 
         metalness={0.1}
       />
@@ -259,13 +256,6 @@ export default function Scene2({
         <Mushroom key={`mushroom-${index}`} position={data.position} scale={data.scale} />
       ))}
 
-      {/* Render the main interactive tree */}
-      <Tree
-        position={treePositions.mainTree}
-        scale={1}
-        trunkColor={interactiveTrunkColor}
-        leafColor={interactiveLeafColor}
-      />
 
       {/* Player Unit with ref */}
       <group ref={playerRef}>
