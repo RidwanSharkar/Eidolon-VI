@@ -20,7 +20,7 @@ export const useCrusaderAura = ({
   setDamageNumbers,
   nextDamageNumberId
 }: CrusaderAuraProps) => {
-  const HEAL_AMOUNT = 2;
+  const HEAL_AMOUNT = 3;
   const HEAL_CHANCE = 0.20;
 
   const processHealingChance = useCallback(() => {
