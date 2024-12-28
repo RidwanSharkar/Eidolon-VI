@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { WeaponType } from '../Weapons/weapons';
+import { WeaponAbilities, WeaponType } from '../Weapons/weapons';
 import { WeaponInfo } from '../Unit/UnitProps';
 import styles from './Panel.module.css';
 import Image from 'next/image';
 import DamageNotification from './DamageNotification';
+import { WEAPON_ABILITY_TOOLTIPS } from '../Weapons/weapons';
+import Tooltip from './Tooltip';
 
 
 interface PanelProps {
@@ -66,6 +68,11 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
   const [damageNotifications, setDamageNotifications] = useState<DamageNotificationData[]>([]);
   const nextNotificationId = useRef(0);
   const prevHealth = useRef(playerHealth);
+  const [tooltipContent, setTooltipContent] = useState<{
+    title: string;
+    description: string;
+  } | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
 
   useEffect(() => {
@@ -103,6 +110,25 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
       return ((kills - 15) / 25) * 100;
     }
     return 100;
+  };
+
+
+  // Ability Tooltip
+  const handleAbilityHover = (
+    e: React.MouseEvent,
+    abilityKey: keyof WeaponAbilities
+  ) => {
+    const tooltip = WEAPON_ABILITY_TOOLTIPS[currentWeapon][abilityKey];
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltipContent(tooltip);
+    setTooltipPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top
+    });
+  };
+
+  const handleAbilityLeave = () => {
+    setTooltipContent(null);
   };
 
   return (
@@ -169,96 +195,45 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
         {/* Abilities Section */}
         {abilities[currentWeapon] && (
           <div className={styles.abilitiesSection}>
-
-
-            {/* Q Ability - Always unlocked */}
-            <div className={styles.ability}>
-              <div className={styles.keyBind}>Q</div>
-              <Image 
-                src={abilities[currentWeapon].q.icon} 
-                alt="Q ability" 
-                width={40}
-                height={40}
-                className={styles.abilityIcon}
-              />
-              {abilities[currentWeapon].q.currentCooldown > 0 && (
-                <div className={styles.cooldownOverlay}>
-                  <RoundedSquareProgress
-                    size={50}
-                    strokeWidth={4}
-                    percentage={(abilities[currentWeapon].q.currentCooldown / abilities[currentWeapon].q.cooldown) * 100}
-                    borderRadius={8}
-                  />
-                  <span className={styles.cooldownText}>
-                    {Math.ceil(abilities[currentWeapon].q.currentCooldown)}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* E Ability - Always unlocked */}
-            <div className={styles.ability}>
-              <div className={styles.keyBind}>E</div>
-              <Image 
-                src={abilities[currentWeapon].e.icon} 
-                alt="E ability" 
-                width={40}
-                height={40}
-                className={styles.abilityIcon}
-              />
-              {abilities[currentWeapon].e.currentCooldown > 0 && (
-                <div className={styles.cooldownOverlay}>
-                  <RoundedSquareProgress
-                    size={50}
-                    strokeWidth={4}
-                    percentage={(abilities[currentWeapon].e.currentCooldown / abilities[currentWeapon].e.cooldown) * 100}
-                    borderRadius={8}
-                  />
-                  <span className={styles.cooldownText}>
-                    {Math.ceil(abilities[currentWeapon].e.currentCooldown)}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* R Ability */}
-            <div className={`${styles.ability} ${!abilities[currentWeapon].r.isUnlocked ? styles.locked : ''}`}>
-              <div className={styles.keyBind}>R</div>
-              <Image 
-                src={abilities[currentWeapon].r.icon} 
-                alt="R ability" 
-                width={40}
-                height={40}
-                className={styles.abilityIcon}
-              />
-              {abilities[currentWeapon].r.currentCooldown > 0 && abilities[currentWeapon].r.isUnlocked && (
-                <div className={styles.cooldownOverlay}>
-                  <RoundedSquareProgress
-                    size={50}
-                    strokeWidth={4}
-                    percentage={(abilities[currentWeapon].r.currentCooldown / abilities[currentWeapon].r.cooldown) * 100}
-                    borderRadius={8}
-                  />
-                  <span className={styles.cooldownText}>
-                    {Math.ceil(abilities[currentWeapon].r.currentCooldown)}
-                  </span>
-                </div>
-              )}
-            </div>
-            
-              {/* Passive Ability */}
-              <div className={`${styles.ability} ${!abilities[currentWeapon].passive.isUnlocked ? styles.locked : ''}`}>
-              <div className={styles.keyBind}>1</div>
-              <Image 
-                src={abilities[currentWeapon].passive.icon} 
-                alt="Ability Slot 1" 
-                width={40}
-                height={40}
-                className={styles.abilityIcon}
-              />
-            </div>
+            {Object.entries(abilities[currentWeapon]).map(([key, ability]) => (
+              <div 
+                key={key}
+                className={`${styles.ability} ${!ability.isUnlocked ? styles.locked : ''}`}
+                onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
+                onMouseLeave={handleAbilityLeave}
+              >
+                <div className={styles.keyBind}>{ability.key.toUpperCase()}</div>
+                <Image 
+                  src={ability.icon} 
+                  alt={`${key} ability`} 
+                  width={40}
+                  height={40}
+                  className={styles.abilityIcon}
+                />
+                {ability.currentCooldown > 0 && (
+                  <div className={styles.cooldownOverlay}>
+                    <RoundedSquareProgress
+                      size={50}
+                      strokeWidth={4}
+                      percentage={(ability.currentCooldown / ability.cooldown) * 100}
+                      borderRadius={8}
+                    />
+                    <span className={styles.cooldownText}>
+                      {Math.ceil(ability.currentCooldown)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
+
+        <Tooltip 
+          content={tooltipContent!}
+          visible={!!tooltipContent}
+          x={tooltipPosition.x}
+          y={tooltipPosition.y}
+        />
 
        
       </div>

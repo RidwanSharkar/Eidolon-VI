@@ -45,7 +45,7 @@ export const useOathstrike = ({
   onHealthChange?: (health: number) => void;
 }) => {
   const [isActive, setIsActive] = useState(false);
-  const HEAL_AMOUNT = 6;
+  const HEAL_AMOUNT = 4;
   
 
   const consumeCharges = useCallback(() => {

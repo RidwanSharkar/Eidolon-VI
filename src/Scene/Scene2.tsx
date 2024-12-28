@@ -14,7 +14,7 @@ import DriftingSouls from '../Environment/DriftingSouls';
 import BackgroundStars from '../Environment/Stars';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
-//import BossUnit from '../Versus/Boss/BossUnit';
+import BossUnit from '@/Versus/Boss/BossUnit';
 
 interface ScenePropsWithCallback extends SceneType {
   onLevelComplete: () => void;
@@ -34,7 +34,7 @@ export default function Scene2({
   killCount,
   onLevelComplete,
   spawnInterval = 6500,
-  maxSkeletons = 23,
+  maxSkeletons = 24,
   initialSkeletons = 5,
   spawnCount = 2,
 }: ScenePropsWithCallback) {
@@ -187,7 +187,7 @@ export default function Scene2({
     // First, set a 5-second delay before allowing spawns
     const initialDelay = setTimeout(() => {
       setSpawnStarted(true);
-    }, 5000);
+    }, 1000);
 
     return () => clearTimeout(initialDelay);
   }, []);
@@ -288,7 +288,7 @@ export default function Scene2({
         />
       ))}
 
-      {/* Boss Unit 
+
       {isBossSpawned && (
         <BossUnit
           key="boss-1"
@@ -296,7 +296,7 @@ export default function Scene2({
           initialPosition={BOSS_SPAWN_POSITION}
           position={BOSS_SPAWN_POSITION}
           health={bossHealth}
-          maxHealth={4000}
+          maxHealth={5000}
           onTakeDamage={(id, damage) => {
             setBossHealth(prev => Math.max(0, prev - damage));
           }}
@@ -305,7 +305,7 @@ export default function Scene2({
           onAttackPlayer={handlePlayerDamage}
         />
       )}
-*/}
+
       
     </>
   );

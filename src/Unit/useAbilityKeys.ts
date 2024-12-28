@@ -105,7 +105,7 @@ export function useAbilityKeys({
           if (currentWeapon === WeaponType.SWORD && !isSmiting) {
             // Check time since last Q usage for Sword
             const timeSinceLastQ = Date.now() - lastQUsageTime.current;
-            if (timeSinceLastQ < 400) { // SMITE BUG TEMP FIX 
+            if (timeSinceLastQ < 550) { // SMITE BUG TEMP FIX 
               console.log('Cannot use Smite so soon after a normal attack');
               return;
             }

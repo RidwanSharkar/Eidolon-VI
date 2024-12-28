@@ -15,7 +15,7 @@ export const useOathstrikeAnimation = ({
   parentRef,
 }: OathstrikeAnimationProps) => {
   const progressRef = useRef(0);
-  const animationDuration = 0.1;
+  const animationDuration = 0.135;
   const isActive = useRef(true);
 
   useEffect(() => {

@@ -33,7 +33,7 @@ export default function Scene({
   interactiveLeafColor,
   unitProps,
   onLevelComplete,
-  spawnInterval = 5000,
+  spawnInterval = 4375,
   maxSkeletons = 15,
   initialSkeletons = 5,
 }: SceneProps) {
