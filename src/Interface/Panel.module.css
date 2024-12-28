@@ -372,12 +372,12 @@
 .cooldownText {
   position: absolute;
   color: #39ff14;
-  font-size: 14px;
+  font-size: 25px;
   font-weight: bold;
   text-shadow: 0 0 5px rgba(0,0,0,0.8);
   z-index: 3;
-  top: 50%;
-  left: 50%;
+  top: 40%;
+  left: 60%;
   transform: translate(-50%, -50%);
 }
 
@@ -630,17 +630,12 @@
   border-color: rgba(102,102,102,0.3) !important;
 }
 
-.weaponLevelIcon {
-  width: 16px !important;
-  height: 16px !important;
-  filter: brightness(0) invert(1);
-  opacity: 0.9;
-}
+
 
 .levelText {
   position: absolute;
-  color:     rgba(57, 255, 20, 0.8);
-  font-size: 14px;
+  color:     #ffffff;
+  font-size: 16px;
   font-weight: bold;
   background: rgba(0, 0, 0, 0);
   border-radius: 50%;
@@ -649,8 +644,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  right: +1px;
-  bottom: 0px;
+  right: +2.5px;
+  bottom: +2px;
 }
 
 .tooltip {

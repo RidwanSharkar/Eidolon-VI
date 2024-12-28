@@ -207,17 +207,7 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
           {/* Experience Bar */}
           <div className={styles.experienceBarContainer}>
             <div className={styles.experienceBarOrnamentLeft}>
-              <Image 
-                src={`/Eidolon/icons/${
-                  currentWeapon === WeaponType.SCYTHE ? '1' : 
-                  currentWeapon === WeaponType.SWORD ? '2' : 
-                  currentWeapon === WeaponType.SABRES ? '3' : '1'
-                }.svg`}
-                alt={currentWeapon}
-                width={30}
-                height={30}
-                className={styles.weaponLevelIcon}
-              />
+
               <span className={styles.levelText}>{getLevel(killCount)}</span>
             </div>
             <div className={styles.experienceBar}>

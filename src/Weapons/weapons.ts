@@ -83,7 +83,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
       key: '1', 
       cooldown: 0, 
       currentCooldown: 0, 
-      icon: 'Eidolon/icons/p2.svg', 
+      icon: '/Eidolon/icons/p2.svg', 
       maxCooldown: 0, 
       name: 'Crusader Aura', 
       isUnlocked: false 
@@ -117,7 +117,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   if (weapon === WeaponType.SWORD && 
       ability === 'q' && 
       abilities[WeaponType.SWORD].passive.isUnlocked) {
-    return 0.65;
+    return 0.70;
   }
   
   return baseAbility.cooldown;
