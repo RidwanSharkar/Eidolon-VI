@@ -5,8 +5,8 @@ export default function DragonSkull() {
       {[-0.95, 0.95].map((side) => (
         <group 
           key={side} 
-          position={[side * 0.675, 0.55, -0.3]}
-          rotation={[-0.65, 0, side * 2.6]} // Changed X rotation to negative to tilt upward
+          position={[side * 0.60, 0.6, -0.6]}
+          rotation={[-0.95, 0, side * 2.6]} // Changed X rotation to negative to tilt upward
         >
           {/* Main Horn Segment */}
           <mesh>

@@ -1,14 +1,14 @@
 .notification {
   position: absolute;
   left: 50%;
-  top: -60%;
+  bottom: +430%;
   transform: translateX(-50%);
   color: #ff3333;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 18px;
   text-shadow: 
     0 0 4px rgba(0, 0, 0, 0.8),
-    0 0 8px rgba(0, 0, 0, 0.6);
+    0 0 2px rgba(0, 0, 0, 0.6);
   pointer-events: none;
   transition: 
     opacity 0.3s ease,

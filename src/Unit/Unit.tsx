@@ -536,11 +536,10 @@ export default function Unit({
 
   const handleHealthChange = useCallback((healAmount: number) => {
     if (onHealthChange) {
-      // Ensure we don't exceed maxHealth
-      const newHealth = Math.min(maxHealth, health + healAmount);
-      onHealthChange(newHealth);
+      // Pass the delta amount directly
+      onHealthChange(healAmount);
     }
-  }, [onHealthChange, health, maxHealth]);
+  }, [onHealthChange]);
 
   const { activateOathstrike } = useOathstrike({
     parentRef: groupRef,
@@ -548,14 +547,11 @@ export default function Unit({
     charges: fireballCharges,
     setCharges: setFireballCharges,
     enemyData,
-    onHealthChange: (healAmount: number) => {
-      if (onHealthChange) {
-        const newHealth = Math.min(health + healAmount, maxHealth);
-        onHealthChange(newHealth);
-      }
-    },
+    onHealthChange: handleHealthChange,
     setDamageNumbers,
-    nextDamageNumberId
+    nextDamageNumberId,
+    currentHealth: health,
+    maxHealth: maxHealth
   });
 
   useAbilityKeys({
@@ -863,7 +859,7 @@ export default function Unit({
 
       {(currentWeapon === WeaponType.SABRES) && isBowCharging && (
         <EtherealBow
-          position={groupRef.current?.position.clone().add(new Vector3(0, 1  , 0)) || new Vector3()}
+          position={groupRef.current?.position.clone().add(new Vector3(0, 1.5  , 0)) || new Vector3()}
           direction={new Vector3(0, 0, 1).applyQuaternion(groupRef.current?.quaternion || new THREE.Quaternion())}
           chargeProgress={bowChargeProgress}
           isCharging={isBowCharging}
@@ -968,35 +964,56 @@ export default function Unit({
                 0
               ]}
             >
+              {/* Large power shot arrow */}
+              <mesh rotation={[Math.PI/2, 0, 0]}>
+                <cylinderGeometry args={[0.1, 0.475, 1.25, 8]} /> {/* Doubled size */}
+                <meshStandardMaterial
+                  color="#00ffff"
+                  emissive="#00ffff"
+                  emissiveIntensity={2.5}
+                  transparent
+                  opacity={0.8}
+                />
+              </mesh>
+
+              <mesh rotation={[Math.PI/2, 0, 0]}>
+                <sphereGeometry args={[0.0005, 16, 16]} />
+                <meshStandardMaterial
+                  color="#ffffff"
+                  emissive="#ffffff"
+                  emissiveIntensity={2.5}
+                  transparent
+                  opacity={0.5}
+                />
+              </mesh>
+
               {[...Array(10)].map((_, i) => {
-                const scale = (i * 0.15);
-                const opacity = 1 - (i * 0.09);
-                const offset = -i * 0.6 + 0.25;
+                const opacity = 1 - (i * 0.04);
+                const offset = -i * 0.4 -0.42;
                 
                 return (
                   <group 
                     key={`power-trail-${i}`}
                     position={[0, 0, offset]}
-                    scale={[scale *0.3 , scale *0.3, 1]}
                   >
                     <mesh>
-                      <torusGeometry args={[0.15, 0.15, 8, 16]} />
+                      <torusGeometry args={[0.05, 0.025, 3, 16]} />
                       <meshStandardMaterial
                         color="#00ffff"
                         emissive="#00ffff"
-                        emissiveIntensity={7}
+                        emissiveIntensity={3}
                         transparent
                         opacity={opacity}
                         blending={THREE.AdditiveBlending}
                       />
                     </mesh>
 
-                    <mesh scale={1.5}>
-                      <torusGeometry args={[0.5, 0.2, 8, 16]} />
+                    <mesh>
+                      <torusGeometry args={[0.17, 0.15, 6, 4]} />
                       <meshStandardMaterial
                         color="#ffffff"
                         emissive="#80ffff"
-                        emissiveIntensity={5}
+                        emissiveIntensity={3}
                         transparent
                         opacity={opacity * 0.5}
                         blending={THREE.AdditiveBlending}
@@ -1008,8 +1025,8 @@ export default function Unit({
 
               <pointLight
                 color="#00ffff"
-                intensity={3}
-                distance={6}
+                intensity={2}
+                distance={2}
                 decay={2}
               />
             </group>
@@ -1109,6 +1126,8 @@ export default function Unit({
         setCharges={setFireballCharges}
         setDamageNumbers={setDamageNumbers}
         nextDamageNumberId={nextDamageNumberId}
+        currentHealth={health}
+        maxHealth={maxHealth}
       />
 
       {currentWeapon === WeaponType.SWORD && 
@@ -1119,6 +1138,8 @@ export default function Unit({
           onHealthChange={handleHealthChange}
           setDamageNumbers={setDamageNumbers}
           nextDamageNumberId={nextDamageNumberId}
+          currentHealth={health}
+          maxHealth={maxHealth}
         />
       )}
     </>

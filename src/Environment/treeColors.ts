@@ -1,12 +1,15 @@
 export const trunkColors = [
-  "#3b2616", // Dark brown
-  "#4a3421", // Medium brown
-  "#5c4033", // Chestnut
-  "#654321", // Dark golden brown
-  "#8b7355", // Wood brown
+  "#B17F94", // Lighter mauve brown
+  "#C18FA3", // Lighter dusty rose
+  "#D1A0B2", // Lighter light mauve
+  "#DCB5C1", // Lighter pink brown
+  "#E7CAD0", // Lighter rose taupe
 ];
 
 export const leafColors = [
-  "#ff69b4", // Forest green
-  "#ff69b4", // Dark olive green
+  "#FFAFC5", // Hot pink
+  "#FFB6C1", // Light pink
+  "#FFC0CB", // Pink
+  "#FFD1DC", // Pastel pink
+  "#FFE4E1", // Misty rose
 ]; 

@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber';
 
 interface ReanimateProps {
   parentRef: React.RefObject<Group>;
-  onHealthChange: (health: number) => void;
+  onHealthChange: (healAmount: number) => void;
   charges: Array<{
     id: number;
     available: boolean;
@@ -24,6 +24,8 @@ interface ReanimateProps {
     isHealing?: boolean;
   }>>>;
   nextDamageNumberId: React.MutableRefObject<number>;
+  currentHealth: number;
+  maxHealth: number;
 }
 
 export interface ReanimateRef {
@@ -124,7 +126,7 @@ const Reanimate = forwardRef<ReanimateRef, ReanimateProps>(({
   charges,
   setCharges,
   setDamageNumbers,
-  nextDamageNumberId
+  nextDamageNumberId,
 }, ref) => {
   const [showHealingEffect, setShowHealingEffect] = useState(false);
 
@@ -134,7 +136,7 @@ const Reanimate = forwardRef<ReanimateRef, ReanimateProps>(({
     setCharges,
     onHealthChange,
     setDamageNumbers,
-    nextDamageNumberId
+    nextDamageNumberId,
   });
 
   // Wrap the castReanimate function to handle the animation

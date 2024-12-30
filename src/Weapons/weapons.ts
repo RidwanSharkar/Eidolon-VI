@@ -70,14 +70,14 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
     q: { key: 'q', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.65, name: 'Scythe E', isUnlocked: true },
-    r: { key: 'r', cooldown: 2.5, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1, name: 'Boneclaw', isUnlocked: false },
-    passive: { key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
+    e: { key: 'e', cooldown: .65, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.65, name: 'Scythe E', isUnlocked: true },
+    r: { key: 'r', cooldown: 2., currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1, name: 'Boneclaw', isUnlocked: false },
+    passive: { key: '1', cooldown: 1, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },
 
   [WeaponType.SWORD]: {
-    q: { key: 'q', cooldown: 1.1, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 3., currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
+    q: { key: 'q', cooldown: 1.0, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 3.25, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
     r: { key: 'r', cooldown: 1.5, currentCooldown: 0, icon: '/Eidolon/icons/r2.svg', maxCooldown: 1.5, name: 'Oathstrike', isUnlocked: false },
     passive: { 
       key: '1', 
@@ -91,9 +91,9 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   },
   
   [WeaponType.SABRES]: {
-    q: { key: 'q', cooldown: 0.625, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
-    r: { key: 'r', cooldown: 9.5, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 5, name: 'Blizzard', isUnlocked: false },
+    q: { key: 'q', cooldown: 0.6, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
+    r: { key: 'r', cooldown: 10, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 5, name: 'Blizzard', isUnlocked: false },
     passive: { key: '1', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/p3.svg', maxCooldown: 0, name: 'Firebeam', isUnlocked: false }
   },
   [WeaponType.SABRES2]: {
@@ -117,7 +117,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   if (weapon === WeaponType.SWORD && 
       ability === 'q' && 
       abilities[WeaponType.SWORD].passive.isUnlocked) {
-    return 0.70;
+    return 0.675;
   }
   
   return baseAbility.cooldown;

@@ -104,17 +104,20 @@ export default function GameWrapper({
           <OrbitControls
             ref={sceneProps.unitProps.controlsRef}
             enablePan={false}
-            maxPolarAngle={Math.PI / 2.2}
-            maxDistance={50}
+            maxPolarAngle={Math.PI / 2.25}
+            maxDistance={21}
             mouseButtons={{
               LEFT: undefined,
               MIDDLE: undefined,
               RIGHT: THREE.MOUSE.ROTATE
             }}
-            minDistance={5}
-            rotateSpeed={0.5}
+            minDistance={7}
+            rotateSpeed={0.75}
             enableDamping={true}
-            dampingFactor={0.05}
+            dampingFactor={0.075}
+            zoomSpeed={1.5}
+            position={[0, 15, 20]}
+            target={[0, 0, 0]}
           />
         </Canvas>
       </div>

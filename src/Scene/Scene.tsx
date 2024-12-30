@@ -28,7 +28,7 @@ export default function Scene({
   mountainData,
   treeData,
   mushroomData,
-  unitProps,
+  unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
   spawnInterval = 5250,
   maxSkeletons = 15,
@@ -105,7 +105,7 @@ export default function Scene({
   // Update unitComponentProps to use playerHealth
   const unitComponentProps: UnitProps = {
     onHit: handleTakeDamage,
-    controlsRef: unitProps.controlsRef,
+    controlsRef: controlsRef,
     currentWeapon: unitProps.currentWeapon,
     onWeaponSelect: unitProps.onWeaponSelect,
     health: playerHealth,
@@ -182,6 +182,15 @@ export default function Scene({
     }
   }, [enemies, totalSpawned, maxSkeletons, onLevelComplete]);
 
+  useEffect(() => {
+    if (controlsRef.current) {
+      // Set initial camera position for Scene 1
+      controlsRef.current.object.position.set(0, 12, -18);
+      controlsRef.current.target.set(0, 0, 0);
+      controlsRef.current.update();
+    }
+  }, [controlsRef]);
+
   return (
     <>
       <group>
@@ -195,7 +204,7 @@ export default function Scene({
 
         {/* Ground Environment */}
         <Terrain 
-          color="#4a1c2c"
+          color="#FFAFC5"
           roughness={0.5}
           metalness={0.1}
         />

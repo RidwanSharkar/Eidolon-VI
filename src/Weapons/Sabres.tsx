@@ -252,7 +252,7 @@ interface SabreProps {
     // Update blade extrude settings for an even thinner blade
     const bladeExtrudeSettings = {
       steps: 2,
-      depth: 0.02, // Even thinner blade
+      depth: 0.02, 
       bevelEnabled: true,
       bevelThickness: 0.004,
       bevelSize: 0.01,
@@ -376,7 +376,7 @@ interface SabreProps {
               <meshStandardMaterial 
                 color="#0066ff"
                 emissive="#0088ff"
-                emissiveIntensity={3}
+                emissiveIntensity={2}
                 metalness={0.9}
                 roughness={0.2}
                 opacity={0.9}
@@ -394,7 +394,7 @@ interface SabreProps {
               <meshStandardMaterial 
                 color="#0033ff"
                 emissive="#0066ff"
-                emissiveIntensity={8}
+                emissiveIntensity={3.5}
                 metalness={0.7}
                 roughness={0.1}
                 opacity={0.4}
@@ -406,7 +406,7 @@ interface SabreProps {
             {/* Point light for local illumination */}
             <pointLight
               color="#0088ff"
-              intensity={2}
+              intensity={1.5}
               distance={2}
               decay={2}
             />

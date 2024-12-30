@@ -3,6 +3,7 @@ import { Vector3 } from 'three';
 import * as THREE from 'three';
 import { ORBITAL_COOLDOWN } from '../../Unit/ChargedOrbitals';
 import { calculateDamage } from '@/Weapons/damage';
+import { useHealing } from '@/Unit/useHealing';
 
 interface OathstrikeControllerProps {
   onHit: (targetId: string, damage: number) => void;
@@ -40,13 +41,25 @@ export const useOathstrike = ({
   enemyData,
   onHealthChange,
   setDamageNumbers,
-  nextDamageNumberId
+  nextDamageNumberId,
+  currentHealth,
+  maxHealth
 }: OathstrikeControllerProps & {
-  onHealthChange?: (health: number) => void;
+  onHealthChange: (health: number) => void;
+  currentHealth: number;
+  maxHealth: number;
 }) => {
   const [isActive, setIsActive] = useState(false);
-  const HEAL_AMOUNT = 4;
+  const HEAL_AMOUNT = 8;
   
+  const { processHealing } = useHealing({
+    currentHealth,
+    maxHealth,
+    onHealthChange,
+    setDamageNumbers,
+    nextDamageNumberId,
+    healAmount: HEAL_AMOUNT
+  });
 
   const consumeCharges = useCallback(() => {
     // Find four available charges
@@ -104,10 +117,8 @@ export const useOathstrike = ({
 
     setIsActive(true);
 
-    // Apply healing if the callback exists
-    if (onHealthChange) {
-      onHealthChange(HEAL_AMOUNT);
-    }
+    // Use processHealing instead of direct onHealthChange
+    processHealing(HEAL_AMOUNT, position);
 
     // Calculate arc for damage
     const forward = direction.clone();
@@ -125,7 +136,7 @@ export const useOathstrike = ({
         const angle = Math.abs(forward.angleTo(toEnemy));
         if (angle <= ARC_ANGLE / 2) {
           // Add damage number creation
-          const { damage, isCritical } = calculateDamage(41); // DAMAGE
+          const { damage, isCritical } = calculateDamage(43); // DAMAGE
           onHit(enemy.id, damage);
           
           setDamageNumbers(prev => [...prev, {
@@ -146,7 +157,7 @@ export const useOathstrike = ({
         setIsActive(false);
       }
     };
-  }, [nextDamageNumberId, setDamageNumbers, parentRef, consumeCharges, enemyData, onHit, onHealthChange]);
+  }, [nextDamageNumberId, setDamageNumbers, parentRef, consumeCharges, enemyData, onHit, processHealing]);
 
   return {
     isActive,

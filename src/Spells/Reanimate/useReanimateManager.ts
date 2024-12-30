@@ -34,7 +34,7 @@ export function useReanimateManager({
   nextDamageNumberId
 }: UseReanimateManagerProps) {
   const lastCastTime = useRef<number>(0);
-  const HEAL_AMOUNT = 10;
+  const HEAL_AMOUNT = 9;
 
   const castReanimate = useCallback(() => {
     // Find first available charge
@@ -64,7 +64,7 @@ export function useReanimateManager({
       }]);
     }
 
-    // Apply healing
+    // Apply healing - pass the delta amount directly
     onHealthChange(HEAL_AMOUNT);
 
     // Start cooldown recovery

@@ -10,11 +10,11 @@ interface BlizzardShardProps {
 }
 
 export default function BlizzardShard({ initialPosition, onComplete, type }: BlizzardShardProps) {
-  const SHARD_SIZE = 0.075;
+  const SHARD_SIZE = 0.0725;
   const meshRef = useRef<Mesh>(null);
   const fallSpeed = useRef(Math.random() * 2 + 4);
   const rotationSpeed = useRef({
-    x: Math.random() * 1,
+    x: Math.random() * 2,
     y: Math.random() * 0.25,
     z: Math.random() * 1
   });
@@ -54,9 +54,9 @@ export default function BlizzardShard({ initialPosition, onComplete, type }: Bli
       <meshStandardMaterial
         color="#80ffff"
         emissive="#40a0ff"
-        emissiveIntensity={2}
+        emissiveIntensity={1}
         transparent
-        opacity={0.8}
+        opacity={0.5}
       />
       <pointLight color="#80ffff" intensity={1} distance={2} decay={2} />
     </mesh>

@@ -136,21 +136,25 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
       {/* Left Panel */}
       <div className={styles.leftPanel}>
         <div className={styles.controlsSection}>
-          <div className={styles.controlGroup}>
-            <div className={styles.controlKey}>Scroll Wheel</div>
-            <div className={styles.controlLabel}>Zoom</div>
-          </div>
 
-          <div className={styles.controlDivider} />
+
+
 
           <div className={styles.controlGroup}>
-          <div className={styles.controlLabel}>Move</div>
             <div className={styles.controlKey}>W</div>
             <div className={styles.controlKey}>A</div>
             <div className={styles.controlKey}>S</div>
             <div className={styles.controlKey}>D</div>
-
+            <div className={styles.controlLabel}>Move</div>
           </div>
+
+          <div className={styles.controlDivider} />
+          
+          <div className={styles.controlGroup}>
+            <div className={styles.controlLabel}>Zoom</div>
+            <div className={styles.controlKey}>Scroll Wheel</div>
+          </div>
+
         </div>
 
 
@@ -174,6 +178,42 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
 
       {/* Bottom Panel */}
       <div className={styles.bottomPanel}>
+        {/* Abilities Section - Moved up */}
+        {abilities[currentWeapon] && (
+          <div className={styles.abilitiesSection}>
+            {Object.entries(abilities[currentWeapon]).map(([key, ability]) => (
+              <div 
+                key={key}
+                className={`${styles.ability} ${!ability.isUnlocked ? styles.locked : ''}`}
+                onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
+                onMouseLeave={handleAbilityLeave}
+              >
+                <div className={styles.keyBind}>{ability.key.toUpperCase()}</div>
+                <Image 
+                  src={ability.icon} 
+                  alt={`${key} ability`} 
+                  width={40}
+                  height={40}
+                  className={styles.abilityIcon}
+                />
+                {ability.currentCooldown > 0 && (
+                  <div className={styles.cooldownOverlay}>
+                    <RoundedSquareProgress
+                      size={50}
+                      strokeWidth={4}
+                      percentage={(ability.currentCooldown / ability.cooldown) * 100}
+                      borderRadius={8}
+                    />
+                    <span className={styles.cooldownText}>
+                      {Math.ceil(ability.currentCooldown)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Health Bar Section */}
         <div className={styles.healthBarSection}>
           {damageNotifications.map((notification, index) => (
@@ -221,42 +261,6 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
             </div>
           </div>
         </div>
-
-        {/* Abilities Section */}
-        {abilities[currentWeapon] && (
-          <div className={styles.abilitiesSection}>
-            {Object.entries(abilities[currentWeapon]).map(([key, ability]) => (
-              <div 
-                key={key}
-                className={`${styles.ability} ${!ability.isUnlocked ? styles.locked : ''}`}
-                onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
-                onMouseLeave={handleAbilityLeave}
-              >
-                <div className={styles.keyBind}>{ability.key.toUpperCase()}</div>
-                <Image 
-                  src={ability.icon} 
-                  alt={`${key} ability`} 
-                  width={40}
-                  height={40}
-                  className={styles.abilityIcon}
-                />
-                {ability.currentCooldown > 0 && (
-                  <div className={styles.cooldownOverlay}>
-                    <RoundedSquareProgress
-                      size={50}
-                      strokeWidth={4}
-                      percentage={(ability.currentCooldown / ability.cooldown) * 100}
-                      borderRadius={8}
-                    />
-                    <span className={styles.cooldownText}>
-                      {Math.ceil(ability.currentCooldown)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
 
         <Tooltip 
           content={tooltipContent!}

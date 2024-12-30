@@ -27,9 +27,9 @@ const createVortexPiece = () => (
       <meshStandardMaterial 
         color="#ff0000"
         emissive="#ff0000"
-        emissiveIntensity={1.17}
+        emissiveIntensity={2}
         transparent
-        opacity={0.3}
+        opacity={0.4}
       />
     </mesh>
   </group>
@@ -90,9 +90,9 @@ export default function BossBoneVortex({ parentRef }: BossBoneVortexProps) {
       
       <pointLight 
         color="#ff0000"
-        intensity={1}
-        distance={1.2}
-        position={[0, 0.25, 0]}
+        intensity={5}
+        distance={2.5}
+        position={[0, 0.3, 0]}
       />
     </group>
   );

@@ -36,7 +36,7 @@ export function useBlizzard({ onHit, enemyData }: UseBlizzardProps) {
     setTimeout(() => {
       clearInterval(damageInterval);
       setActiveBlizzards(prev => prev.filter(b => b.id !== blizzardId));
-    }, 5250);
+    }, 8000);
   }, [enemyData, onHit]);
 
   return {

@@ -10,6 +10,7 @@ interface SwordProps {
 import { useRef } from 'react';
 import { Group, Shape } from 'three';
 import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 
 export default function Sword({ isSwinging, isSmiting, isOathstriking, onSwingComplete, onSmiteComplete, onOathstrikeComplete }: SwordProps) {
   const swordRef = useRef<Group>(null);
@@ -21,7 +22,7 @@ export default function Sword({ isSwinging, isSmiting, isOathstriking, onSwingCo
     if (!swordRef.current) return;
 
     if (isOathstriking) {
-      swingProgress.current += delta * 7;
+      swingProgress.current += delta * 10;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.7, 1);
       
       const pivotX = basePosition[0] + Math.sin(swingPhase * Math.PI) * 2.5;
@@ -145,6 +146,7 @@ export default function Sword({ isSwinging, isSmiting, isOathstriking, onSwingCo
     shape.lineTo(0.2, 0.2);   // Reduced from 0.25
     shape.quadraticCurveTo(0.8, 0.15, 1.5, 0.18); // Reduced y values
     shape.quadraticCurveTo(2.0, 0.1, 2.2, 0);     // Reduced y value
+    
     shape.quadraticCurveTo(2.0, -0.1, 1.5, -0.18); // Mirror of upper curve
     shape.quadraticCurveTo(0.8, -0.15, 0.2, -0.2);
     shape.lineTo(0, -0.08);   // Reduced from -0.12
@@ -161,24 +163,24 @@ export default function Sword({ isSwinging, isSmiting, isOathstriking, onSwingCo
     // Blade shape with  symmetry
     shape.lineTo(0, 0.06);   
     shape.lineTo(0.15, 0.15); 
-    shape.quadraticCurveTo(0.8, 0.12, 1.5, 0.15); 
-    shape.quadraticCurveTo(2.0, 0.08, 2.2, 0);    
+    shape.quadraticCurveTo(1.2, 0.12, 1.5, 0.15); 
+    shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);    
     shape.quadraticCurveTo(2.0, -0.08, 1.5, -0.15); 
-    shape.quadraticCurveTo(0.8, -0.12, 0.15, -0.15);
-    shape.lineTo(0, -0.06);  
+    shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.15);
+    shape.lineTo(0, -0.05);  
     shape.lineTo(0, 0);
     
     return shape;
   };
 
   const bladeExtrudeSettings = {
-    steps: 4,
-    depth: 0.04,
+    steps: 2,
+    depth: 0.05,
     bevelEnabled: true,
-    bevelThickness: 0.015,
-    bevelSize: 0.025,
-    bevelOffset: 0,
-    bevelSegments: 6
+    bevelThickness: 0.014,
+    bevelSize: 0.02,
+    bevelOffset: 0.04,
+    bevelSegments: 2
   };
 
   const innerBladeExtrudeSettings = {
@@ -247,15 +249,15 @@ export default function Sword({ isSwinging, isSmiting, isOathstriking, onSwingCo
             </mesh>
           ))}
           
-          {/* Core orb -   yellow */}
+          {/* REAL Core orb -   yellow */}
           <mesh>
-            <sphereGeometry args={[0.15, 16, 16]} />
+            <sphereGeometry args={[0.155, 16, 16]} />
             <meshStandardMaterial
-              color="#ff9900"           
-              emissive="#ff8800"        
-              emissiveIntensity={30}    
+              color={new THREE.Color(0xFFFF00)}         // Pure yellow
+              emissive={new THREE.Color(0xff6600)}      // Yellow emission
+              emissiveIntensity={1.}                    // Increased intensity
               transparent
-              opacity={0.95}
+              opacity={1}
             />
           </mesh>
           
@@ -263,9 +265,9 @@ export default function Sword({ isSwinging, isSmiting, isOathstriking, onSwingCo
           <mesh>
             <sphereGeometry args={[0.1, 16, 16]} />
             <meshStandardMaterial
-              color="#ff9900"
-              emissive="#ff8800"
-              emissiveIntensity={25}
+              color={new THREE.Color(0xFFFF00)}
+              emissive={new THREE.Color(0xFFFF00)}
+              emissiveIntensity={40}
               transparent
               opacity={0.8}
             />
@@ -274,9 +276,9 @@ export default function Sword({ isSwinging, isSmiting, isOathstriking, onSwingCo
           <mesh>
             <sphereGeometry args={[0.145, 16, 16]} />
             <meshStandardMaterial
-              color="#ff9900"
-              emissive="#ff8800"
-              emissiveIntensity={20}
+              color={new THREE.Color(0xFFFF00)}
+              emissive={new THREE.Color(0xFFFF00)}
+              emissiveIntensity={35}
               transparent
               opacity={0.6}
             />
@@ -285,9 +287,9 @@ export default function Sword({ isSwinging, isSmiting, isOathstriking, onSwingCo
           <mesh>
             <sphereGeometry args={[.175, 16, 16]} />
             <meshStandardMaterial
-              color="#ff9900"
-              emissive="#ff8800"
-              emissiveIntensity={15}
+              color={new THREE.Color(0xFFFF00)}
+              emissive={new THREE.Color(0xFFFF00)}
+              emissiveIntensity={30}
               transparent
               opacity={0.4}
             />
@@ -295,55 +297,41 @@ export default function Sword({ isSwinging, isSmiting, isOathstriking, onSwingCo
 
           {/* Enhanced point light */}
           <pointLight 
-            color="#ff8800"
-            intensity={4}
-            distance={1.5}
+            color={new THREE.Color(0xFFFF00)}
+            intensity={2}
+            distance={0.5}
             decay={2}
           />
         </group>
         
-        {/* Blade  */}
-        <group position={[0, 0.6, 0.0]} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+        {/* Blade with enhanced purple */}
+        <group position={[0, 0.63, 0.0]} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
           {/* Base blade */}
           <mesh>
             <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color="#d8e8ff"
-              metalness={0.4}
+              color={new THREE.Color(0x9932CC)}  // Brighter purple
+              emissive={new THREE.Color(0x8783D1)}
+              emissiveIntensity={0.8}
+              metalness={0.3}
               roughness={0.1}
             />
           </mesh>
           
-          {/* Glowing core */}
+          {/* BLADE Glowing core */}
           <mesh>
             <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color="#ffffff"
-              emissive="#a0d4ff"
-              emissiveIntensity={4}
+              color={new THREE.Color(0x8783D1)}  // Deep purple
+              emissive={new THREE.Color(0x8783D1)}
+              emissiveIntensity={2}
               metalness={0.2}
               roughness={0.1}
               opacity={0.8}
               transparent
             />
           </mesh>
-          
-          {/* Outer glow */}
-          <mesh>
-            <extrudeGeometry args={[createInnerBladeShape(), {
-              ...innerBladeExtrudeSettings,
-              depth: 0.06
-            }]} />
-            <meshStandardMaterial 
-              color="#ffffff"
-              emissive="#c0e0ff"
-              emissiveIntensity={3}
-              metalness={0.2}
-              roughness={0.1}
-              opacity={0.4}
-              transparent
-            />
-          </mesh>
+
         </group>
       </group>
     </group>

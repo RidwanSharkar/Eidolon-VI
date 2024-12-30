@@ -15,9 +15,11 @@ import BackgroundStars from '../Environment/Stars';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import BossUnit from '@/Versus/Boss/BossUnit';
+import Flower from '../Environment/Flower';
 
 interface ScenePropsWithCallback extends SceneType {
   onLevelComplete: () => void;
+  flowerData: Array<{ position: Vector3; scale: number }>;
 }
 
 const BOSS_SPAWN_POSITION = new Vector3(0, 0, 0); // Center of the map
@@ -34,6 +36,7 @@ export default function Scene2({
   maxSkeletons = 23,
   initialSkeletons = 5,
   spawnCount = 2,
+  flowerData,
 }: ScenePropsWithCallback) {
   const [spawnStarted, setSpawnStarted] = useState(false);
   const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 5);
@@ -59,14 +62,12 @@ export default function Scene2({
 
   // Add boss state
   const [isBossSpawned, setIsBossSpawned] = useState(false);
-  const [bossHealth, setBossHealth] = useState(4000);
+  const [bossHealth, setBossHealth] = useState(5000);
 
   // Callback to handle damage to enemies
   const handleTakeDamage = useCallback((targetId: string, damage: number) => {
-    console.log(`Target ${targetId} takes ${damage} damage`);
-    
     // Handle boss damage
-    if (targetId.startsWith('boss-')) {
+    if (targetId.includes('boss')) {
       const newHealth = Math.max(0, bossHealth - damage);
       setBossHealth(newHealth);
       return;
@@ -78,9 +79,7 @@ export default function Scene2({
         const strippedId = targetId.replace('enemy-', '');
         if (enemy.id === strippedId) {
           const newHealth = Math.max(0, enemy.health - damage);
-          console.log(`Enemy ${strippedId} health: ${enemy.health} -> ${newHealth}`);
           if (newHealth === 0 && enemy.health > 0) {
-            console.log('Enemy defeated, triggering onEnemyDeath');
             unitProps.onEnemyDeath?.();
           }
           return {
@@ -148,12 +147,12 @@ export default function Scene2({
         health: enemy.health,
         maxHealth: enemy.maxHealth
       })),
-      ...(bossHealth > 0 ? [{
-        id: 'boss-1',
+      ...(isBossSpawned && bossHealth > 0 ? [{
+        id: `enemy-boss-1`,
         position: BOSS_SPAWN_POSITION,
         initialPosition: BOSS_SPAWN_POSITION,
         health: bossHealth,
-        maxHealth: 4000
+        maxHealth: 5000
       }] : [])
     ],
     onDamage: unitProps.onDamage,
@@ -220,6 +219,14 @@ export default function Scene2({
     return () => clearInterval(spawnTimer);
   }, [spawnStarted, totalSpawned, maxSkeletons, spawnInterval, spawnCount]);
 
+  useEffect(() => {
+    if (unitProps.controlsRef.current) {
+      unitProps.controlsRef.current.object.position.set(0, 12, -18);
+      unitProps.controlsRef.current.target.set(0, 0, 0);
+      unitProps.controlsRef.current.update();
+    }
+  }, [unitProps.controlsRef]);
+
   return (
     <>
 
@@ -231,7 +238,7 @@ export default function Scene2({
 
       {/* Ground Environment with desert-like terrain */}
       <Terrain 
-        color="#4a1c2c" //handled elsewhere 
+        color="#FFAFC5" //handled elsewhere 
         roughness={0.9} 
         metalness={0.1}
       />
@@ -256,6 +263,10 @@ export default function Scene2({
         <Mushroom key={`mushroom-${index}`} position={data.position} scale={data.scale} />
       ))}
 
+      {/* Render all flowers */}
+      {flowerData.map((data, index) => (
+        <Flower key={`flower-${index}`} position={data.position} scale={data.scale} />
+      ))}
 
       {/* Player Unit with ref */}
       <group ref={playerRef}>

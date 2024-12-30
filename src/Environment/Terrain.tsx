@@ -9,7 +9,7 @@ interface TerrainProps {
   metalness?: number;
 }
 
-export default function Terrain({ color = "#4a1c2c", roughness = 0.5, metalness = 0.1 }: TerrainProps) {
+export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness = 0.1 }: TerrainProps) {
   // All hooks must be at the top level
   const terrainRef = useRef<Mesh>(null);
   const octagonRef = useRef<Shape | null>(null);
@@ -19,8 +19,9 @@ export default function Terrain({ color = "#4a1c2c", roughness = 0.5, metalness 
     uniforms: {
       time: { value: 0 },
       scale: { value: 20.0 },
-      elevation: { value: 0.2 },
-      groundScale: { value: 0.1 },
+      elevation: { value: 0.3 },
+      groundScale: { value: 0. },
+      patchScale: { value: 0.1 },
       baseColor: { value: new THREE.Color(color) },
       roughnessValue: { value: roughness },
       metalnessValue: { value: metalness },
@@ -40,6 +41,7 @@ export default function Terrain({ color = "#4a1c2c", roughness = 0.5, metalness 
       uniform float scale;
       uniform float elevation;
       uniform float groundScale;
+      uniform float patchScale;
       
       varying vec2 vUv;
       varying vec3 vNormal;
@@ -78,41 +80,27 @@ export default function Terrain({ color = "#4a1c2c", roughness = 0.5, metalness 
       }
       
       void main() {
-        // Create large distinct patches
-        vec2 groundUv = vUv * groundScale;
-        float groundPattern = snoise(groundUv);
+        // Create brown patches
+        vec2 patchUv = vUv * patchScale;
+        float patchPattern = snoise(patchUv + time * 0.01);
+        float patchPattern2 = snoise(patchUv * 1.5 + time * 0.015); // Second noise for third color
         
-        // Create snow texture for detail
+        // Base colors
+        vec3 grassColor = vec3(0.2, 0.35, 0.15);     // Dark green base
+        vec3 brownColor = vec3(0.45, 0.32, 0.22);     // Brighter earth brown
+        vec3 lightBrownColor = vec3(0.55, 0.42, 0.30); // Light brown
+        
+        // Mix colors based on noise patterns
+        vec3 baseGroundColor = mix(grassColor, brownColor, patchPattern * 0.7);
+        baseGroundColor = mix(baseGroundColor, lightBrownColor, patchPattern2 * 0.5);
+        
+        // Add noise detail
         vec2 uv = vUv * scale;
         float n = snoise(uv) * 0.5;
         n += snoise(uv * 2.0) * 0.25;
-        n += snoise(uv * 4.0) * 0.125;
-        n += snoise(uv * 8.0) * 0.0625;
         
-        // Sparkle effect
-        float sparkle = pow(max(0.0, snoise(uv * 20.0 + time * 0.1)), 20.0) * 0.3;
-        
-        // Create blight glow spots
-        float blightSpots = pow(max(0.0, snoise(uv * 8.0 + time * 0.05)), 8.0) * 0.15;
-        
-        // Colors
-        vec3 snowColor = vec3(0.92, 0.93, 0.95);
-        vec3 blightColor = vec3(0.25, 0.22, 0.20);
-        vec3 glowColor = vec3(0.3, 0.8, 0.2);
-        
-        // Create sharp transitions between snow and ground
-        float blend = smoothstep(0.0, 0.1, groundPattern);
-        vec3 finalColor = mix(snowColor, blightColor, blend);
-        
-        // Add green glow spots only to blighted areas
-        float blightAmount = blend;
-        finalColor += glowColor * blightSpots * blightAmount;
-        
-        // Add snow effects only to snow areas
-        float snowAmount = 1.0 - blend;
-        float shadow = smoothstep(-1.0, 1.0, n) * 0.2;
-        finalColor = mix(finalColor, finalColor * 1.15, shadow * snowAmount);
-        finalColor += vec3(sparkle * snowAmount);
+        // Apply detail to final color
+        vec3 finalColor = mix(baseGroundColor, baseGroundColor * 1.2, n * 0.3);
         
         gl_FragColor = vec4(finalColor, 1.0);
       }
@@ -150,26 +138,14 @@ export default function Terrain({ color = "#4a1c2c", roughness = 0.5, metalness 
       {/* Main terrain */}
       <mesh ref={terrainRef} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         {octagonRef.current && <shapeGeometry args={[octagonRef.current]} />}
-        <meshStandardMaterial 
-          color="#304050"  // Light off-white base color
-          roughness={0.7}
-          metalness={0.1}
-          emissive="#304050"  // Subtle blue-ish glow
-          emissiveIntensity={1.3}
-        />
-      </mesh>
+        <primitive object={snowMaterial} attach="material" />
+      </mesh>  
 
 
-
-
-      {/* Subtle ground glow */}
-      <pointLight
-        position={[0, 0.1, 0]}
-        color="#304050"
-        intensity={4}
-        distance={10}
-        decay={2}
-      />
     </group>
   );
 }
+
+// 9EE493 6CC551 AFD0D6
+
+// BEST AFD0D6 -> 6CC551

@@ -1,21 +1,19 @@
 .bottomPanel {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
+  bottom: 8px;
+  left: 49.5%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  background: linear-gradient(135deg, rgba(78, 78, 78, 0.35), rgba(60, 60, 60, 0.38));
-  padding: 10px 20px;
+  gap: 6px;
+  padding: 16px 40px;
   padding-top: 15px;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 
-    0 0 50px rgba(0,0,0,0.5),
-    inset 0 0 20px rgba(255,255,255,0.05);
-  backdrop-filter: blur(20px);
+  border-radius: 22px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .weaponSection {
@@ -28,16 +26,23 @@
 }
 
 .weaponIcon {
-  width: 64px;
-  height: 64px;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  border: 3px solid #39ff14;
-  padding: 8px;
-  background: rgba(57,255,20,0.1);
-  box-shadow: 
-    0 0 20px rgba(57,255,20,0.2),
-    inset 0 0 15px rgba(57,255,20,0.2);
-  animation: weaponPulse 2s infinite;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #39ff14;
+}
+
+.weaponIcon img {
+  width: 30px;
+  height: 30px;
+  filter: brightness(1.5);
 }
 
 .levelBadge {
@@ -71,6 +76,7 @@
   border-radius: 15px;
   overflow: hidden;
   border: 2px solid rgba(255,51,51,0.3);
+  left: 3px;
 }
 
 .healthBarInner {
@@ -91,7 +97,8 @@
 .abilitiesSection {
   display: flex;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-top: 8px;
+  margin-bottom: 12px;
 }
 
 .ability {
@@ -120,11 +127,8 @@
 }
 
 .healthBarSection {
-  position: absolute;
-  top: -65px;
-  left: 50.5%;
-  transform: translateX(-50%);
-  width: 300px;
+  position: relative;
+  width: 260px;
 }
 
 .healthBarDecoration {
@@ -286,8 +290,8 @@
 
 .ability {
   position: relative;
-  width: 45px;
-  height: 45px;
+  width: 50px;
+  height: 50px;
   border-radius: 10px;
   overflow: visible;
   transition: transform 0.2s ease;
@@ -358,8 +362,8 @@
 
 .cooldownOverlay {
   position: absolute;
-  top: 5.5px;
-  left: -2.5px;
+  top: 1.75px;
+  left: 2.5px;
   width: calc(100% + 1px);
   height: calc(100% + 1px);
   display: flex;
@@ -376,8 +380,8 @@
   font-weight: bold;
   text-shadow: 0 0 5px rgba(0,0,0,0.8);
   z-index: 3;
-  top: 40%;
-  left: 60%;
+  top: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
 }
 
@@ -464,15 +468,15 @@
 
 .abilitiesSection {
   display: flex;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin-bottom: 6px;
 }
 
 .ability {
   position: relative;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 48.5px;
+  height: 48.5px;
+  border-radius: 12px;
   overflow: visible;
 }
 
@@ -489,7 +493,7 @@
   background: rgba(0,0,0,0.8);
   color: #39ff14;
   font-size: 11px;
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: 4px;
   z-index: 10;
   border: 1px solid rgba(57,255,20,0.3);
@@ -497,8 +501,8 @@
 
 .weaponSlot {
   position: relative;
-  width: 55px;
-  height: 55px;
+  width: 50px;
+  height: 50px;
   border-radius: 10px;
   transition: all 0.2s ease;
 }
@@ -520,7 +524,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border: 2px solid rgba(255,255,255,0.2);
+  border: 2.5px solid rgba(255,255,255,0.2);
   border-radius: 8px;
 }
 
@@ -553,16 +557,17 @@
   position: relative;
   width: 100%;
   margin-top: 0px;
-  padding: 0px;
+  padding-top: 0px;
   transform: translateX(0px);
   height: 30px;  
   display: flex;
   align-items: center;
+  left: 3.25px;
 }
 
 .experienceBar {
   width: 100%;
-  height: 16px;
+  height: 14px;
   background: rgba(0, 0, 0, 0.4);
   border-radius: 4px;
   overflow: hidden;
@@ -572,14 +577,14 @@
 
 .experienceBarOrnamentLeft {
   position: absolute;
-  width: 35px;
-  height: 35px;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, #39ff14, #2db80e);
   border-radius: 50%;
   box-shadow: 
     0 0 10px rgba(57, 255, 20, 0.3),
     0 0 20px rgba(57, 255, 20, 0.2);
-  left: -25px;
+  left: -32px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -590,11 +595,11 @@
 
 .experienceBarOrnamentRight {
   position: absolute;
-  width: 35px;
-  height: 35px;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, #39ff14, #2db80e);
   border-radius: 50%;
-  right: -25px;
+  right: -32px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -660,57 +665,58 @@
 
 .controlsSection {
   display: flex;
-  gap: 5px;
+  gap: 2px;
   align-items: center;
   padding-right: 0px;
   padding-left: 0px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.125);
+  border-radius: 4px;
   width: 100%;
 }
 
 .controlGroup {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 1px;
 }
 
 .controlKey {
   background: rgba(57, 255, 20, 0.1);
-  border: 1px solid rgba(57, 255, 20, 0.3);
+  border: 3px solid rgba(57, 255, 20, 0.3);
   color: #39ff14;
   padding: 5px 8px;
   border-radius: 4px;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: bold;
-  min-width: 14px;
+  min-width: 10px;
   text-align: center;
 }
 
 .controlLabel {
   color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
-  margin-left: 4px;
+  margin-left: 3px;
+  margin-right: 3px;
 }
 
 .controlDivider {
   width: 2px;
-  height: 20px;
+  height: 22px;
   background: rgba(255, 255, 255, 0.1);
-  margin: 0 1px;
-  margin-left: 6px;
+  margin: 0 0px;
+  margin-left: 0px;
 }
 
 .leftPanel {
   position: fixed;
-  left: 20px;
-  bottom: 20px;
+  right: 15px;
+  bottom: 15px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
   background: linear-gradient(135deg, rgba(78, 78, 78, 0.35), rgba(60, 60, 60, 0.38));
-  padding: 10px 20px;
+  padding: 10px 10px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.15);
 }

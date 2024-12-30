@@ -24,10 +24,14 @@ interface ReanimateProps {
     isHealing?: boolean;
   }>>>;
   nextDamageNumberId: React.MutableRefObject<number>;
+  currentHealth: number;
+  maxHealth: number;
 }
 
 export interface ReanimateRef {
   castReanimate: () => boolean;
+  currentHealth: number;
+  maxHealth: number;
 }
 
 const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = ({ position, onComplete }) => {
@@ -124,7 +128,9 @@ const Reanimate = forwardRef<ReanimateRef, ReanimateProps>(({
   charges,
   setCharges,
   setDamageNumbers,
-  nextDamageNumberId
+  nextDamageNumberId,
+  currentHealth,
+  maxHealth
 }, ref) => {
   const [showHealingEffect, setShowHealingEffect] = useState(false);
 
@@ -138,7 +144,9 @@ const Reanimate = forwardRef<ReanimateRef, ReanimateProps>(({
   });
 
   useImperativeHandle(ref, () => ({
-    castReanimate
+    castReanimate,
+    currentHealth,
+    maxHealth
   }));
 
   return showHealingEffect && parentRef.current ? (

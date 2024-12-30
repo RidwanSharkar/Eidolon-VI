@@ -7,32 +7,66 @@ import BoneWings from '../../Unit/Gear/BoneWings';
 import BossBoneVortex from './BossBoneVortex';  
 import DragonSkull from './DragonSkull';  
 import BossTrailEffect from './BossTrailEffect';
+import Scythe from '@/Versus/Boss/Scythe';
+import * as THREE from 'three';
 
 interface BossModelProps {
   isAttacking: boolean;
   isWalking: boolean;
   onHit?: (damage: number) => void;
+  playerPosition: THREE.Vector3;
 }
 
-export default function BossModel({ isAttacking, isWalking }: BossModelProps) {
+export default function BossModel({ isAttacking, isWalking, onHit, playerPosition }: BossModelProps) {
   const groupRef = useRef<Group>(null);
+
+  // Add click handler for testing/debugging hits
+  const handleHit = (damage: number) => {
+    if (onHit) {
+      onHit(damage);
+    }
+  };
 
   useFrame(() => {
     if (!groupRef.current) return;
 
-    if (isAttacking) {
-      // Attack animation
-      groupRef.current.rotation.y += 0.1; // Simple rotation for testing
-    } else if (isWalking) {
-      // Walking animation
-      groupRef.current.position.y = Math.sin(Date.now() * 0.003) * 0.1; // Simple floating animation
+    if (isWalking) {
+      // Keep floating animation
+      groupRef.current.position.y = Math.sin(Date.now() * 0.001) * 0.1;
     }
+
+    // Calculate direction to player while keeping boss upright
+    const directionToPlayer = new THREE.Vector3()
+      .subVectors(playerPosition, groupRef.current.position)
+      .setY(0)  // Ignore Y difference to prevent tilting
+      .normalize();
+
+    // Create rotation matrix for smooth facing
+    const lookMatrix = new THREE.Matrix4();
+    lookMatrix.lookAt(
+      new THREE.Vector3(0, 0, 0),
+      directionToPlayer,
+      new THREE.Vector3(0, 1, 0)
+    );
+    
+    // Extract rotation while keeping Y-axis locked
+    const targetRotation = new THREE.Euler(0, 0, 0);
+    targetRotation.setFromRotationMatrix(lookMatrix);
+    
+    // Apply only Y rotation to face player
+    groupRef.current.rotation.y = targetRotation.y;
   });
 
   return (
-    <group ref={groupRef}>
+    <group 
+      ref={groupRef}
+      onClick={(e) => {
+        e.stopPropagation();
+        handleHit(10); // remove this
+      }}
+    >
       {/* Boss Skull - positioned above the body */}
-      <group scale={[0.6, 0.6, 0.6]} position={[0, 2.46, 0.1]} rotation={[0.4, 0, 0]}>
+      <group scale={[0.6, 0.6, 0.6]} position={[0, 2.2, 0.25]} rotation={[0.5, 0, 0]}>
         <DragonSkull />
       </group>
 
@@ -105,6 +139,25 @@ export default function BossModel({ isAttacking, isWalking }: BossModelProps) {
         <group position={[-0.1, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
           <BossBoneVortex parentRef={groupRef} />
         </group>
+      </group>
+
+
+      {/* Left Scythe-------------------------------- */}
+      <group position={[0.5, 2.6, 0.1]} rotation={[Math.PI/3 + 0.2, 1 + Math.PI + 1.15, 1.45]} scale={[0.60, 0.60, 0.60]}>
+        <Scythe 
+          isSwinging={isAttacking} 
+          onSwingComplete={() => {}} 
+          parentRef={groupRef}
+        />
+      </group>
+
+      {/* Right Scythe-------------------------------- */}
+      <group position={[-0.5, 2.35, -1]} rotation={[1-Math.PI + 0.7,  1-Math.PI*3 + Math.PI + 1.15, + 1.2]} scale={[0.60, 0.60, 0.60]}>
+        <Scythe 
+          isSwinging={isAttacking} 
+          onSwingComplete={() => {}} 
+          parentRef={groupRef}
+        />
       </group>
     </group>
   );

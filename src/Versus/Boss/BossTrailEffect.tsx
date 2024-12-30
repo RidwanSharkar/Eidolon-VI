@@ -7,7 +7,7 @@ interface BossTrailEffectProps {
 }
 
 const BossTrailEffect: React.FC<BossTrailEffectProps> = ({ parentRef }) => {
-  const particlesCount = 20;
+  const particlesCount = 24;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -26,11 +26,11 @@ const BossTrailEffect: React.FC<BossTrailEffectProps> = ({ parentRef }) => {
       const radius =  + Math.sin(timeRef.current * 2 + i * 0.2) * 0.1;
       
       positionsRef.current[i * 3] = bossPosition.x + Math.cos(angle) * radius;
-      positionsRef.current[i * 3 + 1] = bossPosition.y + Math.sin(timeRef.current + i * 0.1) * 0.001;
+      positionsRef.current[i * 3 + 1] = bossPosition.y + Math.sin(timeRef.current + i * 0.1) * 0.0001;
       positionsRef.current[i * 3 + 2] = bossPosition.z + Math.sin(angle) * radius;
 
-      opacitiesRef.current[i] = Math.pow((1 - i / particlesCount), 2) * 0.35;
-      scalesRef.current[i] = 0.4 * Math.pow((1 - i / particlesCount), 0.5);
+      opacitiesRef.current[i] = Math.pow((1 - i / particlesCount), 1.5) * 0.25;
+      scalesRef.current[i] = 0.4 * Math.pow((1 - i / particlesCount), 0.6);
     }
 
     if (particlesRef.current) {

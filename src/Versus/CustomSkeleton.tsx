@@ -199,7 +199,7 @@ function ShoulderPlate() {
     <group>
       {/* Main shoulder plate */}
       <mesh>
-        <cylinderGeometry args={[0.05, 0.2, 0.3, 6, 1, false, 0,-Math.PI*2]} />
+        <cylinderGeometry args={[0.07, 0.2, 0.3, 6, 1, false, 0, -Math.PI*2]} />
         <meshStandardMaterial 
           color="#e8e8e8"
           roughness={0.4}

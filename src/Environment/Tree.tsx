@@ -50,8 +50,10 @@ const TreeComponent: React.FC<TreeProps> = ({
           <coneGeometry args={[leafSize, leafHeight, 8]} />
           <meshStandardMaterial 
             color={variedLeafColor}
-            roughness={0.8}
+            roughness={0.4}
             metalness={0.1}
+            emissive={variedLeafColor}
+            emissiveIntensity={0.4}
           />
         </mesh>
 
@@ -59,9 +61,11 @@ const TreeComponent: React.FC<TreeProps> = ({
         <mesh position={[0, trunkHeight * 0.8, 0]} name="tree-top-2">
           <coneGeometry args={[leafSize * 0.7, leafHeight * 0.7, 8]} />
           <meshStandardMaterial 
-            color={variedLeafColor.clone().offsetHSL(0, 0, -0.1)}
-            roughness={0.8}
+            color={variedLeafColor.clone().multiplyScalar(1.1)}
+            roughness={0.4}
             metalness={0.1}
+            emissive={variedLeafColor}
+            emissiveIntensity={0.3}
           />
         </mesh>
 
@@ -69,9 +73,11 @@ const TreeComponent: React.FC<TreeProps> = ({
         <mesh position={[0, trunkHeight, 0]} name="tree-top-3">
           <coneGeometry args={[leafSize * 0.4, leafHeight * 0.4, 8]} />
           <meshStandardMaterial 
-            color={variedLeafColor.clone().offsetHSL(0, 0, -0.15)}
-            roughness={0.8}
+            color={variedLeafColor.clone().multiplyScalar(1.2)}
+            roughness={0.4}
             metalness={0.1}
+            emissive={variedLeafColor}
+            emissiveIntensity={0.2}
           />
         </mesh>
       </mesh>

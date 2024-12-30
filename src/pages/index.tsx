@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { Vector3 } from 'three';
 import { WeaponType } from '../Weapons/weapons';
 import { trunkColors, leafColors } from '../Environment/treeColors';  
-import { generateMountains, generateTrees, generateMushrooms } from '../Environment/terrainGenerators';
+import { generateMountains, generateTrees, generateMushrooms, generateFlowers } from '../Environment/terrainGenerators';
 import { SceneProps, SkeletonProps } from '../Scene/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '../Weapons/weapons';
@@ -72,6 +72,9 @@ export default function HomePage() {
 
   // Memoize mushroom data
   const mushroomData = useMemo(() => generateMushrooms(), []);
+
+  // Memoize flower data
+  const flowerData = useMemo(() => generateFlowers(), []);
 
   // Assign consistent colors to the interactive tree using useMemo
   const [interactiveTrunkColor, setInteractiveTrunkColor] = useState<THREE.Color>();
@@ -226,7 +229,15 @@ export default function HomePage() {
     });
   };
 
-  // Now declare sceneProps after handleReset
+  // Change this handler to properly handle delta values
+  const handleHealthChange = useCallback((deltaHealth: number) => {
+    setPlayerHealth(prevHealth => {
+      const newHealth = Math.min(maxHealth, prevHealth + deltaHealth);
+      return newHealth;
+    });
+  }, [maxHealth]);
+
+  // sceneProps after handleReset
   const sceneProps: SceneProps = {
     mountainData,
     treeData,
@@ -234,7 +245,7 @@ export default function HomePage() {
     treePositions,
     interactiveTrunkColor: interactiveTrunkColor as THREE.Color,
     interactiveLeafColor: interactiveLeafColor as THREE.Color,
-    onReset: handleReset, // Now handleReset is defined before being used
+    onReset: handleReset,
     unitProps: {
       onFireballDamage: handleFireballDamage,
       onSmiteDamage: handleSmiteDamage,
@@ -280,14 +291,14 @@ export default function HomePage() {
       onDamage: handlePlayerDamage,
       onEnemyDeath: handleEnemyDeath,
       fireballManagerRef: fireballManagerRef,
-      onHealthChange: (newHealth: number) => {
-        setPlayerHealth(newHealth);
-      },
+      onHealthChange: handleHealthChange,
     },
     skeletonProps,
     killCount,
     onFireballDamage: handleFireballDamage,
-    onWeaponSelect: handleWeaponSelect
+    onWeaponSelect: handleWeaponSelect,
+    flowerData: flowerData
+
   };
 
   useEffect(() => {

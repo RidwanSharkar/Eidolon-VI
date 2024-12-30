@@ -31,6 +31,7 @@ export interface SceneProps {
   maxSkeletons?: number;
   initialSkeletons?: number;
   spawnCount?: number;
+  flowerData: Array<{ position: Vector3; scale: number }>;
 }
 
 export interface ScenePropsWithCallback extends SceneProps {

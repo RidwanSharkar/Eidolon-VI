@@ -4,6 +4,7 @@ import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import BossModel from './BossModel';
 import { Enemy } from '../enemy';
+import Meteor from '@/Versus/Boss/Meteor';
 
 interface BossUnitProps {
   id: string;
@@ -33,20 +34,29 @@ export default function BossUnit({
   const [isAttacking, setIsAttacking] = useState(false);
   const [isDead, setIsDead] = useState(false);
   const [isSpawning, setIsSpawning] = useState(true);
+  const [isCastingMeteor, setIsCastingMeteor] = useState(false);
 
   const currentPosition = useRef(initialPosition.clone());
   const targetPosition = useRef(initialPosition.clone());
   const currentHealth = useRef(health);
 
   // Boss-specific constants
-  const ATTACK_RANGE = 2;
-  const ATTACK_COOLDOWN = 2000;
+  const ATTACK_RANGE = 3.90;
+  const ATTACK_COOLDOWN_NORMAL = 2000;
+  const ATTACK_COOLDOWN_ENRAGED = 850;
   const MOVEMENT_SPEED = 0.01;
   const SMOOTHING_FACTOR = 0.003;
-  const ATTACK_DAMAGE = 5;
-  const BOSS_HIT_HEIGHT = 2.0;      // Increased from 1.5 to 2.0
-  const BOSS_HIT_RADIUS = 3.0;      // Increased from 2.0 to 3.0
-  const BOSS_HIT_HEIGHT_RANGE = 4.0; // Increased from 3.0 to 4.0
+  const ATTACK_DAMAGE = 12;
+  const BOSS_HIT_HEIGHT = 2.0;      
+  const BOSS_HIT_RADIUS = 4.0;      
+  const BOSS_HIT_HEIGHT_RANGE = 4.0; 
+  const METEOR_COOLDOWN_NORMAL = 10000;
+  const METEOR_COOLDOWN_ENRAGED = 4000;
+  const lastMeteorTime = useRef<number>(Date.now());
+
+  // Add a ref to track current cooldowns
+  const currentAttackCooldown = useRef(ATTACK_COOLDOWN_NORMAL);
+  const currentMeteorCooldown = useRef(METEOR_COOLDOWN_NORMAL);
 
   // Sync health changes
   useEffect(() => {
@@ -75,15 +85,17 @@ export default function BossUnit({
   const handleDamage = useCallback((damage: number, attackerPosition?: Vector3) => {
     if (currentHealth.current <= 0) return;
     
-    // Only check hitbox for regular weapon attacks (not abilities)
+    // Only check hitbox if attackerPosition is provided (for melee attacks)
     if (attackerPosition && !isWithinHitBox(attackerPosition)) {
       return;
     }
     
-    const newHealth = Math.max(0, currentHealth.current - damage);
-    onTakeDamage(`boss-${id}`, damage);
+    // Use the same ID format as EnemyUnit
+    onTakeDamage(`enemy-${id}`, damage);
     
-    if (newHealth === 0 && currentHealth.current > 0) {
+    // Check if this damage would kill the boss
+    const updatedHealth = Math.max(0, currentHealth.current - damage);
+    if (updatedHealth === 0 && currentHealth.current > 0) {
       setIsDead(true);
     }
   }, [id, onTakeDamage]);
@@ -101,15 +113,29 @@ export default function BossUnit({
     }
   }, []);
 
+  // Add effect to handle enrage state
+  useEffect(() => {
+    const isEnraged = health <= maxHealth / 2;
+    currentAttackCooldown.current = isEnraged ? ATTACK_COOLDOWN_ENRAGED : ATTACK_COOLDOWN_NORMAL;
+    currentMeteorCooldown.current = isEnraged ? METEOR_COOLDOWN_ENRAGED : METEOR_COOLDOWN_NORMAL;
+  }, [health, maxHealth]);
+
   // Movement and attack logic
   useFrame(() => {
     if (!bossRef.current || health <= 0 || !playerPosition) return;
 
+    const currentTime = Date.now();
+    const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
+
+    // Update meteor check to use current cooldown
+    if (currentTime - lastMeteorTime.current >= currentMeteorCooldown.current && health > 0) {
+      castMeteor();
+      lastMeteorTime.current = currentTime;
+    }
+
     const direction = new Vector3()
       .subVectors(playerPosition, currentPosition.current)
       .normalize();
-
-    const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
 
     if (distanceToPlayer > ATTACK_RANGE && health > 0) {
       setIsAttacking(false);
@@ -133,15 +159,15 @@ export default function BossUnit({
         onPositionUpdate(id, currentPosition.current.clone());
       }
     } else if (health > 0) {
-      const currentTime = Date.now();
-      if (currentTime - lastAttackTime.current >= ATTACK_COOLDOWN) {
+      // Update attack check to use current cooldown
+      if (currentTime - lastAttackTime.current >= currentAttackCooldown.current) {
         setIsAttacking(true);
         onAttackPlayer(ATTACK_DAMAGE);
         lastAttackTime.current = currentTime;
 
         setTimeout(() => {
           setIsAttacking(false);
-        }, 800); // Longer attack animation
+        }, 270);
       }
     }
   });
@@ -162,26 +188,26 @@ export default function BossUnit({
     return () => clearTimeout(timer);
   }, []);
 
+  const castMeteor = useCallback(() => {
+    if (!isCastingMeteor) {
+      setIsCastingMeteor(true);
+      
+      setTimeout(() => {
+        setIsCastingMeteor(false);
+      }, 4000);
+    }
+  }, [isCastingMeteor]);
+
   return (
     <>
       <group 
         ref={bossRef} 
         visible={!isSpawning && health > 0}
         position={currentPosition.current}
-        scale={[1.5, 1.5, 1.5]}
+        scale={[1.35, 1.35, 1.35]}
         onClick={(e) => {
           e.stopPropagation();
-          if (currentHealth.current > 0) {
-            const hitPosition = currentPosition.current.clone();
-            hitPosition.y = BOSS_HIT_HEIGHT;
-            handleDamage(10);
-          }
-        }}
-        onPointerDown={(e) => {
-          e.stopPropagation();
-          if (currentHealth.current > 0) {
-            const hitPosition = currentPosition.current.clone();
-            hitPosition.y = BOSS_HIT_HEIGHT;
+          if (currentHealth.current > 0) { // ??!?!?!
             handleDamage(10);
           }
         }}
@@ -190,6 +216,7 @@ export default function BossUnit({
           isAttacking={isAttacking}
           isWalking={!isAttacking && health > 0}
           onHit={handleDamage}
+          playerPosition={playerPosition}
         />
 
         {/* Boss health bar */}
@@ -224,6 +251,15 @@ export default function BossUnit({
           )}
         </Billboard>
       </group>
+      
+      {isCastingMeteor && (
+        <Meteor
+          targetPosition={playerPosition}
+          onImpact={(damage) => onAttackPlayer(damage)}
+          onComplete={() => setIsCastingMeteor(false)}
+          playerPosition={playerPosition}
+        />
+      )}
     </>
   );
 } 

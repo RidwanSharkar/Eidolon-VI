@@ -21,10 +21,10 @@ export default function Blizzard({
   const stormRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const lastDamageTime = useRef<number>(0);
-  const duration = 6.0;
+  const duration = 7;
   const shardsRef = useRef<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
 
-  const ORBITAL_RADIUS = 1.01;        // Radius of the orbital shard spawn area
+  const ORBITAL_RADIUS = 0.95;        // Radius of the orbital shard spawn area
   const FALLING_RADIUS = 2.5;        // Radius of the falling shard spawn area
   const ORBITAL_HEIGHT = 2.35;        // Height of orbital shards
   const FALLING_HEIGHT = 1.2;       // Starting height of falling shards
@@ -41,9 +41,9 @@ export default function Blizzard({
       return;
     }
 
-    stormRef.current.rotation.y += delta * 6.5;
+    stormRef.current.rotation.y += delta * 3;
 
-    if (Math.random() < 0.22) { // Reduced from 0.2
+    if (Math.random() < 0.1) { // Reduced from 0.2
       const angle = Math.random() * Math.PI * 2;
       const spawnRadius = Math.random() * ORBITAL_RADIUS / 50;
       
@@ -100,9 +100,9 @@ export default function Blizzard({
   return (
     <group ref={stormRef}>
       <pointLight
-        position={[0, 3, 0]}
+        position={[0, 4, 0]}
         color="#80ffff"
-        intensity={1.5}
+        intensity={0.5}
         distance={3}
         decay={2}
       />

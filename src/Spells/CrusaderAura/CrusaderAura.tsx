@@ -6,6 +6,8 @@ import { useCrusaderAura } from './useCrusaderAura';
 interface CrusaderAuraProps {
   parentRef: React.RefObject<Group>;
   onHealthChange: (health: number) => void;
+  currentHealth: number;
+  maxHealth: number;
   setDamageNumbers: React.Dispatch<React.SetStateAction<Array<{
     id: number;
     damage: number;
@@ -20,7 +22,9 @@ const CrusaderAura = forwardRef<{ processHealingChance: () => void }, CrusaderAu
   parentRef,
   onHealthChange,
   setDamageNumbers,
-  nextDamageNumberId
+  nextDamageNumberId,
+  currentHealth,
+  maxHealth
 }, ref) => {
   const auraRef = useRef<Group>(null);
   const rotationSpeed = 0.2;
@@ -29,7 +33,9 @@ const CrusaderAura = forwardRef<{ processHealingChance: () => void }, CrusaderAu
     onHealthChange,
     parentRef,
     setDamageNumbers,
-    nextDamageNumberId
+    nextDamageNumberId,
+    currentHealth,
+    maxHealth
   });
 
   // Expose processHealingChance through the forwarded ref
@@ -53,11 +59,11 @@ const CrusaderAura = forwardRef<{ processHealingChance: () => void }, CrusaderAu
       <group rotation={[0, 0, 0]}>
         {[0, Math.PI/2, Math.PI, Math.PI*1.5].map((rotation, i) => (
           <mesh key={i} rotation={[-Math.PI / 2, 0, rotation]}>
-            <planeGeometry args={[1., 0.15]} />
+            <planeGeometry args={[1, 0.125]} />
             <meshStandardMaterial
               color="#ff9900"
               emissive="#ff7700"
-              emissiveIntensity={3}
+              emissiveIntensity={2.5}
               transparent
               opacity={0.8}
               depthWrite={false}
@@ -68,7 +74,7 @@ const CrusaderAura = forwardRef<{ processHealingChance: () => void }, CrusaderAu
 
 
       {/* Rotating inner elements */}
-      <group rotation={[0, 0, 0]}>
+      <group rotation={[0, 0, 0]} position={[0, 0.002, 0]}>
         {[0, Math.PI/2, Math.PI, Math.PI*1.5].map((rotation, i) => (
           <mesh key={i} rotation={[-Math.PI / 2, 0, rotation + Date.now() * 0.001]}>
             <ringGeometry args={[0.85, 1.0, 3]} />
@@ -86,7 +92,7 @@ const CrusaderAura = forwardRef<{ processHealingChance: () => void }, CrusaderAu
 
       {/* Circle */}
       <mesh position={[0, 0.1, 0]}>
-        <cylinderGeometry args={[1, 0.5, -0.2, 32]} />
+        <cylinderGeometry args={[0.925, 0.5, -0.2, 32]} />
         <meshStandardMaterial
           color="#ff8800"
           emissive="#ff6600"
