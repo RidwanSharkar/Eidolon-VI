@@ -17,7 +17,7 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
   const lifespan = 10;
   const currentPosition = useRef(position.clone());
   const { scene } = useThree();
-  const size = 0.3;
+  const size = 0.25;
   const color = new Color('#00ff44');
   const impactGroup = useRef<Group>(null);
   const explosionStartTime = useRef<number | null>(null);

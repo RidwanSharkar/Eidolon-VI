@@ -43,13 +43,13 @@ export default function EnemyUnit({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 1.4;
+  const ATTACK_RANGE = 1.75;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.14;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.14;
+  const MOVEMENT_SPEED = 0.13;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.13;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 5;
+  const ATTACK_DAMAGE = 6;
 
   // Sync health changes
   useEffect(() => {

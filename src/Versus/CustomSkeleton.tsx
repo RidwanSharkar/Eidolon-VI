@@ -100,7 +100,7 @@ function BoneLegModel() {
   );
 }
 
-function BossClawModel() {
+function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
   const createBoneSegment = (length: number, width: number) => (
     <mesh>
       <cylinderGeometry args={[width, width * 0.8, length, 8]} />
@@ -185,6 +185,13 @@ function BossClawModel() {
                     </group>
                   </group>
                 ))}
+
+                {/* Only render sword if it's the left hand */}
+                {!isLeftHand && (
+                  <group position={[0, -0.2, 0.3]} rotation={[Math.PI/2, 0, 0]} scale={[0.8, 0.8, 0.8]}>
+                    <BoneSwordModel />
+                  </group>
+                )}
               </group>
             </group>
           </group>
@@ -194,12 +201,70 @@ function BossClawModel() {
   );
 }
 
+function BoneSwordModel() {
+  const redMaterial = {
+    color: "#ff0000",
+    emissive: "#660000",
+    emissiveIntensity: 0.5,
+    roughness: 0.4,
+    metalness: 0.6
+  };
+
+  return (
+    <group rotation={[0, -1.05, -Math.PI / 2.5]} position={[+0.3, -0.1, 0.75]}>
+      {/* Sword Handle */}
+      <mesh position={[0, 0, 0]}>
+        <cylinderGeometry args={[0.125, 0.125, 3.35, 8]} />
+        <meshStandardMaterial 
+          color="#8b0000"
+          roughness={0.4}
+          metalness={0.3}
+        />
+      </mesh>
+
+      {/* Handle Guard */}
+      <mesh position={[0, -0.25, 0]} rotation={[Math.PI / 2, -Math.PI / 2, Math.PI / 2]}>
+        <cylinderGeometry args={[0.3, 0.3, .125 ]} />
+        <meshStandardMaterial 
+          color="#a00000"
+          roughness={0.4}
+          metalness={0.5}
+        />
+      </mesh>
+
+      {/* Blade Base */}
+      <mesh position={[0, +2, 0]}>
+        <cylinderGeometry args={[0.325, 0.125, 2.5, 4]} />
+        <meshStandardMaterial 
+          {...redMaterial}
+        />
+      </mesh>
+
+      {/* Blade Tip */}
+      <mesh position={[0, 4.1, 0]}>
+        <coneGeometry args={[0.325, 1.7, 4]} />
+        <meshStandardMaterial 
+          {...redMaterial}
+        />
+      </mesh>
+
+      {/* Add a subtle glow effect */}
+      <pointLight 
+        color="#ff0000"
+        intensity={0.5}
+        distance={2}
+        decay={2}
+      />
+    </group>
+  );
+}
+
 function ShoulderPlate() {
   return (
     <group>
       {/* Main shoulder plate */}
       <mesh>
-        <cylinderGeometry args={[0.07, 0.2, 0.3, 6, 1, false, 0, -Math.PI*2]} />
+        <cylinderGeometry args={[0.125, 0.2, 0.30, 6, 1, false, 0, Math.PI*2]} />
         <meshStandardMaterial 
           color="#e8e8e8"
           roughness={0.4}
@@ -208,10 +273,10 @@ function ShoulderPlate() {
       </mesh>
       
       {/* Decorative spikes */}
-      {[0, 0., 0.1].map((offset, i) => (
-        <group key={i} position={[0, 0.1, offset]} rotation={[0, 0, 0]}>
+      {[0, 0.2, 0.1].map((offset, i) => (
+        <group key={i} position={[0, 0.25, offset-0.1]} rotation={[0, 0, 0]}>
           <mesh>
-            <coneGeometry args={[0.04, 0.2, 4]} />
+            <coneGeometry args={[0.04, 0.225, 5]} />
             <meshStandardMaterial 
               color="#d4d4d4"
               roughness={0.3}
@@ -515,19 +580,19 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
       </group>
 
       {/* Add shoulder plates just before the arms */}
-      <group position={[-0.35, 1.65, 0]} rotation={[Math.PI/5, -Math.PI/2 - 0.8, 0]}>
+      <group position={[-0.35, 1.6, 0]} rotation={[-0.35, -Math.PI - 0.4, -0.35]}>
         <ShoulderPlate />
       </group>
-      <group position={[0.35, 1.65, 0]} rotation={[Math.PI/5, Math.PI -0.8, 0]}>
+      <group position={[0.35, 1.6, 0]} rotation={[-0.35, Math.PI -0.4, 0.35]}>
         <ShoulderPlate />
       </group>
 
       {/* arms with scaled boss claws */}
-      <group name="LeftArm" position={[-0.35, 1.4, 0]} scale={[-0.4, 0.4, 0.4]} rotation={[0, Math.PI/2, 0]}>
-        <BossClawModel />
+      <group name="LeftArm" position={[-0.35, 1.525, 0]} scale={[-0.4, 0.4, 0.4]} rotation={[0, Math.PI/2, 0]}>
+        <BossClawModel isLeftHand={true} />
       </group>
-      <group name="RightArm" position={[0.35, 1.4, 0]} scale={[0.4, 0.4, 0.4]} rotation={[0, -Math.PI/2.5, 0]}>
-        <BossClawModel />
+      <group name="RightArm" position={[0.35, 1.525, 0.1]} scale={[0.4, 0.4, 0.4]} rotation={[0, -Math.PI/2.5, 0]}>
+        <BossClawModel isLeftHand={false} />
       </group>
 
       {/* Pelvis - moved higher up */}

@@ -1,6 +1,6 @@
 import { Mesh, Shape, DoubleSide, } from 'three';
 import React, { useRef, useEffect } from 'react';
-
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 interface TerrainProps {
@@ -125,6 +125,12 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
     }
   }, []);
 
+  // Animate snow sparkle
+  useFrame(({ clock }) => {
+    if (snowMaterial.uniforms) {
+      snowMaterial.uniforms.time.value = clock.getElapsedTime();
+    }
+  });
 
 
   return (

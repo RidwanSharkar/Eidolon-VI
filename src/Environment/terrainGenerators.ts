@@ -105,7 +105,7 @@ export const generateRandomPosition = (): Vector3 => {
 
 export const generateFlowers = (): Array<{ position: Vector3; scale: number }> => {
   const flowers: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfFlowers = 60;
+  const numberOfFlowers = 30;
 
   for (let i = 0; i < numberOfFlowers; i++) {
     const angle = Math.random() * Math.PI * 2;

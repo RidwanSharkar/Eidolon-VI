@@ -111,7 +111,7 @@ export default function DexScythe({ isSwinging, onSwingComplete, }: ScytheProps)
         </mesh>
         
         {/* Decorative wrappings handle */}
-        {[...Array(10)].map((_, i) => ( // Reduced from 12 to 8 wrappings
+        {[...Array(7)].map((_, i) => ( // Reduced from 12 to 8 wrappings
           <mesh key={i} position={[0, 0.81 - i * 0.3, 0]} rotation={[Math.PI/2, 0, 0]}> {/* Adjusted starting position */}
             <torusGeometry args={[0.06, 0.01, 8, 16]} />
             <meshStandardMaterial color="#8B4513" metalness={0.3} roughness={0.7} />
