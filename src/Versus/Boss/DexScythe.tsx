@@ -22,7 +22,7 @@ export default function DexScythe({ isSwinging, onSwingComplete, }: ScytheProps)
   useFrame((_, delta) => {
     if (isSwinging && scytheRef.current) {
       swingProgress.current += delta * 4;
-      const swingPhase = Math.min(swingProgress.current / Math.PI, 1);
+      const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
       // Complete swing earlier to prevent extra rotation
       if (swingProgress.current >= Math.PI * 0.85) {
@@ -34,13 +34,13 @@ export default function DexScythe({ isSwinging, onSwingComplete, }: ScytheProps)
       }
       
       // SWING ANIMATION
-      const forwardPhase = swingPhase <= 0.35
-        ? swingPhase * 1.4
-        : (1 - (swingPhase - 0.125) * 1.7);
+      const forwardPhase = swingPhase <= 0.25
+      ? swingPhase * 2
+      : (0.6 - (swingPhase - 0.125) * 1.7);
       
       const pivotX = basePosition[0] + Math.sin(forwardPhase * Math.PI) * -2.5;
       const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -1.5;
-      const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 4;
+      const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 3;
       
       scytheRef.current.position.set(pivotX, pivotY, pivotZ);
       
@@ -54,9 +54,9 @@ export default function DexScythe({ isSwinging, onSwingComplete, }: ScytheProps)
       scytheRef.current.rotation.y *= 0.85;
       scytheRef.current.rotation.z *= 0.85;
       
-      scytheRef.current.position.x += (basePosition[0] - scytheRef.current.position.x) * 0.40;
-      scytheRef.current.position.y += (basePosition[1] - scytheRef.current.position.y) * 0.40;
-      scytheRef.current.position.z += (basePosition[2] - scytheRef.current.position.z) * 0.40;
+      scytheRef.current.position.x += (basePosition[0] - scytheRef.current.position.x) * 0.30;
+      scytheRef.current.position.y += (basePosition[1] - scytheRef.current.position.y) * 0.30;
+      scytheRef.current.position.z += (basePosition[2] - scytheRef.current.position.z) * 0.30;
     }
   });
 

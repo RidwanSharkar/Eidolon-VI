@@ -10,15 +10,15 @@ interface BlizzardShardProps {
 }
 
 export default function BlizzardShard({ initialPosition, onComplete, type }: BlizzardShardProps) {
-  const SHARD_SIZE = 0.075;
+  const SHARD_SIZE = 0.07;
   const meshRef = useRef<Mesh>(null);
-  const fallSpeed = useRef(Math.random() * 2 + 4);
+  const fallSpeed = useRef(Math.random() * 1.5 + 3.65);
   const rotationSpeed = useRef({
     x: Math.random() * 1.5,
     y: Math.random() * 0.25,
     z: Math.random() * 1
   });
-  const orbitRadius = useRef(initialPosition.length());
+  const orbitRadius = useRef(Math.min(initialPosition.length(), 2.65));  // Cap the orbital radius
   const orbitAngle = useRef(Math.atan2(initialPosition.z, initialPosition.x));
 
   useFrame((_, delta) => {
@@ -37,7 +37,7 @@ export default function BlizzardShard({ initialPosition, onComplete, type }: Bli
       meshRef.current.position.z = Math.sin(orbitAngle.current) * orbitRadius.current;
       
       // Remove after a few rotations
-      if (orbitAngle.current > Math.PI * 8) {
+      if (orbitAngle.current > Math.PI * 2) {
         onComplete();
       }
     }
@@ -56,9 +56,8 @@ export default function BlizzardShard({ initialPosition, onComplete, type }: Bli
         emissive="#40a0ff"
         emissiveIntensity={1}
         transparent
-        opacity={0.6}
+        opacity={0.7}
       />
-      <pointLight color="#80ffff" intensity={1} distance={2} decay={2} />
     </mesh>
   );
 }

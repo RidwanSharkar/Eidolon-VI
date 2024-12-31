@@ -43,10 +43,10 @@ export default function EnemyUnit({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 1.75;
+  const ATTACK_RANGE = 2.0;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.13;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.13;
+  const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.15;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 6;
@@ -132,7 +132,26 @@ export default function EnemyUnit({
       const currentTime = Date.now();
       if (currentTime - lastAttackTime.current >= ATTACK_COOLDOWN) {
         setIsAttacking(true);
-        onAttackPlayer(ATTACK_DAMAGE);
+        
+        // Store the initial attack position
+        const attackStartPosition = currentPosition.current.clone();
+        
+        // Add delay before dealing damage
+        setTimeout(() => {
+          // Get the current positions at time of damage
+          const finalDistanceToPlayer = currentPosition.current.distanceTo(playerPosition);
+          
+          // Only deal damage if:
+          // 1. Enemy is still alive
+          // 2. Player is still in range
+          // 3. Enemy hasn't moved too far from attack start position
+          if (currentHealth.current > 0 && 
+              finalDistanceToPlayer <= ATTACK_RANGE && 
+              attackStartPosition.distanceTo(currentPosition.current) < 0.5) {
+            onAttackPlayer(ATTACK_DAMAGE);
+          }
+        }, 1000);
+        
         lastAttackTime.current = currentTime;
 
         setTimeout(() => {

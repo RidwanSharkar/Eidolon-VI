@@ -233,16 +233,16 @@ function BoneSwordModel() {
       </mesh>
 
       {/* Blade Base */}
-      <mesh position={[0, +2, 0]}>
-        <cylinderGeometry args={[0.325, 0.125, 2.5, 4]} />
+      <mesh position={[0, +1, 0]}>
+        <cylinderGeometry args={[0.325, 0.125, 2.9, 4]} />
         <meshStandardMaterial 
           {...redMaterial}
         />
       </mesh>
 
       {/* Blade Tip */}
-      <mesh position={[0, 4.1, 0]}>
-        <coneGeometry args={[0.325, 1.7, 4]} />
+      <mesh position={[0, 3.45, 0]}>
+        <coneGeometry args={[0.325, 2, 4]} />
         <meshStandardMaterial 
           {...redMaterial}
         />
@@ -295,7 +295,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
   const [attackCycle, setAttackCycle] = useState(0);
   const attackAnimationRef = useRef<NodeJS.Timeout>();
 
-  const walkSpeed = 2.5;
+  const walkSpeed = 4;
   const attackSpeed = 3;
 
   useFrame((state, delta) => {
@@ -322,7 +322,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
           const phase = isRight ? walkCycle : walkCycle + Math.PI;
           
           // Upper leg movement
-          const upperLegAngle = Math.sin(phase) * 0.4;
+          const upperLegAngle = Math.sin(phase) * 0.3;
           limb.rotation.x = upperLegAngle;
 
           // Lower leg movement (knee joint)
@@ -372,7 +372,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
       if (attackCycle > Math.PI / 4 && onHit && !attackAnimationRef.current) {
         attackAnimationRef.current = setTimeout(() => {
           attackAnimationRef.current = undefined;
-        }, 1000); // 500ms delay to sync with animation
+        }, 0); // 500ms delay to sync with animation
       }
 
       if (attackCycle > Math.PI / 2) {
@@ -399,10 +399,10 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
   return (
     <group ref={groupRef} position={[position[0], position[1] + 1, position[2]]}>
       {/* Ribcage/Torso - keep current position */}
-      <group name="Body" position={[0, 1.45, 0]} scale={0.85}>
+      <group name="Body" position={[0, 1.2, 0]} scale={0.85}>
         {/* Spine */}
         <mesh>
-          <cylinderGeometry args={[0.08, 0.08, 1.6, 6]} />
+          <cylinderGeometry args={[0.08, 0.08, 1.4, 6]} />
           <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
         </mesh>
 
@@ -410,16 +410,16 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
         {[-0.5, -0.25, 0, 0.25, 0.5].map((y, i) => (
           <group key={i} position={[0, y, 0]}>
             {/* Left rib */}
-            <group rotation={[0, 0, -Math.PI / 3]}>
+            <group rotation={[0, 0, -Math.PI / 3.5]}>
               <mesh position={[0.1, 0, 0]} rotation={[1, Math.PI / 2, 0]}>
-                <torusGeometry args={[0.18, 0.015, 8, 12, Math.PI * 1]} />
+                <torusGeometry args={[0.22, 0.015, 8, 12, Math.PI * 1]} />
                 <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
               </mesh>
             </group>
             {/* Right rib */}
-            <group rotation={[0, 0, Math.PI / 3]}>
+            <group rotation={[0, 0, Math.PI / 3.5]}>
               <mesh position={[-0.1, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
-                <torusGeometry args={[0.18, 0.015, 8, 12, Math.PI * 1]} />
+                <torusGeometry args={[0.22, 0.015, 8, 12, Math.PI * 1]} />
                 <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
               </mesh>
             </group>
@@ -439,7 +439,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
           
           {/* Front face plate */}
           <mesh position={[0, -0.02, 0.12]}>
-            <boxGeometry args={[0.28, 0.3, 0.12]} />
+            <boxGeometry args={[0.28, 0.28, 0.1]} />
             <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
           </mesh>
 
@@ -499,6 +499,8 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
           </group>
         </group>
 
+        {/* EYES============================= */}
+
         {/* Eye sockets with glow effect */}
         <group position={[0, 0.05, 0.14]}>
           {/* Left eye */}
@@ -516,7 +518,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
                 emissive="#ff0000"
                 emissiveIntensity={1}
                 transparent
-                opacity={1}
+                opacity={0.75}
               />
             </mesh>
             {/* Outer glow */}
@@ -527,17 +529,19 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
                 emissive="#ff0000"
                 emissiveIntensity={1}
                 transparent
-                opacity={1}
+                opacity={0.7}
               />
             </mesh>
             {/* Point light for dynamic glow */}
             <pointLight 
               color="#ff0000"
-              intensity={1}
-              distance={0.5}
+              intensity={0.5}
+              distance={1}
               decay={2}
             />
           </group>
+
+
 
           {/* Right eye */}
           <group position={[0.07, 0, 0]}>
@@ -552,26 +556,26 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
               <meshStandardMaterial 
                 color="#ff0000"
                 emissive="#ff0000"
-                emissiveIntensity={2}
+                emissiveIntensity={1}
                 transparent
-                opacity={1}
+                opacity={0.75}
               />
             </mesh>
             {/* Outer glow */}
-            <mesh scale={1.3}>
+            <mesh scale={1.4}>
               <sphereGeometry args={[0.05, 6.5, 2]} />
               <meshStandardMaterial 
                 color="#ff0000"
                 emissive="#ff0000"
                 emissiveIntensity={1}
                 transparent
-                opacity={1}
+                opacity={.7}
               />
             </mesh>
             {/* Point light for dynamic glow */}
             <pointLight 
               color="#ff0000"
-              intensity={1}
+              intensity={0.5}
               distance={1}
               decay={2}
             />

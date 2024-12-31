@@ -11,7 +11,6 @@ import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
 import DriftingSouls from '../Environment/DriftingSouls';
-import BackgroundStars from '../Environment/Stars';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import BossUnit from '@/Versus/Boss/BossUnit';
@@ -32,7 +31,7 @@ export default function Scene2({
   skeletonProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 7500,
+  spawnInterval = 8750,
   maxSkeletons = 23,
   initialSkeletons = 5,
   spawnCount = 2,
@@ -62,7 +61,7 @@ export default function Scene2({
 
   // Add boss state
   const [isBossSpawned, setIsBossSpawned] = useState(false);
-  const [bossHealth, setBossHealth] = useState(5000);
+  const [bossHealth, setBossHealth] = useState(4096);
 
   // Callback to handle damage to enemies
   const handleTakeDamage = useCallback((targetId: string, damage: number) => {
@@ -152,7 +151,7 @@ export default function Scene2({
         position: BOSS_SPAWN_POSITION,
         initialPosition: BOSS_SPAWN_POSITION,
         health: bossHealth,
-        maxHealth: 5000
+        maxHealth: 4096
       }] : [])
     ],
     onDamage: unitProps.onDamage,
@@ -183,7 +182,7 @@ export default function Scene2({
     // First, set a 5-second delay before allowing spawns
     const initialDelay = setTimeout(() => {
       setSpawnStarted(true);
-    }, 5000);
+    }, 4000);
 
     return () => clearTimeout(initialDelay);
   }, []);
@@ -231,7 +230,6 @@ export default function Scene2({
     <>
 
       {/* Background Environment */}
-      <BackgroundStars />
       <DriftingSouls />
       <CustomSky />
       <Planet />
@@ -297,7 +295,7 @@ export default function Scene2({
           initialPosition={BOSS_SPAWN_POSITION}
           position={BOSS_SPAWN_POSITION}
           health={bossHealth}
-          maxHealth={5000}
+          maxHealth={4096}
           onTakeDamage={(id, damage) => {
             setBossHealth(prev => Math.max(0, prev - damage));
           }}

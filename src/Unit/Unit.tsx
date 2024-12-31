@@ -195,7 +195,7 @@ export default function Unit({
         type: 'fireballExplosion',
         position: impactPosition,
         direction: new Vector3(),
-        duration: 0.2, // Duration in seconds
+        duration: 0.25, // Duration in seconds
         startTime: Date.now() // Add this line to set the start time
       }]);
     }
@@ -707,7 +707,7 @@ export default function Unit({
         type: 'fireballExplosion',
         position: hitPosition,
         direction: new Vector3(),
-        duration: 0.20, // Duration in seconds
+        duration: 0.25, // Duration in seconds
         startTime: Date.now() // Add start time
       }]);
     }
@@ -879,7 +879,7 @@ export default function Unit({
 
       {(currentWeapon === WeaponType.SABRES) && isBowCharging && (
         <EtherealBow
-          position={groupRef.current?.position.clone().add(new Vector3(0, 1  , 0)) || new Vector3()}
+          position={groupRef.current?.position.clone().add(new Vector3(0, 0.8  , 0)) || new Vector3()}
           direction={new Vector3(0, 0, 1).applyQuaternion(groupRef.current?.quaternion || new THREE.Quaternion())}
           chargeProgress={bowChargeProgress}
           isCharging={isBowCharging}
@@ -1209,13 +1209,28 @@ export default function Unit({
                 />
               </mesh>
 
-                            {/* Outer glow */}
-                            <mesh>
-                <sphereGeometry args={[0.9, 16, 16]} />
+                                          {/* Outer glow */}
+                                          <mesh>
+                <sphereGeometry args={[0.7, 16, 16]} />
                 <meshStandardMaterial
                   color="#00ff44"
                   emissive="#00ff44"
                   emissiveIntensity={0.5}
+                  transparent
+                  opacity={0.125}
+                  depthWrite={false}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
+
+
+                            {/* Outer glow */}
+                            <mesh>
+                <sphereGeometry args={[1, 16, 16]} />
+                <meshStandardMaterial
+                  color="#00ff44"
+                  emissive="#00ff44"
+                  emissiveIntensity={0.3}
                   transparent
                   opacity={0.125}
                   depthWrite={false}

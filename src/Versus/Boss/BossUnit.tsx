@@ -43,7 +43,7 @@ export default function BossUnit({
   // Boss-specific constants
   const ATTACK_RANGE = 3.5;
   const ATTACK_COOLDOWN_NORMAL = 2000;
-  const ATTACK_COOLDOWN_ENRAGED = 750;
+  const ATTACK_COOLDOWN_ENRAGED = 850;
   const MOVEMENT_SPEED = 0.01;
   const SMOOTHING_FACTOR = 0.003;
   const ATTACK_DAMAGE = 12;

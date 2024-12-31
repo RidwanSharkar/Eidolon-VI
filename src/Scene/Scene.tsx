@@ -11,7 +11,6 @@ import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
 import DriftingSouls from '../Environment/DriftingSouls';
-import BackgroundStars from '../Environment/Stars';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 
@@ -30,7 +29,7 @@ export default function Scene({
   mushroomData,
   unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
-  spawnInterval = 5250,
+  spawnInterval = 7100,
   maxSkeletons = 15,
   initialSkeletons = 5,
 }: SceneProps) {
@@ -197,7 +196,6 @@ export default function Scene({
 
 
         {/* Background Environment */}
-        <BackgroundStars />
         <DriftingSouls />
         <CustomSky />
         <Planet />

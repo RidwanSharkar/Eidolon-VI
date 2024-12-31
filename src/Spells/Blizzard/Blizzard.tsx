@@ -3,6 +3,7 @@ import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BlizzardShard from './BlizzardShard';
 import { calculateBlizzardDamage } from './BlizzardDamage';
+import BlizzardAura from './BlizzardAura';
 
 interface BlizzardProps {
   position: Vector3;
@@ -21,10 +22,11 @@ export default function Blizzard({
   const stormRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const lastDamageTime = useRef<number>(0);
-  const duration = 7;
+  const duration = 6;
   const shardsRef = useRef<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
+  const aurasRef = useRef<Array<{ id: number }>>([]);
 
-  const ORBITAL_RADIUS = 0.95;        // Radius of the orbital shard spawn area
+  const ORBITAL_RADIUS = .8;        // Radius of the orbital shard spawn area
   const FALLING_RADIUS = 2.5;        // Radius of the falling shard spawn area
   const ORBITAL_HEIGHT = 2.35;        // Height of orbital shards
   const FALLING_HEIGHT = 1.2;       // Starting height of falling shards
@@ -41,9 +43,9 @@ export default function Blizzard({
       return;
     }
 
-    stormRef.current.rotation.y += delta * 3;
+    stormRef.current.rotation.y += delta * 4;
 
-    if (Math.random() < 0.1) { // Reduced from 0.2
+    if (Math.random() < 0.2) { // Reduced from 0.2
       const angle = Math.random() * Math.PI * 2;
       const spawnRadius = Math.random() * ORBITAL_RADIUS / 50;
       
@@ -60,7 +62,7 @@ export default function Blizzard({
       });
     }
 
-    if (Math.random() < 0.5) { // Reduced from 0.3
+    if (Math.random() > 0.2) { // Reduced from 0.3
       const angle = Math.random() * Math.PI * 2;
       const spawnRadius = Math.random() * FALLING_RADIUS;
       
@@ -74,6 +76,12 @@ export default function Blizzard({
         id: Date.now() + Math.random(),
         position: fallingPosition,
         type: 'falling'
+      });
+    }
+
+    if (Math.random() < 0.1) { // 10% chance each frame
+      aurasRef.current.push({
+        id: Date.now() + Math.random(),
       });
     }
 
@@ -99,13 +107,6 @@ export default function Blizzard({
 
   return (
     <group ref={stormRef}>
-      <pointLight
-        position={[0, 4, 0]}
-        color="#80ffff"
-        intensity={0.5}
-        distance={3}
-        decay={2}
-      />
 
       {shardsRef.current.map(shard => (
         <BlizzardShard
@@ -114,6 +115,15 @@ export default function Blizzard({
           type={shard.type}
           onComplete={() => {
             shardsRef.current = shardsRef.current.filter(s => s.id !== shard.id);
+          }}
+        />
+      ))}
+
+      {aurasRef.current.map(aura => (
+        <BlizzardAura
+          key={aura.id}
+          onComplete={() => {
+            aurasRef.current = aurasRef.current.filter(a => a.id !== aura.id);
           }}
         />
       ))}
