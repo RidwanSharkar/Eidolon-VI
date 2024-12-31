@@ -14,20 +14,18 @@ interface ScytheProps {
   onSwingComplete: () => void;
   parentRef: React.RefObject<Group>;
 }
-
-export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
+export default function LysScythe({ isSwinging, onSwingComplete, }: ScytheProps) {
   const scytheRef = useRef<Group>(null);
   const swingProgress = useRef(0);
   const basePosition = [-1.055, 1.10, 0.35] as const;
   
- 
   useFrame((_, delta) => {
     if (isSwinging && scytheRef.current) {
-      swingProgress.current += delta * 3.5;
-      const swingPhase = Math.min(swingProgress.current / Math.PI/1.75, 1);
+      swingProgress.current += delta * 3;
+      const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
       // Complete swing earlier to prevent extra rotation
-      if (swingProgress.current >= Math.PI * .85) {
+      if (swingProgress.current >= Math.PI * 0.85) {
         swingProgress.current = 0;
         scytheRef.current.rotation.set(0, 0, 0);
         scytheRef.current.position.set(...basePosition);
@@ -36,13 +34,13 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       }
       
       // SWING ANIMATION
-      const forwardPhase = swingPhase <= 0.25
-        ? swingPhase * 2
-        : (1 - (swingPhase - 0.125) * 1);
+      const forwardPhase = swingPhase <= 0.35
+        ? swingPhase * 1.2
+        : (1 - (swingPhase - 0.125) * 1.7);
       
       const pivotX = basePosition[0] + Math.sin(forwardPhase * Math.PI) * 2.5;
       const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -1.5;
-      const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 2.1;
+      const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 1.1;
       
       scytheRef.current.position.set(pivotX, pivotY, pivotZ);
       
@@ -56,11 +54,12 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       scytheRef.current.rotation.y *= 0.85;
       scytheRef.current.rotation.z *= 0.85;
       
-      scytheRef.current.position.x += (basePosition[0] - scytheRef.current.position.x) * 0.10;
-      scytheRef.current.position.y += (basePosition[1] - scytheRef.current.position.y) * 0.10;
-      scytheRef.current.position.z += (basePosition[2] - scytheRef.current.position.z) * 0.10;
+      scytheRef.current.position.x += (basePosition[0] - scytheRef.current.position.x) * 0.20;
+      scytheRef.current.position.y += (basePosition[1] - scytheRef.current.position.y) * 0.20;
+      scytheRef.current.position.z += (basePosition[2] - scytheRef.current.position.z) * 0.20;
     }
   });
+
 
 
   // Create custom blade shape

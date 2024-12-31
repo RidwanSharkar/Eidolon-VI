@@ -9,7 +9,7 @@ interface MeteorTrailProps {
 }
 
 export default function MeteorTrail({ color, size, meshRef }: MeteorTrailProps) {
-  const particlesCount = 10;
+  const particlesCount = 20;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -37,22 +37,23 @@ export default function MeteorTrail({ color, size, meshRef }: MeteorTrailProps) 
 
     const position = meshRef.current.position;
 
-    // Update trail positions
+    // Update trail positions with upward spacing for falling meteor
     for (let i = particlesCount - 1; i > 0; i--) {
       positionsRef.current[i * 3] = positionsRef.current[(i - 1) * 3];
-      positionsRef.current[i * 3 + 1] = positionsRef.current[(i - 1) * 3 + 1];
+      positionsRef.current[i * 3 + 1] = positionsRef.current[(i - 1) * 3 + 1] + 0.5; // minus to plus for upward trail
       positionsRef.current[i * 3 + 2] = positionsRef.current[(i - 1) * 3 + 2];
 
-      opacitiesRef.current[i] = Math.pow((1 - i / particlesCount), 1.2) * 0.9;
-      scalesRef.current[i] = size * (1 - (i / particlesCount) * 0.5);
+      // Keep the same opacity and scale adjustments
+      opacitiesRef.current[i] = Math.pow((1 - i / particlesCount), 0.3) * 0.9;
+      scalesRef.current[i] = size * (2 - (i / particlesCount) * 0.5);
     }
 
     // Update the head of the trail
     positionsRef.current[0] = position.x;
     positionsRef.current[1] = position.y;
     positionsRef.current[2] = position.z;
-    opacitiesRef.current[0] = 0.8;
-    scalesRef.current[0] = size * 5;
+    opacitiesRef.current[0] = 0.9; // Increased from 0.8
+    scalesRef.current[0] = size * 8; // Increased from 5
 
     // Update geometry
     if (particlesRef.current) {

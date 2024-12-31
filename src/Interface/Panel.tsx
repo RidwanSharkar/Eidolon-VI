@@ -85,7 +85,7 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
           damage,
           timestamp: Date.now()
         }
-      ].slice(-4)); // Keep only the last 3 notifications
+      ].slice(-3)); // Keep only the last 3 notifications
     }
     
     prevHealth.current = playerHealth;

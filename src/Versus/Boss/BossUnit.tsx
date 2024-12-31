@@ -41,16 +41,16 @@ export default function BossUnit({
   const currentHealth = useRef(health);
 
   // Boss-specific constants
-  const ATTACK_RANGE = 3.90;
+  const ATTACK_RANGE = 3.5;
   const ATTACK_COOLDOWN_NORMAL = 2000;
-  const ATTACK_COOLDOWN_ENRAGED = 850;
+  const ATTACK_COOLDOWN_ENRAGED = 1000;
   const MOVEMENT_SPEED = 0.01;
   const SMOOTHING_FACTOR = 0.003;
   const ATTACK_DAMAGE = 12;
   const BOSS_HIT_HEIGHT = 2.0;      
   const BOSS_HIT_RADIUS = 4.0;      
   const BOSS_HIT_HEIGHT_RANGE = 4.0; 
-  const METEOR_COOLDOWN_NORMAL = 10000;
+  const METEOR_COOLDOWN_NORMAL = 9000;
   const METEOR_COOLDOWN_ENRAGED = 4000;
   const lastMeteorTime = useRef<number>(Date.now());
 

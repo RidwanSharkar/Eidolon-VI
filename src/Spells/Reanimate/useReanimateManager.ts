@@ -34,9 +34,19 @@ export function useReanimateManager({
   nextDamageNumberId
 }: UseReanimateManagerProps) {
   const lastCastTime = useRef<number>(0);
-  const HEAL_AMOUNT = 9;
+  const HEAL_AMOUNT = 10;
+  const COOLDOWN = 1000; // 1 second in milliseconds
 
   const castReanimate = useCallback(() => {
+    const now = Date.now();
+    const timeSinceLastCast = now - lastCastTime.current;
+    
+    // Check if ability is on cooldown
+    if (timeSinceLastCast < COOLDOWN) {
+      console.log('Reanimate is on cooldown');
+      return false;
+    }
+
     // Find first available charge
     const availableChargeIndex = charges.findIndex(charge => charge.available);
     
@@ -44,6 +54,9 @@ export function useReanimateManager({
       console.log('No charges available for Reanimate');
       return false;
     }
+
+    // Update last cast time
+    lastCastTime.current = now;
 
     // Use the charge
     setCharges(prev => prev.map((charge, index) => 
@@ -76,7 +89,6 @@ export function useReanimateManager({
       ));
     }, ORBITAL_COOLDOWN);
 
-    lastCastTime.current = Date.now();
     console.log(`Reanimate casted. Healed for ${HEAL_AMOUNT} points.`);
     return true;
   }, [charges, setCharges, onHealthChange, parentRef, setDamageNumbers, nextDamageNumberId]);

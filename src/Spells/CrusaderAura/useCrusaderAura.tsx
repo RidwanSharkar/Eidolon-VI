@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Group, Vector3 } from 'three';
 import { useHealing } from '@/Unit/useHealing';
 
@@ -25,8 +25,9 @@ export const useCrusaderAura = ({
   currentHealth,
   maxHealth
 }: CrusaderAuraProps) => {
-  const HEAL_AMOUNT = 12;
-  const HEAL_CHANCE = 0.15;
+  const HEAL_AMOUNT = 8;
+  const HEAL_CHANCE = 0.175;
+  const [showHealingEffect, setShowHealingEffect] = useState(false);
 
   const { processHealing } = useHealing({
     currentHealth,
@@ -42,10 +43,13 @@ export const useCrusaderAura = ({
     
     if (Math.random() < HEAL_CHANCE) {
       processHealing(HEAL_AMOUNT, parentRef.current.position.clone().add(new Vector3(0, 2, 0)));
+      setShowHealingEffect(true);
     }
   }, [processHealing, parentRef, HEAL_CHANCE, HEAL_AMOUNT]);
 
   return {
     processHealingChance,
+    showHealingEffect,
+    setShowHealingEffect
   };
 }; 

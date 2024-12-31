@@ -13,7 +13,7 @@ interface FireballProps {
 export default function Fireball({ position, direction, onImpact }: FireballProps) {
   const fireballRef = useRef<Mesh>(null);
   const clock = useRef(new Clock());
-  const speed = 0.4;
+  const speed = 0.275;
   const lifespan = 10;
   const currentPosition = useRef(position.clone());
   const { scene } = useThree();

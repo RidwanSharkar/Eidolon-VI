@@ -1,9 +1,9 @@
 export const trunkColors = [
-  "#B17F94", // Lighter mauve brown
-  "#C18FA3", // Lighter dusty rose
-  "#D1A0B2", // Lighter light mauve
-  "#DCB5C1", // Lighter pink brown
-  "#E7CAD0", // Lighter rose taupe
+  "#E7CAD0", // Very light mauve
+  "#F0D5DB", // Pale pink
+  "#F5E0E5", // Light rose
+  "#FAE8EC", // Soft blush
+  "#FFF0F3", // Almost white pink
 ];
 
 export const leafColors = [

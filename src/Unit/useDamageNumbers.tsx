@@ -13,6 +13,7 @@ export interface DamageNumber {
   isSmite?: boolean;
   isSword?: boolean;
   isSabres?: boolean;
+  isSabres2?: boolean;
   isStaff?: boolean;
   isOathstrike?: boolean;
   isFirebeam?: boolean;

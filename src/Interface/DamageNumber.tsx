@@ -33,7 +33,7 @@ export default function DamageNumber({
   position, 
   isCritical = false, 
   isLightning = false, 
-  isBlizzard, 
+  isBlizzard= false,
   isHealing = false, 
   isBoneclaw = false, 
   isOathstrike = false,
@@ -84,15 +84,17 @@ export default function DamageNumber({
 
   // Determine text color based on all possible states
   const getTextColor = () => {
-    if (isFirebeam) return "#58FCEC";
-    if (isOathstrike) return "#8783D1";
     if (isHealing) return "#338C66";
     if (isBoneclaw) return "#39ff14";
     if (isCritical) return "#ff0000";
     if (isLightning) return "#ffff00";
+    if (isOathstrike) return "#8783D1";
+    if (isFirebeam) return "#58FCEC";
     if (isBlizzard) return "#61EDFF";
     return "#ffffff";
   };
+
+  console.log('Text color:', getTextColor(), 'isHealing:', isHealing);
 
   return (
     <Text

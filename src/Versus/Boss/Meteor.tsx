@@ -143,7 +143,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
             <MeteorTrail 
               meshRef={meteorMeshRef} 
               color={new THREE.Color("#ff4400")}
-              size={0.25}
+              size={0.09}
             />
           </mesh>
         </group>

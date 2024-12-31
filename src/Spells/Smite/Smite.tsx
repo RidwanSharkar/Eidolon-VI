@@ -50,27 +50,40 @@ export default function Smite({ position, onComplete }: SmiteProps) {
       position={[position.x, 25, position.z]}
       visible={delayTimer.current >= startDelay}
     >
-      {/* Core lightning bolt */}
-      <mesh>
-        <cylinderGeometry args={[0.35, 0.35, 20, 16]} />
+            {/* Core lightning bolt */}
+            <mesh>
+        <cylinderGeometry args={[0.175, 0.175, 20, 16]} />
         <meshStandardMaterial
-          color="#ff6600"
-          emissive="#ff4400"
-          emissiveIntensity={15}
+          color="#ffaa00"
+          emissive="#ff8800"
+          emissiveIntensity={25}
           transparent
           opacity={0.95}
         />
       </mesh>
 
-      {/* Inner glow */}
+
+      {/* Core lightning bolt */}
       <mesh>
-        <cylinderGeometry args={[0.7, 0.7, 20, 16]} />
+        <cylinderGeometry args={[0.42, 0.42, 20, 16]} />
         <meshStandardMaterial
-          color="#ff6600"
-          emissive="#ff4400"
+          color="#ffaa00"
+          emissive="#ff8800"
           emissiveIntensity={10}
           transparent
-          opacity={0.7}
+          opacity={0.75}
+        />
+      </mesh>
+
+      {/* Inner glow */}
+      <mesh>
+        <cylinderGeometry args={[0.7, 0.6, 20, 16]} />
+        <meshStandardMaterial
+          color="#ffaa00"
+          emissive="#ff8800"
+          emissiveIntensity={2}
+          transparent
+          opacity={0.55}
         />
       </mesh>
 
@@ -78,11 +91,11 @@ export default function Smite({ position, onComplete }: SmiteProps) {
       <mesh>
         <cylinderGeometry args={[1.0, 1.0, 20, 16]} />
         <meshStandardMaterial
-          color="#ff8800"
-          emissive="#ff6600"
-          emissiveIntensity={8}
+          color="#ffcc00"
+          emissive="#ffaa00"
+          emissiveIntensity={3}
           transparent
-          opacity={0.4}
+          opacity={0.35}
         />
       </mesh>
 
@@ -91,9 +104,9 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]}>
           <torusGeometry args={[1.2, 0.08, 8, 32]} />
           <meshStandardMaterial
-            color="#ff6600"
-            emissive="#ff4400"
-            emissiveIntensity={8}
+            color="#ffaa00"
+            emissive="#ff8800"
+            emissiveIntensity={4}
             transparent
             opacity={0.3}
           />
@@ -112,8 +125,8 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         >
           <sphereGeometry args={[0.15, 8, 8]} />
           <meshStandardMaterial
-            color="#ff6600"
-            emissive="#ff4400"
+            color="#ffaa00"
+            emissive="#ff8800"
             emissiveIntensity={12}
             transparent
             opacity={0.6}
@@ -122,10 +135,10 @@ export default function Smite({ position, onComplete }: SmiteProps) {
       ))}
 
       {/* Enhanced impact point glow */}
-      <pointLight position={[0, -10, 0]} color="#ff4400" intensity={25} distance={12} />
+      <pointLight position={[0, -10, 0]} color="#ff8800" intensity={20} distance={12} />
 
       {/* Additional ambient glow */}
-      <pointLight position={[0, 0, 0]} color="#ff6600" intensity={15} distance={6} />
+      <pointLight position={[0, 0, 0]} color="#ffaa00" intensity={10} distance={6} />
     </group>
   );
 }

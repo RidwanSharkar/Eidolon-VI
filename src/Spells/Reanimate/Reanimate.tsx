@@ -154,7 +154,7 @@ const Reanimate = forwardRef<ReanimateRef, ReanimateProps>(({
 
   return showHealingEffect && parentRef.current ? (
     <HealingEffect
-      position={parentRef.current.position.clone().add(new Vector3(0, 1, 0))}
+      position={parentRef.current.position.clone().add(new Vector3(0, 0, 0))}
       onComplete={() => setShowHealingEffect(false)}
     />
   ) : null;

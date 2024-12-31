@@ -5,9 +5,10 @@ import BoneTail from '../../Unit/Gear/BoneTail';
 import BonePlate from '../../Unit/Gear/BonePlate';  
 import BoneWings from '../../Unit/Gear/BoneWings';  
 import BossBoneVortex from './BossBoneVortex';  
-import DragonSkull from './DragonSkull';  
+import DragonSkull from './BossSkull';  
 import BossTrailEffect from './BossTrailEffect';
-import Scythe from '@/Versus/Boss/Scythe';
+import DexScythe from '@/Versus/Boss/DexScythe';
+import LysScythe from '@/Versus/Boss/LysScythe';
 import * as THREE from 'three';
 
 interface BossModelProps {
@@ -143,8 +144,12 @@ export default function BossModel({ isAttacking, isWalking, onHit, playerPositio
 
 
       {/* Left Scythe-------------------------------- */}
-      <group position={[0.5, 2.6, 0.1]} rotation={[Math.PI/3 + 0.2, 1 + Math.PI + 1.15, 1.45]} scale={[0.60, 0.60, 0.60]}>
-        <Scythe 
+      <group 
+        position={[0.5, 2.6, +0.2]} 
+        rotation={[Math.PI/3 + 0.2, 1 + Math.PI + 1.15, 1.45]} 
+        scale={[0.60, 0.60, 0.60]}
+      >
+        <LysScythe 
           isSwinging={isAttacking} 
           onSwingComplete={() => {}} 
           parentRef={groupRef}
@@ -152,8 +157,12 @@ export default function BossModel({ isAttacking, isWalking, onHit, playerPositio
       </group>
 
       {/* Right Scythe-------------------------------- */}
-      <group position={[-0.5, 2.35, -1]} rotation={[1-Math.PI + 0.7,  1-Math.PI*3 + Math.PI + 1.15, + 1.2]} scale={[0.60, 0.60, 0.60]}>
-        <Scythe 
+      <group 
+        position={[-0.5, 2.31, -1]} 
+        rotation={[Math.PI/3 + 0.2, -(1 + Math.PI + 1.15), -1.45]} 
+        scale={[0.60, 0.60, 0.60]}
+      >
+        <DexScythe 
           isSwinging={isAttacking} 
           onSwingComplete={() => {}} 
           parentRef={groupRef}

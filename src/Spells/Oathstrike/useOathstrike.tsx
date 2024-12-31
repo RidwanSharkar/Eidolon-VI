@@ -50,7 +50,7 @@ export const useOathstrike = ({
   maxHealth: number;
 }) => {
   const [isActive, setIsActive] = useState(false);
-  const HEAL_AMOUNT = 8;
+  const HEAL_AMOUNT = 9;
   
   const { processHealing } = useHealing({
     currentHealth,

@@ -34,8 +34,8 @@ import { useOathstrike } from '../Spells/Oathstrike/useOathstrike';
 import CrusaderAura from '../Spells/CrusaderAura/CrusaderAura';
 
 
-// refactor maybe
-// ISOLATE BEFORE SPLITTING: SMITE- >FIREBALL -> , BOW 
+
+// EIDOLON 1.0 ABILITIES NEED REFACTORING
 
 //=====================================================================================================
 
@@ -89,9 +89,12 @@ export default function Unit({
     position: Vector3;
     isCritical: boolean;
     isLightning?: boolean;
+    isHealing?: boolean;
     isBlizzard?: boolean;
     isBoneclaw?: boolean;
     isSmite?: boolean;
+    isOathstrike?: boolean;
+    isFirebeam?: boolean;
   }[]>([]);
   const nextDamageNumberId = useRef(0);
   const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
@@ -140,6 +143,8 @@ export default function Unit({
     type: string;
     position: Vector3;
     direction: Vector3;
+    duration?: number;
+    startTime?: number;
   }>>([]);
 
   // Add to existing state declarations
@@ -183,13 +188,23 @@ export default function Unit({
     }]);
   }, [groupRef, fireballCharges]);
 
-  const handleFireballImpact = (id: number) => {
+  const handleFireballImpact = (id: number, impactPosition?: Vector3) => {
+    if (impactPosition) {
+      setActiveEffects(prev => [...prev, {
+        id: Date.now(),
+        type: 'fireballExplosion',
+        position: impactPosition,
+        direction: new Vector3(),
+        duration: 0.105, // Duration in seconds
+        startTime: Date.now() // Add this line to set the start time
+      }]);
+    }
     setFireballs(prev => prev.filter(fireball => fireball.id !== id));
   };
 
   //=====================================================================================================
 
-  // SMITE LOGIC
+  // ATTACK LOGIC
   const handleWeaponHit = (targetId: string) => {
     if (!groupRef.current || !isSwinging) return;
 
@@ -220,10 +235,10 @@ export default function Unit({
     if (currentHits >= maxHits) return;
 
     const distance = groupRef.current.position.distanceTo(target.position);
-    const weaponRange = (currentWeapon === WeaponType.SABRES) ? 5.0 : 4.5;
+    const weaponRange = WEAPON_DAMAGES[currentWeapon].range;
 
     if (distance <= weaponRange) {
-      // Add new angle check ONLY for Sabres
+      // SABRES HIT ARC CHECK
       if (currentWeapon === WeaponType.SABRES ) {
         const toTarget = new Vector3()
           .subVectors(target.position, groupRef.current.position)
@@ -232,77 +247,59 @@ export default function Unit({
           .applyQuaternion(groupRef.current.quaternion);
         
         const angle = toTarget.angleTo(forward);
-        // Restrict hit detection to a narrower arc (about 60 degrees total)
-        if (Math.abs(angle) > Math.PI / 5) {
+        
+        if (Math.abs(angle) > Math.PI / 5) { // Restrict hit detection to a 60 degree arc 
           return;
         }
       }
-      let baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
+      const baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
       
+      //=====================================================================================================
+
       // SMITE LOGIC
       if (isSmiting && currentWeapon === WeaponType.SWORD) {
-        if (pendingLightningTargets.current.has(target.id) || isProcessingAbility) {
+        if (pendingLightningTargets.current.has(target.id)) {
           return;
         }
         
-        setIsProcessingAbility(true);
+        // Check if target is alive before initial hit
+        if (target.health <= 0) return;
+        
+        pendingLightningTargets.current.add(target.id);
         
         // Initial hit
-        baseDamage = 37;
-        const { damage, isCritical } = calculateDamage(baseDamage);
+        const { damage, isCritical } = calculateDamage(37);
         onHit(target.id, damage);
         
-        // Revalidate target after initial hit
-        const updatedTarget = enemyData.find(e => e.id === target.id);
-        if (!updatedTarget || updatedTarget.health <= 0) {
-          return;
-        }
-
-        // Show initial damage number
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
           damage,
-          position: updatedTarget.position.clone(),
+          position: target.position.clone(),
           isCritical
         }]);
 
-        // Track pending lightning
-        pendingLightningTargets.current.add(target.id);
-
         // Schedule lightning damage
         setTimeout(() => {
-          // Final validation before lightning
-          const finalTarget = enemyData.find(e => e.id === target.id);
-          if (!finalTarget || 
-              finalTarget.health <= 0 || 
-              !pendingLightningTargets.current.has(target.id)) {
+          // Check if target is still alive before lightning hit
+          const updatedTarget = enemyData.find(e => e.id === target.id);
+          if (!updatedTarget || updatedTarget.health <= 0) {
             pendingLightningTargets.current.delete(target.id);
             return;
           }
 
-          // Apply lightning damage
           const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(47);
           onHit(target.id, lightningDamage);
-
-          // Show lightning damage number
-          const afterLightningTarget = enemyData.find(e => e.id === target.id);
-          if (afterLightningTarget && afterLightningTarget.health > 0) {
-            setDamageNumbers(prev => [...prev, {
-              id: nextDamageNumberId.current++,
-              damage: lightningDamage,
-              position: afterLightningTarget.position.clone(),
-              isCritical: lightningCrit,
-              isLightning: true
-            }]);
-          }
-
+          
+          setDamageNumbers(prev => [...prev, {
+            id: nextDamageNumberId.current++,
+            damage: lightningDamage,
+            position: updatedTarget.position.clone(),
+            isCritical: lightningCrit,
+            isLightning: true
+          }]);
+          
           pendingLightningTargets.current.delete(target.id);
-        }, 200);
-        setTimeout(() => {
-          setIsProcessingAbility(false);
-        }, 250); // Slightly longer than  lightning delay
-
-        return;
+        }, 300);
       }
 
       //=====================================================================================================
@@ -372,12 +369,12 @@ export default function Unit({
       });
     }
 
-    //=====================================================================================================
+//======//======//==============================================================================================
 
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 1.75, 1); // 2 seconds for full charge
+      const progress = Math.min(chargeTime / 1.85, 1); // 2 seconds for full charge
       setBowChargeProgress(progress);
 
       // Smooth charge line opacity using delta
@@ -396,7 +393,7 @@ export default function Unit({
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       
       if (distanceTraveled < projectile.maxDistance) {
-        const speed = 0.5;
+        const speed = 0.6;
         projectile.position.add(
           projectile.direction
             .clone()
@@ -417,7 +414,7 @@ export default function Unit({
           );
           const distanceToEnemy = projectilePos2D.distanceTo(enemyPos2D);
           
-          if (distanceToEnemy < 1.4) { // Hit radius
+          if (distanceToEnemy < 1.375) { // Hit radius
             handleProjectileHit(projectile.id, enemy.id, projectile.power, projectile.position);
           }
         });
@@ -451,7 +448,8 @@ export default function Unit({
           const enemyPos = enemy.position.clone();
           enemyPos.y = 1.5;
           if (fireball.position.distanceTo(enemyPos) < 1.5) {
-            handleFireballHit(fireball.id, enemy.id);
+            handleFireballHit(fireball.id, enemy.id, fireball.position.clone());
+            handleFireballImpact(fireball.id, fireball.position.clone());
             return null;
           }
         }
@@ -471,12 +469,20 @@ export default function Unit({
       }
       return charge;
     }));
+
+    // Clean up expired effects
+    setActiveEffects(prev => prev.filter(effect => {
+      if (effect.duration && effect.startTime) {
+        const elapsed = (Date.now() - effect.startTime) / 120;
+        return elapsed < effect.duration;
+      }
+      return true;
+    }));
   });
 
   //=====================================================================================================
 
   // SABRE BOW SHOT 
-    const [isProcessingAbility, setIsProcessingAbility] = useState(false);
     const [lastBowShotTime, setLastBowShotTime] = useState<number>(0);
 
   const releaseBowShot = useCallback((power: number) => {
@@ -675,7 +681,7 @@ export default function Unit({
   //=====================================================================================================
 
   // FIREBALL HIT 
-  const handleFireballHit = (fireballId: number, targetId: string) => {
+  const handleFireballHit = (fireballId: number, targetId: string, hitPosition?: Vector3) => {
     const isEnemy = targetId.startsWith('enemy');
     if (!isEnemy) return;
 
@@ -694,6 +700,18 @@ export default function Unit({
         damage,
         position: enemy.position.clone(),
         isCritical
+      }]);
+    }
+
+    // Add explosion effect at hit position
+    if (hitPosition) {
+      setActiveEffects(prev => [...prev, {
+        id: Date.now(),
+        type: 'fireballExplosion',
+        position: hitPosition,
+        direction: new Vector3(),
+        duration: 0.105, // Duration in seconds
+        startTime: Date.now() // Add start time
       }]);
     }
 
@@ -726,7 +744,7 @@ export default function Unit({
         {/* HEAD - core sphere with striped pattern */}
 
         
-        {/* Enhanced outer glow */}
+        {/* Outer glow SPhere layer */}
         <mesh scale={1.1}>
           <sphereGeometry args={[0.35, 32, 32]} />
           <meshBasicMaterial
@@ -833,7 +851,7 @@ export default function Unit({
           key={fireball.id}
           position={fireball.position}
           direction={fireball.direction}
-          onImpact={() => handleFireballImpact(fireball.id)}
+          onImpact={(impactPosition?: Vector3) => handleFireballImpact(fireball.id, impactPosition)}
         />
       ))}
 
@@ -853,13 +871,18 @@ export default function Unit({
           position={dn.position}
           isCritical={dn.isCritical}
           isLightning={dn.isLightning}
+          isHealing={dn.isHealing}
+          isBlizzard={dn.isBlizzard}
+          isBoneclaw={dn.isBoneclaw}
+          isOathstrike={dn.isOathstrike}
+          isFirebeam={dn.isFirebeam}
           onComplete={() => handleDamageNumberComplete(dn.id)}
         />
       ))}
 
       {(currentWeapon === WeaponType.SABRES) && isBowCharging && (
         <EtherealBow
-          position={groupRef.current?.position.clone().add(new Vector3(0, 1.5  , 0)) || new Vector3()}
+          position={groupRef.current?.position.clone().add(new Vector3(0, 1  , 0)) || new Vector3()}
           direction={new Vector3(0, 0, 1).applyQuaternion(groupRef.current?.quaternion || new THREE.Quaternion())}
           chargeProgress={bowChargeProgress}
           isCharging={isBowCharging}
@@ -1142,6 +1165,51 @@ export default function Unit({
           maxHealth={maxHealth}
         />
       )}
+
+      {activeEffects.map(effect => {
+        if (effect.type === 'fireballExplosion') {
+          return (
+            <group key={effect.id} position={effect.position}>
+              {/* Main explosion sphere */}
+              <mesh>
+                <sphereGeometry args={[0.6, 16, 16]} />
+                <meshStandardMaterial
+                  color="#00ff44"
+                  emissive="#00ff44"
+                  emissiveIntensity={0.8}
+                  transparent
+                  opacity={0.7}
+                  depthWrite={false}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
+              
+              {/* Outer glow */}
+              <mesh>
+                <sphereGeometry args={[1, 16, 16]} />
+                <meshStandardMaterial
+                  color="#00ff44"
+                  emissive="#00ff44"
+                  emissiveIntensity={1}
+                  transparent
+                  opacity={0.2}
+                  depthWrite={false}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
+
+              {/* Point light for dynamic lighting */}
+              <pointLight
+                color="#00ff44"
+                intensity={5}
+                distance={4}
+                decay={2}
+              />
+            </group>
+          );
+        }
+        return null;
+      })}
     </>
   );
 }
