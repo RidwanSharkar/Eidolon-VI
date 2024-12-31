@@ -195,7 +195,7 @@ export default function Unit({
         type: 'fireballExplosion',
         position: impactPosition,
         direction: new Vector3(),
-        duration: 0.105, // Duration in seconds
+        duration: 0.2, // Duration in seconds
         startTime: Date.now() // Add this line to set the start time
       }]);
     }
@@ -268,7 +268,7 @@ export default function Unit({
         pendingLightningTargets.current.add(target.id);
         
         // Initial hit
-        const { damage, isCritical } = calculateDamage(37);
+        const { damage, isCritical } = calculateDamage(31);
         onHit(target.id, damage);
         
         setDamageNumbers(prev => [...prev, {
@@ -400,7 +400,7 @@ export default function Unit({
             .multiplyScalar(speed)
         );
 
-        // Check for collisions with enemies but don't remove projectile
+        // Keep existing collision checks for piercing
         enemyData.forEach(enemy => {
           const projectilePos2D = new Vector3(
             projectile.position.x,
@@ -421,11 +421,8 @@ export default function Unit({
         
         return projectile;
       }
-      return projectile;
-    }).filter(projectile => {
-      const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
-      return distanceTraveled < projectile.maxDistance; // Only remove when max distance reached
-    }));
+      return null; // Return null when max distance reached
+    }).filter(Boolean) as typeof prev); // Remove null projectiles
 
     //=====================================================================================================
 
@@ -710,7 +707,7 @@ export default function Unit({
         type: 'fireballExplosion',
         position: hitPosition,
         direction: new Vector3(),
-        duration: 0.105, // Duration in seconds
+        duration: 0.20, // Duration in seconds
         startTime: Date.now() // Add start time
       }]);
     }
@@ -1186,13 +1183,13 @@ export default function Unit({
             <group key={effect.id} position={effect.position}>
               {/* Main explosion sphere */}
               <mesh>
-                <sphereGeometry args={[0.6, 16, 16]} />
+                <sphereGeometry args={[0.25, 16, 16]} />
                 <meshStandardMaterial
                   color="#00ff44"
                   emissive="#00ff44"
-                  emissiveIntensity={0.8}
+                  emissiveIntensity={0.9}
                   transparent
-                  opacity={0.7}
+                  opacity={0.65}
                   depthWrite={false}
                   blending={THREE.AdditiveBlending}
                 />
@@ -1200,13 +1197,27 @@ export default function Unit({
               
               {/* Outer glow */}
               <mesh>
-                <sphereGeometry args={[1, 16, 16]} />
+                <sphereGeometry args={[0.5, 16, 16]} />
                 <meshStandardMaterial
                   color="#00ff44"
                   emissive="#00ff44"
-                  emissiveIntensity={1}
+                  emissiveIntensity={.7}
                   transparent
-                  opacity={0.2}
+                  opacity={0.33}
+                  depthWrite={false}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
+
+                            {/* Outer glow */}
+                            <mesh>
+                <sphereGeometry args={[0.9, 16, 16]} />
+                <meshStandardMaterial
+                  color="#00ff44"
+                  emissive="#00ff44"
+                  emissiveIntensity={0.5}
+                  transparent
+                  opacity={0.125}
                   depthWrite={false}
                   blending={THREE.AdditiveBlending}
                 />

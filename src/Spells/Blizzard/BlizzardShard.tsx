@@ -10,11 +10,11 @@ interface BlizzardShardProps {
 }
 
 export default function BlizzardShard({ initialPosition, onComplete, type }: BlizzardShardProps) {
-  const SHARD_SIZE = 0.0725;
+  const SHARD_SIZE = 0.075;
   const meshRef = useRef<Mesh>(null);
   const fallSpeed = useRef(Math.random() * 2 + 4);
   const rotationSpeed = useRef({
-    x: Math.random() * 2,
+    x: Math.random() * 1.5,
     y: Math.random() * 0.25,
     z: Math.random() * 1
   });

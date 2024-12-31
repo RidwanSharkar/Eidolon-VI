@@ -79,7 +79,7 @@ export const useFirebeamManager = ({
 
   const startFirebeam = useCallback(() => {
     const currentTime = Date.now();
-    if (currentTime - lastFireTime.current < 500) { 
+    if (currentTime - lastFireTime.current < 700) { 
       return; // Enforce 1-second cooldown between shots
     }
 

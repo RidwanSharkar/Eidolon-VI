@@ -53,11 +53,11 @@ interface SabreProps {
           rightSabreRef.current.position.z += (rightSheathPosition[2] - rightSabreRef.current.position.z) * 0.3;
           
           // Full rotation plus a bit more to point downward
-          leftSabreRef.current.rotation.x = lerp(leftSabreRef.current.rotation.x, Math.PI * 1.1, 0.1);  // ~216 degrees
-          leftSabreRef.current.rotation.z = lerp(leftSabreRef.current.rotation.z, Math.PI * 0.35, 0.1);  // Same side angle
+          leftSabreRef.current.rotation.x = lerp(leftSabreRef.current.rotation.x, Math.PI * 0.37, 0.15);  // ~216 degrees
+          leftSabreRef.current.rotation.z = lerp(leftSabreRef.current.rotation.z, Math.PI * 0.95, 0.15);  // Same side angle
           
-          rightSabreRef.current.rotation.x = lerp(rightSabreRef.current.rotation.x, Math.PI * 1.1, 0.1); // ~216 degrees
-          rightSabreRef.current.rotation.z = lerp(rightSabreRef.current.rotation.z, -Math.PI * 0.35, 0.1); // Same side angle
+          rightSabreRef.current.rotation.x = lerp(rightSabreRef.current.rotation.x, Math.PI * 0.37, 0.15); // ~216 degrees
+          rightSabreRef.current.rotation.z = lerp(rightSabreRef.current.rotation.z, -Math.PI * 0.95, 0.15); // Same side angle
 
           // Reset swing states when charging bow
           leftSwingProgress.current = 0;

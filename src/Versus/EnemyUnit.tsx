@@ -157,9 +157,6 @@ export default function EnemyUnit({
         position={currentPosition.current}
         onClick={(e) => {
           e.stopPropagation();
-          if (currentHealth.current > 0) {
-            handleDamage(10);
-          }
         }}
       >
         <CustomSkeleton

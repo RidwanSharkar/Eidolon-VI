@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Group, Mesh } from 'three';
 import { useFrame } from '@react-three/fiber';
 
@@ -224,10 +224,11 @@ function ShoulderPlate() {
   );
 }
 
-export default function CustomSkeleton({ position, isAttacking, isWalking }: CustomSkeletonProps) {
+export default function CustomSkeleton({ position, isAttacking, isWalking, onHit }: CustomSkeletonProps) {
   const groupRef = useRef<Group>(null);
   const [walkCycle, setWalkCycle] = useState(0);
   const [attackCycle, setAttackCycle] = useState(0);
+  const attackAnimationRef = useRef<NodeJS.Timeout>();
 
   const walkSpeed = 2.5;
   const attackSpeed = 3;
@@ -295,18 +296,40 @@ export default function CustomSkeleton({ position, isAttacking, isWalking }: Cus
     if (isAttacking) {
       setAttackCycle((prev) => prev + delta * attackSpeed);
       const progress = Math.min(attackCycle, Math.PI / 2);
-      const armAngle = Math.sin(progress) * Math.PI ;
+      const armAngle = Math.sin(progress) * Math.PI;
 
       const rightArm = groupRef.current.getObjectByName('RightArm') as Mesh;
       if (rightArm) {
         rightArm.rotation.x = -armAngle;
       }
 
+      // Deal damage at the peak of the animation (around halfway through)
+      if (attackCycle > Math.PI / 4 && onHit && !attackAnimationRef.current) {
+        attackAnimationRef.current = setTimeout(() => {
+          attackAnimationRef.current = undefined;
+        }, 1000); // 500ms delay to sync with animation
+      }
+
       if (attackCycle > Math.PI / 2) {
         setAttackCycle(0);
       }
+    } else {
+      // Clear the timeout if attack is interrupted
+      if (attackAnimationRef.current) {
+        clearTimeout(attackAnimationRef.current);
+        attackAnimationRef.current = undefined;
+      }
     }
   });
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (attackAnimationRef.current) {
+        clearTimeout(attackAnimationRef.current);
+      }
+    };
+  }, []);
 
   return (
     <group ref={groupRef} position={[position[0], position[1] + 1, position[2]]}>
