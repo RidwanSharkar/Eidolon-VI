@@ -56,7 +56,7 @@ export default function BlizzardShard({ initialPosition, onComplete, type }: Bli
         emissive="#40a0ff"
         emissiveIntensity={1}
         transparent
-        opacity={0.5}
+        opacity={0.6}
       />
       <pointLight color="#80ffff" intensity={1} distance={2} decay={2} />
     </mesh>

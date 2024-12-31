@@ -393,7 +393,7 @@ export default function Unit({
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       
       if (distanceTraveled < projectile.maxDistance) {
-        const speed = 0.6;
+        const speed = 0.5;
         projectile.position.add(
           projectile.direction
             .clone()
@@ -901,61 +901,31 @@ export default function Unit({
             ]}
           >
             <mesh rotation={[Math.PI/2, 0, 0]}>
-              <cylinderGeometry args={[0.005, 0.1, 1.2, 8]} />
+              <cylinderGeometry args={[0.03, 0.125, 2.1, 8]} />
               <meshStandardMaterial
                 color="#00ffff"
                 emissive="#00ffff"
-                emissiveIntensity={2.5}
+                emissiveIntensity={1}
                 transparent
-                opacity={0.9}
-              />
-            </mesh>
-
-            <mesh rotation={[Math.PI/2, 0, 0]}>
-              <sphereGeometry args={[0.00025, 16, 16]} />
-              <meshStandardMaterial
-                color="#ffffff"
-                emissive="#ffffff"
-                emissiveIntensity={8}
-                transparent
-                opacity={0.7}
+                opacity={1}
               />
             </mesh>
 
 
-            {[...Array(6)].map((_, i) => (
-              <mesh
-                key={i}
-                position={[
-                  Math.sin(Date.now() * 0.01 + i) * 0.2,
-                  Math.cos(Date.now() * 0.01 + i) * 0.2,
-                  -i * 0.3
-                ]}
-              >
-                <sphereGeometry args={[0.05 - i * 0.03, 8, 8]} />
-                <meshStandardMaterial
-                  color="#00ffff"
-                  emissive="#00ffff"
-                  emissiveIntensity={4}
-                  transparent
-                  opacity={0.5 - i * 0.1}
-                />
-              </mesh>
-            ))}
 
-            {[...Array(3)].map((_, i) => (
+            {[...Array(5)].map((_, i) => (
               <mesh
                 key={`ring-${i}`}
-                position={[0, 0, -i * 0.45-0.5]}
+                position={[0, 0, -i * 0.45+0.5]}
                 rotation={[Math.PI , 0, Date.now() * 0.003 + i * Math.PI / 3]}
               >
-                <torusGeometry args={[0.2 + i * 0.1, 0.05, 8, 16]} />
+                <torusGeometry args={[0.125 + i * 0.04, 0.05, 8, 16]} />
                 <meshStandardMaterial
                   color="#00ffff"
                   emissive="#00ffff"
                   emissiveIntensity={3}
                   transparent
-                  opacity={0.4 - i * 0.1}
+                  opacity={0.9 - i * 0.125}
                   blending={THREE.AdditiveBlending}
                 />
               </mesh>
@@ -963,19 +933,21 @@ export default function Unit({
 
             <pointLight 
               color="#00ffff" 
-              intensity={4} 
-              distance={5}
+              intensity={3} 
+              distance={4}
               decay={2}
             />
 
             <pointLight
               color="#80ffff"
-              intensity={2}
-              distance={8}
+              intensity={1.7}
+              distance={6}
               decay={1}
             />
           </group>
 
+
+          {/* POWERSHOT========================================================== */}
           {projectile.power >= 1 && 
            projectile.position.distanceTo(projectile.startPosition) < projectile.maxDistance && 
            !projectile.hasCollided && (
@@ -987,58 +959,39 @@ export default function Unit({
                 0
               ]}
             >
-              {/* Large power shot arrow */}
+              {/* Core arrow shaft */}
               <mesh rotation={[Math.PI/2, 0, 0]}>
-                <cylinderGeometry args={[0.1, 0.475, 1.25, 8]} /> {/* Doubled size */}
+                <cylinderGeometry args={[0.15, 0.35, 2, 6]} />
                 <meshStandardMaterial
-                  color="#00ffff"
-                  emissive="#00ffff"
-                  emissiveIntensity={2.5}
+                  color="#EAC4D5"
+                  emissive="#EAC4D5"
+                  emissiveIntensity={1.5}
                   transparent
-                  opacity={0.8}
+                  opacity={0.7}
                 />
               </mesh>
 
-              <mesh rotation={[Math.PI/2, 0, 0]}>
-                <sphereGeometry args={[0.0005, 16, 16]} />
-                <meshStandardMaterial
-                  color="#ffffff"
-                  emissive="#ffffff"
-                  emissiveIntensity={2.5}
-                  transparent
-                  opacity={0.5}
-                />
-              </mesh>
-
-              {[...Array(10)].map((_, i) => {
-                const opacity = 1 - (i * 0.04);
-                const offset = -i * 0.4 -0.42;
-                
+              {/* Ethereal trails */}
+              {[...Array(8)].map((_, i) => {
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 0.4;
                 return (
                   <group 
-                    key={`power-trail-${i}`}
-                    position={[0, 0, offset]}
+                    key={`ghost-trail-${i}`}
+                    position={[
+                      Math.sin(angle + Date.now() * 0.003) * radius,
+                      Math.cos(angle + Date.now() * 0.003) * radius,
+                      -1.4
+                    ]}
                   >
                     <mesh>
-                      <torusGeometry args={[0.05, 0.025, 3, 16]} />
+                      <sphereGeometry args={[0.125, 4, 4]} />
                       <meshStandardMaterial
                         color="#00ffff"
                         emissive="#00ffff"
-                        emissiveIntensity={3}
+                        emissiveIntensity={1}
                         transparent
-                        opacity={opacity}
-                        blending={THREE.AdditiveBlending}
-                      />
-                    </mesh>
-
-                    <mesh>
-                      <torusGeometry args={[0.17, 0.15, 6, 4]} />
-                      <meshStandardMaterial
-                        color="#ffffff"
-                        emissive="#80ffff"
-                        emissiveIntensity={3}
-                        transparent
-                        opacity={opacity * 0.5}
+                        opacity={0.5}
                         blending={THREE.AdditiveBlending}
                       />
                     </mesh>
@@ -1046,11 +999,72 @@ export default function Unit({
                 );
               })}
 
+
+              {/* Ethereal trails */}
+              {[...Array(8)].map((_, i) => {
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 0.4;
+                return (
+                  <group 
+                    key={`ghost-trail-${i}`}
+                    position={[
+                      Math.sin(angle + Date.now() * 0.003) * radius,
+                      Math.cos(angle + Date.now() * 0.003) * radius,
+                      -2
+                    ]}
+                  >
+                    <mesh>
+                      <sphereGeometry args={[0.125, 4, 4]} />
+                      <meshStandardMaterial
+                        color="#00ffff"
+                        emissive="#00ffff"
+                        emissiveIntensity={1}
+                        transparent
+                        opacity={0.4}
+                        blending={THREE.AdditiveBlending}
+                      />
+                    </mesh>
+                  </group>
+                );
+              })}
+
+              {/* Ghostly wisps */}
+              {[...Array(12)].map((_, i) => {
+                const offset = -i * 0.3 -1.5;
+                const scale = 1 - (i * 0.015);
+                return (
+                  <group 
+                    key={`wisp-${i}`}
+                    position={[0, 0, offset]}
+                    rotation={[0, Date.now() * 0.001 + i, 0]}
+                  >
+                    <mesh scale={scale}>
+                      <torusGeometry args={[0.4, 0.1, 3, 8]} />
+                      <meshStandardMaterial
+                        color="#00ffff"
+                        emissive="#00ffff"
+                        emissiveIntensity={1}
+                        transparent
+                        opacity={0.3}
+                        blending={THREE.AdditiveBlending}
+                      />
+                    </mesh>
+                  </group>
+                );
+              })}
+
+              {/* Ambient lights */}
               <pointLight
-                color="#00ffff"
-                intensity={2}
-                distance={2}
+                color="#EAC4D5"
+                intensity={3}
+                distance={4}
                 decay={2}
+              />
+              <pointLight
+                color="#ffffff"
+                intensity={1}
+                distance={6}
+                decay={1}
               />
             </group>
           )}

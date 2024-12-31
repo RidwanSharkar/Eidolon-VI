@@ -111,7 +111,7 @@ export const useFirebeamManager = ({
       const angle = direction.angleTo(enemyDir);
       const distance = enemyDir.length();
 
-      if (angle < 0.3 && distance < 20) {
+      if (angle < 0.35 && distance < 20) {
         onHit(enemy.id, damage);
         
         // Add damage number

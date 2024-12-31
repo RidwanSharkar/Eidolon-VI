@@ -21,7 +21,7 @@ export default function DexScythe({ isSwinging, onSwingComplete, }: ScytheProps)
   
   useFrame((_, delta) => {
     if (isSwinging && scytheRef.current) {
-      swingProgress.current += delta * 3;
+      swingProgress.current += delta * 2.75;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
       // Complete swing earlier to prevent extra rotation

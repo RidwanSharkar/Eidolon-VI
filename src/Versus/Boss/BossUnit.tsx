@@ -51,7 +51,7 @@ export default function BossUnit({
   const BOSS_HIT_RADIUS = 4.0;      
   const BOSS_HIT_HEIGHT_RANGE = 4.0; 
   const METEOR_COOLDOWN_NORMAL = 9000;
-  const METEOR_COOLDOWN_ENRAGED = 4000;
+  const METEOR_COOLDOWN_ENRAGED = 5000;
   const lastMeteorTime = useRef<number>(Date.now());
 
   // Add a ref to track current cooldowns
