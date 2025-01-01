@@ -31,7 +31,7 @@ export default function Scene2({
   skeletonProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 8750,
+  spawnInterval = 7750,
   maxSkeletons = 23,
   initialSkeletons = 5,
   spawnCount = 2,
