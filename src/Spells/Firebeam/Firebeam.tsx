@@ -46,25 +46,25 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
       <group position={[0, -1.1, 0]}>
         {/* Origin core glow */}
         <mesh>
-          <sphereGeometry args={[0.4, 16, 16]} />
+          <sphereGeometry args={[0.65, 16, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
             emissive="#58FCEC"
-            emissiveIntensity={5}
+            emissiveIntensity={2.5}
             transparent
-            opacity={0.7}
+            opacity={0.65}
           />
         </mesh>
 
         {/* Origin outer glow */}
         <mesh>
-          <sphereGeometry args={[0.5, 16, 16]} />
+          <sphereGeometry args={[0.825, 16, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
             emissive="#58FCEC"
-            emissiveIntensity={8}
+            emissiveIntensity={0.7}
             transparent
-            opacity={0.4}
+            opacity={0.65}
           />
         </mesh>
 
@@ -74,13 +74,13 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
             key={`ring-${i}`}
             rotation={[Math.PI / 2, 0, (i * Math.PI) / 3]}
           >
-            <torusGeometry args={[0.7, 0.10, 8, 32]} />
+            <torusGeometry args={[0.875, 0.075, 8, 32]} />
             <meshStandardMaterial
               color="#58FCEC"
               emissive="#58FCEC"
-              emissiveIntensity={10}
+              emissiveIntensity={0.8}
               transparent
-              opacity={2}
+              opacity={0.9}
             />
           </mesh>
         ))}
@@ -97,7 +97,7 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
           <meshStandardMaterial
             color="#58FCEC"
             emissive="#58FCEC"
-            emissiveIntensity={15}
+            emissiveIntensity={2}
             transparent
             opacity={0.95}
           />
@@ -105,11 +105,11 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
 
         {/* Inner glow */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.2, 0.2, 20, 16]} />
+          <cylinderGeometry args={[0.275, 0.275, 20, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
             emissive="#58FCEC"
-            emissiveIntensity={10}
+            emissiveIntensity={1.5}
             transparent
             opacity={0.7}
           />
@@ -117,13 +117,13 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
 
         {/* Outer glow */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.3, 0.3, 20, 16]} />
+          <cylinderGeometry args={[0.425, 0.425, 20, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
             emissive="#58FCEC"
-            emissiveIntensity={8}
+            emissiveIntensity={0.5}
             transparent
-            opacity={0.4}
+            opacity={0.6}
           />
         </mesh>
 
@@ -138,36 +138,46 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
             <meshStandardMaterial
               color="#58FCEC"
               emissive="#58FCEC"
-              emissiveIntensity={8}
+              emissiveIntensity={1}
               transparent
               opacity={0.3}
             />
           </mesh>
         ))}
 
-        {/* Floating particles along beam */}
-        {[...Array(8)].map((_, i) => (
+
+
+        {/* End-beam sparks */}
+        {[...Array(24)].map((_, i) => (
           <mesh
-            key={i}
+            key={`spark-${i}`}
             position={[
-              Math.cos((i * Math.PI) / 4) * 0.6,
-              Math.sin((i * Math.PI) / 4) * 0.6,
-              i * 1 -10,
+              (Math.random() - 0.5) * 1.75, // Increased X spread
+              (Math.random() - 0.5) * 1.75, // Increased Y spread
+              Math.random() * 10, // end of beam
+            ]}
+            rotation={[
+              Math.random() * Math.PI * 2,
+              Math.random() * Math.PI * 2,
+              Math.random() * Math.PI * 2,
             ]}
           >
-            <sphereGeometry args={[0.1, 8, 8]} />
+            <boxGeometry args={[0.05, 0.05, 0.1]} /> {/* sparks */}
             <meshStandardMaterial
               color="#58FCEC"
               emissive="#58FCEC"
-              emissiveIntensity={12}
+              emissiveIntensity={2}
               transparent
-              opacity={0.6}
+              opacity={0.75}
             />
           </mesh>
         ))}
 
+        {/* Adjusted point light for the sparks */}
+        <pointLight position={[0, 0, 18.5]} color="#58FCEC" intensity={12} distance={4} />
+
         {/* Enhanced beam glow */}
-        <pointLight position={[0, 0, 7.5]} color="#58FCEC" intensity={15} distance={2} />
+        {/* <pointLight position={[0, 0.5, 7.5]} color="#58FCEC" intensity={15} distance={2} /> */}
         {/* <pointLight position={[0, 0, 10]} color="#58FCEC" intensity={15} distance={2} /> */}
         {/* <pointLight position={[0, 0, 5]} color="#58FCEC" intensity={15} distance={2} /> */}
         {/* <pointLight position={[0, 0, 2.5]} color="#58FCEC" intensity={15} distance={2} /> */}

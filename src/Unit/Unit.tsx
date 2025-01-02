@@ -195,7 +195,7 @@ export default function Unit({
         type: 'fireballExplosion',
         position: impactPosition,
         direction: new Vector3(),
-        duration: 0.25, // Duration in seconds
+        duration: 0.125, // Duration in seconds
         startTime: Date.now() // Add this line to set the start time
       }]);
     }
@@ -393,7 +393,7 @@ export default function Unit({
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       
       if (distanceTraveled < projectile.maxDistance) {
-        const speed = 0.5;
+        const speed = 0.625;
         projectile.position.add(
           projectile.direction
             .clone()
@@ -470,8 +470,19 @@ export default function Unit({
     // Clean up expired effects
     setActiveEffects(prev => prev.filter(effect => {
       if (effect.duration && effect.startTime) {
-        const elapsed = (Date.now() - effect.startTime) / 120;
+        const elapsed = (Date.now() - effect.startTime) / 1000; // Convert to seconds
         return elapsed < effect.duration;
+      }
+      return true;
+    }));
+
+    // Only remove firebeam effects after their full duration
+    setActiveEffects(prev => prev.filter(effect => {
+      if (effect.type === 'firebeam') {
+        if (effect.startTime && effect.duration) {
+          const elapsed = (Date.now() - effect.startTime) / 1000;
+          return elapsed < effect.duration;
+        }
       }
       return true;
     }));
@@ -656,7 +667,7 @@ export default function Unit({
         [hitKey]: 1
     }));
 
-    const baseDamage = 10;
+    const baseDamage = 11;
     const maxDamage = 87;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
     const fullChargeDamage = power >= 0.99 ? 20 : 0;
@@ -685,7 +696,7 @@ export default function Unit({
     const enemy = enemyData.find(e => e.id === targetId);
     if (!enemy) return;
 
-    const { damage, isCritical } = calculateDamage(53); // Fixed fireball damage
+    const { damage, isCritical } = calculateDamage(59); // Fixed fireball damage
     
     onHit(targetId, damage);
 
@@ -707,7 +718,7 @@ export default function Unit({
         type: 'fireballExplosion',
         position: hitPosition,
         direction: new Vector3(),
-        duration: 0.25, // Duration in seconds
+        duration: 0.125, // Duration in seconds
         startTime: Date.now() // Add start time
       }]);
     }
@@ -728,7 +739,7 @@ export default function Unit({
 
   //=====================================================================================================
 
-  // Add new handler (near other handle*Complete functions)
+  // OATHSTRIKE COMPLETE
   const handleOathstrikeComplete = () => {
     setIsOathstriking(false);
     setIsSwinging(false);
@@ -738,8 +749,6 @@ export default function Unit({
   return (
     <>
       <group ref={groupRef} position={[0, 1, 0]}>
-        {/* HEAD - core sphere with striped pattern */}
-
         
         {/* Outer glow SPhere layer */}
         <mesh scale={1.1}>
@@ -752,7 +761,7 @@ export default function Unit({
           />
         </mesh>
 
-        {/* Skull decoration - made smaller and more ethereal */}
+        {/* SOUL SPHERE */}
         <mesh position={[0, 0.2, 0.25]} scale={0.35}>
           <sphereGeometry args={[0.25, 32, 32]} />
           <meshPhongMaterial
@@ -764,7 +773,7 @@ export default function Unit({
           />
         </mesh>
 
-        {/* Add Bone Wings with proper position/rotation vectors */}
+        {/* WINGS */}
         <group position={[0, 0.2, -0.2]}>
           {/* Left Wing */}
           <group rotation={[0, Math.PI / 5.5, 0]}>
@@ -1179,71 +1188,95 @@ export default function Unit({
 
       {activeEffects.map(effect => {
         if (effect.type === 'fireballExplosion') {
+          const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
+          const duration = effect.duration || 0.125;
+          const fade = Math.max(0, 1 - (elapsed / duration));
+          
           return (
             <group key={effect.id} position={effect.position}>
-              {/* Main explosion sphere */}
+              {/* Core explosion sphere */}
               <mesh>
-                <sphereGeometry args={[0.25, 16, 16]} />
+                <sphereGeometry args={[0.3 * (1 + elapsed * 2), 32, 32]} />
                 <meshStandardMaterial
                   color="#00ff44"
-                  emissive="#00ff44"
-                  emissiveIntensity={0.9}
+                  emissive="#33ff66"
+                  emissiveIntensity={2 * fade}
                   transparent
-                  opacity={0.65}
+                  opacity={0.8 * fade}
                   depthWrite={false}
                   blending={THREE.AdditiveBlending}
                 />
               </mesh>
               
-              {/* Outer glow */}
+              {/* Inner energy sphere */}
               <mesh>
-                <sphereGeometry args={[0.5, 16, 16]} />
+                <sphereGeometry args={[0.2 * (1 + elapsed * 3), 24, 24]} />
                 <meshStandardMaterial
-                  color="#00ff44"
-                  emissive="#00ff44"
-                  emissiveIntensity={.7}
+                  color="#66ff88"
+                  emissive="#ffffff"
+                  emissiveIntensity={3 * fade}
                   transparent
-                  opacity={0.33}
+                  opacity={0.9 * fade}
                   depthWrite={false}
                   blending={THREE.AdditiveBlending}
                 />
               </mesh>
 
-                                          {/* Outer glow */}
-                                          <mesh>
-                <sphereGeometry args={[0.7, 16, 16]} />
-                <meshStandardMaterial
-                  color="#00ff44"
-                  emissive="#00ff44"
-                  emissiveIntensity={0.5}
-                  transparent
-                  opacity={0.125}
-                  depthWrite={false}
-                  blending={THREE.AdditiveBlending}
-                />
-              </mesh>
+              {/* Multiple expanding rings */}
+              {[0.4, 0.6, 0.8, 1.0].map((size, i) => (
+                <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
+                  <torusGeometry args={[size * (1 + elapsed * 3), 0.045, 16, 32]} />
+                  <meshStandardMaterial
+                    color="#00ff44"
+                    emissive="#33ff66"
+                    emissiveIntensity={0.8 * fade}
+                    transparent
+                    opacity={0.5 * fade * (1 - i * 0.2)}
+                    depthWrite={false}
+                    blending={THREE.AdditiveBlending}
+                  />
+                </mesh>
+              ))}
 
+              {/* Particle sparks */}
+              {[...Array(8)].map((_, i) => {
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 0.5 * (1 + elapsed * 2);
+                return (
+                  <mesh
+                    key={`spark-${i}`}
+                    position={[
+                      Math.sin(angle) * radius,
+                      Math.cos(angle) * radius,
+                      0
+                    ]}
+                  >
+                    <sphereGeometry args={[0.05, 8, 8]} />
+                    <meshStandardMaterial
+                      color="#66ff88"
+                      emissive="#ffffff"
+                      emissiveIntensity={2 * fade}
+                      transparent
+                      opacity={0.8 * fade}
+                      depthWrite={false}
+                      blending={THREE.AdditiveBlending}
+                    />
+                  </mesh>
+                );
+              })}
 
-                            {/* Outer glow */}
-                            <mesh>
-                <sphereGeometry args={[1, 16, 16]} />
-                <meshStandardMaterial
-                  color="#00ff44"
-                  emissive="#00ff44"
-                  emissiveIntensity={0.3}
-                  transparent
-                  opacity={0.125}
-                  depthWrite={false}
-                  blending={THREE.AdditiveBlending}
-                />
-              </mesh>
-
-              {/* Point light for dynamic lighting */}
+              {/* Dynamic lights */}
               <pointLight
                 color="#00ff44"
-                intensity={5}
+                intensity={2 * fade}
                 distance={4}
                 decay={2}
+              />
+              <pointLight
+                color="#66ff88"
+                intensity={1 * fade}
+                distance={6}
+                decay={1}
               />
             </group>
           );

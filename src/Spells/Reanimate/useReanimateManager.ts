@@ -35,7 +35,7 @@ export function useReanimateManager({
 }: UseReanimateManagerProps) {
   const lastCastTime = useRef<number>(0);
   const HEAL_AMOUNT = 10;
-  const COOLDOWN = 1000; // 1 second in milliseconds
+  const COOLDOWN = 775; // 1 second in milliseconds
 
   const castReanimate = useCallback(() => {
     const now = Date.now();

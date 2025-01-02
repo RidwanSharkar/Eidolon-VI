@@ -31,7 +31,7 @@ export default function Scene2({
   skeletonProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 7750,
+  spawnInterval = 8500,
   maxSkeletons = 23,
   initialSkeletons = 5,
   spawnCount = 2,
@@ -61,7 +61,10 @@ export default function Scene2({
 
   // Add boss state
   const [isBossSpawned, setIsBossSpawned] = useState(false);
-  const [bossHealth, setBossHealth] = useState(4096);
+  const [bossHealth, setBossHealth] = useState(5184);
+
+  // Add state to track boss position
+  const [bossPosition, setBossPosition] = useState<Vector3>(BOSS_SPAWN_POSITION.clone());
 
   // Callback to handle damage to enemies
   const handleTakeDamage = useCallback((targetId: string, damage: number) => {
@@ -101,8 +104,13 @@ export default function Scene2({
     setPlayerPosition(position);
   }, []);
 
-  // Add this callback before unitComponentProps
+  // Update the handleEnemyPositionUpdate callback
   const handleEnemyPositionUpdate = useCallback((id: string, newPosition: Vector3) => {
+    if (id.includes('boss')) {
+      setBossPosition(newPosition.clone());
+      return;
+    }
+
     setEnemies(prevEnemies =>
       prevEnemies.map(enemy =>
         enemy.id === id.replace('enemy-', '')
@@ -148,10 +156,10 @@ export default function Scene2({
       })),
       ...(isBossSpawned && bossHealth > 0 ? [{
         id: `enemy-boss-1`,
-        position: BOSS_SPAWN_POSITION,
+        position: bossPosition, // Use tracked boss position instead of BOSS_SPAWN_POSITION
         initialPosition: BOSS_SPAWN_POSITION,
         health: bossHealth,
-        maxHealth: 4096
+        maxHealth: 5184
       }] : [])
     ],
     onDamage: unitProps.onDamage,
@@ -295,7 +303,7 @@ export default function Scene2({
           initialPosition={BOSS_SPAWN_POSITION}
           position={BOSS_SPAWN_POSITION}
           health={bossHealth}
-          maxHealth={4096}
+          maxHealth={5184}
           onTakeDamage={(id, damage) => {
             setBossHealth(prev => Math.max(0, prev - damage));
           }}

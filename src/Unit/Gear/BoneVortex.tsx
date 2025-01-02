@@ -110,9 +110,9 @@ export default function BoneVortex({ parentRef, weaponType }: BoneVortexProps) {
       
       <pointLight 
         color={getVortexColor(weaponType)}
-        intensity={1}
-        distance={1.2}
-        position={[0, 0.25, 0]}
+        intensity={2}
+        distance={1.3}
+        position={[0, 0.15, 0]}
       />
     </group>
   );

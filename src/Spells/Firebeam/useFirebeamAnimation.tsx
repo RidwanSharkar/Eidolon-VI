@@ -13,9 +13,7 @@ export const useFirebeamAnimation = ({
 }: FirebeamAnimationProps) => {
   const progressRef = useRef(0);
   const startupDuration = 0;
-  const fadeOutDuration = 1.2;
-  const delayTimer = useRef(0);
-  const startDelay = 0.0;
+  const fadeOutDuration = 2.5;
   const isActive = useRef(true);
   const isFadingOut = useRef(false);
 
@@ -38,11 +36,6 @@ export const useFirebeamAnimation = ({
   useFrame((_, delta) => {
     if (!beamRef.current) return;
 
-    if (delayTimer.current < startDelay) {
-      delayTimer.current += delta;
-      return;
-    }
-
     if (isFadingOut.current) {
       progressRef.current -= delta / fadeOutDuration;
       if (progressRef.current > 0) {
@@ -53,19 +46,11 @@ export const useFirebeamAnimation = ({
       const progress = Math.min(progressRef.current, 1);
       beamRef.current.scale.z = progress;
     }
-
-    // Animate beam particles
-    beamRef.current.children.forEach((child, index) => {
-      if (child.name === 'particle') {
-        child.position.z = ((Date.now() * 0.01 + index * 50) % 200) / 10;
-      }
-    });
   });
 
   return {
     reset: () => {
       progressRef.current = 0;
-      delayTimer.current = 0;
       isActive.current = false;
       isFadingOut.current = true;
       setTimeout(() => {

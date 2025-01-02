@@ -1,10 +1,16 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback
+} from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import BossModel from './BossModel';
 import { Enemy } from '../enemy';
 import Meteor from '@/Versus/Boss/Meteor';
+import BossAttackIndicator from './BossAttackIndicator';
 
 interface BossUnitProps {
   id: string;
@@ -30,184 +36,256 @@ export default function BossUnit({
   onAttackPlayer,
 }: BossUnitProps & Pick<Enemy, 'position'>) {
   const bossRef = useRef<Group>(null);
+  
+  // Use refs for timing
   const lastAttackTime = useRef<number>(Date.now() + 2000);
+  const lastMeteorTime = useRef<number>(Date.now());
+
+  // Use refs for positions so we can always read the LATEST in setTimeouts
+  const currentPosition = useRef<Vector3>(initialPosition.clone());
+  const playerPosRef = useRef<Vector3>(playerPosition.clone());
+
+  // Keep track of current health in a ref as well
+  const currentHealth = useRef<number>(health);
+
+  // State
   const [isAttacking, setIsAttacking] = useState(false);
   const [isDead, setIsDead] = useState(false);
   const [isSpawning, setIsSpawning] = useState(true);
   const [isCastingMeteor, setIsCastingMeteor] = useState(false);
-
-  const currentPosition = useRef(initialPosition.clone());
-  const targetPosition = useRef(initialPosition.clone());
-  const currentHealth = useRef(health);
+  const [showAttackIndicator, setShowAttackIndicator] = useState(false);
+  const [isAttackOnCooldown, setIsAttackOnCooldown] = useState(false);
 
   // Boss-specific constants
-  const ATTACK_RANGE = 3.5;
-  const ATTACK_COOLDOWN_NORMAL = 2000;
-  const ATTACK_COOLDOWN_ENRAGED = 850;
-  const MOVEMENT_SPEED = 0.01;
-  const SMOOTHING_FACTOR = 0.003;
-  const ATTACK_DAMAGE = 12;
-  const BOSS_HIT_HEIGHT = 2.0;      
-  const BOSS_HIT_RADIUS = 4.0;      
-  const BOSS_HIT_HEIGHT_RANGE = 4.0; 
+  const ATTACK_RANGE = 5;
+  const ATTACK_COOLDOWN_NORMAL = 3800;
+  const ATTACK_COOLDOWN_ENRAGED = 2250;
+  const MOVEMENT_SPEED = 0.15;
+  const SMOOTHING_FACTOR = 0.15;
+  const ATTACK_DAMAGE = 26;
+  const BOSS_HIT_HEIGHT = 2.0;       
+  const BOSS_HIT_RADIUS = 4.0;
+  const BOSS_HIT_HEIGHT_RANGE = 4.0;
   const METEOR_COOLDOWN_NORMAL = 9000;
   const METEOR_COOLDOWN_ENRAGED = 5000;
-  const lastMeteorTime = useRef<number>(Date.now());
 
-  // Add a ref to track current cooldowns
+  // Current cooldown refs
   const currentAttackCooldown = useRef(ATTACK_COOLDOWN_NORMAL);
   const currentMeteorCooldown = useRef(METEOR_COOLDOWN_NORMAL);
 
-  // Sync health changes
+  // Keep the player's position ref updated
+  useEffect(() => {
+    playerPosRef.current.copy(playerPosition);
+  }, [playerPosition]);
+
+  // Sync boss's position on mount + whenever `position` changes
+  useEffect(() => {
+    if (position) {
+      currentPosition.current.copy(position);
+      if (bossRef.current) {
+        bossRef.current.position.copy(currentPosition.current);
+      }
+    }
+  }, [position]);
+
+  // Sync health in the ref
   useEffect(() => {
     currentHealth.current = health;
   }, [health]);
 
-  // Add hit detection helper function after the constants
-  const isWithinHitBox = (attackerPosition: Vector3, attackHeight: number = 1.0) => {
-    const bossPosition = currentPosition.current;
-    
-    // Check horizontal distance first (cylindrical collision)
-    const horizontalDist = new Vector3(
-      bossPosition.x - attackerPosition.x,
-      0,
-      bossPosition.z - attackerPosition.z
-    ).length();
-    
-    if (horizontalDist > BOSS_HIT_RADIUS) return false;
-    
-    // Check vertical distance
-    const heightDiff = Math.abs(attackerPosition.y + attackHeight - (bossPosition.y + BOSS_HIT_HEIGHT));
-    return heightDiff <= BOSS_HIT_HEIGHT_RANGE;
-  };
-
-  // Handle damage with proper synchronization
-  const handleDamage = useCallback((damage: number, attackerPosition?: Vector3) => {
-    if (currentHealth.current <= 0) return;
-    
-    // Only check hitbox if attackerPosition is provided (for melee attacks)
-    if (attackerPosition && !isWithinHitBox(attackerPosition)) {
-      return;
-    }
-    
-    // Use the same ID format as EnemyUnit
-    onTakeDamage(`enemy-${id}`, damage);
-    
-    // Check if this damage would kill the boss
-    const updatedHealth = Math.max(0, currentHealth.current - damage);
-    if (updatedHealth === 0 && currentHealth.current > 0) {
-      setIsDead(true);
-    }
-  }, [id, onTakeDamage]);
-
-  // Position update logic
-  useEffect(() => {
-    if (position) {
-      currentPosition.current = position.clone();
-    }
-  }, [position]);
-
-  useEffect(() => {
-    if (bossRef.current) {
-      bossRef.current.position.copy(currentPosition.current);
-    }
-  }, []);
-
-  // Add effect to handle enrage state
+  // ENRAGE LOGIC
   useEffect(() => {
     const isEnraged = health <= maxHealth / 2;
     currentAttackCooldown.current = isEnraged ? ATTACK_COOLDOWN_ENRAGED : ATTACK_COOLDOWN_NORMAL;
     currentMeteorCooldown.current = isEnraged ? METEOR_COOLDOWN_ENRAGED : METEOR_COOLDOWN_NORMAL;
   }, [health, maxHealth]);
 
-  // Movement and attack logic
-  useFrame(() => {
-    if (!bossRef.current || health <= 0 || !playerPosition) return;
+  // Hide boss for a short spawn animation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsSpawning(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
-    const currentTime = Date.now();
-    const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
-
-    // Update meteor check to use current cooldown
-    if (currentTime - lastMeteorTime.current >= currentMeteorCooldown.current && health > 0) {
-      castMeteor();
-      lastMeteorTime.current = currentTime;
-    }
-
-    const direction = new Vector3()
-      .subVectors(playerPosition, currentPosition.current)
-      .normalize();
-
-    if (distanceToPlayer > ATTACK_RANGE && health > 0) {
-      setIsAttacking(false);
-      
-      targetPosition.current.copy(currentPosition.current).add(
-        direction.multiplyScalar(MOVEMENT_SPEED)
-      );
-      
-      currentPosition.current.lerp(targetPosition.current, SMOOTHING_FACTOR);
-      
-      if (bossRef.current) {
-        bossRef.current.position.copy(currentPosition.current);
-        
-        const lookTarget = new Vector3()
-          .copy(playerPosition)
-          .setY(currentPosition.current.y);
-        bossRef.current.lookAt(lookTarget);
-      }
-      
-      if (currentPosition.current.distanceTo(position) > 0.01) {
-        onPositionUpdate(id, currentPosition.current.clone());
-      }
-    } else if (health > 0) {
-      // Update attack check to use current cooldown
-      if (currentTime - lastAttackTime.current >= currentAttackCooldown.current) {
-        setIsAttacking(true);
-        onAttackPlayer(ATTACK_DAMAGE);
-        lastAttackTime.current = currentTime;
-
-        setTimeout(() => {
-          setIsAttacking(false);
-        }, 270);
-      }
-    }
-  });
-
-  // Death handling
+  // Mark dead if health hits zero
   useEffect(() => {
     if (health === 0 && !isDead) {
       console.log(`Boss ${id} died`);
       setIsDead(true);
     }
-  }, [setIsDead, health, id, isDead]);
+  }, [health, id, isDead]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsSpawning(false);
-    }, 3000); // 1 second delay before showing the boss
+  // Helper for your hitbox logic (updated to use current position)
+  const isWithinHitBox = useCallback(
+    (attackerPosition: Vector3, attackHeight: number = 1.0) => {
+      // Use current position from ref for accurate hit detection
+      const bossPosition = currentPosition.current;
+      const horizontalDist = new Vector3(
+        bossPosition.x - attackerPosition.x,
+        0,
+        bossPosition.z - attackerPosition.z
+      ).length();
 
-    return () => clearTimeout(timer);
-  }, []);
+      if (horizontalDist > BOSS_HIT_RADIUS) return false;
 
+      const heightDiff = Math.abs(
+        attackerPosition.y + attackHeight - (bossPosition.y + BOSS_HIT_HEIGHT)
+      );
+      return heightDiff <= BOSS_HIT_HEIGHT_RANGE;
+    },
+    []
+  );
+
+  // Damage handler (updated to always use position check)
+  const handleDamage = useCallback(
+    (damage: number, attackerPosition?: Vector3) => {
+      if (currentHealth.current <= 0) return;
+      
+      // Always require attacker position and check hit detection
+      if (!attackerPosition || !isWithinHitBox(attackerPosition)) {
+        return;
+      }
+
+      onTakeDamage(`enemy-${id}`, damage);
+      const updatedHealth = Math.max(0, currentHealth.current - damage);
+      if (updatedHealth === 0 && currentHealth.current > 0) {
+        setIsDead(true);
+      }
+    },
+    [id, onTakeDamage, isWithinHitBox]
+  );
+
+  // Attack wind-up logic, reading live positions in final check
+  const startAttack = useCallback(() => {
+    if (!isAttacking && !isAttackOnCooldown) {
+      // Make sure we respect cooldown
+      if (Date.now() - lastAttackTime.current < currentAttackCooldown.current) {
+        return;
+      }
+
+      setShowAttackIndicator(true);
+      lastAttackTime.current = Date.now();
+      setIsAttackOnCooldown(true);
+
+      // 1) range indicator 
+      setTimeout(() => {
+        setShowAttackIndicator(false);
+        setIsAttacking(true);
+
+        // 2) Attack hits ~270ms after the boss transitions to animation
+        setTimeout(() => {
+          // READ LATEST positions from refs at the moment of impact
+          const bossGroundPos = currentPosition.current.clone();
+          bossGroundPos.y = 0;
+
+          const playerGroundPos = playerPosRef.current.clone();
+          playerGroundPos.y = 0;
+
+          const distanceToPlayer = bossGroundPos.distanceTo(playerGroundPos);
+
+          // Only deal damage if STILL within range at impact
+          if (distanceToPlayer <= ATTACK_RANGE) {
+            onAttackPlayer(ATTACK_DAMAGE);
+          }
+        }, 270);
+
+        // 3) Attack animation ends ~540ms after it starts
+        setTimeout(() => {
+          setIsAttacking(false);
+
+          // 4) Re-enable attacks once cooldown is over
+          setTimeout(() => {
+            setIsAttackOnCooldown(false);
+          }, currentAttackCooldown.current);
+        }, 540);
+      }, 1500); //  MOVEMENT + REACTION TIME 
+    }
+  }, [
+    isAttacking,
+    isAttackOnCooldown,
+    onAttackPlayer,
+    ATTACK_DAMAGE,
+    ATTACK_RANGE
+  ]);
+
+  // Meteor cast logic
   const castMeteor = useCallback(() => {
     if (!isCastingMeteor) {
       setIsCastingMeteor(true);
-      
+      // METEOR CAST TIME
       setTimeout(() => {
         setIsCastingMeteor(false);
-      }, 4000);
+      }, 3500);
     }
   }, [isCastingMeteor]);
 
+  // Main AI loop: move towards player or attack if in range
+  useFrame(() => {
+    if (!bossRef.current || health <= 0) return;
+
+    const currentTime = Date.now();
+    const distanceToPlayer = currentPosition.current.distanceTo(playerPosRef.current);
+
+    // Possibly cast meteor if off cooldown
+    if (currentTime - lastMeteorTime.current >= currentMeteorCooldown.current && health > 0) {
+      castMeteor();
+      lastMeteorTime.current = currentTime;
+    }
+
+    // If out of melee range, move closer
+    if (distanceToPlayer > ATTACK_RANGE && health > 0) {
+      setIsAttacking(false);
+
+      const direction = new Vector3()
+        .subVectors(playerPosRef.current, currentPosition.current)
+        .normalize();
+
+      // Move boss
+      const nextPos = currentPosition.current.clone().add(
+        direction.multiplyScalar(MOVEMENT_SPEED)
+      );
+      // Lerp for smoother movement
+      currentPosition.current.lerp(nextPos, SMOOTHING_FACTOR);
+
+      // Update boss mesh & let parent know
+      bossRef.current.position.copy(currentPosition.current);
+      
+      // UPDATED ROTATION LOGIC
+      // Calculate the angle to face the player
+      const lookAtPos = new Vector3(
+        playerPosRef.current.x,
+        currentPosition.current.y, // Keep the same Y to avoid tilting
+        playerPosRef.current.z
+      );
+      
+      // Make the boss face the player
+      bossRef.current.lookAt(lookAtPos);
+      // Rotate 180 degrees around Y axis since the model might be backwards
+      bossRef.current.rotateY(Math.PI/2);
+
+      // If position changed enough, notify parent
+      if (currentPosition.current.distanceTo(position) > 0.01) {
+        onPositionUpdate(id, currentPosition.current.clone());
+      }
+    } else {
+      // Within range => attempt attack if cooldown is up
+      if (currentTime - lastAttackTime.current >= currentAttackCooldown.current) {
+        startAttack();
+        lastAttackTime.current = currentTime;
+      }
+    }
+  });
+
+  // Render
   return (
     <>
-      <group 
-        ref={bossRef} 
+      <group
+        ref={bossRef}
         visible={!isSpawning && health > 0}
         position={currentPosition.current}
-        scale={[1.5, 1.5, 1.5]}
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
+        scale={[1.75, 1.75, 1.75]}
+        onClick={(e) => e.stopPropagation()}
       >
         <BossModel
           isAttacking={isAttacking}
@@ -216,7 +294,7 @@ export default function BossUnit({
           playerPosition={playerPosition}
         />
 
-        {/* Boss health bar */}
+        {/* Health bar */}
         <Billboard
           position={[0, 5, 0]}
           follow={true}
@@ -248,15 +326,25 @@ export default function BossUnit({
           )}
         </Billboard>
       </group>
-      
+
+      {/* Meteor effect */}
       {isCastingMeteor && (
         <Meteor
-          targetPosition={playerPosition}
+          targetPosition={playerPosRef.current}
           onImpact={(damage) => onAttackPlayer(damage)}
           onComplete={() => setIsCastingMeteor(false)}
-          playerPosition={playerPosition}
+          playerPosition={playerPosRef.current}
+        />
+      )}
+
+      {/* Attack telegraph */}
+      {showAttackIndicator && (
+        <BossAttackIndicator
+          position={currentPosition.current}
+          duration={1}
+          range={ATTACK_RANGE}
         />
       )}
     </>
   );
-} 
+}

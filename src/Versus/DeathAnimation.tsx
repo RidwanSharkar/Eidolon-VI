@@ -14,11 +14,11 @@ const createVortexSegment = () => (
     <mesh>
       <cylinderGeometry args={[0.03, 0.015, 0.3, 8]} />
       <meshStandardMaterial 
-        color="#67f2b9"
+        color="#99ccff"
         transparent
         opacity={0.5}
-        emissive="#67f2b9"
-        emissiveIntensity={0.5}
+        emissive="#66b3ff" // 67f2b9
+        emissiveIntensity={0.75}
       />
     </mesh>
   </group>
@@ -26,13 +26,13 @@ const createVortexSegment = () => (
 
 export default function BoneVortex({ position, onComplete, isSpawning = false }: BoneVortexProps) {
   const segmentsRef = useRef<Mesh[]>([]);
-  const layerCount = 12;
+  const layerCount = 15;
   const segmentsPerLayer = 8;
-  const maxRadius = 1.2;
-  const height = 3;
+  const maxRadius = 1.3;
+  const height = 2.8;
   const groupRef = useRef<Group>(null);
   const startTime = useRef(Date.now());
-  const animationDuration = 1250;
+  const animationDuration = 1500;
   
   useFrame(() => {
     if (!groupRef.current) return;

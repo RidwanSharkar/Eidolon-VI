@@ -13,7 +13,7 @@ import GameWrapper from '../Scene/GameWrapper';
 
 // SKELETON SPAWN POINTS
 const generateRandomPosition = () => {
-  const radius = 35; // Increased radius for more spread
+  const radius = 15
   const angle = Math.random() * Math.PI * 2;
   const distance = Math.sqrt(Math.random()) * radius; // Using sqrt for more even distribution
   return new Vector3(

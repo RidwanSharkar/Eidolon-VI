@@ -82,11 +82,11 @@ export default function DamageNumber({
     textRef.current.material.opacity = Math.min(1, 3 * (1 - progress));
   });
 
-  // Determine text color based on all possible states
+  // Determine text color based on all possible states ORDER IS CRUCIAL ***
   const getTextColor = () => {
     if (isHealing) return "#338C66";
-    if (isBoneclaw) return "#39ff14";
     if (isCritical) return "#ff0000";
+    if (isBoneclaw) return "#39ff14";
     if (isLightning) return "#ffff00";
     if (isOathstrike) return "#8783D1";
     if (isFirebeam) return "#58FCEC";

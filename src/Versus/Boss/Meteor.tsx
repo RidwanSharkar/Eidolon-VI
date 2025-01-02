@@ -12,6 +12,81 @@ interface MeteorProps {
 
 const DAMAGE_RADIUS = 2.95;  // Define damage and visual radius
 
+const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, onComplete: () => void) => {
+  const elapsed = (Date.now() - startTime) / 1000;
+  const duration = 1.25; // Duration of impact effect
+  const fade = Math.max(0, 1 - (elapsed / duration));
+  
+  // If effect is done, call onComplete
+  if (fade <= 0) {
+    onComplete();
+    return null;
+  }
+  
+  return (
+    <group position={position}>
+      {/* Core explosion sphere */}
+      <mesh>
+        <sphereGeometry args={[1.2 * (2 + elapsed), 32, 32]} />
+        <meshStandardMaterial
+          color="#ff2200"
+          emissive="#ff4400"
+          emissiveIntensity={2 * fade}
+          transparent
+          opacity={1.8 * fade}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+      
+      {/* Inner energy sphere */}
+      <mesh>
+        <sphereGeometry args={[1, 24, 24]} />
+        <meshStandardMaterial
+          color="#ff8800"
+          emissive="#ffffff"
+          emissiveIntensity={2 * fade}
+          transparent
+          opacity={1.9 * fade}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      {/* Multiple expanding rings */}
+      {[2.0, 2.15, 2.3, 2.5, 2.7].map((size, i) => (
+        <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
+          <torusGeometry args={[size * (1.325 + elapsed * 2), 0.225, 4, 32]} />
+          <meshStandardMaterial
+            color="#ff2200"
+            emissive="#ff4400"
+            emissiveIntensity={0.7 * fade}
+            transparent
+            opacity={0.95 * fade * (1 - i * 0.1)}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      ))}
+
+
+      {/* Dynamic lights with fade */}
+      <pointLight
+        color="#ff2200"
+        intensity={0.8 * fade}
+        distance={8 * (1 + elapsed)}
+        decay={2}
+      />
+      <pointLight
+        color="#ff8800"
+        intensity={0.8 * fade}
+        distance={12}
+        decay={1}
+      />
+    </group>
+  );
+};
+
 export default function Meteor({ targetPosition, onImpact, onComplete, playerPosition }: MeteorProps) {
   const meteorGroupRef = useRef<THREE.Group>(null);
   const meteorMeshRef = useRef<THREE.Mesh>(null);
@@ -20,6 +95,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
   const [impactOccurred, setImpactOccurred] = useState(false);
   const [showMeteor, setShowMeteor] = useState(false);
   const warningRingRef = useRef<THREE.Mesh>(null);
+  const [impactStartTime, setImpactStartTime] = useState<number | null>(null);
   
   const trajectory = useRef(new THREE.Vector3()
     .subVectors(initialTargetPosition.current, startPosition.current)
@@ -29,19 +105,25 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowMeteor(true);
-    }, 1700);
+    }, 1090);
 
     return () => clearTimeout(timer);
   }, []);
 
   useFrame((_, delta) => {
-    if (!meteorGroupRef.current || !showMeteor || impactOccurred) return;
+    if (!meteorGroupRef.current || !showMeteor || impactOccurred) {
+      if (impactOccurred && !impactStartTime) {
+        setImpactStartTime(Date.now());
+      }
+      return;
+    }
 
     const currentPos = meteorGroupRef.current.position;
     const distanceToTarget = currentPos.distanceTo(initialTargetPosition.current);
 
     if (distanceToTarget < DAMAGE_RADIUS || currentPos.y <= 0.1) {
       setImpactOccurred(true);
+      setImpactStartTime(Date.now());
       
       const playerDistance = new THREE.Vector3(
         playerPosition.x,
@@ -56,9 +138,6 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
       if (playerDistance <= DAMAGE_RADIUS) {
         onImpact(42);
       }
-      
-      setTimeout(() => onComplete(), 3000);
-      return;
     }
 
     const speed = 27.75 * delta;
@@ -147,6 +226,13 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
             />
           </mesh>
         </group>
+      )}
+
+      {/* Add impact effect */}
+      {impactStartTime && createMeteorImpactEffect(
+        meteorGroupRef.current?.position || initialTargetPosition.current,
+        impactStartTime,
+        onComplete
       )}
     </>
   );

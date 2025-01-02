@@ -11,25 +11,25 @@ const createVortexPiece = () => (
   <group>
     {/* Main vortex fragment */}
     <mesh>
-      <boxGeometry args={[0.08, 0.020, 0.020]} />
+      <boxGeometry args={[0.055, 0.015, 0.015]} />
       <meshStandardMaterial 
         color="#ff0000"
         transparent
-        opacity={0.5}
+        opacity={0.35}
         emissive="#ff0000"
-        emissiveIntensity={0.9}
+        emissiveIntensity={0.4}
       />
     </mesh>
     
     {/* Glowing core */}
     <mesh>
-      <sphereGeometry args={[0.035, 6, 6]} />
+      <sphereGeometry args={[0.032, 6, 6]} />
       <meshStandardMaterial 
         color="#ff0000"
         emissive="#ff0000"
-        emissiveIntensity={2}
+        emissiveIntensity={0.9}
         transparent
-        opacity={0.4}
+        opacity={0.6}
       />
     </mesh>
   </group>
@@ -38,7 +38,7 @@ const createVortexPiece = () => (
 export default function BossBoneVortex({ parentRef }: BossBoneVortexProps) {
   const vortexPiecesRef = useRef<(Group | null)[]>([]);
   const pieceCount = 25;
-  const baseRadius = 0.45;
+  const baseRadius = 0.425;
   const groupRef = useRef<Group>(null);
   
   useFrame(({ clock }) => {
@@ -90,9 +90,9 @@ export default function BossBoneVortex({ parentRef }: BossBoneVortexProps) {
       
       <pointLight 
         color="#ff0000"
-        intensity={5}
+        intensity={1.25}
         distance={2.5}
-        position={[0, 0.3, 0]}
+        position={[0, 0.25, 0]}
       />
     </group>
   );

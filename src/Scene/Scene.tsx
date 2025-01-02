@@ -29,7 +29,7 @@ export default function Scene({
   mushroomData,
   unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
-  spawnInterval = 6500,
+  spawnInterval = 6000,
   maxSkeletons = 15,
   initialSkeletons = 5,
 }: SceneProps) {

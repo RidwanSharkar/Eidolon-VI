@@ -2,15 +2,15 @@ export default function DragonSkull() {
   return (
     <group>
       {/* Main Horns - Left and Right */}
-      {[-0.95, 0.95].map((side) => (
+      {[-.905, 0.905].map((side) => (
         <group 
           key={side} 
-          position={[side * 0.60, 0.6, -0.6]}
-          rotation={[-0.95, 0, side * 2.6]} // Changed X rotation to negative to tilt upward
+          position={[side * 0.575, 0.9, -0.55]}
+          rotation={[-0.9, 0, side * 3.025]} // Changed X rotation to negative to tilt upward
         >
           {/* Main Horn Segment */}
           <mesh>
-            <cylinderGeometry args={[.05, 0.009, 1.2, ]} />
+            <cylinderGeometry args={[.09, 0.0125, 1, ]} />
             <meshStandardMaterial 
               color="#d4d4d4"
               roughness={0.4}
@@ -18,13 +18,29 @@ export default function DragonSkull() {
             />
           </mesh>
 
+          {/* Added Teeth Row */}
+          <group position={[0, 2.2, 0.1]} scale={2}>
+            {[-0.03, -0.06, -0.09, 0, 0.03].map((offset, i) => (
+              <group key={i} position={[offset, 0, 0]} rotation={[0.5, 0, 0]}>
+                <mesh>
+                  <coneGeometry args={[0.02, 0.075, 3]} />
+                  <meshStandardMaterial 
+                    color="#e8e8e8"
+                    roughness={0.3}
+                    metalness={0.4}
+                  />
+                </mesh>
+              </group>
+            ))}
+          </group>
+
           {/* Mid Section with Ridge Details */}
           <group 
-            position={[0, 0.1, 0.2]} 
+            position={[0, 0.375, 0.2]} 
             rotation={[-0.0, 0, side * 0.3]} 
           >
             <mesh>
-              <cylinderGeometry args={[0.08, 0.008, 0.9, 32, 32]} />
+              <cylinderGeometry args={[0.08, 0.008, 0.8, 32, 32]} />
               <meshStandardMaterial 
                 color="#c4c4c4"
                 roughness={0.3}
@@ -32,15 +48,15 @@ export default function DragonSkull() {
               />
             </mesh>
             
-            {/* Ridge Spikes - adjusted positions */}
+            {/* Ridge Spikes - adjusted to point forward */}
             {[...Array(5)].map((_, i) => (
               <group 
                 key={i}
-                position={[side * 0.08, i * 0.125, 0.05]}
-                rotation={[11, 0, -side * 2]}
+                position={[side * +0.02, i * 0.095, 0.07]}
+                rotation={[Math.PI / 1.5, 0, 0]}
               >
                 <mesh>
-                  <coneGeometry args={[0.04, 0.11, 32, 32]} />
+                  <coneGeometry args={[0.0325, 0.1, 32, 32]} />
                   <meshStandardMaterial 
                     color="#b4b4b4"
                     roughness={0.5}
@@ -53,11 +69,11 @@ export default function DragonSkull() {
 
           {/* Upper Curved Section */}
           <group 
-            position={[0, 0.7, 0.55]} 
-            rotation={[-0.6, 0, side * 0.3]} // Changed X rotation to negative
+            position={[0, 1.15, +0.325]} 
+            rotation={[-0.675, 0, side * 0.5]} // Changed X rotation to negative
           >
             <mesh>
-              <cylinderGeometry args={[0.07, 0.010, 0.6, 8]} />
+              <cylinderGeometry args={[0.071, 0.0075, 0.6, 5]} />
               <meshStandardMaterial 
                 color="#b4b4b4"
                 roughness={0.3}
@@ -66,20 +82,7 @@ export default function DragonSkull() {
             </mesh>
           </group>
 
-          {/* Sharp Tip */}
-          <group 
-            position={[side * .5, -0.42, -0.6]} // Adjusted Z position to move tip backward
-            rotation={[0.35, 0, side * 0.4]} // Changed X rotation to more negative for upward tilt
-          >
-            <mesh>
-              <cylinderGeometry args={[0.04, 0.01, 1., 8]} />
-              <meshStandardMaterial 
-                color="#a4a4a4"
-                roughness={0.2}
-                metalness={0.6}
-              />
-            </mesh>
-          </group>
+
 
         </group>
       ))}

@@ -103,15 +103,15 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       scale={[1, 1, 1.05]}
     >
       {/* Handle HEIGHT  */}
-      <group position={[0, -0.7, 0]} rotation={[0, 0, -Math.PI]}>
+      <group position={[0, -0.4, 0]} rotation={[0, 0, -Math.PI]}>
         <mesh>
-          <cylinderGeometry args={[0.05, 0.05, 2.1, 12]} /> {/* Reduced from 3.2 to 2.4 */}
+          <cylinderGeometry args={[0.05, 0.05, 2.3, 12]} /> {/* Reduced from 3.2 to 2.4 */}
           <meshStandardMaterial color="#2c1810" roughness={0.7} />
         </mesh>
         
         {/* Decorative wrappings handle */}
-        {[...Array(7)].map((_, i) => ( // Reduced from 12 to 8 wrappings
-          <mesh key={i} position={[0, 0.81 - i * 0.3, 0]} rotation={[Math.PI/2, 0, 0]}> {/* Adjusted starting position */}
+        {[...Array(10)].map((_, i) => ( // Reduced from 12 to 8 wrappings
+          <mesh key={i} position={[0, 1 - i * 0.2, 0]} rotation={[Math.PI/2, 0, 0]}> {/* Adjusted starting position */}
             <torusGeometry args={[0.06, 0.01, 8, 16]} />
             <meshStandardMaterial color="#8B4513" metalness={0.3} roughness={0.7} />
           </mesh>
@@ -119,7 +119,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       </group>
       
       {/* Blade connector  */}
-      <group position={[0, 0.35, 0]} rotation={[Math.PI / 1, 0, Math.PI]}>
+      <group position={[0, 0.60, 0]} rotation={[Math.PI / 1, 0, Math.PI]}>
         {/* Base connector */}
         <mesh>
           <cylinderGeometry args={[0.08, 0.08, 0.3, 8]} />
@@ -168,7 +168,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       </group>
       
       {/* BLADE with glowing effect - adjusted position */}
-      <group position={[0, 0.375, 1.175]} rotation={[-1.0, -Math.PI / 2, Math.PI / 2.2]}>
+      <group position={[0, 0.49, 1.1]} rotation={[-1.0, -Math.PI / 2, Math.PI / 2.2]} scale={[1.0, 0.75, 1.0]}>
         {/* Base blade */}
         <mesh>
           <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.03 }]} />

@@ -82,7 +82,7 @@ export const generateMushrooms = (): Array<{ position: Vector3; scale: number }>
     const x = distance * Math.cos(angle);
     const z = distance * Math.sin(angle);
 
-    const scale = 0.5 + Math.random() * 0.2; // Small mushrooms
+    const scale = 0.45 + Math.random() * 0.2; // Small mushrooms
 
     mushrooms.push({
       position: new Vector3(x, 0, z),
@@ -105,7 +105,7 @@ export const generateRandomPosition = (): Vector3 => {
 
 export const generateFlowers = (): Array<{ position: Vector3; scale: number }> => {
   const flowers: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfFlowers = 30;
+  const numberOfFlowers = 35;
 
   for (let i = 0; i < numberOfFlowers; i++) {
     const angle = Math.random() * Math.PI * 2;

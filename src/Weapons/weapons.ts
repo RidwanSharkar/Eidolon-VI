@@ -45,12 +45,12 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SCYTHE]: {
     normal: 17,
-    range: 4.2,
+    range: 4.4,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
     normal: 13,
-    range: 4.1,
+    range: 4,
     maxHitsPerSwing: 2
   },
   
@@ -66,13 +66,12 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   }
 };
 
-// reduntant current cooldown /max?
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
-    q: { key: 'q', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.65, name: 'Scythe E', isUnlocked: true },
-    r: { key: 'r', cooldown: 2.1, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1, name: 'Boneclaw', isUnlocked: false },
-    passive: { key: '1', cooldown: 1, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
+    q: { key: 'q', cooldown: 0.7, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
+    e: { key: 'e', cooldown: 0.7, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.7, name: 'Scythe E', isUnlocked: true },
+    r: { key: 'r', cooldown: 1.8, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
+    passive: { key: '1', cooldown: 0.775, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false }
   },
 
   [WeaponType.SWORD]: {
@@ -149,7 +148,7 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     r: {
       title: "Bone Claw",
-      description: "Summon skeletal lazer claws - Cooldown: 2.5 seconds - Range: 4.0-8.0 feet",
+      description: "Summon skeletal lazer claws - Cooldown: 1.8 seconds - Range: 4.0-8.0 feet",
       cost: "Cooldown: 2.5 seconds",
       range: "Range: 8.0 feet",
       damage: "Damage: 67"
@@ -183,7 +182,7 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     passive: {
       title: "Crusader Aura",
-      description: "Increases attack speed by 40% and gives attacks a 20% chance to heal."
+      description: "Increases attack speed by 35% and gives attacks a 20% chance to heal."
     }
   },
   [WeaponType.SABRES]: {
@@ -210,7 +209,7 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     passive: {
       title: "Frost Lance",
-      description: "Consumes 1 Orb Charge to fire a beam of ice that piereces through all enemies in a line."
+      description: "Consumes 1 Orb Charge to fire a beam of ice that piereces through all enemies in a line. 4 foot minimum range."
     }
   },
   // Placeholder tooltips for test weapons

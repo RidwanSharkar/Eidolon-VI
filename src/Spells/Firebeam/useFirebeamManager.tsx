@@ -128,7 +128,7 @@ export const useFirebeamManager = ({
     // Automatically stop the beam effect after a short duration
     setTimeout(() => {
       stopFirebeam();
-    }, 3000); 
+    }, 6000);
 
     return undefined; // No longer returning an interval
   }, [ nextDamageNumberId, setDamageNumbers, activateFirebeam, enemyData, onHit, setActiveEffects, consumeCharge, stopFirebeam]);

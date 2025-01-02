@@ -45,8 +45,8 @@ export default function EnemyUnit({
 
   const ATTACK_RANGE = 2.0;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.15;
+  const MOVEMENT_SPEED = 0.1475;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.1475;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 6;

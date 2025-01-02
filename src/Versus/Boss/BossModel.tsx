@@ -18,15 +18,9 @@ interface BossModelProps {
   playerPosition: THREE.Vector3;
 }
 
-export default function BossModel({ isAttacking, isWalking, onHit, playerPosition }: BossModelProps) {
+export default function BossModel({ isAttacking, isWalking, playerPosition }: BossModelProps) {
   const groupRef = useRef<Group>(null);
 
-  // Add click handler for testing/debugging hits
-  const handleHit = (damage: number) => {
-    if (onHit) {
-      onHit(damage);
-    }
-  };
 
   useFrame(() => {
     if (!groupRef.current) return;
@@ -63,16 +57,16 @@ export default function BossModel({ isAttacking, isWalking, onHit, playerPositio
       ref={groupRef}
       onClick={(e) => {
         e.stopPropagation();
-        handleHit(10); // remove this
+
       }}
     >
       {/* Boss Skull - positioned above the body */}
-      <group scale={[0.6, 0.6, 0.6]} position={[0, 2.2, 0.25]} rotation={[0.5, 0, 0]}>
+      <group scale={[0.6, 0.6, 0.6]} position={[0, 2.25, 0]} rotation={[0.40, 0, 0]}>
         <DragonSkull />
       </group>
 
       {/* Scaled Bone Plate */}
-      <group scale={[1.8 , 1.35, 1.6]} position={[0, 1.7, 0]}>
+      <group scale={[1.8 , 1.4, 1.6]} position={[0, 1.7, 0]}>
         <BonePlate />
       </group>
 
@@ -98,7 +92,7 @@ export default function BossModel({ isAttacking, isWalking, onHit, playerPositio
       </group>
 
       {/* Add Decorative Boneclaws */}
-      <group scale={[0.7, 0.7, 0.7]} position={[0, 1.9, 0]}>
+      <group scale={[0.65, 0.65, 0.65]} position={[0, 1.9, 0]}>
         {/* Left Claw */}
         <group position={[-0.85, 0.25, 0.1]} rotation={[0, Math.PI /-2, 0]}>
           <BossClawModel />
@@ -115,7 +109,10 @@ export default function BossModel({ isAttacking, isWalking, onHit, playerPositio
       </group>
 
       {/* Add Glowing Core Effect */}
-      <group position={[0, 2.2, 0]}>
+      <group position={[0, 2.1, 0]}>
+        <BossTrailEffect parentRef={groupRef} />
+      </group>
+      <group position={[0, 1.25, 0]} scale={[0.7, 0.7, 0.7]}>
         <BossTrailEffect parentRef={groupRef} />
       </group>
 
@@ -207,7 +204,7 @@ function BossClawModel() {
         {createJoint(0.08)}
       </group>
       <group position={[0, -length/2, 0]}>
-        {createJoint(0.08)}
+        {createJoint(0.115)}
       </group>
     </group>
   );

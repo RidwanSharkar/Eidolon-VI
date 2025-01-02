@@ -14,6 +14,7 @@ interface ScytheProps {
   onSwingComplete: () => void;
   parentRef: React.RefObject<Group>;
 }
+
 export default function LysScythe({ isSwinging, onSwingComplete, }: ScytheProps) {
   const scytheRef = useRef<Group>(null);
   const swingProgress = useRef(0);
@@ -21,11 +22,11 @@ export default function LysScythe({ isSwinging, onSwingComplete, }: ScytheProps)
   
   useFrame((_, delta) => {
     if (isSwinging && scytheRef.current) {
-      swingProgress.current += delta * 4;
+      swingProgress.current += delta * 6;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
       // Complete swing earlier to prevent extra rotation
-      if (swingProgress.current >= Math.PI * 0.85) {
+      if (swingProgress.current >= Math.PI * 0.5) {
         swingProgress.current = 0;
         scytheRef.current.rotation.set(0, 0, 0);
         scytheRef.current.position.set(...basePosition);
@@ -35,18 +36,18 @@ export default function LysScythe({ isSwinging, onSwingComplete, }: ScytheProps)
       
       // SWING ANIMATION
       const forwardPhase = swingPhase <= 0.25
-      ? swingPhase * 2
-      : (0.6 - (swingPhase - 0.125) * 1.7);
+        ? swingPhase * 2
+        : (0.5 - (swingPhase - 0.25));
       
-      const pivotX = basePosition[0] + Math.sin(forwardPhase * Math.PI) * 2.5;
-      const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -1.5;
-      const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 3;
+      const pivotX = basePosition[0] + Math.sin(forwardPhase * Math.PI) * 2.0;
+      const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -1.2;
+      const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 0.9;
       
       scytheRef.current.position.set(pivotX, pivotY, pivotZ);
       
-      const rotationX = Math.sin(forwardPhase * Math.PI) * (Math.PI / 3);
-      const rotationY = Math.sin(forwardPhase * Math.PI) * Math.PI;
-      const rotationZ = Math.sin(forwardPhase * Math.PI) * (Math.PI / 3);
+      const rotationX = Math.sin(forwardPhase * Math.PI) * (Math.PI / 4);
+      const rotationY = Math.sin(forwardPhase * Math.PI) * (Math.PI / 2);
+      const rotationZ = Math.sin(forwardPhase * Math.PI) * (Math.PI / 4);
       
       scytheRef.current.rotation.set(rotationX, rotationY, rotationZ);
     } else if (!isSwinging && scytheRef.current) {
@@ -54,9 +55,9 @@ export default function LysScythe({ isSwinging, onSwingComplete, }: ScytheProps)
       scytheRef.current.rotation.y *= 0.85;
       scytheRef.current.rotation.z *= 0.85;
       
-      scytheRef.current.position.x += (basePosition[0] - scytheRef.current.position.x) * 0.30;
-      scytheRef.current.position.y += (basePosition[1] - scytheRef.current.position.y) * 0.30;
-      scytheRef.current.position.z += (basePosition[2] - scytheRef.current.position.z) * 0.30;
+      scytheRef.current.position.x += (basePosition[0] - scytheRef.current.position.x) * 0.20;
+      scytheRef.current.position.y += (basePosition[1] - scytheRef.current.position.y) * 0.20;
+      scytheRef.current.position.z += (basePosition[2] - scytheRef.current.position.z) * 0.20;
     }
   });
 
@@ -179,7 +180,7 @@ export default function LysScythe({ isSwinging, onSwingComplete, }: ScytheProps)
             emissiveIntensity={1.25}
             metalness={0.8}
             roughness={0.1}
-            opacity={0.4}
+            opacity={0.5}
             transparent
             side={THREE.DoubleSide}
           />
