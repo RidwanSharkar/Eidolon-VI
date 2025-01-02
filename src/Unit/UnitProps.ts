@@ -1,7 +1,8 @@
-import { Vector3 } from 'three';
+import { Vector3, Group } from 'three';
 import { WeaponType } from '../Weapons/weapons';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { Enemy } from '../Versus/enemy';
+import { RefObject } from 'react';
 
 export interface AbilityButton {
   key: 'q' | 'e' | 'r' | 'passive';
@@ -40,4 +41,5 @@ export interface UnitProps {
   onEnemyDeath: () => void;
   fireballManagerRef: React.RefObject<{ shootFireball: () => void }>;
   onSmiteDamage: (targetId: string, damage: number, isCritical: boolean, position: Vector3) => void;
+  parentRef?: RefObject<Group>;
 }

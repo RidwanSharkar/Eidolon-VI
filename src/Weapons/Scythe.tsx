@@ -102,18 +102,18 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       rotation={[0, 0, Math.PI]}
       scale={[1, 1, 1.05]}
     >
-      {/* Handle HEIGHT  */}
+      {/* Handle   */}
       <group position={[0, -0.4, 0]} rotation={[0, 0, -Math.PI]}>
         <mesh>
-          <cylinderGeometry args={[0.05, 0.05, 2.3, 12]} /> {/* Reduced from 3.2 to 2.4 */}
-          <meshStandardMaterial color="#2c1810" roughness={0.7} />
+          <cylinderGeometry args={[0.04, 0.04, 2.3, 12]} />
+          <meshStandardMaterial color="#a86432" roughness={0.7} />
         </mesh>
         
         {/* Decorative wrappings handle */}
         {[...Array(10)].map((_, i) => ( // Reduced from 12 to 8 wrappings
           <mesh key={i} position={[0, 1 - i * 0.2, 0]} rotation={[Math.PI/2, 0, 0]}> {/* Adjusted starting position */}
-            <torusGeometry args={[0.06, 0.01, 8, 16]} />
-            <meshStandardMaterial color="#8B4513" metalness={0.3} roughness={0.7} />
+            <torusGeometry args={[0.07, 0.01, 8, 16]} />
+            <meshStandardMaterial color="#a86432" metalness={0.3} roughness={0.7} />
           </mesh>
         ))}
       </group>
@@ -128,7 +128,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
 
         {/* Rotating glow rings */}
         <group rotation-x={useFrame((state) => state.clock.getElapsedTime() * 2)}>
-        <mesh position-y={-0.075} rotation={[Math.PI/2, 0, 0]}>
+        <mesh position-y={-0.11} rotation={[Math.PI/2, 0, 0]}>
             <torusGeometry args={[0.145, 0.02, 16, 32]} />
             <meshStandardMaterial
               color="#39ff14"
@@ -142,8 +142,22 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
 
         {/* Second ring rotating opposite direction */}
         <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
-          <mesh position-y={0.03} rotation={[Math.PI/2, 0, 0]}>
-          <torusGeometry args={[0.175, 0.02, 16, 32]} />
+          <mesh position-y={-0.005} rotation={[Math.PI/2, 0, 0]}>
+          <torusGeometry args={[0.135, 0.02, 16, 32]} />
+            <meshStandardMaterial
+              color="#39ff14"
+              emissive="#39ff14"
+              emissiveIntensity={1.5}
+              transparent
+              opacity={0.7}
+            />
+          </mesh>
+        </group>
+
+                {/* Second ring rotating opposite direction */}
+                <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+          <mesh position-y={0.1} rotation={[Math.PI/2, 0, 0]}>
+          <torusGeometry args={[0.145, 0.02, 16, 32]} />
             <meshStandardMaterial
               color="#39ff14"
               emissive="#39ff14"

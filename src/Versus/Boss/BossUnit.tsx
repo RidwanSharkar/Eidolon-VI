@@ -57,12 +57,12 @@ export default function BossUnit({
   const [isAttackOnCooldown, setIsAttackOnCooldown] = useState(false);
 
   // Boss-specific constants
-  const ATTACK_RANGE = 5;
-  const ATTACK_COOLDOWN_NORMAL = 3800;
-  const ATTACK_COOLDOWN_ENRAGED = 2250;
-  const MOVEMENT_SPEED = 0.15;
-  const SMOOTHING_FACTOR = 0.15;
-  const ATTACK_DAMAGE = 26;
+  const ATTACK_RANGE = 5.25;
+  const ATTACK_COOLDOWN_NORMAL = 3250;
+  const ATTACK_COOLDOWN_ENRAGED =2000;
+  const MOVEMENT_SPEED = 0.16;
+  const SMOOTHING_FACTOR = 0.16;
+  const ATTACK_DAMAGE = 24;
   const BOSS_HIT_HEIGHT = 2.0;       
   const BOSS_HIT_RADIUS = 4.0;
   const BOSS_HIT_HEIGHT_RANGE = 4.0;
@@ -261,8 +261,8 @@ export default function BossUnit({
       
       // Make the boss face the player
       bossRef.current.lookAt(lookAtPos);
-      // Rotate 180 degrees around Y axis since the model might be backwards
-      bossRef.current.rotateY(Math.PI/2);
+      // Rotate around Y axis since the model might be backwards??
+      bossRef.current.rotateY(Math.PI * 2 + Math.PI/4);
 
       // If position changed enough, notify parent
       if (currentPosition.current.distanceTo(position) > 0.01) {
@@ -284,7 +284,7 @@ export default function BossUnit({
         ref={bossRef}
         visible={!isSpawning && health > 0}
         position={currentPosition.current}
-        scale={[1.75, 1.75, 1.75]}
+        scale={[1.615, 1.615, 1.615]}
         onClick={(e) => e.stopPropagation()}
       >
         <BossModel

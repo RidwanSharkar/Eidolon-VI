@@ -3,8 +3,11 @@ import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import CustomSkeleton from './CustomSkeleton';
-import BoneVortex from './DeathAnimation';
+import BoneVortex2 from './SpawnAnimation';
 import { Enemy } from './enemy';
+import BoneVortex from './DeathAnimation';
+import { WeaponType } from '../Weapons/weapons';
+
 
 interface EnemyUnitProps {
   id: string;
@@ -16,6 +19,7 @@ interface EnemyUnitProps {
   onPositionUpdate: (id: string, position: Vector3) => void;
   playerPosition: Vector3;
   onAttackPlayer: (damage: number) => void;
+  weaponType: WeaponType;
 }
 
 export default function EnemyUnit({
@@ -28,6 +32,7 @@ export default function EnemyUnit({
   onPositionUpdate,
   playerPosition,
   onAttackPlayer,
+  weaponType,
 }: EnemyUnitProps & Pick<Enemy, 'position'>) {
   const enemyRef = useRef<Group>(null);
   const lastAttackTime = useRef<number>(Date.now() + 2000);
@@ -141,7 +146,7 @@ export default function EnemyUnit({
           // Get the current positions at time of damage
           const finalDistanceToPlayer = currentPosition.current.distanceTo(playerPosition);
           
-          // Only deal damage if:
+          // ONE SECOND TELEGRAPH
           // 1. Enemy is still alive
           // 2. Player is still in range
           // 3. Enemy hasn't moved too far from attack start position
@@ -218,7 +223,7 @@ export default function EnemyUnit({
       </group>
 
       {isSpawning && (
-        <BoneVortex 
+        <BoneVortex2 
           position={currentPosition.current}
           onComplete={() => {
             setIsSpawning(false);
@@ -234,6 +239,7 @@ export default function EnemyUnit({
             setShowDeathEffect(false);
           }}
           isSpawning={false}
+          weaponType={weaponType}
         />
       )}
     </>

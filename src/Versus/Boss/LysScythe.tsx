@@ -22,7 +22,7 @@ export default function LysScythe({ isSwinging, onSwingComplete, }: ScytheProps)
   
   useFrame((_, delta) => {
     if (isSwinging && scytheRef.current) {
-      swingProgress.current += delta * 6;
+      swingProgress.current += delta * 2.7;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
       // Complete swing earlier to prevent extra rotation
@@ -107,15 +107,26 @@ export default function LysScythe({ isSwinging, onSwingComplete, }: ScytheProps)
       {/* Handle HEIGHT  */}
       <group position={[0, -0.7, 0]} rotation={[0, 0, -Math.PI]}>
         <mesh>
-          <cylinderGeometry args={[0.05, 0.05, 2.5, 12]} /> {/* Reduced from 3.2 to 2.4 */}
-          <meshStandardMaterial color="#2c1810" roughness={0.7} />
+          <cylinderGeometry args={[0.05, 0.05, 2.5, 12]} />
+          <meshStandardMaterial 
+            color="#2c1810" 
+            roughness={0.7} 
+            transparent
+            opacity={0.5}
+          />
         </mesh>
         
         {/* Decorative wrappings handle */}
-        {[...Array(7)].map((_, i) => ( // Reduced from 12 to 8 wrappings
-          <mesh key={i} position={[0, 0.81 - i * 0.3, 0]} rotation={[Math.PI/2, 0, 0]}> {/* Adjusted starting position */}
+        {[...Array(7)].map((_, i) => (
+          <mesh key={i} position={[0, 0.81 - i * 0.3, 0]} rotation={[Math.PI/2, 0, 0]}>
             <torusGeometry args={[0.06, 0.01, 8, 16]} />
-            <meshStandardMaterial color="#8B4513" metalness={0.3} roughness={0.7} />
+            <meshStandardMaterial 
+              color="#8B4513" 
+              metalness={0.3} 
+              roughness={0.7}
+              transparent
+              opacity={0.5}
+            />
           </mesh>
         ))}
       </group>

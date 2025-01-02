@@ -2,34 +2,53 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, Vector3 } from 'three';
 import * as THREE from 'three';
+import { WeaponType } from '../Weapons/weapons';
 
 interface BoneVortexProps {
   position: Vector3;
   onComplete?: () => void;
   isSpawning?: boolean;
+  weaponType: WeaponType;
 }
 
-const createVortexSegment = () => (
-  <group>
-    <mesh>
-      <cylinderGeometry args={[0.03, 0.015, 0.3, 8]} />
-      <meshStandardMaterial 
-        color="#99ccff"
-        transparent
-        opacity={0.5}
-        emissive="#66b3ff" // 67f2b9
-        emissiveIntensity={0.75}
-      />
-    </mesh>
-  </group>
-);
+const getVortexColor = (weaponType: WeaponType) => {
+  switch (weaponType) {
+    case WeaponType.SCYTHE:
+      return '#FF9E3D';
+    case WeaponType.SWORD:
+      return '#C7BEFF';
+    case WeaponType.SABRES:
+    case WeaponType.SABRES2:
+      return '#78F6FF';
+    default:
+      return '#00ff44'; // 00FF37
+  }
+};
 
-export default function BoneVortex({ position, onComplete, isSpawning = false }: BoneVortexProps) {
+const createVortexSegment = (weaponType: WeaponType) => {
+  const color = getVortexColor(weaponType);
+  return (
+    <group>
+      <mesh>
+        <cylinderGeometry args={[0.0125, 0.0315, 0.25, 8]} />
+        <meshStandardMaterial 
+          color={color}
+          transparent
+          opacity={0.45}
+          emissive={color}
+          emissiveIntensity={0.45}
+        />
+      </mesh>
+    </group>
+  );
+};
+
+export default function BoneVortex({ position, onComplete, isSpawning = false, weaponType }: BoneVortexProps) {
   const segmentsRef = useRef<Mesh[]>([]);
-  const layerCount = 15;
-  const segmentsPerLayer = 8;
-  const maxRadius = 1.3;
-  const height = 2.8;
+  const layerCount = 14;
+  const segmentsPerLayer = 10;
+  const maxRadius = 1.15;
+  const height = 2.5;
   const groupRef = useRef<Group>(null);
   const startTime = useRef(Date.now());
   const animationDuration = 1500;
@@ -90,7 +109,7 @@ export default function BoneVortex({ position, onComplete, isSpawning = false }:
             if (el) segmentsRef.current[i] = el;
           }}
         >
-          {createVortexSegment()}
+          {createVortexSegment(weaponType)}
         </mesh>
       ))}
     </group>

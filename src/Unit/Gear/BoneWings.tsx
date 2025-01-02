@@ -18,9 +18,9 @@ export default function BoneWings({ collectedBones, isLeftWing }: BoneWingsProps
     const wingBonePositions: BonePosition[] = [
     // Main central arm bone
     { 
-      pos: new Vector3(isLeftWing ? -0.3 : 0.3, 0.3, 0), 
-      rot: new Euler(0, 0, isLeftWing ? -Math.PI / 6 : Math.PI / 6), 
-      scale: 1.3 
+      pos: new Vector3(isLeftWing ? -0.3 : 0.3, 0.275, 0), 
+      rot: new Euler(0, 0, isLeftWing ? -Math.PI / 5 : Math.PI / 5), 
+      scale: 1.2 
     },
     { 
       pos: new Vector3(isLeftWing ? -0.5 : 0.5, 0.45, 0), 

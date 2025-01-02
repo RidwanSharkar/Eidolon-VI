@@ -73,16 +73,17 @@ export const generateTrees = (): GeneratedTree[] => {
 
 export const generateMushrooms = (): Array<{ position: Vector3; scale: number }> => {
   const mushrooms: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMushrooms = 70; // Adjust 
+  const numberOfMushrooms = 60; 
+
 
   for (let i = 0; i < numberOfMushrooms; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const distance = Math.random() * 45; // Within the baseRadius + layers
+    const distance = Math.random() * 48; // Within the baseRadius + layers
 
     const x = distance * Math.cos(angle);
     const z = distance * Math.sin(angle);
 
-    const scale = 0.45 + Math.random() * 0.2; // Small mushrooms
+    const scale = 0.45 + Math.random() * 0.175; // Small mushrooms
 
     mushrooms.push({
       position: new Vector3(x, 0, z),
@@ -95,7 +96,7 @@ export const generateMushrooms = (): Array<{ position: Vector3; scale: number }>
 
 export const generateRandomPosition = (): Vector3 => {
   const angle = Math.random() * Math.PI * 2;
-  const distance = Math.random() * 37; // spawn radus
+  const distance = Math.random() * 20; // REAL SPAWN RADIUS!?
 
   const x = Math.cos(angle) * distance;
   const z = Math.sin(angle) * distance;

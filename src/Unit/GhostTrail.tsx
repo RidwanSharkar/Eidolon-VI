@@ -27,14 +27,13 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
   const getTrailColor = () => {
     switch (weaponType) {
       case WeaponType.SCYTHE:
-        return '#39ff14';
+        return '#1EFF00'; // 39ff14
       case WeaponType.SWORD:
-        return '#8783D1';
+        return '#9382FF'; // 8783D1
       case WeaponType.SABRES:
-        return '#58FCEC';
+        return '#00EEFF'; //78DFFF
     }
   };
-
   useFrame(() => {
     if (!parentRef.current || !isInitialized) return;
 

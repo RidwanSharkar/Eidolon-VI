@@ -25,6 +25,8 @@ export default function LevelManager({
   const handleLevelComplete = useCallback(() => {
     if (currentLevel === 1) {
       onLevelTransition(1, true);
+    } else if (currentLevel === 2) {
+      onLevelTransition(2, false);
     }
   }, [currentLevel, onLevelTransition]);
 

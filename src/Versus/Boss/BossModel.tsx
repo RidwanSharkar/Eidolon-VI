@@ -13,22 +13,18 @@ import * as THREE from 'three';
 
 interface BossModelProps {
   isAttacking: boolean;
-  isWalking: boolean;
   onHit?: (damage: number) => void;
   playerPosition: THREE.Vector3;
+  isWalking: boolean;
 }
 
-export default function BossModel({ isAttacking, isWalking, playerPosition }: BossModelProps) {
+export default function BossModel({ isAttacking, playerPosition }: BossModelProps) {
   const groupRef = useRef<Group>(null);
 
 
   useFrame(() => {
     if (!groupRef.current) return;
 
-    if (isWalking) {
-      // Keep floating animation
-      groupRef.current.position.y = Math.sin(Date.now() * 0.001) * 0.1;
-    }
 
     // Calculate direction to player while keeping boss upright
     const directionToPlayer = new THREE.Vector3()
@@ -61,17 +57,17 @@ export default function BossModel({ isAttacking, isWalking, playerPosition }: Bo
       }}
     >
       {/* Boss Skull - positioned above the body */}
-      <group scale={[0.6, 0.6, 0.6]} position={[0, 2.25, 0]} rotation={[0.40, 0, 0]}>
+      <group scale={[0.57, 0.57, 0.57]} position={[0, 2.05, 0]} rotation={[0.35, 0, 0]}>
         <DragonSkull />
       </group>
 
       {/* Scaled Bone Plate */}
-      <group scale={[1.8 , 1.4, 1.6]} position={[0, 1.7, 0]}>
+      <group scale={[1.65 , 1.15, 1.2]} position={[0, 1.6, 0]}>
         <BonePlate />
       </group>
 
       {/* Scaled Wings */}
-      <group scale={[1.9, 1.6, 1.4]} position={[0, 2, 0]}>
+      <group scale={[1.75, 1.45, 1.6]} position={[0, 2, 0]}>
         {/* Left Wing */}
         <group rotation={[0, Math.PI / 7, 0]}>
           <BoneWings 
@@ -92,49 +88,52 @@ export default function BossModel({ isAttacking, isWalking, playerPosition }: Bo
       </group>
 
       {/* Add Decorative Boneclaws */}
-      <group scale={[0.65, 0.65, 0.65]} position={[0, 1.9, 0]}>
+      <group scale={[0.625, 0.625, 0.625]} position={[0, 1.9, 0]}>
         {/* Left Claw */}
-        <group position={[-0.85, 0.25, 0.1]} rotation={[0, Math.PI /-2, 0]}>
+        <group position={[-0.775, 0.25, 0.1]} rotation={[0, Math.PI /-2, 0]}>
           <BossClawModel />
         </group>
         {/* Right Claw */}
-        <group position={[0.85, 0.25, 0.1]} rotation={[0, -Math.PI / 6, 0]}>
+        <group position={[0.775, 0.225, 0.1]} rotation={[0, -Math.PI / 6, 0]}>
           <BossClawModel />
         </group>
       </group>
 
       {/* Scaled Tail */}
-      <group scale={[2, 2, 2]} position={[0, 1.75, -0.15]}>
+      <group scale={[1.5, 1.5, 1.5]} position={[0, 1.7, 0.16]}>
         <BoneTail />
       </group>
 
       {/* Add Glowing Core Effect */}
-      <group position={[0, 2.1, 0]}>
-        <BossTrailEffect parentRef={groupRef} />
-      </group>
-      <group position={[0, 1.25, 0]} scale={[0.7, 0.7, 0.7]}>
-        <BossTrailEffect parentRef={groupRef} />
+      <group position={[0,1.85, 0]}>
+      <BossTrailEffect parentRef={groupRef} />
       </group>
 
+      {/* 
+      <group position={[0,0.15, 0]} scale={[9.25, 50.25, 9.25]}>
+        <BossTrailEffect parentRef={groupRef} />
+      </group>
+     */}
+
       {/* Add Bone Vortex Effects */}
-      <group scale={[2.1, 2.25, 2.1]}>
+      <group scale={[2.1, 2.25, 2.1]} position={[0, -0.325, 0]}>
         {/* Front Vortex */}
-        <group position={[0, 0, 0.1]} rotation={[0, 0, 0]}>
+        <group position={[0, 0, 0.11]} rotation={[0, 0, 0]}>
           <BossBoneVortex parentRef={groupRef} />
         </group>
         
         {/* Back Vortex */}
-        <group position={[0, 0, -0.1]} rotation={[0, Math.PI, 0]}>
+        <group position={[0, 0, -0.11]} rotation={[0, Math.PI, 0]}>
           <BossBoneVortex parentRef={groupRef} />
         </group>
         
         {/* Left Vortex */}
-        <group position={[0.1, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <group position={[0.11, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
           <BossBoneVortex parentRef={groupRef} />
         </group>
         
         {/* Right Vortex */}
-        <group position={[-0.1, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <group position={[-0.11, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
           <BossBoneVortex parentRef={groupRef} />
         </group>
       </group>
@@ -144,7 +143,7 @@ export default function BossModel({ isAttacking, isWalking, playerPosition }: Bo
       <group 
         position={[0.5, 2.6, +0.2]} 
         rotation={[Math.PI/3 + 0.2, 1 + Math.PI + 1.15, 1.45]} 
-        scale={[0.60, 0.60, 0.60]}
+        scale={[0.57, 0.57, 0.57]}
       >
         <LysScythe 
           isSwinging={isAttacking} 
@@ -157,7 +156,7 @@ export default function BossModel({ isAttacking, isWalking, playerPosition }: Bo
       <group 
         position={[-0.5, 2.31, -1]} 
         rotation={[Math.PI/3 + 0.2, -(1 + Math.PI + 1.15), -1.45]} 
-        scale={[0.60, 0.60, 0.60]}
+        scale={[0.57, 0.57, 0.57]}
       >
         <DexScythe 
           isSwinging={isAttacking} 
@@ -201,10 +200,10 @@ function BossClawModel() {
         {createBoneSegment(length, 0.06)}
       </group>
       <group position={[0, length/2, 0]}>
-        {createJoint(0.08)}
+        {createJoint(0.17)}
       </group>
       <group position={[0, -length/2, 0]}>
-        {createJoint(0.115)}
+        {createJoint(0.075)}
       </group>
     </group>
   );

@@ -154,6 +154,9 @@ export default function Unit({
   // Add near other refs at top of component
   const crusaderAuraRef = useRef<{ processHealingChance: () => void }>(null);
 
+  // Add near other state declarations
+  const [bowGroundEffectProgress, setBowGroundEffectProgress] = useState(0);
+
 
 
 
@@ -374,8 +377,9 @@ export default function Unit({
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 1.85, 1); // 2 seconds for full charge
+      const progress = Math.min(chargeTime / 1.675, 1); // 2 seconds for full charge
       setBowChargeProgress(progress);
+      setBowGroundEffectProgress(progress); // Update ground effect progress
 
       // Smooth charge line opacity using delta
       const targetOpacity = progress;
@@ -393,7 +397,7 @@ export default function Unit({
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       
       if (distanceTraveled < projectile.maxDistance) {
-        const speed = 0.625;
+        const speed = projectile.power >= 1 ? 0.645 : 0.45;
         projectile.position.add(
           projectile.direction
             .clone()
@@ -668,9 +672,9 @@ export default function Unit({
     }));
 
     const baseDamage = 11;
-    const maxDamage = 87;
+    const maxDamage = 70;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
-    const fullChargeDamage = power >= 0.99 ? 20 : 0;
+    const fullChargeDamage = power >= 0.99 ? 47 : 0;
     const finalDamage = scaledDamage + fullChargeDamage;
     
     onHit(targetId, finalDamage);
@@ -696,7 +700,7 @@ export default function Unit({
     const enemy = enemyData.find(e => e.id === targetId);
     if (!enemy) return;
 
-    const { damage, isCritical } = calculateDamage(59); // Fixed fireball damage
+    const { damage, isCritical } = calculateDamage(53); // Fixed fireball damage
     
     onHit(targetId, damage);
 
@@ -751,12 +755,12 @@ export default function Unit({
       <group ref={groupRef} position={[0, 1, 0]}>
         
         {/* Outer glow SPhere layer */}
-        <mesh scale={1.1}>
-          <sphereGeometry args={[0.35, 32, 32]} />
+        <mesh scale={1.085}>
+          <sphereGeometry args={[0.415, 32, 32]} />
           <meshBasicMaterial
-            color="#EAC4D5"
+            color="#ffffff"
             transparent
-            opacity={0.1}
+            opacity={0.125}
             depthWrite={false}
           />
         </mesh>
@@ -799,10 +803,12 @@ export default function Unit({
           charges={fireballCharges}
           weaponType={currentWeapon}
         />
-      <group scale={[1 , 0.85, 1]} position={[0, 0, -0.1]}>
+      <group scale={[1 , 0.70, 0.8]} position={[0, 0, -0.1]}>
         <BonePlate />
       </group>
+      <group scale={[0.85  , 0.85, 0.85]} position={[0, 0.05, +0.1]}>
         <BoneTail />
+      </group>
         
         {currentWeapon === WeaponType.SABRES ? (
           <Sabres 
@@ -1283,6 +1289,88 @@ export default function Unit({
         }
         return null;
       })}
+
+      {isBowCharging && (
+        <group 
+          position={groupRef.current ? (() => {
+            const forward = new Vector3(0, 0, 1)
+              .applyQuaternion(groupRef.current.quaternion)
+              .multiplyScalar(2);
+            return [
+              groupRef.current.position.x + forward.x,
+              0.01,
+              groupRef.current.position.z + forward.z
+            ];
+          })() : [0, 0.015, 0]}
+          ref={el => {
+            if (el && groupRef?.current) {
+              el.rotation.y = groupRef.current.rotation.y;
+            }
+          }}
+        >
+          {/* Main rectangular charge area */}
+          <mesh 
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[0, 0.15, (bowGroundEffectProgress * 15 -4.5)]}
+          >
+            <planeGeometry 
+              args={[
+                0.4,
+                bowGroundEffectProgress * 30 -4,
+              ]} 
+            />
+            <meshStandardMaterial
+              color="#00ffff"
+              emissive="#00ffff"
+              emissiveIntensity={1}
+              transparent
+              opacity={0.3 + (0.4 * bowGroundEffectProgress)}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+
+          {/* Side lines */}
+          {[-0.4, 0.4].map((xOffset, i) => (
+            <mesh 
+              key={i}
+              position={[xOffset, 0.1, (bowGroundEffectProgress * 7.5+3.5)]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[0.125, bowGroundEffectProgress * 15+10]} />
+              <meshStandardMaterial
+                color="#80ffff"
+                emissive="#80ffff"
+                emissiveIntensity={2}
+                transparent
+                opacity={0.6 * bowGroundEffectProgress}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+              />
+            </mesh>
+          ))}
+
+          {/* Cross lines */}
+          {[...Array(10)].map((_, i) => (
+            <mesh 
+              key={i}
+              position={[0, 0.1, (i * 2.5 * bowGroundEffectProgress) + (bowGroundEffectProgress * 3 -2)]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[1, 0.1]} />
+              <meshStandardMaterial
+                color="#00ffff"
+                emissive="#00ffff"
+                emissiveIntensity={1.5}
+                transparent
+                opacity={0.4 * bowGroundEffectProgress * (1 - i * 0.07)}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+              />
+            </mesh>
+          ))}
+        </group>
+      )}
     </>
   );
 }

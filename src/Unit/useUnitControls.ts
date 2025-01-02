@@ -77,6 +77,12 @@ export function useUnitControls({
     cameraDirection.y = 0;
     cameraDirection.normalize();
 
+    const currentRotation = groupRef.current.rotation.y;
+    const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
+    const rotationSpeed = 0.1;
+    
+    groupRef.current.rotation.y = currentRotation + (targetRotation - currentRotation) * rotationSpeed;
+
     const cameraRight = new Vector3(
       -cameraDirection.z,
       0,
@@ -90,12 +96,22 @@ export function useUnitControls({
     if (keys.current.a) moveDirection.sub(cameraRight);
     if (keys.current.d) moveDirection.add(cameraRight);
 
+    if (controlsRef.current) {
+      const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
+      groupRef.current.rotation.y = targetRotation;
+    }
+
     if (moveDirection.length() > 0) {
       moveDirection.normalize();
-      groupRef.current.position.add(moveDirection.multiplyScalar(speed));
-
-      const targetRotation = Math.atan2(moveDirection.x, moveDirection.z);
-      groupRef.current.rotation.y = targetRotation;
+      
+      // Calculate dot product between movement and facing direction
+      const dotProduct = moveDirection.dot(cameraDirection);
+      
+      // Adjust speed based on movement direction
+      const backwardsSpeed = speed * 0.6; // 60% of normal speed when moving backwards
+      const currentSpeed = dotProduct < 0 ? backwardsSpeed : speed;
+      
+      groupRef.current.position.add(moveDirection.multiplyScalar(currentSpeed));
     }
 
     if (controlsRef.current) {

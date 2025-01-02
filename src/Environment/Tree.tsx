@@ -45,21 +45,23 @@ const TreeComponent: React.FC<TreeProps> = ({
           metalness={0.1}
         />
         
-        {/* Main foliage */}
-        <mesh position={[0, trunkHeight * 0.6, 0]} name="tree-top">
-          <coneGeometry args={[leafSize, leafHeight, 8]} />
+
+
+        <mesh position={[0, trunkHeight * 0.69, 0]} name="tree-top">
+          <coneGeometry args={[leafSize* 0.8, leafHeight* 0.8, 8]} />
           <meshStandardMaterial 
             color={variedLeafColor}
             roughness={0.4}
             metalness={0.1}
             emissive={variedLeafColor}
-            emissiveIntensity={0.4}
+            emissiveIntensity={0.3}
           />
         </mesh>
 
+
         {/* Secondary foliage layer */}
-        <mesh position={[0, trunkHeight * 0.8, 0]} name="tree-top-2">
-          <coneGeometry args={[leafSize * 0.7, leafHeight * 0.7, 8]} />
+        <mesh position={[0, trunkHeight * 0.875, 0]} name="tree-top-2">
+          <coneGeometry args={[leafSize * 0.6, leafHeight * 0.8, 8]} />
           <meshStandardMaterial 
             color={variedLeafColor.clone().multiplyScalar(1.1)}
             roughness={0.4}
@@ -69,15 +71,28 @@ const TreeComponent: React.FC<TreeProps> = ({
           />
         </mesh>
 
+                        {/* Main foliage */}
+                        <mesh position={[0, trunkHeight * 0.56, 0]} name="tree-top">
+          <coneGeometry args={[leafSize, leafHeight, 8]} />
+          <meshStandardMaterial 
+            color={variedLeafColor}
+            roughness={0.4}
+            metalness={0.1}
+            emissive={variedLeafColor}
+            emissiveIntensity={0.25}
+          />
+        </mesh>
+
+
         {/* Top foliage layer */}
-        <mesh position={[0, trunkHeight, 0]} name="tree-top-3">
-          <coneGeometry args={[leafSize * 0.4, leafHeight * 0.4, 8]} />
+        <mesh position={[0, trunkHeight*0.925, 0]} name="tree-top-3">
+          <coneGeometry args={[leafSize * 0.525, leafHeight * 0.45, 8]} />
           <meshStandardMaterial 
             color={variedLeafColor.clone().multiplyScalar(1.2)}
             roughness={0.4}
             metalness={0.1}
             emissive={variedLeafColor}
-            emissiveIntensity={0.2}
+            emissiveIntensity={0.35}
           />
         </mesh>
       </mesh>

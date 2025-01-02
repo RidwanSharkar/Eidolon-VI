@@ -111,7 +111,7 @@ export default function GameWrapper({
               MIDDLE: undefined,
               RIGHT: THREE.MOUSE.ROTATE
             }}
-            minDistance={7}
+            minDistance={6}
             rotateSpeed={0.75}
             enableDamping={true}
             dampingFactor={0.075}

@@ -30,7 +30,7 @@ export default function BossAttackIndicator({ position, duration, range }: BossA
   });
 
   return (
-    <group position={[position.x, 1.15, position.z]}>
+    <group position={[position.x, 0.5, position.z]}>
       {/* Main warning ring */}
       <mesh
         ref={ringRef}

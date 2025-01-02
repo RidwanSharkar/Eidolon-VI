@@ -14,4 +14,5 @@
      onAttackPlayer: (damage: number) => void;
      onPositionUpdate: (id: string, position: Vector3) => void;
      position: THREE.Vector3;
+    
    }

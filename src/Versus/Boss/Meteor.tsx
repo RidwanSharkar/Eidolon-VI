@@ -136,7 +136,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
       ));
 
       if (playerDistance <= DAMAGE_RADIUS) {
-        onImpact(42);
+        onImpact(72);
       }
     }
 
@@ -157,7 +157,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
           <meshBasicMaterial 
             color="#ff2200"
             transparent 
-            opacity={0.6}
+            opacity={0.4}
             side={THREE.DoubleSide}
           />
         </mesh>
@@ -185,7 +185,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
           <meshBasicMaterial 
             color="#ff3300"
             transparent
-            opacity={0.3}
+            opacity={0.25}
             side={THREE.DoubleSide}
           />
         </mesh>

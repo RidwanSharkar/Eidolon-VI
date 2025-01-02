@@ -65,9 +65,9 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
           <meshStandardMaterial
             color="#00ff88"
             emissive="#00ff88"
-            emissiveIntensity={2}
+            emissiveIntensity={0.75}
             transparent
-            opacity={opacity * (1 - i * 0.2)}
+            opacity={opacity * (1 - i * 0.1)}
           />
         </mesh>
       ))}
@@ -78,7 +78,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
         <meshStandardMaterial
           color="#00ff88"
           emissive="#00ff88"
-          emissiveIntensity={3}
+          emissiveIntensity={1.25}
           transparent
           opacity={opacity * 0.3}
         />
@@ -103,9 +103,9 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
             <meshStandardMaterial
               color="#00ff88"
               emissive="#00ff88"
-              emissiveIntensity={2}
+              emissiveIntensity={0.25}
               transparent
-              opacity={opacity * 0.8}
+              opacity={opacity * 0.3}
             />
           </mesh>
         );
@@ -114,7 +114,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
       {/* Light source */}
       <pointLight
         color="#00ff88"
-        intensity={4 * opacity}
+        intensity={2 * opacity}
         distance={5}
         decay={2}
       />

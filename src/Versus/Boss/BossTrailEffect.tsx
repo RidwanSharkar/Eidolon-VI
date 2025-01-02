@@ -83,7 +83,7 @@ const BossTrailEffect: React.FC<BossTrailEffectProps> = ({ parentRef }) => {
           void main() {
             float d = length(gl_PointCoord - vec2(0.5));
             float strength = smoothstep(0.5, 0.1, d);
-            vec3 glowColor = mix(vec3(0.6, 0.0, 0.0), vec3(0.8, 0.1, 0.1), 0.4);
+            vec3 glowColor = mix(vec3(0.8, 0.1, 0.1), vec3(1.0, 0.3, 0.3), 0.4);
             gl_FragColor = vec4(glowColor, vOpacity * strength);
           }
         `}

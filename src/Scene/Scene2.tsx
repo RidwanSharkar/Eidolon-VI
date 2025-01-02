@@ -228,7 +228,7 @@ export default function Scene2({
 
   useEffect(() => {
     if (unitProps.controlsRef.current) {
-      unitProps.controlsRef.current.object.position.set(0, 12, -18);
+      unitProps.controlsRef.current.object.position.set(0, 12, -18); //camera start position
       unitProps.controlsRef.current.target.set(0, 0, 0);
       unitProps.controlsRef.current.update();
     }
@@ -292,6 +292,7 @@ export default function Scene2({
           onPositionUpdate={handleEnemyPositionUpdate}
           playerPosition={playerPosition}
           onAttackPlayer={handlePlayerDamage}
+          weaponType={unitProps.currentWeapon}
         />
       ))}
 

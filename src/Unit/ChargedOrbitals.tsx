@@ -1,9 +1,10 @@
 import React, { useRef } from 'react';
-import { Mesh, Group } from 'three';
+import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { WeaponType } from '../Weapons/weapons';
+import * as THREE from 'three';
 
-export const ORBITAL_COOLDOWN = 7750; // ORB CHARGE COOLDOWN
+export const ORBITAL_COOLDOWN = 8000; // ORB CHARGE COOLDOWN
 
 interface ChargeStatus {
   id: number;
@@ -32,22 +33,21 @@ export default function ChargedOrbitals({
   particleCount = 8,
   weaponType
 }: ChargedOrbitalsProps) {
-  const particlesRef = useRef<Mesh[]>([]);
+  const particlesRef = useRef<Group[]>([]);
 
   const getOrbitalColor = () => {
     switch (weaponType) {
       case WeaponType.SCYTHE:
         return '#00ff44';
       case WeaponType.SWORD:
-        return '#8783D1';
+        return '#FF801F'; //  8783D1 FF6F00
       case WeaponType.SABRES:
       case WeaponType.SABRES2:
-        return '#73EEDC';
+        return '#00EEFF'; // 78F6FF
       default:
-        return '#00ff44';  // Default to scythe color
+        return '#00ff44';  // Default to scythe 78F6FF
     }
   };
-
   const activeColor = getOrbitalColor();
 
   useFrame(() => {
@@ -69,21 +69,39 @@ export default function ChargedOrbitals({
         const chargeStatus = charges[i];
         
         return (
-          <mesh
+          <group 
             key={i}
             ref={(el) => {
               if (el) particlesRef.current[i] = el;
             }}
           >
-            <sphereGeometry args={[particleSize, 8, 8]} />
-            <meshStandardMaterial
-              color={chargeStatus?.available ? activeColor : "#333333"}
-              emissive={chargeStatus?.available ? activeColor : "#333333"}
-              emissiveIntensity={chargeStatus?.available ? 2 : 0.5}
-              transparent
-              opacity={chargeStatus?.available ? 0.8 : 0.4}
-            />
-          </mesh>
+            {/* Inner glowing sphere */}
+            <mesh>
+              <sphereGeometry args={[particleSize, 8, 8]} />
+              <meshStandardMaterial
+                color={chargeStatus?.available ? activeColor : "#333333"}
+                emissive={chargeStatus?.available ? activeColor : "#333333"}
+                emissiveIntensity={chargeStatus?.available ? 1.25 : 0.4}
+                transparent
+                opacity={chargeStatus?.available ? 0.8 : 0.4}
+              />
+            </mesh>
+
+            {/* Outer opaque layer */}
+            <mesh>
+              <sphereGeometry args={[particleSize*1.2, 32, 32]} />
+              <meshStandardMaterial
+                color={chargeStatus?.available ? activeColor : "#333333"}
+                emissive={chargeStatus?.available ? activeColor : "#333333"}
+                emissiveIntensity={chargeStatus?.available ? .5 : 0.1}
+                transparent
+                opacity={chargeStatus?.available ? 0.4 : 0.15}
+                depthWrite={false}
+                side={THREE.DoubleSide}
+                blending={THREE.AdditiveBlending}
+              />
+            </mesh>
+          </group>
         );
       })}
     </>

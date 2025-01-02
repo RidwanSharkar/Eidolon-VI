@@ -246,6 +246,7 @@ export default function Scene({
             onPositionUpdate={handleEnemyPositionUpdate}
             playerPosition={playerPosition}
             onAttackPlayer={handlePlayerDamage}
+            weaponType={unitProps.currentWeapon}
           />
         ))}
 
