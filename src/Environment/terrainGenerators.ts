@@ -14,7 +14,7 @@ export const generateMountains = (): Array<{ position: Vector3; scale: number }>
 
   for (let i = 0; i < numberOfMountains; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const distance = 46 + Math.random() * 10;
+    const distance = 46.5 + Math.random() * 15;
 
     const x = Math.cos(angle) * distance;
     const z = Math.sin(angle) * distance;

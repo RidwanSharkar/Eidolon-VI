@@ -40,7 +40,7 @@ export default function ChargedOrbitals({
       case WeaponType.SCYTHE:
         return '#00ff44';
       case WeaponType.SWORD:
-        return '#FF801F'; //  8783D1 FF6F00
+        return '#FF9C50'; //  8783D1 FF6F00 FF801F
       case WeaponType.SABRES:
       case WeaponType.SABRES2:
         return '#00EEFF'; // 78F6FF

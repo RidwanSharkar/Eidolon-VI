@@ -16,10 +16,10 @@ const getVortexColor = (weaponType: WeaponType) => {
     case WeaponType.SCYTHE:
       return '#FF9E3D';
     case WeaponType.SWORD:
-      return '#C7BEFF';
+      return '#7A65FF';
     case WeaponType.SABRES:
     case WeaponType.SABRES2:
-      return '#78F6FF';
+      return '#00EEFF';
     default:
       return '#00ff44'; // 00FF37
   }
