@@ -70,12 +70,14 @@ export default function Unit({
   const [fireballs, setFireballs] = useState<FireballData[]>([]);
   const nextFireballId = useRef(0);
   const { camera } = useThree();
+  const [isBowCharging, setIsBowCharging] = useState(false);
   const { keys: movementKeys } = useUnitControls({
     groupRef,
     controlsRef,
     camera: camera!,
     onPositionUpdate,
-    health
+    health,
+    isCharging: isBowCharging
   });
 
   // SMITE 
@@ -101,7 +103,6 @@ export default function Unit({
   const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
 
   // BOW CHARGES 
-  const [isBowCharging, setIsBowCharging] = useState(false);
   const [bowChargeProgress, setBowChargeProgress] = useState(0);
   const bowChargeStartTime = useRef<number | null>(null);
   const bowChargeLineOpacity = useRef(0);
@@ -199,7 +200,7 @@ export default function Unit({
         type: 'fireballExplosion',
         position: impactPosition,
         direction: new Vector3(),
-        duration: 0.125, // Duration in seconds
+        duration: 0.2, // Duration in seconds
         startTime: Date.now() // Add this line to set the start time
       }]);
     }
@@ -382,7 +383,7 @@ export default function Unit({
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 1.75, 1); // 2 seconds for full charge
+      const progress = Math.min(chargeTime / 1.40, 1); // 2 seconds for full charge - 1.5 no movemvent
       setBowChargeProgress(progress);
       setBowGroundEffectProgress(progress); // Update ground effect progress
 

@@ -12,6 +12,7 @@ interface UseUnitControlsProps {
   speed?: number;
   onPositionUpdate: (position: Vector3) => void;
   health: number;
+  isCharging?: boolean;
 }
 
 export function useUnitControls({
@@ -20,7 +21,8 @@ export function useUnitControls({
   camera,
   speed = 0.08,
   onPositionUpdate,
-  health
+  health,
+  isCharging = false
 }: UseUnitControlsProps) {
   const keys = useRef({
     w: false,
@@ -79,7 +81,7 @@ export function useUnitControls({
 
     const currentRotation = groupRef.current.rotation.y;
     const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-    const rotationSpeed = 0.0625; // 0.1 defaulted 
+    const rotationSpeed = 0.05; // 0.1 defaulted 
     
     groupRef.current.rotation.y = currentRotation + (targetRotation - currentRotation) * rotationSpeed;
 
@@ -107,9 +109,10 @@ export function useUnitControls({
       // Calculate dot product between movement and facing direction
       const dotProduct = moveDirection.dot(cameraDirection);
       
-      // Adjust speed based on movement direction
-      const backwardsSpeed = speed * 0.565; // 45% of normal speed when moving backwards
-      const currentSpeed = dotProduct < 0 ? backwardsSpeed : speed;
+      // Adjust speed based on movement direction and charging state
+      const baseSpeed = isCharging ? 0.001 : speed; // BOW CHARGING NO MOVEMENT SPEED
+      const backwardsSpeed = baseSpeed * 0.565; // 45% of normal speed when moving backwards
+      const currentSpeed = dotProduct < 0 ? backwardsSpeed : baseSpeed;
       
       groupRef.current.position.add(moveDirection.multiplyScalar(currentSpeed));
     }
