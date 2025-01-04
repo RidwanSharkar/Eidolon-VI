@@ -14,12 +14,12 @@ interface BoneVortexProps {
 const getVortexColor = (weaponType: WeaponType) => {
   switch (weaponType) {
     case WeaponType.SCYTHE:
-      return '#FF9E3D';
+      return '#00FF4D'; //  00FF88
     case WeaponType.SWORD:
-      return '#7A65FF';
+      return '#8EA4FF';
     case WeaponType.SABRES:
     case WeaponType.SABRES2:
-      return '#00EEFF';
+      return '#00F7FF'; //ice blue 98F5FC 
     default:
       return '#00ff44'; // 00FF37
   }
@@ -30,13 +30,13 @@ const createVortexSegment = (weaponType: WeaponType) => {
   return (
     <group>
       <mesh>
-        <cylinderGeometry args={[0.0125, 0.0315, 0.25, 8]} />
+        <cylinderGeometry args={[0.03, 0.025, 0.3, 8]} />
         <meshStandardMaterial 
           color={color}
           transparent
-          opacity={0.45}
+          opacity={0.525}
           emissive={color}
-          emissiveIntensity={0.45}
+          emissiveIntensity={0.65}
         />
       </mesh>
     </group>
@@ -45,10 +45,10 @@ const createVortexSegment = (weaponType: WeaponType) => {
 
 export default function BoneVortex({ position, onComplete, isSpawning = false, weaponType }: BoneVortexProps) {
   const segmentsRef = useRef<Mesh[]>([]);
-  const layerCount = 14;
+  const layerCount = 16;
   const segmentsPerLayer = 10;
   const maxRadius = 1.15;
-  const height = 2.5;
+  const height = 2.75;
   const groupRef = useRef<Group>(null);
   const startTime = useRef(Date.now());
   const animationDuration = 1500;
@@ -61,7 +61,7 @@ export default function BoneVortex({ position, onComplete, isSpawning = false, w
     
     const effectiveProgress = isSpawning ? 1 - progress : progress;
     
-    groupRef.current.position.copy(position);
+    groupRef.current.position.set(position.x, 0, position.z);
     
     segmentsRef.current.forEach((segment, i) => {
       const layer = Math.floor(i / segmentsPerLayer);
@@ -101,7 +101,7 @@ export default function BoneVortex({ position, onComplete, isSpawning = false, w
   });
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} >
       {Array.from({ length: layerCount * segmentsPerLayer }).map((_, i) => (
         <mesh
           key={i}

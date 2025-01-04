@@ -1,8 +1,8 @@
    // src/types/EnemyUnitProps.ts
 
-   import { Vector3 } from 'three';
+   import { Group, Vector3 } from 'three';
    import { TargetId } from './TargetId';
-   import * as THREE from 'three';
+   import { WeaponType } from '../Weapons/weapons';
 
    export interface EnemyUnitProps {
      id: TargetId;
@@ -13,6 +13,10 @@
      playerPosition: Vector3;
      onAttackPlayer: (damage: number) => void;
      onPositionUpdate: (id: string, position: Vector3) => void;
-     position: THREE.Vector3;
-    
+     position: Vector3;
+     weaponType: WeaponType;
+     isAttacking?: boolean;
+     forwardedRef?: React.ForwardedRef<Group>;
+     isDying?: boolean;
+     deathStartTime?: number;
    }

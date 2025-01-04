@@ -20,6 +20,7 @@ interface EnemyUnitProps {
   playerPosition: Vector3;
   onAttackPlayer: (damage: number) => void;
   weaponType: WeaponType;
+  isDying?: boolean;
 }
 
 export default function EnemyUnit({
@@ -50,8 +51,8 @@ export default function EnemyUnit({
 
   const ATTACK_RANGE = 2.0;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.1475;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.1475;
+  const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.15;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 6;
@@ -170,8 +171,23 @@ export default function EnemyUnit({
     if (health === 0 && !isDead) {
       setIsDead(true);
       setShowDeathEffect(true);
+      if (enemyRef.current) {
+        enemyRef.current.visible = true;
+      }
     }
   }, [health, isDead]);
+
+  useEffect(() => {
+    if (isDead) {
+      const cleanup = setTimeout(() => {
+        setShowDeathEffect(false);
+        if (enemyRef.current?.parent) {
+          enemyRef.current.parent.remove(enemyRef.current);
+        }
+      }, 3000);
+      return () => clearTimeout(cleanup);
+    }
+  }, [isDead]);
 
   return (
     <>

@@ -35,13 +35,13 @@ export default function HomePage() {
   const [abilities, setAbilities] = useState<WeaponInfo>(() => DEFAULT_WEAPON_ABILITIES as WeaponInfo);
 
   
-  // Add state for ability unlocks - moved up before its usage
+  // state for ability unlocks - moved up before its usage
   const [unlockedAbilities, setUnlockedAbilities] = useState({
     r: false,
     passive: false
   });
 
-  // Add ability unlock handler
+  // ability unlock handler
   const handleAbilityUnlock = (abilityType: 'r' | 'passive') => {
     console.log(`Unlocking ${abilityType} ability`);
     
@@ -112,7 +112,9 @@ export default function HomePage() {
     });
   };
 
+
   useEffect(() => {
+
     const interval = setInterval(() => {
       setAbilities((prev: WeaponInfo) => {
         const newAbilities = { ...prev };
@@ -120,7 +122,7 @@ export default function HomePage() {
           ['q', 'e', 'r', 'passive'].forEach(ability => {
             const key = ability as 'q' | 'e' | 'r' | 'passive';
             if (newAbilities[weapon][key].currentCooldown > 0) {
-              newAbilities[weapon][key].currentCooldown -= 0.15; // GLOBAL COOLDOWN
+              newAbilities[weapon][key].currentCooldown -= 0.15;
             }
           });
         });
@@ -203,7 +205,10 @@ export default function HomePage() {
   );
 
   // FIREBALL MANAGER
-  const fireballManagerRef = useRef<{ shootFireball: () => void }>(null);
+  const fireballManagerRef = useRef<{
+    shootFireball: () => void;
+    cleanup: () => void;
+  } | null>(null);
 
   // Move handleReset up, before sceneProps
   const handleReset = () => {

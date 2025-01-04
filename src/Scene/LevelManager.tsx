@@ -31,12 +31,24 @@ export default function LevelManager({
   }, [currentLevel, onLevelTransition]);
 
   useEffect(() => {
+    return () => {
+      if (sceneProps.unitProps.controlsRef.current) {
+        sceneProps.unitProps.controlsRef.current.dispose();
+      }
+    };
+  }, [sceneProps.unitProps.controlsRef]);
+
+  useEffect(() => {
     if (currentLevel === 2) {
+      // Cleanup Scene1 resources before showing Scene2
+      if (sceneProps.unitProps.fireballManagerRef?.current?.cleanup) {
+        sceneProps.unitProps.fireballManagerRef.current.cleanup();
+      }
       setShowScene2(true);
     } else {
       setShowScene2(false);
     }
-  }, [currentLevel]);
+  }, [currentLevel, sceneProps.unitProps.controlsRef, sceneProps.unitProps.fireballManagerRef]);
 
   return (
     <>

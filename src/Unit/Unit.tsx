@@ -35,7 +35,7 @@ import CrusaderAura from '../Spells/CrusaderAura/CrusaderAura';
 
 
 
-// EIDOLON 1.0 ABILITIES NEED REFACTORING
+// EIDOLON 1,0 ABILITIES NEED REFACTORING
 
 //=====================================================================================================
 
@@ -63,6 +63,7 @@ export default function Unit({
   onPositionUpdate,
   enemyData,
   onHealthChange,
+  fireballManagerRef,
 }: UnitProps) {
   const groupRef = useRef<Group>(null);
   const [isSwinging, setIsSwinging] = useState(false);
@@ -246,12 +247,12 @@ export default function Unit({
         const toTarget = new Vector3()
           .subVectors(target.position, groupRef.current.position)
           .normalize();
-        const forward = new Vector3(0, 0, 1)
+        const forward = new Vector3(0, 0, 0.5)
           .applyQuaternion(groupRef.current.quaternion);
         
         const angle = toTarget.angleTo(forward);
         
-        if (Math.abs(angle) > Math.PI / 5) { // Restrict hit detection to a 60 degree arc 
+        if (Math.abs(angle) > Math.PI / 4.5) { // 52 degree?
           return;
         }
       }
@@ -261,14 +262,16 @@ export default function Unit({
 
       // SMITE LOGIC
       if (isSmiting && currentWeapon === WeaponType.SWORD) {
-        if (pendingLightningTargets.current.has(target.id)) {
+        const currentPendingTargets = pendingLightningTargets.current;
+        
+        if (currentPendingTargets.has(target.id)) {
           return;
         }
         
         // Check if target is alive before initial hit
         if (target.health <= 0) return;
         
-        pendingLightningTargets.current.add(target.id);
+        currentPendingTargets.add(target.id);
         
         // Initial hit
         const { damage, isCritical } = calculateDamage(31);
@@ -286,7 +289,7 @@ export default function Unit({
           // Check if target is still alive before lightning hit
           const updatedTarget = enemyData.find(e => e.id === target.id);
           if (!updatedTarget || updatedTarget.health <= 0) {
-            pendingLightningTargets.current.delete(target.id);
+            currentPendingTargets.delete(target.id);
             return;
           }
 
@@ -301,7 +304,7 @@ export default function Unit({
             isLightning: true
           }]);
           
-          pendingLightningTargets.current.delete(target.id);
+          currentPendingTargets.delete(target.id);
         }, 300);
       }
 
@@ -362,11 +365,13 @@ export default function Unit({
     setHasHealedThisSwing(false);
   };
 
+
+
   useFrame((_, delta) => {
     if (!groupRef.current) return;
 
+
     if (isSwinging && groupRef.current) {
-      // Handle hits for enemy units
       enemyData.forEach(enemy => {
         handleWeaponHit(enemy.id);
       });
@@ -377,7 +382,7 @@ export default function Unit({
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 1.675, 1); // 2 seconds for full charge
+      const progress = Math.min(chargeTime / 1.75, 1); // 2 seconds for full charge
       setBowChargeProgress(progress);
       setBowGroundEffectProgress(progress); // Update ground effect progress
 
@@ -404,7 +409,7 @@ export default function Unit({
             .multiplyScalar(speed)
         );
 
-        // Keep existing collision checks for piercing
+        // collision checks for piercing
         enemyData.forEach(enemy => {
           const projectilePos2D = new Vector3(
             projectile.position.x,
@@ -431,11 +436,11 @@ export default function Unit({
     //=====================================================================================================
 
     // FIREBALLS 
-    setFireballs(prev => prev.map(fireball => {
+    setFireballs(prev => prev.filter(fireball => {
       const distanceTraveled = fireball.position.distanceTo(fireball.startPosition);
       
       if (distanceTraveled < fireball.maxDistance) {
-        const speed = 0.5;
+        const speed = 0.4;
         fireball.position.add(
           fireball.direction
             .clone()
@@ -451,14 +456,16 @@ export default function Unit({
           if (fireball.position.distanceTo(enemyPos) < 1.5) {
             handleFireballHit(fireball.id, enemy.id, fireball.position.clone());
             handleFireballImpact(fireball.id, fireball.position.clone());
-            return null;
+            return false; // Remove the fireball on hit
           }
         }
     
-        return fireball;
+        return true; // Keep the fireball if it hasn't hit anything
       }
-      return fireball;
-    }).filter(Boolean) as FireballData[]);
+      
+      handleFireballImpact(fireball.id); // Trigger impact effect when max distance reached
+      return false; // Remove the fireball if it exceeds maxDistance
+    }));
 
     // Update fireball charge cooldowns
     setFireballCharges(prev => prev.map(charge => {
@@ -471,23 +478,19 @@ export default function Unit({
       return charge;
     }));
 
-    // Clean up expired effects
+    // Modified cleanup logic
     setActiveEffects(prev => prev.filter(effect => {
+      // Special handling for boneclaw and blizzard
+      if (effect.type === 'boneclaw' || effect.type === 'blizzard') {
+        return true; // Let these effects manage their own cleanup via onComplete
+      }
+
+      // Handle timed effects
       if (effect.duration && effect.startTime) {
-        const elapsed = (Date.now() - effect.startTime) / 1000; // Convert to seconds
+        const elapsed = (Date.now() - effect.startTime) / 1000;
         return elapsed < effect.duration;
       }
-      return true;
-    }));
 
-    // Only remove firebeam effects after their full duration
-    setActiveEffects(prev => prev.filter(effect => {
-      if (effect.type === 'firebeam') {
-        if (effect.startTime && effect.duration) {
-          const elapsed = (Date.now() - effect.startTime) / 1000;
-          return elapsed < effect.duration;
-        }
-      }
       return true;
     }));
   });
@@ -722,7 +725,7 @@ export default function Unit({
         type: 'fireballExplosion',
         position: hitPosition,
         direction: new Vector3(),
-        duration: 0.125, // Duration in seconds
+        duration: 0.20, // Duration in seconds
         startTime: Date.now() // Add start time
       }]);
     }
@@ -749,6 +752,86 @@ export default function Unit({
     setIsSwinging(false);
     setHitCountThisSwing({});
   };
+
+  // Clear any pending SMITE targets using the captured value
+  useEffect(() => {
+    const currentPendingTargets = pendingLightningTargets.current;
+    return () => {
+      currentPendingTargets.clear();
+    };
+  }, []);
+
+  // Add cleanup for expired projectiles
+  useFrame(() => {
+    
+    setActiveProjectiles(prev => prev.filter(projectile => {
+      const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
+      return distanceTraveled < projectile.maxDistance;
+    }));
+  });
+
+  // Add cleanup for expired effects
+  useEffect(() => {
+    const cleanup = setInterval(() => {
+
+      
+      setActiveEffects(prev => prev.filter(effect => {
+        // Special handling for boneclaw and blizzard
+        if (effect.type === 'boneclaw' || effect.type === 'blizzard') {
+          return true; // Let these effects manage their own cleanup via onComplete
+        }
+
+        // Handle timed effects
+        if (effect.duration && effect.startTime) {
+          const elapsed = (Date.now() - effect.startTime) / 1000;
+          return elapsed < effect.duration;
+        }
+
+        return true;
+      }));
+    }, 100);
+    
+    return () => clearInterval(cleanup);
+  }, []);
+
+  useEffect(() => {
+    if (fireballManagerRef) {
+      fireballManagerRef.current = {
+        shootFireball,
+        cleanup: () => {
+          setFireballs([]);
+          setActiveEffects([]);
+          // Clear any pending effects
+          pendingLightningTargets.current.clear();
+          // Reset orbital charges
+          setFireballCharges(prev => prev.map(charge => ({
+            ...charge,
+            available: true,
+            cooldownStartTime: null
+          })));
+        }
+      };
+    }
+  }, [fireballManagerRef, shootFireball]);
+
+  useEffect(() => {
+    return () => {
+      setFireballs([]);
+      setFireballCharges(prev => prev.map(charge => ({
+        ...charge,
+        available: true,
+        cooldownStartTime: null
+      })));
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      setActiveEffects(prev => prev.filter(effect => 
+        effect.type === 'boneclaw' || effect.type === 'blizzard'
+      ));
+    };
+  }, []);
 
   return (
     <>
@@ -803,7 +886,7 @@ export default function Unit({
           charges={fireballCharges}
           weaponType={currentWeapon}
         />
-      <group scale={[1 , 0.70, 0.8]} position={[0, 0, -0.1]}>
+      <group scale={[0.9 , 0.70, 0.8]} position={[0, 0, -0.1]} rotation={[0.25, 0, 0]}>
         <BonePlate />
       </group>
       <group scale={[0.85  , 0.85, 0.85]} position={[0, 0.05, +0.1]}>

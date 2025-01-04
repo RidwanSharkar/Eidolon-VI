@@ -26,10 +26,10 @@ const createVortexSegment = () => (
 
 export default function BoneVortex2({ position, onComplete, isSpawning = false }: BoneVortexProps) {
     const segmentsRef = useRef<Mesh[]>([]);
-    const layerCount = 14;
+    const layerCount = 16;
     const segmentsPerLayer = 10;
     const maxRadius = 1.15;
-    const height = 2.5;
+    const height = 2.75;
     const groupRef = useRef<Group>(null);
     const startTime = useRef(Date.now());
     const animationDuration = 1500;

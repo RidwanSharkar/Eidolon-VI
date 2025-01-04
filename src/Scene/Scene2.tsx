@@ -5,7 +5,6 @@ import Mountain from '../Environment/Mountain';
 import Tree from '../Environment/Tree';
 import Mushroom from '../Environment/Mushroom';
 import Unit from '../Unit/Unit';
-import EnemyUnit from '../Versus/EnemyUnit';
 import { SceneProps as SceneType } from './SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
@@ -15,6 +14,9 @@ import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import BossUnit from '@/Versus/Boss/BossUnit';
 import Flower from '../Environment/Flower';
+
+import * as THREE from 'three';
+import { MemoizedEnemyUnit } from '../Versus/MemoizedEnemyUnit';
 
 interface ScenePropsWithCallback extends SceneType {
   onLevelComplete: () => void;
@@ -31,12 +33,13 @@ export default function Scene2({
   skeletonProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 8500,
+  spawnInterval = 8000,
   maxSkeletons = 23,
   initialSkeletons = 5,
   spawnCount = 2,
   flowerData,
 }: ScenePropsWithCallback) {
+
   const [spawnStarted, setSpawnStarted] = useState(false);
   const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 5);
   const [enemies, setEnemies] = useState<Enemy[]>(() => 
@@ -76,22 +79,32 @@ export default function Scene2({
     }
 
     // Handle regular enemy damage
-    setEnemies(prevEnemies =>
-      prevEnemies.map(enemy => {
-        const strippedId = targetId.replace('enemy-', '');
-        if (enemy.id === strippedId) {
-          const newHealth = Math.max(0, enemy.health - damage);
-          if (newHealth === 0 && enemy.health > 0) {
-            unitProps.onEnemyDeath?.();
-          }
-          return {
-            ...enemy,
+    setEnemies(prevEnemies => {
+      const newEnemies = [...prevEnemies];
+      const enemyIndex = newEnemies.findIndex(
+        enemy => enemy.id === targetId.replace('enemy-', '')
+      );
+      
+      if (enemyIndex !== -1) {
+        const newHealth = Math.max(0, newEnemies[enemyIndex].health - damage);
+        if (newHealth === 0 && newEnemies[enemyIndex].health > 0) {
+          // Mark enemy as dying instead of removing immediately
+          newEnemies[enemyIndex] = {
+            ...newEnemies[enemyIndex],
+            health: newHealth,
+            isDying: true,
+            deathStartTime: Date.now()
+          };
+          unitProps.onEnemyDeath?.();
+        } else {
+          newEnemies[enemyIndex] = {
+            ...newEnemies[enemyIndex],
             health: newHealth
           };
         }
-        return enemy;
-      })
-    );
+      }
+      return newEnemies;
+    });
   }, [bossHealth, unitProps]);
 
   // Update handlePlayerDamage to use setPlayerHealth
@@ -187,7 +200,7 @@ export default function Scene2({
 
   // Modify the spawn logic to include the delay
   useEffect(() => {
-    // First, set a 5-second delay before allowing spawns
+    // 5-second delay before allowing spawns
     const initialDelay = setTimeout(() => {
       setSpawnStarted(true);
     }, 4000);
@@ -195,11 +208,12 @@ export default function Scene2({
     return () => clearTimeout(initialDelay);
   }, []);
 
-  // Modify the spawn effect to check for spawnStarted
+  // Modify the spawn effect
   useEffect(() => {
     if (!spawnStarted || totalSpawned >= maxSkeletons) return;
 
     const spawnTimer = setInterval(() => {
+      
       setEnemies(prev => {
         if (totalSpawned >= maxSkeletons) {
           clearInterval(spawnTimer);
@@ -213,8 +227,8 @@ export default function Scene2({
             position: spawnPosition.clone(),
             initialPosition: spawnPosition.clone(),
             currentPosition: spawnPosition.clone(),
-            health: 250, // Scene2-specific health
-            maxHealth: 250, // Scene2-specific max health
+            health: 250,
+            maxHealth: 250,
           };
         });
         
@@ -228,12 +242,90 @@ export default function Scene2({
 
   useEffect(() => {
     if (unitProps.controlsRef.current) {
-      unitProps.controlsRef.current.object.position.set(0, 12, -18); //camera start position
+      unitProps.controlsRef.current.object.position.set(0, 12, -18);
       unitProps.controlsRef.current.target.set(0, 0, 0);
       unitProps.controlsRef.current.update();
     }
   }, [unitProps.controlsRef]);
 
+  // Update the cleanup of dead enemies effect
+  useEffect(() => {
+    const DEATH_ANIMATION_DURATION = 1500; // match animation length
+    
+    setEnemies(prev => {
+      const currentTime = Date.now();
+      return prev.filter(enemy => {
+        if (enemy.isDying && enemy.deathStartTime) {
+          // Keep dying enemies until animation completes
+          return currentTime - enemy.deathStartTime < DEATH_ANIMATION_DURATION;
+        }
+        return enemy.health > 0;
+      });
+    });
+  }, [enemies]);
+
+  // Cleanup function for enemies
+  const cleanup = () => {
+    setEnemies(prev => {
+      prev.forEach(enemy => {
+        if (enemy.ref?.current?.parent) {
+          enemy.ref.current.parent.remove(enemy.ref.current);
+          enemy.ref.current.traverse((child) => {
+            if ('geometry' in child && child.geometry instanceof THREE.BufferGeometry) {
+              child.geometry.dispose();
+            }
+            if ('material' in child) {
+              const material = child.material as THREE.Material | THREE.Material[];
+              if (Array.isArray(material)) {
+                material.forEach(m => m.dispose());
+              } else {
+                material?.dispose();
+              }
+            }
+          });
+        }
+      });
+      return [];
+    });
+  };
+
+  useEffect(() => {
+    // Capture the ref value when the effect runs
+    const currentPlayerRef = playerRef.current;
+  
+    return () => {
+      // Cleanup when scene unmounts
+      setEnemies([]);
+      if (currentPlayerRef) {
+        currentPlayerRef.clear();
+      }
+      // Reset scene-specific state
+      setPlayerPosition(new Vector3(0, 0, 0));
+      setTotalSpawned(initialSkeletons);
+      setBossPosition(BOSS_SPAWN_POSITION.clone());
+      setIsBossSpawned(false);
+      setBossHealth(5184);
+    };
+  }, [initialSkeletons]);
+
+  // Resource tracking effect
+  useEffect(() => {
+    const resources = {
+      geometries: [] as THREE.BufferGeometry[],
+      materials: [] as THREE.Material[]
+    };
+  
+    return () => {
+      resources.geometries.forEach(geometry => geometry.dispose());
+      resources.materials.forEach(material => material.dispose());
+    };
+  }, []);
+  
+  useEffect(() => {
+    return cleanup;
+  }, []);
+  
+  
   return (
     <>
 
@@ -281,7 +373,7 @@ export default function Scene2({
 
       {/* Enemy Units (Skeletons only) */}
       {enemies.map((enemy) => (
-        <EnemyUnit
+        <MemoizedEnemyUnit
           key={enemy.id}
           id={enemy.id}
           initialPosition={enemy.initialPosition}

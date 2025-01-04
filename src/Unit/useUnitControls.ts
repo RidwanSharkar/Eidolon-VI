@@ -18,7 +18,7 @@ export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.075,
+  speed = 0.08,
   onPositionUpdate,
   health
 }: UseUnitControlsProps) {
@@ -79,7 +79,7 @@ export function useUnitControls({
 
     const currentRotation = groupRef.current.rotation.y;
     const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-    const rotationSpeed = 0.05; // 0.1 defaulted 
+    const rotationSpeed = 0.0625; // 0.1 defaulted 
     
     groupRef.current.rotation.y = currentRotation + (targetRotation - currentRotation) * rotationSpeed;
 
@@ -108,7 +108,7 @@ export function useUnitControls({
       const dotProduct = moveDirection.dot(cameraDirection);
       
       // Adjust speed based on movement direction
-      const backwardsSpeed = speed * 0.45; // 45% of normal speed when moving backwards
+      const backwardsSpeed = speed * 0.565; // 45% of normal speed when moving backwards
       const currentSpeed = dotProduct < 0 ? backwardsSpeed : speed;
       
       groupRef.current.position.add(moveDirection.multiplyScalar(currentSpeed));

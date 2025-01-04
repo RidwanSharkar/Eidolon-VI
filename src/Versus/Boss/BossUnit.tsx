@@ -57,11 +57,11 @@ export default function BossUnit({
   const [isAttackOnCooldown, setIsAttackOnCooldown] = useState(false);
 
   // Boss-specific constants
-  const ATTACK_RANGE = 5.25;
+  const ATTACK_RANGE = 5.35;
   const ATTACK_COOLDOWN_NORMAL = 3250;
   const ATTACK_COOLDOWN_ENRAGED =2000;
-  const MOVEMENT_SPEED = 0.16;
-  const SMOOTHING_FACTOR = 0.16;
+  const MOVEMENT_SPEED = 0.1675;
+  const SMOOTHING_FACTOR = 0.1675;
   const ATTACK_DAMAGE = 24;
   const BOSS_HIT_HEIGHT = 2.0;       
   const BOSS_HIT_RADIUS = 4.0;

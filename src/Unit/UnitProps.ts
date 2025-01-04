@@ -23,6 +23,11 @@ export interface WeaponAbilities {
 
 export type WeaponInfo = Record<WeaponType, WeaponAbilities>;
 
+interface FireballManager {
+  shootFireball: () => void;
+  cleanup: () => void;
+}
+
 export interface UnitProps {
   onHit: (targetId: string, damage: number) => void;
   onHealthChange?: (newHealth: number) => void;
@@ -39,7 +44,7 @@ export interface UnitProps {
   onFireballDamage: (targetId: string, damage: number, isCritical: boolean, position: Vector3) => void;
   onDamage: (damage: number) => void;
   onEnemyDeath: () => void;
-  fireballManagerRef: React.RefObject<{ shootFireball: () => void }>;
+  fireballManagerRef?: React.MutableRefObject<FireballManager | null>;
   onSmiteDamage: (targetId: string, damage: number, isCritical: boolean, position: Vector3) => void;
   parentRef?: RefObject<Group>;
 }

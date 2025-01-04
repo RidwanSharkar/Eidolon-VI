@@ -5,7 +5,7 @@ import Mountain from '../Environment/Mountain';
 import Tree from '../Environment/Tree';
 import Mushroom from '../Environment/Mushroom';
 import Unit from '../Unit/Unit';
-import EnemyUnit from '../Versus/EnemyUnit';
+import { MemoizedEnemyUnit } from '../Versus/MemoizedEnemyUnit';
 import { SceneProps as SceneType } from './SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
@@ -13,7 +13,7 @@ import CustomSky from '../Environment/Sky';
 import DriftingSouls from '../Environment/DriftingSouls';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
-
+import * as THREE from 'three';
 
 
 interface SceneProps extends SceneType {
@@ -29,7 +29,7 @@ export default function Scene({
   mushroomData,
   unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
-  spawnInterval = 6000,
+  spawnInterval = 5500,
   maxSkeletons = 15,
   initialSkeletons = 5,
 }: SceneProps) {
@@ -44,6 +44,7 @@ export default function Scene({
         initialPosition: spawnPosition.clone(),
         health: 200,
         maxHealth: 200,
+        ref: React.createRef<Group>()
       };
     });
   });
@@ -55,25 +56,32 @@ export default function Scene({
 
   // Callback to handle damage to enemies
   const handleTakeDamage = useCallback((targetId: string, damage: number) => {
-    console.log(`Target ${targetId} takes ${damage} damage`);
-    setEnemies(prevEnemies =>
-      prevEnemies.map(enemy => {
-        const strippedId = targetId.replace('enemy-', '');
-        if (enemy.id === strippedId) {
-          const newHealth = Math.max(0, enemy.health - damage);
-          console.log(`Enemy ${strippedId} health: ${enemy.health} -> ${newHealth}`);
-          if (newHealth === 0 && enemy.health > 0) {
-            console.log('Enemy defeated, triggering onEnemyDeath');
-            unitProps.onEnemyDeath?.();
-          }
-          return {
-            ...enemy,
+    setEnemies(prevEnemies => {
+      const newEnemies = [...prevEnemies];
+      const enemyIndex = newEnemies.findIndex(
+        enemy => enemy.id === targetId.replace('enemy-', '')
+      );
+      
+      if (enemyIndex !== -1) {
+        const newHealth = Math.max(0, newEnemies[enemyIndex].health - damage);
+        if (newHealth === 0 && newEnemies[enemyIndex].health > 0) {
+          // Mark enemy as dying instead of removing immediately
+          newEnemies[enemyIndex] = {
+            ...newEnemies[enemyIndex],
+            health: newHealth,
+            isDying: true,
+            deathStartTime: Date.now()
+          };
+          unitProps.onEnemyDeath?.();
+        } else {
+          newEnemies[enemyIndex] = {
+            ...newEnemies[enemyIndex],
             health: newHealth
           };
         }
-        return enemy;
-      })
-    );
+      }
+      return newEnemies;
+    });
   }, [unitProps]);
 
   // Update handlePlayerDamage to use setPlayerHealth
@@ -143,9 +151,13 @@ export default function Scene({
     onSmiteDamage: unitProps.onSmiteDamage
   };
 
+
+
   // Handle spawning logic
   useEffect(() => {
     if (totalSpawned >= maxSkeletons) return;
+    
+
 
     const spawnTimer = setInterval(() => {
       setEnemies((prev: Enemy[]) => {
@@ -161,6 +173,7 @@ export default function Scene({
           initialPosition: spawnPosition.clone(),
           health: 200,
           maxHealth: 200,
+          ref: React.createRef<Group>()
         };
         
         setTotalSpawned((prev: number) => prev + 1);
@@ -189,6 +202,79 @@ export default function Scene({
       controlsRef.current.update();
     }
   }, [controlsRef]);
+
+  // cleanup of dead enemies
+  useEffect(() => {
+    const DEATH_ANIMATION_DURATION = 1500; // match  animation length
+    
+    setEnemies(prev => {
+      const currentTime = Date.now();
+      return prev.filter(enemy => {
+        if (enemy.isDying && enemy.deathStartTime) {
+          // Keep dying enemies until animation completes
+          return currentTime - enemy.deathStartTime < DEATH_ANIMATION_DURATION;
+        }
+        return enemy.health > 0;
+      });
+    });
+  }, [enemies]);
+
+  useEffect(() => {
+    // Capture the ref value when the effect runs
+    const currentPlayerRef = playerRef.current;
+
+    return () => {
+      // Cleanup when scene unmounts
+      setEnemies([]);
+      if (currentPlayerRef) {
+        currentPlayerRef.clear();
+      }
+      // Reset any scene-specific state
+      setPlayerPosition(new Vector3(0, 0, 0));
+      setTotalSpawned(initialSkeletons);
+    };
+  }, [initialSkeletons]);
+
+  useEffect(() => {
+    const resources = {
+      geometries: [] as THREE.BufferGeometry[],
+      materials: [] as THREE.Material[]
+    };
+
+    return () => {
+      resources.geometries.forEach(geometry => geometry.dispose());
+      resources.materials.forEach(material => material.dispose());
+    };
+  }, []);
+
+  const cleanup = () => {
+    setEnemies(prev => {
+      prev.forEach(enemy => {
+        if (enemy.ref?.current?.parent) {
+          enemy.ref.current.parent.remove(enemy.ref.current);
+          // Also dispose of any materials/geometries if they exist
+          enemy.ref.current.traverse((child) => {
+            if ('geometry' in child && child.geometry instanceof THREE.BufferGeometry) {
+              child.geometry.dispose();
+            }
+            if ('material' in child) {
+              const material = child.material as THREE.Material | THREE.Material[];
+              if (Array.isArray(material)) {
+                material.forEach(m => m.dispose());
+              } else {
+                material?.dispose();
+              }
+            }
+          });
+        }
+      });
+      return [];
+    });
+  };
+
+  useEffect(() => {
+    return cleanup;
+  }, []);
 
   return (
     <>
@@ -235,13 +321,14 @@ export default function Scene({
 
         {/* Enemy Units (Skeletons only) */}
         {enemies.map((enemy) => (
-          <EnemyUnit
+          <MemoizedEnemyUnit
             key={enemy.id}
             id={enemy.id}
             initialPosition={enemy.initialPosition}
             position={enemy.position}
             health={enemy.health}
             maxHealth={enemy.maxHealth}
+            isDying={enemy.isDying}
             onTakeDamage={handleTakeDamage}
             onPositionUpdate={handleEnemyPositionUpdate}
             playerPosition={playerPosition}
