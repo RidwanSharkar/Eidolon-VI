@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styles from './LevelCompletionPanel.module.css';
-import { AbilityType, WeaponType } from '../weapons/weapons';
-import { WEAPON_ABILITY_TOOLTIPS } from '../weapons/weapons';
+import { AbilityType, WeaponType } from '@/weapons/weapons';
+import { WEAPON_ABILITY_TOOLTIPS } from '@/weapons/weapons';
 import Tooltip from './Tooltip';
 
 interface LevelCompletionPanelProps {
