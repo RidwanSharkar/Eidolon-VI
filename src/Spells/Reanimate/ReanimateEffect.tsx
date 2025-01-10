@@ -65,7 +65,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
           <meshStandardMaterial
             color="#00ff88"
             emissive="#00ff88"
-            emissiveIntensity={0.75}
+            emissiveIntensity={0.55}
             transparent
             opacity={opacity * (1 - i * 0.1)}
           />
@@ -78,7 +78,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
         <meshStandardMaterial
           color="#00ff88"
           emissive="#00ff88"
-          emissiveIntensity={1.25}
+          emissiveIntensity={.5}
           transparent
           opacity={opacity * 0.3}
         />

@@ -1,15 +1,40 @@
 export const trunkColors = [
-  "#E7CAD0", // Very light mauve
-  "#F0D5DB", // Pale pink
-  "#F5E0E5", // Light rose
-  "#FAE8EC", // Soft blush
-  "#FFF0F3", // Almost white pink
+  "#E8D5C4", // Very light beige
+  "#DEC8B5", // Light taupe
+  "#F1E4D6", // Pale sand
+  "#E6D5C5", // Light fawn
+  "#F2E6D8", // Cream beige
 ];
 
-export const leafColors = [
-  "#FFAFC5", // Hot pink
-  "#FFB6C1", // Light pink
-  "#FFC0CB", // Pink
-  "#FFD1DC", // Pastel pink
-  "#FFE4E1", // Misty rose
+export const leafColors = [ 
+  "#FF8DAC", // Pink
+  "#FF98B7", // Light pink
+  "#93E66C", // Light green
+  "#C6E48B", // Light green
+
+
+  "#ACBF85", // Light green
+  "#ACBF85", // Light green
+  "#DFFF9F", // Light green
+
+
+
+  "#90C956",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ]; 

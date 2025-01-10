@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { WeaponType } from '../../Weapons/weapons';
+import { WeaponType } from '../../weapons/weapons';
 
 interface SmiteProps {
   weaponType: WeaponType;
@@ -15,7 +15,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
   const progressRef = useRef(0);
   const animationDuration = 0.75; // Fixed animation duration (in seconds)
   const delayTimer = useRef(0);
-  const startDelay = 0.05; // Same initial delay
+  const startDelay = 0.1; // Same initial delay
 
   useFrame((_, delta) => {
     if (!lightningRef.current) return;
@@ -67,8 +67,8 @@ export default function Smite({ position, onComplete }: SmiteProps) {
       <mesh>
         <cylinderGeometry args={[0.42, 0.42, 20, 16]} />
         <meshStandardMaterial
-          color="#ffaa00"
-          emissive="#ff8800"
+          color="#FF9D00"
+          emissive="#FF9D00"
           emissiveIntensity={10}
           transparent
           opacity={0.75}
@@ -79,9 +79,9 @@ export default function Smite({ position, onComplete }: SmiteProps) {
       <mesh>
         <cylinderGeometry args={[0.7, 0.6, 20, 16]} />
         <meshStandardMaterial
-          color="#ffaa00"
-          emissive="#ff8800"
-          emissiveIntensity={2}
+          color="#FF9D00"
+          emissive="#FF9D00"
+          emissiveIntensity={10}
           transparent
           opacity={0.55}
         />
@@ -89,13 +89,13 @@ export default function Smite({ position, onComplete }: SmiteProps) {
 
       {/* Outer glow */}
       <mesh>
-        <cylinderGeometry args={[1.0, 1.0, 20, 16]} />
+        <cylinderGeometry args={[0.875, 0.9, 20, 16]} />
         <meshStandardMaterial
-          color="#ffcc00"
-          emissive="#ffaa00"
-          emissiveIntensity={3}
+          color="#FF9D00"
+          emissive="#FF9D00"
+          emissiveIntensity={2.5}
           transparent
-          opacity={0.35}
+          opacity={0.65}
         />
       </mesh>
 
@@ -104,8 +104,8 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]}>
           <torusGeometry args={[1.2, 0.08, 8, 32]} />
           <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
+            color="#FF9D00"
+            emissive="#FF9D00"
             emissiveIntensity={4}
             transparent
             opacity={0.3}

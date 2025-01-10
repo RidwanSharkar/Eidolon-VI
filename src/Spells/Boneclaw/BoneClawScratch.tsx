@@ -43,7 +43,7 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
     const progress = Math.min(progressRef.current / animationDuration, 1);
 
     if (progress < 1) {
-      const startY = 3; //HEIGHT
+      const startY = 3.5; //HEIGHT
       const currentY = startY * (1 - progress);
       effectRef.current.position.y = currentY;
 

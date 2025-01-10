@@ -1,18 +1,16 @@
 import React, { useRef } from 'react';
 import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { WeaponType } from '../Weapons/weapons';
+import { WeaponType } from '../weapons/weapons';
 import * as THREE from 'three';
 
-export const ORBITAL_COOLDOWN = 8000; // ORB CHARGE COOLDOWN
-
-interface ChargeStatus {
+export interface ChargeStatus {
   id: number;
   available: boolean;
   cooldownStartTime: number | null;
 }
 
-
+export const ORBITAL_COOLDOWN = 8000; // ORB CHARGE COOLDOWN
 
 interface ChargedOrbitalsProps {
   parentRef: React.RefObject<Group>;
@@ -38,12 +36,12 @@ export default function ChargedOrbitals({
   const getOrbitalColor = () => {
     switch (weaponType) {
       case WeaponType.SCYTHE:
-        return '#00ff44';
+        return '#5EFF00';
       case WeaponType.SWORD:
-        return '#FF9C50'; //  8783D1 FF6F00 FF801F
+        return '#FF9748'; //  FF9C50
       case WeaponType.SABRES:
       case WeaponType.SABRES2:
-        return '#00EEFF'; // 78F6FF
+        return '#00AAFF'; // 78F6FF
       default:
         return '#00ff44';  // Default to scythe 78F6FF
     }
@@ -89,7 +87,7 @@ export default function ChargedOrbitals({
 
             {/* Outer opaque layer */}
             <mesh>
-              <sphereGeometry args={[particleSize*1.2, 32, 32]} />
+              <sphereGeometry args={[particleSize*1.225, 32, 32]} />
               <meshStandardMaterial
                 color={chargeStatus?.available ? activeColor : "#333333"}
                 emissive={chargeStatus?.available ? activeColor : "#333333"}

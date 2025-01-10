@@ -9,11 +9,11 @@ const BonePlate: React.FC = () => {
       {/* Left rib */}
       <group rotation={[0, 0, -Math.PI / 3]}>
         <mesh 
-          position={[0.1, 0, 0]}
-          rotation={[1, Math.PI / 2, 0]} // Moved rotation to mesh
+          position={[0.085, 0.05, 0.08]}
+          rotation={[0.3, Math.PI / 2, -0.5]} // Moved rotation to mesh
         >
           <torusGeometry 
-            args={[0.2, 0.015, 8, 12, Math.PI * 0.75]} 
+            args={[0.2, 0.022, 8, 12, Math.PI * 1.1]} 
           />
           <meshStandardMaterial 
             color="#e8e8e8"
@@ -23,8 +23,8 @@ const BonePlate: React.FC = () => {
         </mesh>
 
         {/* Rib end joint */}
-        <mesh position={[0.3, -0.15, 0]}>
-          <sphereGeometry args={[0.02, 4, 4]} />
+        <mesh position={[0, 0, -0.1]}>
+          <sphereGeometry args={[0.0375, 8, 8]} />
           <meshStandardMaterial 
             color="#d8d8d8"
             roughness={0.5}
@@ -36,11 +36,11 @@ const BonePlate: React.FC = () => {
       {/* Right rib */}
       <group rotation={[0, 0, Math.PI / 3]}>
         <mesh 
-          position={[-0.1, 0, 0]}
-          rotation={[0, -Math.PI / 2, 0]} // Moved rotation to mesh
+          position={[-0.085, 0.05, 0.08]}
+          rotation={[0.3, -Math.PI / 2, 0]} // Moved rotation to mesh
         >
           <torusGeometry 
-            args={[0.2, 0.015, 8, 12, Math.PI * 0.75]} 
+            args={[0.2, 0.022, 8, 12, Math.PI * 1.1]} 
           />
           <meshStandardMaterial 
             color="#e8e8e8"
@@ -62,7 +62,7 @@ const BonePlate: React.FC = () => {
 
       {/* Rib connection to spine */}
       <mesh>
-        <cylinderGeometry args={[0.02, 0.02, 0.1, 4]} />
+        <cylinderGeometry args={[0.06, 0.05, 0.075, 6]} />
         <meshStandardMaterial 
           color="#e8e8e8"
           roughness={0.4}
@@ -76,7 +76,7 @@ const BonePlate: React.FC = () => {
     <group>
       {/* Vertical spine column */}
       <mesh>
-        <cylinderGeometry args={[0.04, 0.04, 0.8, 4]} />
+        <cylinderGeometry args={[0.04, 0.04, 0.9, 4]} />
         <meshStandardMaterial 
           color="#e8e8e8"
           roughness={0.4}
@@ -98,8 +98,8 @@ const BonePlate: React.FC = () => {
           </mesh>
           
           {/* Vertebra protrusions */}
-          <mesh position={[0, 0, 0.04]}>
-            <boxGeometry args={[0.04, 0.03, 0.04]} />
+          <mesh position={[0, 0, -0.125]}>
+            <boxGeometry args={[0.0175, 0.06, 0.075]} />
             <meshStandardMaterial 
               color="#d8d8d8"
               roughness={0.5}
@@ -115,7 +115,7 @@ const BonePlate: React.FC = () => {
     <group 
       ref={plateRef}
       position={[0, 0.04, -0]}
-      rotation={[0.25, Math.PI + Math.PI /0.97, 0]}
+      rotation={[0.25, Math.PI + Math.PI , 0]}
     >
       <group>
         {/* Create spine first */}

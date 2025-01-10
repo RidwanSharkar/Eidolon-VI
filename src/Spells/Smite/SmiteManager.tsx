@@ -1,9 +1,9 @@
 import { Vector3 } from 'three';
 import { useRef, useState } from 'react';
-import { calculateDamage } from '../../Weapons/damage';
+import { calculateDamage } from '../../weapons/damage';
 
 //=====================================================================================================
-//DORMANT 
+//DORMANT gotta refactor from unit 
 //=====================================================================================================
 interface SmiteManagerProps {
   onHit: (targetId: string, damage: number) => void;

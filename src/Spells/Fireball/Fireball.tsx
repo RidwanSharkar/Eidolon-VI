@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Mesh, Vector3, Clock, Color, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import FireballTrail from '@/Spells/Fireball/FireballTrail';
+import FireballTrail from '@/spells/Fireball/FireballTrail';
 import * as THREE from 'three'
 
 interface FireballProps {

@@ -1,3 +1,5 @@
+// src/weapons/Gladius.tsx
+
 interface SabreProps {
   isSwinging: boolean;
   onSwingComplete: () => void;

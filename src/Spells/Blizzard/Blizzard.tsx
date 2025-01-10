@@ -22,7 +22,7 @@ export default function Blizzard({
   const stormRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const lastDamageTime = useRef<number>(0);
-  const duration = 6;
+  const duration = 6.5;
   const shardsRef = useRef<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
   const aurasRef = useRef<Array<{ id: number }>>([]);
 

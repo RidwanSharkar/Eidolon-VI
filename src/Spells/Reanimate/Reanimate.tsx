@@ -74,8 +74,8 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
       <mesh scale={[scale, scale, scale]}>
         <sphereGeometry args={[0.5, 32, 32]} />
         <meshStandardMaterial
-          color="#00ff88"
-          emissive="#00ff88"
+          color="#5EFF00"
+          emissive="#5EFF00"
           emissiveIntensity={3}
           transparent
           opacity={opacity * 0.3}
@@ -99,9 +99,9 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
           >
             <sphereGeometry args={[0.1, 8, 8]} />
             <meshStandardMaterial
-              color="#00ff88"
-              emissive="#00ff88"
-              emissiveIntensity={2}
+              color="#5EFF00"
+              emissive="#5EFF00"
+              emissiveIntensity={1.2}
               transparent
               opacity={opacity * 0.8}
             />

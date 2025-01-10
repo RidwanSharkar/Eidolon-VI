@@ -1,9 +1,9 @@
 import { Vector3 } from 'three';
-import { calculateDamage } from '@/Weapons/damage';
+import { calculateDamage } from '@/weapons/damage';
 
 const BONECLAW_BASE_DAMAGE = 67;
-const BONECLAW_RANGE = 7.5;
-const BONECLAW_ARC = Math.PI / 1.5; // 135? degrees arc
+const BONECLAW_RANGE = 8.5;
+const BONECLAW_ARC = Math.PI / 1.5; // 120? degrees arc
 
 interface BoneclawHitResult {
   targetId: string;

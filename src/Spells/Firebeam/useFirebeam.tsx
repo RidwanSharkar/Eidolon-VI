@@ -16,12 +16,12 @@ export const useFirebeam = ({ parentRef }: FirebeamControllerProps) => {
     const position = parentRef.current.position.clone();
     position.y += 1;
 
-    const direction = new Vector3(0, 0, 1)
+    const direction = new Vector3(0, 0, 0.1)
       .applyQuaternion(parentRef.current.quaternion);
 
     setIsActive(true);
     
-    const baseDamage = 41; // 10 damage per tick
+    const baseDamage = 53; // 10 damage per tick
     
     return {
       position,

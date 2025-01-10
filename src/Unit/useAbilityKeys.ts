@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react';
+// src/unit/useAbilityKeys.ts
+import { useEffect, useRef, useCallback } from 'react';
 import { Vector3, Group } from 'three';
-import { WeaponType, WeaponInfo } from '../Weapons/weapons';
-import { ReanimateRef } from '../Spells/Reanimate/Reanimate';
+import { WeaponType, WeaponInfo, AbilityType } from '../weapons/weapons';
+import { ReanimateRef } from '../spells/Reanimate/Reanimate';
+import { OrbShieldRef } from '../spells/OrbShield/OrbShield';
 
 interface UseAbilityKeysProps {
   keys: React.MutableRefObject<Record<string, boolean>>;
@@ -19,7 +21,7 @@ interface UseAbilityKeysProps {
   setBowChargeStartTime: (value: number | null) => void;
   setSmiteEffects: (callback: (prev: Array<{ id: number; position: Vector3 }>) => Array<{ id: number; position: Vector3 }>) => void;
   setActiveEffects: (callback: (prev: Array<{ id: number; type: string; position: Vector3; direction: Vector3 }>) => Array<{ id: number; type: string; position: Vector3; direction: Vector3 }>) => void;
-  onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r' | 'passive') => void;
+  onAbilityUse: (weapon: WeaponType, abilityType: AbilityType) => void;
   shootFireball: () => void;
   releaseBowShot: (progress: number) => void;
   startFirebeam?: () => NodeJS.Timeout | undefined;
@@ -31,6 +33,7 @@ interface UseAbilityKeysProps {
   onHealthChange?: (health: number) => void;
   activateOathstrike: () => { position: Vector3; direction: Vector3; onComplete: () => void } | null;
   setIsOathstriking: (value: boolean) => void;
+  orbShieldRef: React.RefObject<OrbShieldRef>;
 }
 
 export function useAbilityKeys({
@@ -59,13 +62,32 @@ export function useAbilityKeys({
   maxHealth,
   onHealthChange,
   activateOathstrike,
-  setIsOathstriking
+  setIsOathstriking,
+  orbShieldRef,
 }: UseAbilityKeysProps) {
   // Add a ref to track the last Q usage time
   const lastQUsageTime = useRef(0);
 
   // Add ref to track if game is over
   const isGameOver = useRef(false);
+
+  // Add at the top of useAbilityKeys
+  const lastAttackTime = useRef(0);
+  const ATTACK_DEBOUNCE = 250; // ms
+
+  // Shared attack logic function
+  const tryAttack = useCallback(() => {
+    const now = Date.now();
+    if (now - lastAttackTime.current < ATTACK_DEBOUNCE) return;
+    
+    const qAbility = abilities[currentWeapon].q;
+    if (qAbility.currentCooldown <= 0 && !isSwinging) {
+      lastAttackTime.current = now;
+      lastQUsageTime.current = now;
+      setIsSwinging(true);
+      onAbilityUse(currentWeapon, 'q');
+    }
+  }, [abilities, currentWeapon, isSwinging, onAbilityUse, setIsSwinging]);
 
   // Update isGameOver when health reaches 0
   useEffect(() => {
@@ -91,12 +113,7 @@ export function useAbilityKeys({
 
 
       if (key === 'q') {
-        const qAbility = abilities[currentWeapon].q;
-        if (qAbility.currentCooldown <= 0 && !isSwinging) {
-          lastQUsageTime.current = Date.now();
-          setIsSwinging(true);
-          onAbilityUse(currentWeapon, 'q');
-        }
+        tryAttack();
       }
 
       if (key === 'e') {
@@ -120,7 +137,7 @@ export function useAbilityKeys({
             }]);
             onAbilityUse(currentWeapon, 'e');
           } else if ((currentWeapon === WeaponType.SABRES2 || currentWeapon === WeaponType.STAFF) && startFirebeam && stopFirebeam) {
-            // Remove the interval storage since we're letting the effect manage its own duration
+
             startFirebeam();
             onAbilityUse(currentWeapon, 'e');
           } else if (currentWeapon === WeaponType.SABRES && !isBowCharging) {
@@ -142,6 +159,32 @@ export function useAbilityKeys({
             // Start firebeam and store the interval
             startFirebeam();
             onAbilityUse(currentWeapon, 'passive');
+          }
+        }
+      }
+
+      if (key === '2') {
+        const activeAbility = abilities[currentWeapon].active;
+        if (
+          activeAbility.isUnlocked && 
+          activeAbility.currentCooldown <= 0
+        ) {
+          if (currentWeapon === WeaponType.SABRES) {
+            onAbilityUse(currentWeapon, 'active');
+          } else if (currentWeapon === WeaponType.SCYTHE) {
+            setActiveEffects(prev => [...prev, {
+              id: Math.random(),
+              type: 'summon',
+              position: groupRef.current!.position.clone(),
+              direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
+              onComplete: () => {
+                onAbilityUse(currentWeapon, 'active');
+              },
+              onStartCooldown: () => {
+                onAbilityUse(currentWeapon, 'active');
+              }
+            }]);
+            onAbilityUse(currentWeapon, 'active');
           }
         }
       }
@@ -213,6 +256,7 @@ export function useAbilityKeys({
     };
   }, [
     keys,
+    tryAttack,
     groupRef,
     currentWeapon,
     abilities,
@@ -237,7 +281,8 @@ export function useAbilityKeys({
     maxHealth,
     onHealthChange,
     setIsOathstriking,
-    activateOathstrike
+    activateOathstrike,
+    orbShieldRef
   ]);
 
   // Modify the mouse event handlers to check game over state
@@ -268,20 +313,16 @@ export function useAbilityKeys({
   // Modify the attack interval to properly respect game over state
   useEffect(() => {
     const attackInterval = setInterval(() => {
-      if (isGameOver.current || !keys.current) return; // Check both conditions
+      if (isGameOver.current || !keys.current) return;
       
-      if (keys.current['mouse0'] || keys.current['q']) {
-        const qAbility = abilities[currentWeapon].q;
-        if (qAbility.currentCooldown <= 0 && !isSwinging) {
-          lastQUsageTime.current = Date.now();
-          setIsSwinging(true);
-          onAbilityUse(currentWeapon, 'q');
-        }
+      // Only check for mouse0, since 'q' is handled by keydown event
+      if (keys.current['mouse0']) {
+        tryAttack();
       }
     }, 50);
 
     return () => clearInterval(attackInterval);
-  }, [setIsSwinging, keys, abilities, currentWeapon, isSwinging, onAbilityUse]);
+  }, [tryAttack, keys, abilities, currentWeapon, isSwinging, onAbilityUse]);
 
   useEffect(() => {
     const handleGameOver = () => {

@@ -10,7 +10,7 @@ interface BlizzardShardProps {
 }
 
 export default function BlizzardShard({ initialPosition, onComplete, type }: BlizzardShardProps) {
-  const SHARD_SIZE = 0.07;
+  const SHARD_SIZE = 0.0775;
   const meshRef = useRef<Mesh>(null);
   const fallSpeed = useRef(Math.random() * 1.5 + 3.65);
   const rotationSpeed = useRef({
@@ -18,7 +18,7 @@ export default function BlizzardShard({ initialPosition, onComplete, type }: Bli
     y: Math.random() * 0.25,
     z: Math.random() * 1
   });
-  const orbitRadius = useRef(Math.min(initialPosition.length(), 2.65));  // Cap the orbital radius
+  const orbitRadius = useRef(Math.min(initialPosition.length(), 2.7));  // Cap the orbital radius
   const orbitAngle = useRef(Math.atan2(initialPosition.z, initialPosition.x));
 
   useFrame((_, delta) => {

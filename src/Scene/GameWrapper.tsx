@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import LevelManager from './LevelManager'; 
-import Panel from '../Interface/Panel';
+import Panel from '../interface/Panel';
 import { SceneProps } from './SceneProps';
 import * as THREE from 'three';
-import { WeaponType } from '@/Weapons/weapons';
-import { WeaponInfo } from '../Unit/UnitProps';
-import WeaponSelectionPanel from '../Interface/WeaponSelectionPanel';
-import LevelCompletionPanel from '../Interface/LevelCompletionPanel';
+import { AbilityType, WeaponType } from '@/weapons/weapons';
+import { WeaponInfo } from '../unit/UnitProps';
+import WeaponSelectionPanel from '../interface/WeaponSelectionPanel';
+import LevelCompletionPanel from '../interface/LevelCompletionPanel';
 import Behavior from './Behavior';
 import { GameStateProvider } from './GameStateContext';
 
@@ -21,9 +21,9 @@ interface GameWrapperProps {
   abilities: WeaponInfo;
   onReset: () => void;
   killCount: number;
-  onAbilityUnlock: (abilityType: 'r' | 'passive') => void;
+  onAbilityUnlock: (abilityType: AbilityType) => void;
 }
-
+  
 export default function GameWrapper({ 
   sceneProps,
   currentWeapon,
@@ -47,15 +47,18 @@ export default function GameWrapper({
     }
   };
 
-  const handleLevelTransition = useCallback((level: number, show: boolean) => {
-    setCurrentLevel(level);
-    setShowLevelPanel(show);
+  const handleLevelTransition = useCallback((level: number, showPanel: boolean) => {
+    if (showPanel) {
+      setShowLevelPanel(true);
+    } else {
+      setCurrentLevel(prev => prev + 1);
+    }
   }, []);
 
   const handleContinue = useCallback(() => {
-    setCurrentLevel(2);
     setShowLevelPanel(false);
     setSelectedIcon(null);
+    setCurrentLevel(prev => prev + 1);
   }, []);
 
   const handleReset = useCallback(() => {
@@ -120,14 +123,14 @@ export default function GameWrapper({
               ref={sceneProps.unitProps.controlsRef}
               enablePan={false}
               maxPolarAngle={Math.PI / 2.25}
-              maxDistance={21}
+              maxDistance={14}
               mouseButtons={{
                 LEFT: undefined,
                 MIDDLE: undefined,
                 RIGHT: THREE.MOUSE.ROTATE
               }}
               minDistance={6}
-              rotateSpeed={0.75}
+              rotateSpeed={0.5}
               enableDamping={true}
               dampingFactor={0.075}
               zoomSpeed={1.5}
@@ -142,7 +145,7 @@ export default function GameWrapper({
           onReset={handleReset}
           killCount={killCount}
           onEnemiesDefeated={() => {}}
-          maxSkeletons={15}
+          maxSkeletons={12} // why dfq
         />
 
         <div style={{ 

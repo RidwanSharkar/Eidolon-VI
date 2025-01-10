@@ -1,3 +1,5 @@
+// src/weapons/EtherBow.tsx
+
 import { useRef, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
 import * as THREE from 'three';
@@ -13,7 +15,7 @@ interface EtherealBowProps {
 
 export default function EtherealBow({ position, direction, chargeProgress, isCharging, onRelease }: EtherealBowProps) {
   const bowRef = useRef<Group>(null);
-  const maxDrawDistance = 2;
+  const maxDrawDistance = 1.35;
   const prevIsCharging = useRef(isCharging);
   const chargeStartTime = useRef<number | null>(null);
   
@@ -44,13 +46,16 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
 
   // Create a V-shaped bow curve
   const createBowCurve = () => {
-    const curve = new THREE.CubicBezierCurve3(
-      new THREE.Vector3(-0.8, 0, 0),      // Left base point
-      new THREE.Vector3(-0.85, 0.3, 0),   // Reduced Y and moved X closer to base for sharper angle
-      new THREE.Vector3(0.85, 0.3, 0),    // Reduced Y and moved X closer to base for sharper angle
-      new THREE.Vector3(0.8, 0, 0)        // Right base point
-    );
-    return curve;
+    return new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.875, 0, 0),        // Left base point
+      new THREE.Vector3(-0.85, 0.2, 0),     // Left inner curve
+      new THREE.Vector3(-0.25, 0.5, 0),      // Left outer curve peak
+      new THREE.Vector3(-0.4, 0.35, 0),     // Left transition point
+      new THREE.Vector3(0.4, 0.35, 0),      // Right transition point
+      new THREE.Vector3(0.25, 0.5, 0),       // Right outer curve peak
+      new THREE.Vector3(0.85, 0.2, 0),      // Right inner curve
+      new THREE.Vector3(0.875, 0, 0)          // Right base point
+    ]);
   };
 
   // String curve remains the same to maintain functionality
@@ -58,8 +63,8 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
     const pullback = drawAmount * maxDrawDistance;
     const curve = new THREE.CubicBezierCurve3(
       new THREE.Vector3(-0.8, 0, 0),
-      new THREE.Vector3(0, -0.1, -pullback),
-      new THREE.Vector3(0, 0.1, -pullback),
+      new THREE.Vector3(0, 0, -pullback),
+      new THREE.Vector3(0, 0, -pullback),
       new THREE.Vector3(0.8, 0, 0)
     );
     return curve;
@@ -73,7 +78,7 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
         <meshStandardMaterial 
           color="#00ffff"
           emissive="#00ffff"
-          emissiveIntensity={2}
+          emissiveIntensity={1}
           transparent
           opacity={0.8}
         />
@@ -81,11 +86,11 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
 
       {/* Bow string */}
       <mesh>
-        <tubeGeometry args={[createStringCurve(chargeProgress), 32, 0.02, 8, false]} />
+        <tubeGeometry args={[createStringCurve(chargeProgress), 16, 0.02, 8, false]} />
         <meshStandardMaterial 
           color="#ffffff"
           emissive="#ffffff"
-          emissiveIntensity={4}
+          emissiveIntensity={1}
           transparent
           opacity={0.6}
         />
@@ -94,31 +99,31 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
       {/* Decorative wing elements */}
       <group>
         {/* Left wing */}
-        <mesh position={[-0.4, 0, 0.32]} rotation={[Math.PI/2, 0, Math.PI/6]}>
+        <mesh position={[-0.4, 0, 0.475]} rotation={[Math.PI/2, 0, Math.PI/6]}>
           <boxGeometry args={[0.6, 0.02, 0.05]} />
           <meshStandardMaterial 
             color="#00ffff"
             emissive="#00ffff"
-            emissiveIntensity={2}
+            emissiveIntensity={1}
             transparent
             opacity={0.8}
           />
         </mesh>
 
         {/* Right wing */}
-        <mesh position={[0.4, 0, 0.32]} rotation={[Math.PI/2, 0, -Math.PI/6]}>
+        <mesh position={[0.4, 0, 0.475]} rotation={[Math.PI/2, 0, -Math.PI/6]}>
           <boxGeometry args={[0.6, 0.02, 0.05]} />
           <meshStandardMaterial 
             color="#00ffff"
             emissive="#00ffff"
-            emissiveIntensity={2}
+            emissiveIntensity={1}
             transparent
             opacity={0.8}
           />
         </mesh>
       </group>
 
-      {/* Arrow - with increased length */}
+      {/* Arrow  */}
       {isCharging && (
         <group 
           position={[0, 0, 0.8 - chargeProgress * maxDrawDistance]}
@@ -126,7 +131,7 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
         >
           {/* Arrow shaft - increased length from 0.5 to 0.7 */}
           <mesh>
-            <cylinderGeometry args={[0.01, 0.02, 0.7, 8]} />
+            <cylinderGeometry args={[0.015, 0.02, 0.9, 8]} />
             <meshStandardMaterial 
               color="#00ffff"
               emissive="#00ffff"

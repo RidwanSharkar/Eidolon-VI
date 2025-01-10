@@ -21,29 +21,37 @@ const varyColor = (baseColor: Color, range: number = 0.1) => {
 const TreeComponent: React.FC<TreeProps> = ({ 
   position = new Vector3(0, 2, -5),
   scale = 0.8,
-  trunkColor,
   leafColor,
 }: TreeProps) => {
-  const variedTrunkColor = useMemo(() => varyColor(trunkColor), [trunkColor]);
   const variedLeafColor = useMemo(() => varyColor(leafColor), [leafColor]);
 
-
-
   const trunkRadius = 0.25 * scale;
-  const trunkHeight = 4.2 * scale;
-  const leafSize = 1.5 * scale;
-  const leafHeight = 2 * scale;
+  const trunkHeight = 4 * scale;
+  const leafSize = 1.35 * scale;
+  const leafHeight = 1.7 * scale;
 
   return (
     <group name="tree" position={position} scale={scale}>
       <mesh>
         {/* Trunk */}
-        <cylinderGeometry args={[trunkRadius, trunkRadius * 1.2, trunkHeight, 8]} />
+        <cylinderGeometry args={[trunkRadius, trunkRadius * 1.225, trunkHeight, 8]} />
         <meshStandardMaterial 
-          color={variedTrunkColor}
+          color={'#FFBD83'}
           roughness={0.8}
           metalness={0.1}
         />
+
+                                {/* Main foliage */}
+                                <mesh position={[0, trunkHeight * 0.56, 0]} name="tree-top">
+          <coneGeometry args={[leafSize, leafHeight, 8]} />
+          <meshStandardMaterial 
+            color={variedLeafColor}
+            roughness={0.4}
+            metalness={0.1}
+            emissive={variedLeafColor}
+            emissiveIntensity={0.375}
+          />
+        </mesh>
         
 
 
@@ -54,45 +62,35 @@ const TreeComponent: React.FC<TreeProps> = ({
             roughness={0.4}
             metalness={0.1}
             emissive={variedLeafColor}
-            emissiveIntensity={0.3}
+            emissiveIntensity={0.35}
           />
         </mesh>
 
 
         {/* Secondary foliage layer */}
-        <mesh position={[0, trunkHeight * 0.875, 0]} name="tree-top-2">
-          <coneGeometry args={[leafSize * 0.6, leafHeight * 0.8, 8]} />
+        <mesh position={[0, trunkHeight * 0.85, 0]} name="tree-top-2">
+          <coneGeometry args={[leafSize * 0.56, leafHeight * 0.8, 8]} />
           <meshStandardMaterial 
             color={variedLeafColor.clone().multiplyScalar(1.1)}
             roughness={0.4}
             metalness={0.1}
             emissive={variedLeafColor}
-            emissiveIntensity={0.3}
+            emissiveIntensity={0.39}
           />
         </mesh>
 
-                        {/* Main foliage */}
-                        <mesh position={[0, trunkHeight * 0.56, 0]} name="tree-top">
-          <coneGeometry args={[leafSize, leafHeight, 8]} />
-          <meshStandardMaterial 
-            color={variedLeafColor}
-            roughness={0.4}
-            metalness={0.1}
-            emissive={variedLeafColor}
-            emissiveIntensity={0.25}
-          />
-        </mesh>
+
 
 
         {/* Top foliage layer */}
-        <mesh position={[0, trunkHeight*0.925, 0]} name="tree-top-3">
+        <mesh position={[0, trunkHeight*0.905, 0]} name="tree-top-3">
           <coneGeometry args={[leafSize * 0.525, leafHeight * 0.45, 8]} />
           <meshStandardMaterial 
-            color={variedLeafColor.clone().multiplyScalar(1.2)}
+            color={variedLeafColor.clone().multiplyScalar(1.15)}
             roughness={0.4}
             metalness={0.1}
             emissive={variedLeafColor}
-            emissiveIntensity={0.35}
+            emissiveIntensity={0.385}
           />
         </mesh>
       </mesh>

@@ -1,3 +1,4 @@
+// src/versus/Boss/BossBoneVortex.tsx
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, } from 'three';

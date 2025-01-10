@@ -1,3 +1,4 @@
+// src/versus/Boss/BossUnit.tsx
 import React, {
   useRef,
   useEffect,
@@ -9,7 +10,7 @@ import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import BossModel from './BossModel';
 import { Enemy } from '../enemy';
-import Meteor from '@/Versus/Boss/Meteor';
+import Meteor from '@/versus/Boss/Meteor';
 import BossAttackIndicator from './BossAttackIndicator';
 
 interface BossUnitProps {

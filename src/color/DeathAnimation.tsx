@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, Vector3 } from 'three';
 import * as THREE from 'three';
-import { WeaponType } from '../Weapons/weapons';
+import { WeaponType } from '../weapons/weapons';
 
 interface BoneVortexProps {
   position: Vector3;
@@ -16,7 +16,7 @@ const getVortexColor = (weaponType: WeaponType) => {
     case WeaponType.SCYTHE:
       return '#00FF4D'; //  00FF88
     case WeaponType.SWORD:
-      return '#8EA4FF';
+      return '#00F7FF';
     case WeaponType.SABRES:
     case WeaponType.SABRES2:
       return '#00F7FF'; //ice blue 98F5FC 

@@ -49,7 +49,7 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
           <sphereGeometry args={[0.65, 16, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
-            emissive="#58FCEC"
+            emissive="#00E5FF"
             emissiveIntensity={2.5}
             transparent
             opacity={0.65}
@@ -61,7 +61,7 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
           <sphereGeometry args={[0.825, 16, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
-            emissive="#58FCEC"
+            emissive="#00E5FF"
             emissiveIntensity={0.7}
             transparent
             opacity={0.65}
@@ -77,7 +77,7 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
             <torusGeometry args={[0.875, 0.075, 8, 32]} />
             <meshStandardMaterial
               color="#58FCEC"
-              emissive="#58FCEC"
+              emissive="#00E5FF"
               emissiveIntensity={0.8}
               transparent
               opacity={0.9}
@@ -96,8 +96,8 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
           <cylinderGeometry args={[0.1, 0.1, 20, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
-            emissive="#58FCEC"
-            emissiveIntensity={2}
+            emissive="#00E5FF"
+            emissiveIntensity={3}
             transparent
             opacity={0.95}
           />
@@ -108,8 +108,8 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
           <cylinderGeometry args={[0.275, 0.275, 20, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
-            emissive="#58FCEC"
-            emissiveIntensity={1.5}
+            emissive="#00E5FF"
+            emissiveIntensity={2.5}
             transparent
             opacity={0.7}
           />
@@ -117,11 +117,11 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
 
         {/* Outer glow */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.425, 0.425, 20, 16]} />
+          <cylinderGeometry args={[0.375, 0.375, 20, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
-            emissive="#58FCEC"
-            emissiveIntensity={0.5}
+            emissive="#00E5FF"
+            emissiveIntensity={1}
             transparent
             opacity={0.6}
           />
@@ -137,7 +137,7 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
             <torusGeometry args={[0.35, 0.05, 8, 32]} />
             <meshStandardMaterial
               color="#58FCEC"
-              emissive="#58FCEC"
+              emissive="#00E5FF"
               emissiveIntensity={1}
               transparent
               opacity={0.3}
@@ -165,7 +165,7 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
             <boxGeometry args={[0.05, 0.05, 0.1]} /> {/* sparks */}
             <meshStandardMaterial
               color="#58FCEC"
-              emissive="#58FCEC"
+              emissive="#00E5FF"
               emissiveIntensity={2}
               transparent
               opacity={0.75}
@@ -174,7 +174,7 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
         ))}
 
         {/* Adjusted point light for the sparks */}
-        <pointLight position={[0, 0, 18.5]} color="#58FCEC" intensity={12} distance={4} />
+        <pointLight position={[0, 0, 18.5]} color="#00E5FF" intensity={12} distance={4} />
 
         {/* Enhanced beam glow */}
         {/* <pointLight position={[0, 0.5, 7.5]} color="#58FCEC" intensity={15} distance={2} /> */}

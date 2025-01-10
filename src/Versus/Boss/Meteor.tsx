@@ -1,3 +1,4 @@
+// src/versus/Boss/Meteor.tsx
 import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -14,7 +15,7 @@ const DAMAGE_RADIUS = 2.95;  // Define damage and visual radius
 
 const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, onComplete: () => void) => {
   const elapsed = (Date.now() - startTime) / 1000;
-  const duration = 1.25; // Duration of impact effect
+  const duration = 2; // Duration of impact effect
   const fade = Math.max(0, 1 - (elapsed / duration));
   
   // If effect is done, call onComplete

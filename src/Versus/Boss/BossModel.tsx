@@ -1,14 +1,15 @@
+// src/versus/Boss/BossModel.tsx
 import React, { useRef } from 'react';
 import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import BoneTail from '../../Unit/Gear/BoneTail';
-import BonePlate from '../../Unit/Gear/BonePlate';  
-import BoneWings from '../../Unit/Gear/BoneWings';  
+import BoneTail from '../../gear/BoneTail';
+import BonePlate from '../../gear/BonePlate';  
+import BoneWings from '../../gear/BoneWings';  
 import BossBoneVortex from './BossBoneVortex';  
-import DragonSkull from './BossSkull';  
+import DragonSkull from '../../gear/DragonSkull';  
 import BossTrailEffect from './BossTrailEffect';
-import DexScythe from '@/Versus/Boss/DexScythe';
-import LysScythe from '@/Versus/Boss/LysScythe';
+import DexScythe from '../../versus/Boss/DexScythe';
+import LysScythe from '../../versus/Boss/LysScythe';
 import * as THREE from 'three';
 
 interface BossModelProps {

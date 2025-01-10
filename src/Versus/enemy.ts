@@ -1,3 +1,5 @@
+// src/versus/enemy.ts
+
 import { Vector3 } from 'three';
 import { RefObject } from 'react';
 import { Group } from 'three';
@@ -11,4 +13,6 @@ export interface Enemy {
   ref?: RefObject<Group>;
   isDying?: boolean;
   deathStartTime?: number;
+  type?: 'regular' | 'mage';
+  currentPosition?: Vector3;
 }

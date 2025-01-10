@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
-import { ORBITAL_COOLDOWN } from '../../Unit/ChargedOrbitals';
+import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
 
 interface UseReanimateManagerProps {
   parentRef: React.RefObject<Group>;
@@ -34,8 +34,8 @@ export function useReanimateManager({
   nextDamageNumberId
 }: UseReanimateManagerProps) {
   const lastCastTime = useRef<number>(0);
-  const HEAL_AMOUNT = 10;
-  const COOLDOWN = 775; // 1 second in milliseconds
+  const HEAL_AMOUNT = 7;
+  const COOLDOWN = 75; // 1 second in milliseconds
 
   const castReanimate = useCallback(() => {
     const now = Date.now();

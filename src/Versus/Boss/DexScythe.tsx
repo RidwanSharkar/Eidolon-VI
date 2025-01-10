@@ -1,3 +1,4 @@
+// src/versus/Boss/DexScythe.tsx
 import { useRef,  } from 'react';
 import { Group, Shape,  } from 'three';
 import { useFrame } from '@react-three/fiber';

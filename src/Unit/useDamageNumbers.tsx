@@ -1,3 +1,4 @@
+// src/unit/useDamageNumbers.tsx
 import { Vector3 } from 'three';
 import { useState, useRef } from 'react';
 
@@ -17,6 +18,9 @@ export interface DamageNumber {
   isStaff?: boolean;
   isOathstrike?: boolean;
   isFirebeam?: boolean;
+  isOrbShield?: boolean;
+  isChainLightning?: boolean;
+  isFireball?: boolean;
 }
 
 export function useDamageNumbers() {

@@ -1,37 +1,42 @@
+// src/unit/Unit.tsx
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Vector3, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import Fireball from '../Spells/Fireball/Fireball';
+import Fireball from '../spells/Fireball/Fireball';
 import * as THREE from 'three';
-import { WeaponType, WEAPON_DAMAGES } from '../Weapons/weapons';
+import { WeaponType, WEAPON_DAMAGES } from '../weapons/weapons';
 
-import Scythe from '@/Weapons/Scythe';
-import Sword from '@/Weapons/Sword';
-import Sabres from '@/Weapons/Sabres';
-import EtherealBow from '@/Weapons/EtherBow';
+import Scythe from '@/weapons/Scythe';
+import Sword from '@/weapons/Sword';
+import Sabres from '@/weapons/Sabres';
+import EtherealBow from '@/weapons/EtherBow';
 
-import Smite from '@/Spells/Smite/Smite';
-import DamageNumber from '@/Interface/DamageNumber';
-import Billboard from '@/Interface/Billboard';
-import GhostTrail from '@/Unit/GhostTrail';
-import BoneWings from '@/Unit/Gear/BoneWings';
-import BoneAura from '@/Unit/Gear/BoneAura';
-import BonePlate from '@/Unit/Gear/BonePlate';
-import BoneTail from '@/Unit/Gear/BoneTail';
-import BoneVortex from '@/Unit/Gear/BoneVortex';
+import Smite from '@/spells/Smite/Smite';
+import DamageNumber from '@/interface/DamageNumber';
+import Billboard from '@/interface/Billboard';
+import GhostTrail from '@/color/GhostTrail';
+import BoneWings from '@/gear/BoneWings';
+import BoneAura from '@/color/BoneAura';
+import BonePlate from '@/gear/BonePlate';
+import BoneTail from '@/gear/BoneTail';
+import BoneVortex from '@/color/BoneVortex';
 import { UnitProps } from './UnitProps';
-import { useUnitControls } from '@/Unit/useUnitControls';
-import { calculateDamage } from '@/Weapons/damage';
-import Boneclaw from '@/Spells/Boneclaw/Boneclaw';
-import Blizzard from '@/Spells/Blizzard/Blizzard';
+import { useUnitControls } from '@/unit/useUnitControls';
+import { calculateDamage } from '@/weapons/damage';
+import Boneclaw from '@/spells/Boneclaw/Boneclaw';
+import Blizzard from '@/spells/Blizzard/Blizzard';
 import { useAbilityKeys } from './useAbilityKeys';
-import { useFirebeamManager } from '../Spells/Firebeam/useFirebeamManager';
-import Firebeam from '../Spells/Firebeam/Firebeam';
-import ChargedOrbitals, { ORBITAL_COOLDOWN } from '@/Unit/ChargedOrbitals';
-import Reanimate, { ReanimateRef } from '../Spells/Reanimate/Reanimate';
-import Oathstrike from '@/Spells/Oathstrike/Oathstrike';
-import { useOathstrike } from '../Spells/Oathstrike/useOathstrike';
-import CrusaderAura from '../Spells/CrusaderAura/CrusaderAura';
+import { useFirebeamManager } from '../spells/Firebeam/useFirebeamManager';
+import Firebeam from '../spells/Firebeam/Firebeam';
+import ChargedOrbitals, { ORBITAL_COOLDOWN } from '@/color/ChargedOrbitals';
+import Reanimate, { ReanimateRef } from '../spells/Reanimate/Reanimate';
+import Oathstrike from '@/spells/Oathstrike/Oathstrike';
+import { useOathstrike } from '../spells/Oathstrike/useOathstrike';
+import CrusaderAura from '../spells/CrusaderAura/CrusaderAura';
+import Summon from '@/spells/Summon/Summon';
+import { OrbShieldRef } from '@/spells/OrbShield/OrbShield';
+import ChainLightning from '@/spells/ChainLightning/ChainLightning';
+import OrbShield from '@/spells/OrbShield/OrbShield';
 
 
 
@@ -77,7 +82,10 @@ export default function Unit({
     camera: camera!,
     onPositionUpdate,
     health,
-    isCharging: isBowCharging
+    isCharging: isBowCharging,
+    onMovementUpdate: (direction: Vector3) => {
+      movementDirection.copy(direction);
+    }
   });
 
   // SMITE 
@@ -98,6 +106,9 @@ export default function Unit({
     isSmite?: boolean;
     isOathstrike?: boolean;
     isFirebeam?: boolean;
+    isOrbShield?: boolean;
+    isChainLightning?: boolean;
+    isFireball?: boolean;
   }[]>([]);
   const nextDamageNumberId = useRef(0);
   const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
@@ -159,6 +170,13 @@ export default function Unit({
   // Add near other state declarations
   const [bowGroundEffectProgress, setBowGroundEffectProgress] = useState(0);
 
+  // Add this near other state declarations
+  const [movementDirection] = useState(() => new Vector3());
+
+
+  // Add with other refs
+  const chainLightningRef = useRef<{ processChainLightning: () => void }>(null);
+
 
 
 
@@ -210,15 +228,20 @@ export default function Unit({
   //=====================================================================================================
 
   // ATTACK LOGIC
+  const lastHitDetectionTime = useRef<Record<string, number>>({});
+  const HIT_DETECTION_DEBOUNCE = 250; // ms
+
   const handleWeaponHit = (targetId: string) => {
     if (!groupRef.current || !isSwinging) return;
 
     const now = Date.now();
-    const lastHitTime = hitCountThisSwing[`${targetId}_time`] || 0;
-    const hitCooldown = 240; // double attack detection
+    const lastHitTime = lastHitDetectionTime.current[targetId] || 0;
     
-    if (now - lastHitTime < hitCooldown) return;
-
+    // Add frame-level debouncing
+    if (now - lastHitTime < HIT_DETECTION_DEBOUNCE) return;
+    
+    lastHitDetectionTime.current[targetId] = now;
+    
     const target = enemyData.find(e => e.id === targetId);
     if (!target) return;
 
@@ -248,7 +271,7 @@ export default function Unit({
         const toTarget = new Vector3()
           .subVectors(target.position, groupRef.current.position)
           .normalize();
-        const forward = new Vector3(0, 0, 0.5)
+        const forward = new Vector3(0, 0, 0.25) // SABRE FORWARD 
           .applyQuaternion(groupRef.current.quaternion);
         
         const angle = toTarget.angleTo(forward);
@@ -275,7 +298,7 @@ export default function Unit({
         currentPendingTargets.add(target.id);
         
         // Initial hit
-        const { damage, isCritical } = calculateDamage(31);
+        const { damage, isCritical } = calculateDamage(17);
         onHit(target.id, damage);
         
         setDamageNumbers(prev => [...prev, {
@@ -294,7 +317,7 @@ export default function Unit({
             return;
           }
 
-          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(47);
+          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(41);
           onHit(target.id, lightningDamage);
           
           setDamageNumbers(prev => [...prev, {
@@ -313,10 +336,46 @@ export default function Unit({
 
       // NORMAL WEAPON HIT HANDLING
       const { damage, isCritical } = calculateDamage(baseDamage);
-      onHit(target.id, damage); 
+
+      // Add orb shield bonus damage for Sabres
+      let totalDamage = damage;
+      if (currentWeapon === WeaponType.SABRES && orbShieldRef.current && 
+        abilities[WeaponType.SABRES].active.isUnlocked) {
+        const bonusDamage = orbShieldRef.current.calculateBonusDamage();
+        if (bonusDamage > 0) {
+          totalDamage += bonusDamage;
+          
+          // Display bonus damage number separately
+          setDamageNumbers(prev => {
+            console.log('Creating OrbShield damage number:', {
+              damage: bonusDamage,
+              isOrbShield: true
+            });
+            return [...prev, {
+              id: nextDamageNumberId.current++,
+              damage: bonusDamage,
+              position: new Vector3(
+                target.position.x + (currentHits === 0 ? -0.4 : 0.4),
+                target.position.y + 0.8,
+                target.position.z
+              ),
+              isCritical: false,
+              isOrbShield: true
+            }];
+          });
+
+          // Consume one orb per attack (not per hit)
+          if (!hitCountThisSwing[targetId]) {
+            orbShieldRef.current.consumeOrb();
+          }
+        }
+      }
+
+      // Use totalDamage instead of just damage
+      onHit(target.id, totalDamage);
 
       // Calculate target's health after damage
-      const targetAfterDamage = target.health - damage;
+      const targetAfterDamage = target.health - totalDamage;
 
       // Add Crusader Aura healing check for Sword Q
       if (currentWeapon === WeaponType.SWORD && 
@@ -353,6 +412,13 @@ export default function Unit({
         }
       }
 
+      if (currentWeapon === WeaponType.SWORD && 
+          abilities[WeaponType.SWORD].active.isUnlocked && 
+          !isSmiting && !isOathstriking) {
+          
+          chainLightningRef.current?.processChainLightning();
+      }
+
       return;
     }
 
@@ -383,7 +449,7 @@ export default function Unit({
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 1.40, 1); // 2 seconds for full charge - 1.5 no movemvent
+      const progress = Math.min(chargeTime / 1.65, 1); // 2 seconds for full charge - 1.5 no movemvent
       setBowChargeProgress(progress);
       setBowGroundEffectProgress(progress); // Update ground effect progress
 
@@ -403,7 +469,7 @@ export default function Unit({
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       
       if (distanceTraveled < projectile.maxDistance) {
-        const speed = projectile.power >= 1 ? 0.645 : 0.45;
+        const speed = projectile.power >= 1 ? 0.60 : 0.375;
         projectile.position.add(
           projectile.direction
             .clone()
@@ -517,7 +583,7 @@ export default function Unit({
     const direction = new Vector3(0, 0, 1);
     direction.applyQuaternion(groupRef.current.quaternion);
 
-    const maxRange = 80;
+    const maxRange = 40;
     const rayStart = unitPosition.clone();
 
     // Add projectile with max range limit
@@ -563,6 +629,7 @@ export default function Unit({
     }
   }, [onHealthChange]);
 
+  const orbShieldRef = useRef<OrbShieldRef>(null);
   const { activateOathstrike } = useOathstrike({
     parentRef: groupRef,
     onHit,
@@ -606,6 +673,7 @@ export default function Unit({
     onHealthChange,
     activateOathstrike,
     setIsOathstriking,
+    orbShieldRef,
   });
 
   //=====================================================================================================
@@ -676,9 +744,9 @@ export default function Unit({
     }));
 
     const baseDamage = 11;
-    const maxDamage = 70;
+    const maxDamage = 51;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
-    const fullChargeDamage = power >= 0.99 ? 47 : 0;
+    const fullChargeDamage = power >= 0.99 ? 66 : 0;
     const finalDamage = scaledDamage + fullChargeDamage;
     
     onHit(targetId, finalDamage);
@@ -715,7 +783,8 @@ export default function Unit({
         id: nextDamageNumberId.current++,
         damage,
         position: enemy.position.clone(),
-        isCritical
+        isCritical,
+        isFireball: true
       }]);
     }
 
@@ -849,7 +918,7 @@ export default function Unit({
           />
         </mesh>
 
-        {/* SOUL SPHERE */}
+        {/* SOUL SPHERE 
         <mesh position={[0, 0.2, 0.25]} scale={0.35}>
           <sphereGeometry args={[0.25, 32, 32]} />
           <meshPhongMaterial
@@ -860,7 +929,8 @@ export default function Unit({
             emissiveIntensity={0.1}
           />
         </mesh>
-
+        */}
+        
         {/* WINGS */}
         <group position={[0, 0.2, -0.2]}>
           {/* Left Wing */}
@@ -887,20 +957,21 @@ export default function Unit({
           charges={fireballCharges}
           weaponType={currentWeapon}
         />
-      <group scale={[0.9 , 0.70, 0.8]} position={[0, 0, -0.1]} rotation={[0.25, 0, 0]}>
+      <group scale={[0.9 , 0.70, 0.8]} position={[0, 0.04, -0.015]} rotation={[0.3, 0, 0]}>
         <BonePlate />
       </group>
       <group scale={[0.85  , 0.85, 0.85]} position={[0, 0.05, +0.1]}>
-        <BoneTail />
+        <BoneTail movementDirection={movementDirection} />
       </group>
         
         {currentWeapon === WeaponType.SABRES ? (
-          <Sabres 
-            isSwinging={isSwinging} 
+          <Sabres
+            isSwinging={isSwinging}
             onSwingComplete={handleSwingComplete}
             onLeftSwingStart={() => {}}
             onRightSwingStart={() => {}}
             isBowCharging={isBowCharging}
+            hasActiveAbility={abilities[WeaponType.SABRES].active.isUnlocked}
           />
         ) : currentWeapon === WeaponType.SCYTHE ? (
           <Scythe 
@@ -916,6 +987,7 @@ export default function Unit({
             onSwingComplete={handleSwingComplete}
             onSmiteComplete={handleSmiteComplete}
             onOathstrikeComplete={handleOathstrikeComplete}
+            hasChainLightning={abilities[WeaponType.SWORD].active.isUnlocked}
           />
         )}
 
@@ -960,6 +1032,7 @@ export default function Unit({
         />
       ))}
 
+      {/* DAMAGE NUMBERS  */}
       {damageNumbers.map(dn => (
         <DamageNumber
           key={dn.id}
@@ -972,6 +1045,9 @@ export default function Unit({
           isBoneclaw={dn.isBoneclaw}
           isOathstrike={dn.isOathstrike}
           isFirebeam={dn.isFirebeam}
+          isOrbShield={dn.isOrbShield}
+          isChainLightning={dn.isChainLightning}
+          isFireball={dn.isFireball}
           onComplete={() => handleDamageNumberComplete(dn.id)}
         />
       ))}
@@ -1247,6 +1323,34 @@ export default function Unit({
               parentRef={groupRef}
             />
           );
+        } else if (effect.type === 'summon') {
+          return (
+            <Summon
+              key={effect.id}
+              onStartCooldown={() => {
+                onAbilityUse(currentWeapon, 'active');
+              }}
+              position={effect.position}
+              enemyData={enemyData}
+              onDamage={(targetId, damage, position) => {
+                onHit(targetId, damage);
+                const targetEnemy = enemyData.find(e => e.id === targetId);
+                if (targetEnemy && targetEnemy.position) {
+                  setDamageNumbers(prev => [...prev, {
+                    id: nextDamageNumberId.current++,
+                    damage,
+                    position: position || targetEnemy.position.clone(),
+                    isCritical: false
+                  }]);
+                }
+              }}
+              onComplete={() => {
+                setActiveEffects(prev => 
+                  prev.filter(e => e.id !== effect.id)
+                );
+              }}
+            />
+          );
         }
         return null;
       })}
@@ -1279,7 +1383,7 @@ export default function Unit({
       {activeEffects.map(effect => {
         if (effect.type === 'fireballExplosion') {
           const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
-          const duration = effect.duration || 0.125;
+          const duration = effect.duration || 0.2;
           const fade = Math.max(0, 1 - (elapsed / duration));
           
           return (
@@ -1454,6 +1558,28 @@ export default function Unit({
             </mesh>
           ))}
         </group>
+      )}
+
+      {currentWeapon === WeaponType.SWORD && 
+       abilities[WeaponType.SWORD].active.isUnlocked && (
+        <ChainLightning
+          ref={chainLightningRef}
+          parentRef={groupRef}
+          enemies={enemyData}
+          onEnemyDamage={onHit}
+          setDamageNumbers={setDamageNumbers}
+          nextDamageNumberId={nextDamageNumberId}
+        />
+      )}
+
+      {currentWeapon === WeaponType.SABRES && 
+       abilities[WeaponType.SABRES].active.isUnlocked && (
+        <OrbShield
+          ref={orbShieldRef}
+          parentRef={groupRef}
+          charges={fireballCharges}
+          setCharges={setFireballCharges}
+        />
       )}
     </>
   );

@@ -44,9 +44,9 @@ export default function Oathstrike({ position, direction, onComplete, parentRef 
         <mesh>
           <torusGeometry args={[3, 0.8, 8, 32, Math.PI]} />
           <meshStandardMaterial
-            color="#6B67A8"
-            emissive="#5B4B99"
-            emissiveIntensity={8}
+            color="#FF9748"
+            emissive="#FF6F00"
+            emissiveIntensity={2}
             transparent
             opacity={0.9}
           />
@@ -56,9 +56,9 @@ export default function Oathstrike({ position, direction, onComplete, parentRef 
         <mesh>
           <torusGeometry args={[3, 0.4, 16, 32, Math.PI]} />
           <meshStandardMaterial
-            color="#8783D1"
-            emissive="#6B67A8"
-            emissiveIntensity={6}
+            color="#FF9748"
+            emissive="#FF6F00"
+            emissiveIntensity={1}
             transparent
             opacity={0.7}
           />
@@ -68,9 +68,9 @@ export default function Oathstrike({ position, direction, onComplete, parentRef 
         <mesh>
           <torusGeometry args={[2, 0.9, 16, 32, Math.PI]} />
           <meshStandardMaterial
-            color="#A59FFA"
-            emissive="#8783D1"
-            emissiveIntensity={4}
+            color="#FF9748"
+            emissive="#FF6F00"
+            emissiveIntensity={1.3}
             transparent
             opacity={0.5}
           />
@@ -88,9 +88,9 @@ export default function Oathstrike({ position, direction, onComplete, parentRef 
           >
             <sphereGeometry args={[0.15, 8, 8]} />
             <meshStandardMaterial
-              color="#ff8800"
-              emissive="#ff6600"
-              emissiveIntensity={6}
+              color="#FF9748"
+              emissive="#FF6F00"
+              emissiveIntensity={1.5}
               transparent
               opacity={0.6}
             />
@@ -98,8 +98,8 @@ export default function Oathstrike({ position, direction, onComplete, parentRef 
         ))}
 
         {/* Dynamic lighting */}
-        <pointLight color="#8783D1" intensity={15} distance={8} />
-        <pointLight color="#6B67A8" intensity={10} distance={12} />
+        <pointLight color="#FF9748" intensity={15} distance={8} />
+        <pointLight color="#FF6F00" intensity={10} distance={12} />
       </group>
     </group>
   );

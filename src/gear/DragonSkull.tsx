@@ -3,7 +3,7 @@ export default function DragonSkull() {
     roughness: 0.4,
     metalness: 0.3,
     transparent: true,
-    opacity: 0.65
+    opacity: 0.95
   };
 
   return (

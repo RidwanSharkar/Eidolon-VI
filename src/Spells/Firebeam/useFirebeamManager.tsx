@@ -1,10 +1,10 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { Vector3 } from 'three';
 import { useFirebeam } from './useFirebeam';
-import { Enemy } from '../../Versus/enemy';
+import { Enemy } from '../../versus/enemy';
 import * as THREE from 'three';
-import { ORBITAL_COOLDOWN } from '../../Unit/ChargedOrbitals';
-import { DamageNumber } from '../../Unit/useDamageNumbers';
+import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
+import { DamageNumber } from '../../unit/useDamageNumbers';
 
 interface FirebeamManagerProps {
   parentRef: React.RefObject<THREE.Group>;

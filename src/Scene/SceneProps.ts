@@ -1,7 +1,7 @@
 import { Vector3 } from 'three';
-import { WeaponType } from '../Weapons/weapons';
-import { GeneratedTree } from '../Environment/terrainGenerators';
-import { UnitProps } from '../Unit/UnitProps';
+import { WeaponType } from '../weapons/weapons';
+import { GeneratedTree } from '../environment/terrainGenerators';
+import { UnitProps } from '../unit/UnitProps';
 import * as THREE from 'three';
 
 export interface SkeletonProps {
@@ -26,12 +26,14 @@ export interface SceneProps {
   onReset: () => void;
   skeletonProps: SkeletonProps[];
   killCount: number;
+  onAbilityUnlock: (abilityType: 'r' | 'passive' | 'active') => void;
   onFireballDamage: (targetId: string, damage: number, isCritical: boolean, position: Vector3) => void;
   spawnInterval?: number;
   maxSkeletons?: number;
   initialSkeletons?: number;
   spawnCount?: number;
   flowerData: Array<{ position: Vector3; scale: number }>;
+  bossActive: boolean;
 }
 
 export interface ScenePropsWithCallback extends SceneProps {

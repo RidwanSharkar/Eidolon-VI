@@ -1,3 +1,4 @@
+// src/versus/Boss/MeteorTrail.tsx
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';

@@ -135,6 +135,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
         ref={clawRef} 
         position={position}
         rotation={[0, Math.atan2(direction.x, direction.z), Math.PI / 4]}
+        scale={1.25}
       >
         <group>
           {createParallelBones(1.15, 0.15)}

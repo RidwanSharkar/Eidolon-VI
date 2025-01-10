@@ -18,6 +18,9 @@ interface DamageNumberProps {
   isStaff?: boolean;
   isOathstrike?: boolean;
   isFirebeam?: boolean;
+  isOrbShield?: boolean;
+  isChainLightning?: boolean;
+  isFireball?: boolean;
   onComplete: () => void;
 }
 
@@ -38,9 +41,12 @@ export default function DamageNumber({
   isBoneclaw = false, 
   isOathstrike = false,
   isFirebeam = false,
+  isOrbShield = false,
+  isChainLightning = false,
+  isFireball = false,
   onComplete 
 }: DamageNumberProps) {
-  console.log('DamageNumber props:', { damage, isCritical, isBlizzard, isLightning, isHealing, isBoneclaw });
+  console.log('DamageNumber props:', { damage, isCritical, isBlizzard, isLightning, isHealing, isBoneclaw, isOrbShield, isChainLightning });
   const textRef = useRef<TextMesh>(null);
   const startTime = useRef(Date.now());
   const startY = position.y + 3.5;
@@ -82,15 +88,19 @@ export default function DamageNumber({
     textRef.current.material.opacity = Math.min(1, 3 * (1 - progress));
   });
 
-  // Determine text color based on all possible states ORDER IS CRUCIAL ***
+  // ***ORDER IS CRUCIAL ***
   const getTextColor = () => {
+    console.log('Getting text color, isOrbShield:', isOrbShield);
     if (isHealing) return "#338C66";
+    if (isChainLightning) return "#ffff00";
+    if (isOrbShield) return "#58FCEC";
     if (isCritical) return "#ff0000";
     if (isBoneclaw) return "#39ff14";
     if (isLightning) return "#ffff00";
-    if (isOathstrike) return "#8783D1";
+    if (isOathstrike) return "#FF9441";
     if (isFirebeam) return "#58FCEC";
     if (isBlizzard) return "#61EDFF";
+    if (isFireball) return "#00FF51";
     return "#ffffff";
   };
 

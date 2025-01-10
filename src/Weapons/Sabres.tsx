@@ -1,21 +1,29 @@
-// Add this helper function
-const lerp = (start: number, end: number, t: number) => {
-  return start * (1 - t) + end * t;
-};
-  
-interface SabreProps {
-    isSwinging: boolean;
-    onSwingComplete: () => void;
-    onLeftSwingStart: () => void;
-    onRightSwingStart: () => void;
-    isBowCharging: boolean;
-  }
+// src/weapons/Sabres.tsx
 
-  import { useRef } from 'react';
-  import { Group, Shape } from 'three';
+
+  import { useRef, useState, useEffect } from 'react';
+  import { Group, Shape, Vector3 } from 'three';
   import { useFrame } from '@react-three/fiber';
+  import FireballTrail from '../spells/Fireball/FireballTrail';
+  import * as THREE from 'three';
+
+  const lerp = (start: number, end: number, t: number) => {
+    return start * (1 - t) + end * t;
+  };
+    
+  interface SabresProps {
+      isSwinging: boolean;
+      onSwingComplete: () => void;
+      onLeftSwingStart: () => void;
+      onRightSwingStart: () => void;
+      isBowCharging: boolean;
+      hasActiveAbility?: boolean;
+      leftTargetPosition?: Vector3 | null;
+      rightTargetPosition?: Vector3 | null;
+    }
   
-  export default function Sabre({ isSwinging, onSwingComplete, onLeftSwingStart, onRightSwingStart, isBowCharging }: SabreProps) {
+  
+  export default function Sabre({ isSwinging, onSwingComplete, onLeftSwingStart, onRightSwingStart, isBowCharging, hasActiveAbility = false, leftTargetPosition = null, rightTargetPosition = null }: SabresProps) {
     // Refs and states for the left sabre
     const leftSabreRef = useRef<Group>(null);
     const leftSwingProgress = useRef(0);
@@ -24,8 +32,8 @@ interface SabreProps {
     const rightSabreRef = useRef<Group>(null);
     const rightSwingProgress = useRef(0);
   
-    const leftBasePosition = [-0.8, 0.75, 0.75] as const;
-    const rightBasePosition = [0.8, 0.75, 0.75] as const;
+    const leftBasePosition = [-0.8, 0.75, 0.65] as const;
+    const rightBasePosition = [0.8, 0.75, 0.65] as const;
   
     // Ref for tracking right swing delay
     const rightSwingDelay = useRef(0);
@@ -35,6 +43,13 @@ interface SabreProps {
   
     // Add a ref for left swing delay
     const leftSwingDelay = useRef(0);
+  
+    // Add refs inside the Sabre component
+    const leftOrbRef = useRef<THREE.Mesh>(null);
+    const rightOrbRef = useRef<THREE.Mesh>(null);
+  
+    const [showLeftExplosion, setShowLeftExplosion] = useState(false);
+    const [showRightExplosion, setShowRightExplosion] = useState(false);
   
     useFrame((_, delta) => {
       if (leftSabreRef.current && rightSabreRef.current) {
@@ -54,10 +69,10 @@ interface SabreProps {
           
           // Full rotation plus a bit more to point downward
           leftSabreRef.current.rotation.x = lerp(leftSabreRef.current.rotation.x*1.05,   Math.PI * 0.37, 0.3);  // ~216 degrees
-          leftSabreRef.current.rotation.z = lerp(leftSabreRef.current.rotation.z,   Math.PI * 1.05, 0.20);  // Same side angle
+          leftSabreRef.current.rotation.z = lerp(leftSabreRef.current.rotation.z,   Math.PI * 1.65, 0.20);  // Same side angle
           
           rightSabreRef.current.rotation.x = lerp(rightSabreRef.current.rotation.x*1.05,   Math.PI * 0.37, 0.3); // ~216 degrees
-          rightSabreRef.current.rotation.z = lerp(rightSabreRef.current.rotation.z,   -Math.PI * 1.05, 0.2); // Same side angle
+          rightSabreRef.current.rotation.z = lerp(rightSabreRef.current.rotation.z,   -Math.PI * 1.65, 0.2); // Same side angle
 
           // Reset swing states when charging bow
           leftSwingProgress.current = 0;
@@ -74,31 +89,31 @@ interface SabreProps {
           
           // Handle left sabre swing with delay
           if (leftSabreRef.current) {
-            if (leftSwingDelay.current < 0.15) {  // 0.15 seconds delay
+            if (leftSwingDelay.current < 0.175) {  // 0.15 seconds delay
               leftSwingDelay.current += delta;
             } else {
               if (leftSwingProgress.current === 0) {
                 onLeftSwingStart();
               }
-              leftSwingProgress.current += delta * 7;
+              leftSwingProgress.current += delta * 9;
   
               const swingPhase = Math.min(leftSwingProgress.current / Math.PI, 1);
   
               // Adjusted left sabre movement to swing towards front center
-              const pivotX = leftBasePosition[0] + Math.sin(swingPhase * Math.PI) * 1.2;  // Increased X movement
+              const pivotX = leftBasePosition[0] + Math.sin(swingPhase * Math.PI) * 1.2 -0.45;  //  X movement
               const pivotY = leftBasePosition[1] + 
-                (Math.sin(swingPhase * Math.PI * 2) * -0.3);  // Reduced Y movement
+                (Math.sin(swingPhase * Math.PI * 2) * -0.25);  //  Y movement
               const pivotZ = leftBasePosition[2] + 
-                (Math.sin(swingPhase * Math.PI) * 2.0);  // Increased forward movement
+                (Math.sin(swingPhase * Math.PI) * 2);  //  forward movement
   
               leftSabreRef.current.position.set(pivotX, pivotY, pivotZ);
   
-              // Adjusted rotation for more natural front-center swing
-              const rotationX = Math.sin(swingPhase * Math.PI) * (Math.PI * 0.5);
-              const rotationY = Math.sin(swingPhase * Math.PI) * (Math.PI * 0.3);
-              const rotationZ = Math.sin(swingPhase * Math.PI) * (Math.PI * 0.2);
+              // Left sabre specific rotations
+              const leftRotationX = Math.sin(swingPhase * Math.PI) * (Math.PI * 0.65);
+              const leftRotationY = Math.sin(swingPhase * Math.PI) * (Math.PI * 0.3);
+              const leftRotationZ = Math.sin(swingPhase * Math.PI) * (Math.PI * -0.1);
   
-              leftSabreRef.current.rotation.set(rotationX, rotationY, rotationZ);
+              leftSabreRef.current.rotation.set(leftRotationX, leftRotationY, leftRotationZ);
   
               if (leftSwingProgress.current >= Math.PI) {
                 leftSwingProgress.current = 0;
@@ -113,25 +128,26 @@ interface SabreProps {
             if (rightSwingProgress.current === 0) {
               onRightSwingStart();
             }
-            rightSwingProgress.current += delta * 7;
+            rightSwingProgress.current += delta * 9;
   
             const swingPhase = Math.min(rightSwingProgress.current / Math.PI, 1);
   
             // Adjusted right sabre movement to mirror left sabre
-            const pivotX = rightBasePosition[0] - Math.sin(swingPhase * Math.PI) * 1.2;  // Mirror of left X movement
+            const pivotX = rightBasePosition[0] - Math.sin(swingPhase * Math.PI) * 1.2 + 0.45;  // Mirror of left X movement
             const pivotY = rightBasePosition[1] + 
-              (Math.sin(swingPhase * Math.PI * 2) * -0.3);  // Same Y movement
+              (Math.sin(swingPhase * Math.PI * 2) * -0.25);  // Same Y movement
             const pivotZ = rightBasePosition[2] + 
-              (Math.sin(swingPhase * Math.PI) * 2.0);  // Same forward movement
+              (Math.sin(swingPhase * Math.PI) * 2);  // Same forward movement
   
             rightSabreRef.current.position.set(pivotX, pivotY, pivotZ);
   
-            // Adjusted rotation to mirror left sabre
-            const rotationX = Math.sin(swingPhase * Math.PI) * (Math.PI * 0.5);
-            const rotationY = -Math.sin(swingPhase * Math.PI) * (Math.PI * 0.3);  // Negated for mirror
-            const rotationZ = -Math.sin(swingPhase * Math.PI) * (Math.PI * 0.2);  // Negated for mirror
+            // Right sabre specific rotations
+            const rightRotationX = Math.sin(swingPhase * Math.PI) * (Math.PI * 0.5);
+            const rightRotationY = -Math.sin(swingPhase * Math.PI) * (Math.PI * 0.3);
+            const rightRotationZ = Math.sin(swingPhase * Math.PI) * (Math.PI * 0.2);
+
   
-            rightSabreRef.current.rotation.set(rotationX, rotationY, rotationZ);
+            rightSabreRef.current.rotation.set(rightRotationX, rightRotationY, rightRotationZ);
   
             if (rightSwingProgress.current >= Math.PI) {
               rightSwingProgress.current = 0;
@@ -266,152 +282,273 @@ interface SabreProps {
       bevelSize: 0.004,
       bevelOffset: 0,
     };
+
+    //===================================================================================================
   
+    // Handle explosions when targets are hit
+    useEffect(() => {
+      if (hasActiveAbility && leftTargetPosition && leftSwingProgress.current > 0) {
+        setShowLeftExplosion(true);
+        setTimeout(() => setShowLeftExplosion(false), 1000);
+      }
+    }, [hasActiveAbility, leftTargetPosition]);
+
+    useEffect(() => {
+      if (hasActiveAbility && rightTargetPosition && rightSwingProgress.current > 0) {
+        setShowRightExplosion(true);
+        setTimeout(() => setShowRightExplosion(false), 1000);
+      }
+    }, [hasActiveAbility, rightTargetPosition]);
+
     return (
-      <group 
-        position={[0, -0.25, -0.1]} 
-        rotation={[0, 0, 0]}
-        scale={[0.8, 0.8, 0.8]}
-      >
-        {/* Left Sabre */}
+      <>
         <group 
-          ref={leftSabreRef} 
-          position={[leftBasePosition[0], leftBasePosition[1], leftBasePosition[2]]}
-          rotation={[0, 0, Math.PI]}
-          scale={[1, 1, 1]}
+          position={[0, -0.6, 0.5]} 
+          rotation={[-0.55 , 0, 0]}
+          scale={[0.875, 0.8, 0.8]}
         >
-          {/* Handle */}
-          <group position={[0, -0.125, 0]} rotation={[0, 0, -Math.PI]}>
-            <mesh>
-              <cylinderGeometry args={[0.015, 0.02, 0.45, 12]} />
-              <meshStandardMaterial color="#2a3b4c" roughness={0.7} />
-            </mesh>
-            
-            {/* Handle wrappings */}
-            {[...Array(4)].map((_, i) => (
-              <mesh key={i} position={[0, 0.175 - i * 0.065, 0]}>
-                <torusGeometry args={[0.0225, 0.004, 8, 16]} />
-                <meshStandardMaterial color="#1a2b3c" metalness={0.6} roughness={0.4} />
+          {/* Left Sabre */}
+          <group 
+            ref={leftSabreRef} 
+            position={[leftBasePosition[0], leftBasePosition[1], leftBasePosition[2]]}
+            rotation={[0, 0, Math.PI]}
+            scale={[1, 1, 0.875]}
+          >
+            {/* Handle */}
+            <group position={[0.2, -0.125, 0]} rotation={[0, 0, -Math.PI]}>
+              <mesh>
+                <cylinderGeometry args={[0.015, 0.02, 0.45, 12]} />
+                <meshStandardMaterial color="#2a3b4c" roughness={0.7} />
               </mesh>
-            ))}
+              
+              {/* Handle wrappings */}
+              {[...Array(4)].map((_, i) => (
+                <mesh key={i} position={[0, 0.175 - i * 0.065, 0]}>
+                  <torusGeometry args={[0.0225, 0.004, 8, 16]} />
+                  <meshStandardMaterial color="#1a2b3c" metalness={0.6} roughness={0.4} />
+                </mesh>
+              ))}
+            </group>
+            
+            {/* Blade */}
+            <group position={[0.2, 0.3, 0.0]} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+              {/* Base blade */}
+              <mesh>
+                <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+                <meshStandardMaterial 
+                  color="#0066ff"
+                  emissive="#0088ff"
+                  emissiveIntensity={3}
+                  metalness={0.9}
+                  roughness={0.2}
+                  opacity={0.9}
+                  transparent
+                />
+              </mesh>
+              
+
+              
+
+              
+              {/* Outer ethereal glow */}
+              <mesh position={[0, 0, -0.02]}>  {/* Offset to center */}
+                <extrudeGeometry args={[createInnerBladeShape(), {
+                  ...innerBladeExtrudeSettings,
+                  depth: 0.06
+                }]} />
+                <meshStandardMaterial 
+                  color="#0033ff"
+                  emissive="#0066ff"
+                  emissiveIntensity={8}
+                  metalness={0.7}
+                  roughness={0.1}
+                  opacity={0.4}
+                  transparent
+                />
+              </mesh>
+              
+
+              
+              {/* Point light for local illumination */}
+              <pointLight
+                color="#0088ff"
+                intensity={5}
+                distance={2}
+                decay={2}
+              />
+
+              {/* Only render orbs and trails if active ability is unlocked */}
+              {hasActiveAbility && (
+                <>
+                  <mesh ref={leftOrbRef} position={[0.9, 0, 0]}>
+                    <sphereGeometry args={[0.06, 16, 16]} />
+                    <meshStandardMaterial
+                      color="#0066ff"
+                      emissive="#0088ff"
+                      emissiveIntensity={3}
+                      transparent
+                      opacity={0.9}
+                    />
+                  </mesh>
+                  
+                  <FireballTrail
+                    meshRef={leftOrbRef}
+                    color={new THREE.Color("#0088ff")}
+                    size={0.04}
+                    opacity={0.6}
+                  />
+                </>
+              )}
+            </group>
           </group>
-          
-          {/* Blade */}
-          <group position={[0, 0.3, 0.0]} rotation={[0, Math.PI / 2, Math.PI / 2]}>
-            {/* Base blade */}
-            <mesh>
-              <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
-              <meshStandardMaterial 
-                color="#0066ff"
-                emissive="#0088ff"
-                emissiveIntensity={3}
-                metalness={0.9}
-                roughness={0.2}
-                opacity={0.9}
-                transparent
+
+          {/* Right Sabre */}
+          <group 
+            ref={rightSabreRef} 
+            position={[rightBasePosition[0], rightBasePosition[1], rightBasePosition[2]]}
+            rotation={[0, 0, Math.PI]}
+            scale={[1, 1, 0.875]}
+          >
+            {/* Handle */}
+            <group position={[-0.2, -0.125, 0]} rotation={[0, 0, -Math.PI]}>
+              <mesh>
+                <cylinderGeometry args={[0.015, 0.02, 0.45, 12]} />
+                <meshStandardMaterial color="#2a3b4c" roughness={0.7} />
+              </mesh>
+              
+              {/* Handle wrappings */}
+              {[...Array(4)].map((_, i) => (
+                <mesh key={i} position={[0, 0.175 - i * 0.065, 0]}>
+                  <torusGeometry args={[0.0225, 0.004, 8, 16]} />
+                  <meshStandardMaterial color="#1a2b3c" metalness={0.6} roughness={0.4} />
+                </mesh>
+              ))}
+            </group>
+            
+            {/* Blade */}
+            <group position={[-0.2, 0.3, 0.]} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+              {/* Base blade */}
+              <mesh>
+                <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+                <meshStandardMaterial 
+                  color="#0066ff"
+                  emissive="#0088ff"
+                  emissiveIntensity={2}
+                  metalness={0.9}
+                  roughness={0.2}
+                  opacity={0.9}
+                  transparent
+                />
+              </mesh>
+              
+              
+              {/* Outer ethereal glow */}
+              <mesh position={[0, 0, -0.02]}>  {/* Offset to center */}
+                <extrudeGeometry args={[createInnerBladeShape(), {
+                  ...innerBladeExtrudeSettings,
+                  depth: 0.06
+                }]} />
+                <meshStandardMaterial 
+                  color="#0033ff"
+                  emissive="#0066ff"
+                  emissiveIntensity={3.5}
+                  metalness={0.7}
+                  roughness={0.1}
+                  opacity={0.4}
+                  transparent
+                />
+              </mesh>
+
+              
+              {/* Point light for local illumination */}
+              <pointLight
+                color="#0088ff"
+                intensity={1.5}
+                distance={2}
+                decay={2}
               />
-            </mesh>
-            
 
-            
-
-            
-            {/* Outer ethereal glow */}
-            <mesh position={[0, 0, -0.02]}>  {/* Offset to center */}
-              <extrudeGeometry args={[createInnerBladeShape(), {
-                ...innerBladeExtrudeSettings,
-                depth: 0.06
-              }]} />
-              <meshStandardMaterial 
-                color="#0033ff"
-                emissive="#0066ff"
-                emissiveIntensity={8}
-                metalness={0.7}
-                roughness={0.1}
-                opacity={0.4}
-                transparent
-              />
-            </mesh>
-            
-
-            
-            {/* Point light for local illumination */}
-            <pointLight
-              color="#0088ff"
-              intensity={5}
-              distance={2}
-              decay={2}
-            />
+              {/* Only render orbs and trails if active ability is unlocked */}
+              {hasActiveAbility && (
+                <>
+                  <mesh ref={rightOrbRef} position={[0.9, 0, 0]}>
+                    <sphereGeometry args={[0.06, 16, 16]} />
+                    <meshStandardMaterial
+                      color="#0066ff"
+                      emissive="#0088ff"
+                      emissiveIntensity={3}
+                      transparent
+                      opacity={0.9}
+                    />
+                  </mesh>
+                  
+                  <FireballTrail
+                    meshRef={rightOrbRef}
+                    color={new THREE.Color("#0088ff")}
+                    size={0.04}
+                    opacity={0.6}
+                  />
+                </>
+              )}
+            </group>
           </group>
         </group>
 
-        {/* Right Sabre */}
-        <group 
-          ref={rightSabreRef} 
-          position={[rightBasePosition[0], rightBasePosition[1], rightBasePosition[2]]}
-          rotation={[0, 0, Math.PI]}
-          scale={[1, 1, 1]}
-        >
-          {/* Handle */}
-          <group position={[0, -0.125, 0]} rotation={[0, 0, -Math.PI]}>
-            <mesh>
-              <cylinderGeometry args={[0.015, 0.02, 0.45, 12]} />
-              <meshStandardMaterial color="#2a3b4c" roughness={0.7} />
-            </mesh>
-            
-            {/* Handle wrappings */}
-            {[...Array(4)].map((_, i) => (
-              <mesh key={i} position={[0, 0.175 - i * 0.065, 0]}>
-                <torusGeometry args={[0.0225, 0.004, 8, 16]} />
-                <meshStandardMaterial color="#1a2b3c" metalness={0.6} roughness={0.4} />
-              </mesh>
-            ))}
-          </group>
-          
-          {/* Blade */}
-          <group position={[0, 0.3, 0.]} rotation={[0, Math.PI / 2, Math.PI / 2]}>
-            {/* Base blade */}
-            <mesh>
-              <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
-              <meshStandardMaterial 
-                color="#0066ff"
-                emissive="#0088ff"
-                emissiveIntensity={2}
-                metalness={0.9}
-                roughness={0.2}
-                opacity={0.9}
-                transparent
-              />
-            </mesh>
-            
-            
-            {/* Outer ethereal glow */}
-            <mesh position={[0, 0, -0.02]}>  {/* Offset to center */}
-              <extrudeGeometry args={[createInnerBladeShape(), {
-                ...innerBladeExtrudeSettings,
-                depth: 0.06
-              }]} />
-              <meshStandardMaterial 
-                color="#0033ff"
-                emissive="#0066ff"
-                emissiveIntensity={3.5}
-                metalness={0.7}
-                roughness={0.1}
-                opacity={0.4}
-                transparent
-              />
-            </mesh>
-
-            
-            {/* Point light for local illumination */}
-            <pointLight
-              color="#0088ff"
-              intensity={1.5}
-              distance={2}
-              decay={2}
-            />
-          </group>
-        </group>
-      </group>
+        {/* Add frost explosions */}
+        {hasActiveAbility && showLeftExplosion && leftTargetPosition && (
+          <FrostExplosion position={leftTargetPosition} />
+        )}
+        {hasActiveAbility && showRightExplosion && rightTargetPosition && (
+          <FrostExplosion position={rightTargetPosition} />
+        )}
+      </>
     );
   }
+
+  // Add this new component for the frost explosion effect
+  const FrostExplosion: React.FC<{ position: Vector3 }> = ({ position }) => {
+    const [particles, setParticles] = useState(() => 
+      Array(15).fill(null).map(() => ({
+        position: new Vector3(
+          position.x + (Math.random() - 0.5) * 0.2,
+          position.y,
+          position.z + (Math.random() - 0.5) * 0.2
+        ),
+        velocity: new Vector3(
+          (Math.random() - 0.5) * 2,
+          Math.random() * 3,
+          (Math.random() - 0.5) * 2
+        ),
+        scale: Math.random() * 0.3 + 0.1,
+        life: 1.0
+      }))
+    );
+
+    useFrame((_, delta) => {
+      setParticles(prev => prev.map(particle => {
+        particle.velocity.y -= delta * 5;
+        particle.position.add(particle.velocity.multiplyScalar(delta));
+        particle.life -= delta * 1.5;
+        return particle;
+      }).filter(particle => particle.life > 0));
+    });
+
+    return (
+      <group>
+        {particles.map((particle, i) => (
+          <mesh key={i} position={particle.position.toArray()} scale={[particle.scale, particle.scale, particle.scale]}>
+            <icosahedronGeometry args={[1, 0]} />
+            <meshStandardMaterial
+              color="#A5F3FC"
+              emissive="#A5F3FC"
+              emissiveIntensity={1.5}
+              transparent
+              opacity={particle.life * 0.7}
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        ))}
+      </group>
+    );
+  };

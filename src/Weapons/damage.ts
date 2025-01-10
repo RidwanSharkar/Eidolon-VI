@@ -1,3 +1,5 @@
+// src/weapons/damage.ts
+
 export interface DamageResult {
   damage: number;
   isCritical: boolean;

@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Vector3, Color } from 'three';
 import * as THREE from 'three';
-import { WeaponType } from '../Weapons/weapons';
+import { WeaponType } from '../weapons/weapons';
 
 interface GhostTrailProps {
   parentRef: React.RefObject<THREE.Group>;
@@ -13,7 +13,7 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
   const trailsRef = useRef<Mesh[]>([]);
   const positions = useRef<Vector3[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const trailCount = 28;
+  const trailCount = 27;
   
   useEffect(() => {
     if (parentRef.current) {
@@ -29,9 +29,9 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
       case WeaponType.SCYTHE:
         return '#1EFF00'; // 39ff14
       case WeaponType.SWORD:
-        return '#9382FF'; // 8783D1
+        return '#FF9441'; // 8783D1 FF9441
       case WeaponType.SABRES:
-        return '#00EEFF'; //78DFFF
+        return '#13B0FF'; //78DFFF
     }
   };
   useFrame(() => {

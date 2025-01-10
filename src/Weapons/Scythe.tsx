@@ -1,3 +1,5 @@
+// src/weapons/Scythe.tsx
+
 import { useRef,  } from 'react';
 import { Group, Shape,  } from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -18,11 +20,11 @@ interface ScytheProps {
 export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
   const scytheRef = useRef<Group>(null);
   const swingProgress = useRef(0);
-  const basePosition = [-1.055, 1.10, 0.35] as const;
+  const basePosition = [-1.175, 0.9, 0.3] as const;  // POSITIONING
   
   useFrame((_, delta) => {
     if (isSwinging && scytheRef.current) {
-      swingProgress.current += delta * 6;
+      swingProgress.current += delta * 5.5;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
       // Complete swing earlier to prevent extra rotation
@@ -45,7 +47,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       
       scytheRef.current.position.set(pivotX, pivotY, pivotZ);
       
-      const rotationX = Math.sin(forwardPhase * Math.PI) * (Math.PI / 3);
+      const rotationX = Math.sin(forwardPhase * Math.PI) * (-0.75) +0.3;
       const rotationY = Math.sin(forwardPhase * Math.PI) * Math.PI;
       const rotationZ = Math.sin(forwardPhase * Math.PI) * (Math.PI / 3);
       
@@ -100,10 +102,10 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       ref={scytheRef} 
       position={[basePosition[0], basePosition[1], basePosition[2]]}
       rotation={[0, 0, Math.PI]}
-      scale={[1, 1, 1.05]}
+      scale={[1, 1, 1.]}
     >
       {/* Handle   */}
-      <group position={[0, -0.4, 0]} rotation={[0, 0, -Math.PI]}>
+      <group position={[0, -0.4, 0]} rotation={[0, 0, Math.PI + 0.3]}>
         <mesh>
           <cylinderGeometry args={[0.04, 0.04, 2.3, 12]} />
           <meshStandardMaterial color="#a86432" roughness={0.7} />
@@ -119,7 +121,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       </group>
       
       {/* Blade connector  */}
-      <group position={[0, 0.60, 0]} rotation={[Math.PI / 1, 0, Math.PI]}>
+      <group position={[-.305, 0.60, 0]} rotation={[Math.PI / 1, 0, Math.PI - 0.3]}>
         {/* Base connector */}
         <mesh>
           <cylinderGeometry args={[0.08, 0.08, 0.3, 8]} />
@@ -129,11 +131,11 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
         {/* Rotating glow rings */}
         <group rotation-x={useFrame((state) => state.clock.getElapsedTime() * 2)}>
         <mesh position-y={-0.11} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.145, 0.02, 16, 32]} />
+            <torusGeometry args={[0.14, 0.02, 16, 32]} />
             <meshStandardMaterial
               color="#39ff14"
               emissive="#39ff14"
-              emissiveIntensity={1.5}
+              emissiveIntensity={1.25}
               transparent
               opacity={0.7}
             />
@@ -143,11 +145,11 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
         {/* Second ring rotating opposite direction */}
         <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
           <mesh position-y={-0.005} rotation={[Math.PI/2, 0, 0]}>
-          <torusGeometry args={[0.135, 0.02, 16, 32]} />
+          <torusGeometry args={[0.155, 0.02, 16, 32]} />
             <meshStandardMaterial
               color="#39ff14"
               emissive="#39ff14"
-              emissiveIntensity={1.5}
+              emissiveIntensity={1.25}
               transparent
               opacity={0.7}
             />
@@ -157,16 +159,63 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
                 {/* Second ring rotating opposite direction */}
                 <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
           <mesh position-y={0.1} rotation={[Math.PI/2, 0, 0]}>
-          <torusGeometry args={[0.145, 0.02, 16, 32]} />
+          <torusGeometry args={[0.17, 0.02, 16, 32]} />
             <meshStandardMaterial
               color="#39ff14"
               emissive="#39ff14"
-              emissiveIntensity={1.5}
+              emissiveIntensity={1.25}
               transparent
               opacity={0.7}
             />
           </mesh>
         </group>
+
+                        {/* HANDLE RING 1 */}
+                        <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+          <mesh position-y={-0.35} rotation={[Math.PI/2, 0, 0]}>
+          <torusGeometry args={[0.075, 0.02, 16, 32]} />
+            <meshStandardMaterial
+              color="#39ff14"
+              emissive="#39ff14"
+              emissiveIntensity={1}
+              transparent
+              opacity={0.7}
+            />
+          </mesh>
+        </group>
+
+                                    {/* HANDLE RING 2 */}
+                                <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+          <mesh position-y={-0.54} rotation={[Math.PI/2, 0, 0]}>
+          <torusGeometry args={[0.075, 0.02, 16, 32]} />
+            <meshStandardMaterial
+              color="#39ff14"
+              emissive="#39ff14"
+              emissiveIntensity={1.25}
+              transparent
+              opacity={0.7}
+            />
+          </mesh>
+        </group>
+
+                                            {/* HANDLE RING 2 */}
+                                            <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+          <mesh position-y={-0.74} rotation={[Math.PI/2, 0, 0]}>
+          <torusGeometry args={[0.075, 0.02, 16, 32]} />
+            <meshStandardMaterial
+              color="#39ff14"
+              emissive="#39ff14"
+              emissiveIntensity={ 1.25}
+              transparent
+              opacity={0.7}
+            />
+          </mesh>
+        </group>
+
+
+
+
+
 
         {/* Static outer glow */}
         <mesh>
@@ -182,7 +231,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       </group>
       
       {/* BLADE with glowing effect - adjusted position */}
-      <group position={[0, 0.49, 1.1]} rotation={[-1.0, -Math.PI / 2, Math.PI / 2.2]} scale={[1.0, 0.75, 1.0]}>
+      <group position={[0.37, 0.8, 0.775]} rotation={[0.2, -Math.PI / 3.6, Math.PI -0.175]} scale={[1.0, 0.55, 1.0]}>
         {/* Base blade */}
         <mesh>
           <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.03 }]} />

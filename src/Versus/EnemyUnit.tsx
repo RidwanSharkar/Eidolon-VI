@@ -1,12 +1,14 @@
+// src/versus/EnemyUnit.tsx
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import CustomSkeleton from './CustomSkeleton';
-import BoneVortex2 from './SpawnAnimation';
+import BoneVortex2 from '../color/SpawnAnimation';
 import { Enemy } from './enemy';
-import BoneVortex from './DeathAnimation';
-import { WeaponType } from '../Weapons/weapons';
+import BoneVortex from '../color/DeathAnimation';
+import { WeaponType } from '../weapons/weapons';
+import { FrostExplosion } from '../spells/OrbShield/FrostExplosion';
 
 
 interface EnemyUnitProps {
@@ -21,6 +23,11 @@ interface EnemyUnitProps {
   onAttackPlayer: (damage: number) => void;
   weaponType: WeaponType;
   isDying?: boolean;
+}
+
+interface DamageSource {
+  type: WeaponType;
+  hasActiveAbility?: boolean;
 }
 
 export default function EnemyUnit({
@@ -42,6 +49,7 @@ export default function EnemyUnit({
   const [isDead, setIsDead] = useState(false);
   const [isSpawning, setIsSpawning] = useState(true);
   const [isMoving, setIsMoving] = useState(false);
+  const [showFrostEffect, setShowFrostEffect] = useState(false);
   
   // Use refs for position tracking
   const currentPosition = useRef(initialPosition.clone());
@@ -49,13 +57,15 @@ export default function EnemyUnit({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 2.0;
+  const ATTACK_RANGE = 2.4;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.15;
+  const MOVEMENT_SPEED = 0.18;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.18;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 6;
+  const ATTACK_DAMAGE = 8;
+  const SEPARATION_RADIUS = 1.2; // Minimum distance between enemies
+  const SEPARATION_FORCE = 0.4; // Strength of the separation force
 
   // Sync health changes
   useEffect(() => {
@@ -63,7 +73,7 @@ export default function EnemyUnit({
   }, [health]);
 
   // Handle damage with proper synchronization
-  const handleDamage = useCallback((damage: number) => {
+  const handleDamage = useCallback((damage: number, source: DamageSource) => {
     if (currentHealth.current <= 0) return;
     
     const newHealth = Math.max(0, currentHealth.current - damage);
@@ -72,6 +82,10 @@ export default function EnemyUnit({
     if (newHealth === 0 && currentHealth.current > 0) {
       setIsDead(true);
       setShowDeathEffect(true);
+    }
+
+    if (source.type === WeaponType.SABRES && source.hasActiveAbility) {
+      setShowFrostEffect(true);
     }
   }, [id, onTakeDamage]);
 
@@ -103,12 +117,40 @@ export default function EnemyUnit({
         .subVectors(playerPosition, currentPosition.current)
         .normalize();
 
-      // Update target position
-      const movement = direction.multiplyScalar(MOVEMENT_SPEED * delta * 60);
+      // Get all other enemy positions from the scene
+      const otherEnemies = enemyRef.current.parent?.children
+        .filter(child => 
+          child !== enemyRef.current && 
+          child.position && 
+          child.position.distanceTo(currentPosition.current) < SEPARATION_RADIUS
+        ) || [];
+
+      // Calculate separation force
+      const separationForce = new Vector3();
+      otherEnemies.forEach(enemy => {
+        // Create a ground-plane version of positions for separation calculation
+        const currentGroundPos = currentPosition.current.clone().setY(0);
+        const enemyGroundPos = enemy.position.clone().setY(0);
+        
+        const diff = new Vector3()
+          .subVectors(currentGroundPos, enemyGroundPos)
+          .normalize()
+          .multiplyScalar(SEPARATION_FORCE / Math.max(0.1, enemyGroundPos.distanceTo(currentGroundPos)));
+        separationForce.add(diff);
+      });
+
+      // Combine forces and ensure Y remains 0 - FIXES WALK ANIMATION
+      const finalDirection = direction.add(separationForce).normalize();
+      finalDirection.y = 0; // Force movement to stay on ground plane
+
+      // Update target position with combined forces
+      const movement = finalDirection.multiplyScalar(MOVEMENT_SPEED * delta * 60);
       targetPosition.current.copy(currentPosition.current).add(movement);
+      targetPosition.current.y = 0; // Ensure target position stays on ground
 
       // Smooth movement
       currentPosition.current.lerp(targetPosition.current, SMOOTHING_FACTOR);
+      currentPosition.current.y = 0; // Force current position to stay on ground
 
       // Apply position to mesh
       enemyRef.current.position.copy(currentPosition.current);
@@ -153,10 +195,10 @@ export default function EnemyUnit({
           // 3. Enemy hasn't moved too far from attack start position
           if (currentHealth.current > 0 && 
               finalDistanceToPlayer <= ATTACK_RANGE && 
-              attackStartPosition.distanceTo(currentPosition.current) < 0.5) {
+              attackStartPosition.distanceTo(currentPosition.current) < 0.65) {
             onAttackPlayer(ATTACK_DAMAGE);
           }
-        }, 1000);
+        }, 865); // REACTION TIME 
         
         lastAttackTime.current = currentTime;
 
@@ -200,10 +242,10 @@ export default function EnemyUnit({
         }}
       >
         <CustomSkeleton
-          position={[0, 0, 0]}
+          position={[0, 0.765, 0]}
           isAttacking={isAttacking}
           isWalking={isMoving && currentHealth.current > 0}
-          onHit={handleDamage}
+          onHit={(damage) => handleDamage(damage, { type: weaponType })}
         />
 
         <Billboard
@@ -256,6 +298,13 @@ export default function EnemyUnit({
           }}
           isSpawning={false}
           weaponType={weaponType}
+        />
+      )}
+
+      {showFrostEffect && (
+        <FrostExplosion 
+          position={position}
+          onComplete={() => setShowFrostEffect(false)}
         />
       )}
     </>

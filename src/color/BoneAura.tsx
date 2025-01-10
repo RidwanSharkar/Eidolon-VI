@@ -11,7 +11,7 @@ const createBonePiece = () => (
   <group rotation={[Math.PI / 4, 0, 0]}>
     {/* Main bone shaft - thinner and more angular */}
     <mesh>
-      <cylinderGeometry args={[0.02, 0.015, 0.2, 4]} />
+      <cylinderGeometry args={[0.015, 0.015, 0.15, 4]} />
       <meshStandardMaterial 
         color="#ffffff"
         roughness={0.4}
@@ -20,7 +20,7 @@ const createBonePiece = () => (
     </mesh>
     
     {/* Bone joints - more pronounced */}
-    <mesh position={new THREE.Vector3(0, 0.135, 0)} rotation={new THREE.Euler(0, 0, Math.PI / 6)}>
+    <mesh position={new THREE.Vector3(0, 0.1, 0)} rotation={new THREE.Euler(0, 0, Math.PI / 6)}>
       <sphereGeometry args={[0.03, 4, 4]} />
       <meshStandardMaterial 
         color="#ffffff"
@@ -43,7 +43,7 @@ const createBonePiece = () => (
 export default function BoneAura({ parentRef }: BoneAuraProps) {
   const bonesRef = useRef<Mesh[]>([]);
   const boneCount = 16;
-  const radius = 0.5;
+  const radius = 0.465;
   const groupRef = useRef<Group>(null);
   
   useFrame(() => {
@@ -54,9 +54,9 @@ export default function BoneAura({ parentRef }: BoneAuraProps) {
     
     bonesRef.current.forEach((bone, i) => {
       const angle = (i / boneCount) * Math.PI * 2 + Date.now() * 0.001;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      const y = Math.sin(Date.now() * 0.002 + i) * 0.01;
+      const x = -Math.cos(angle) * radius *1.1;
+      const z = Math.sin(angle) * radius *1.1;
+      const y = Math.sin(Date.now() * 0.002 + i) * 0.02;
       
       bone.position.set(x, y + 0.13, z);
       bone.rotation.y = angle + Math.PI / 3;

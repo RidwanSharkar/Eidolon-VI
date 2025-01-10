@@ -1,11 +1,13 @@
+// src/unit/UnitProps.ts
 import { Vector3, Group } from 'three';
-import { WeaponType } from '../Weapons/weapons';
+import { WeaponType, AbilityType } from '../weapons/weapons';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { Enemy } from '../Versus/enemy';
+import { Enemy } from '../versus/enemy';
 import { RefObject } from 'react';
 
 export interface AbilityButton {
-  key: 'q' | 'e' | 'r' | 'passive';
+  type: 'q' | 'e' | 'r' | 'passive' | 'active';
+  key: 'q' | 'e' | 'r' | '1' | '2';
   cooldown: number;
   currentCooldown: number;
   icon: string;
@@ -19,6 +21,7 @@ export interface WeaponAbilities {
   e: AbilityButton;
   r: AbilityButton;
   passive: AbilityButton;
+  active: AbilityButton;
 }
 
 export type WeaponInfo = Record<WeaponType, WeaponAbilities>;
@@ -38,7 +41,7 @@ export interface UnitProps {
   maxHealth: number;
   isPlayer?: boolean;
   abilities: WeaponInfo;
-  onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r' | 'passive') => void;
+  onAbilityUse: (weapon: WeaponType, abilityType: AbilityType) => void;
   onPositionUpdate: (pos: Vector3) => void;
   enemyData: Enemy[];
   onFireballDamage: (targetId: string, damage: number, isCritical: boolean, position: Vector3) => void;

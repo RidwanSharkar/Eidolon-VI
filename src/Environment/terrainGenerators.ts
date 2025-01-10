@@ -1,5 +1,5 @@
 import { Vector3, Color } from 'three';
-import { trunkColors, leafColors } from '@/Environment/treeColors';
+import { trunkColors, leafColors } from '@/environment/treeColors';
 
 export interface GeneratedTree {
   position: Vector3;
@@ -10,11 +10,11 @@ export interface GeneratedTree {
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 58; 
+  const numberOfMountains = 50; 
 
   for (let i = 0; i < numberOfMountains; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const distance = 46.5 + Math.random() * 15;
+    const distance = 44;
 
     const x = Math.cos(angle) * distance;
     const z = Math.sin(angle) * distance;

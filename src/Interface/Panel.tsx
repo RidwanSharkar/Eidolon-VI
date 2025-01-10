@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { WeaponAbilities, WeaponType } from '../Weapons/weapons';
-import { WeaponInfo } from '../Unit/UnitProps';
+import { WeaponAbilities, WeaponType } from '../weapons/weapons';
+import { WeaponInfo } from '../unit/UnitProps';
 import styles from './Panel.module.css';
 import Image from 'next/image';
 import DamageNotification from './DamageNotification';
-import { WEAPON_ABILITY_TOOLTIPS } from '../Weapons/weapons';
+import { WEAPON_ABILITY_TOOLTIPS } from '../weapons/weapons';
 import Tooltip from './Tooltip';
 
 
@@ -96,20 +96,20 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
   };
 
   const getLevel = (kills: number) => {
-    if (kills < 15) return 1;
-    if (kills < 40) return 2;  // 15 kills for level 1-> 2, then need 25 more for 2->3
-    return 3;
+    if (kills < 13) return 1;      // Level 1: 0-12 kills
+    if (kills < 30) return 2;      // Level 2: 13-29 kills
+    return 3;                      // Level 3: 30+ kills
   };
 
   const getExpProgress = (kills: number) => {
     const level = getLevel(kills);
     
     if (level === 1) {
-      return (kills / 15) * 100;
+      return (kills / 13) * 100;  // 13 kills for level 1
     } else if (level === 2) {
-      return ((kills - 15) / 25) * 100;
+      return ((kills - 13) / 17) * 100;  // 17 kills for level 2
     }
-    return 100;
+    return ((kills - 30) / 23) * 100;  // 23 kills for level 3
   };
 
 

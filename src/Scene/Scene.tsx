@@ -1,18 +1,18 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Vector3, Group } from 'three';
-import Terrain from '../Environment/Terrain';
-import Mountain from '../Environment/Mountain';
-import Tree from '../Environment/Tree';
-import Mushroom from '../Environment/Mushroom';
-import Unit from '../Unit/Unit';
-import { MemoizedEnemyUnit } from '../Versus/MemoizedEnemyUnit';
+import Terrain from '../environment/Terrain';
+import Mountain from '../environment/Mountain';
+import Tree from '../environment/Tree';
+import Mushroom from '../environment/Mushroom';
+import Unit from '../unit/Unit';
+import { MemoizedEnemyUnit } from '../versus/MemoizedEnemyUnit';
 import { SceneProps as SceneType } from './SceneProps';
-import { UnitProps } from '../Unit/UnitProps';
-import Planet from '../Environment/Planet';
-import CustomSky from '../Environment/Sky';
-import DriftingSouls from '../Environment/DriftingSouls';
-import { generateRandomPosition } from '../Environment/terrainGenerators';
-import { Enemy } from '../Versus/enemy';
+import { UnitProps } from '../unit/UnitProps';
+import Planet from '../environment/Planet';
+import CustomSky from '../environment/Sky';
+import DriftingSouls from '../environment/DriftingSouls';
+import { generateRandomPosition } from '../environment/terrainGenerators';
+import { Enemy } from '../versus/enemy';
 import * as THREE from 'three';
 
 
@@ -29,9 +29,9 @@ export default function Scene({
   mushroomData,
   unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
-  spawnInterval = 5500,
-  maxSkeletons = 15,
-  initialSkeletons = 5,
+  spawnInterval = 4000,
+  maxSkeletons = 13,
+  initialSkeletons = 4,
 }: SceneProps) {
   // State for enemies (with Scene1-specific health values)
   const [enemies, setEnemies] = useState<Enemy[]>(() => {
@@ -42,8 +42,8 @@ export default function Scene({
         id: `skeleton-${index}`,
         position: spawnPosition.clone(),
         initialPosition: spawnPosition.clone(),
-        health: 200,
-        maxHealth: 200,
+        health: 225,
+        maxHealth: 225,
         ref: React.createRef<Group>()
       };
     });
@@ -171,8 +171,8 @@ export default function Scene({
           id: `skeleton-${totalSpawned}`,
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
-          health: 200,
-          maxHealth: 200,
+          health: 225,
+          maxHealth: 225,
           ref: React.createRef<Group>()
         };
         

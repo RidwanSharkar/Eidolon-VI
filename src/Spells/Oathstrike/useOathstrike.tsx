@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
-import { ORBITAL_COOLDOWN } from '../../Unit/ChargedOrbitals';
-import { calculateDamage } from '@/Weapons/damage';
-import { useHealing } from '@/Unit/useHealing';
+import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
+import { calculateDamage } from '@/weapons/damage';
+import { useHealing } from '@/unit/useHealing';
 
 interface OathstrikeControllerProps {
   onHit: (targetId: string, damage: number) => void;
@@ -50,7 +50,7 @@ export const useOathstrike = ({
   maxHealth: number;
 }) => {
   const [isActive, setIsActive] = useState(false);
-  const HEAL_AMOUNT = 9;
+  const HEAL_AMOUNT = 5;
   
   const { processHealing } = useHealing({
     currentHealth,
@@ -122,7 +122,7 @@ export const useOathstrike = ({
 
     // Calculate arc for damage
     const forward = direction.clone();
-    const DAMAGE_RANGE = 6.5;
+    const DAMAGE_RANGE = 5.5;
     const ARC_ANGLE = Math.PI * 0.6; // 108-degree arc
 
     // Check enemies in arc

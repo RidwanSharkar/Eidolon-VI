@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styles from './LevelCompletionPanel.module.css';
-import { WeaponType } from '../Weapons/weapons';
-import { WEAPON_ABILITY_TOOLTIPS } from '../Weapons/weapons';
+import { AbilityType, WeaponType } from '../weapons/weapons';
+import { WEAPON_ABILITY_TOOLTIPS } from '../weapons/weapons';
 import Tooltip from './Tooltip';
 
 interface LevelCompletionPanelProps {
@@ -9,7 +9,7 @@ interface LevelCompletionPanelProps {
   onSelectIcon: (iconId: number) => void;
   selectedIcon: number | null;
   currentWeapon: WeaponType;
-  onAbilityUnlock: (abilityType: 'r' | 'passive') => void;
+  onAbilityUnlock: (abilityType: AbilityType) => void;
 }
 
 export default function LevelCompletionPanel({ 
@@ -31,23 +31,35 @@ export default function LevelCompletionPanel({
   const getAbilityIcons = () => {
     switch (currentWeapon) {
       case WeaponType.SCYTHE:
-        return { r: '/Eidolon/icons/r1.svg', p: '/Eidolon/icons/p1.svg' };
+        return { 
+          r: '/Eidolon/icons/r1.svg', 
+          p: '/Eidolon/icons/p1.svg',
+          s: '/Eidolon/icons/s1.svg'
+        };
       case WeaponType.SWORD:
-        return { r: '/Eidolon/icons/r2.svg', p: '/Eidolon/icons/p2.svg' };
+        return { 
+          r: '/Eidolon/icons/r2.svg', 
+          p: '/Eidolon/icons/p2.svg',
+          s: '/Eidolon/icons/s2.svg'
+        };
       case WeaponType.SABRES:
-        return { r: '/Eidolon/icons/r3.svg', p: '/Eidolon/icons/p3.svg' };
+        return { 
+          r: '/Eidolon/icons/r3.svg', 
+          p: '/Eidolon/icons/p3.svg',
+          s: '/Eidolon/icons/s3.svg'
+        };
       case WeaponType.SABRES2:
         return { r: '/Eidolon/icons/r4.svg', p: '/Eidolon/icons/p4.svg' };
     }
   };
 
-  const handleIconHover = (e: React.MouseEvent, abilityType: 'r' | 'passive') => {
+  const handleIconHover = (e: React.MouseEvent, abilityType: 'r' | 'passive' | 'active') => {
     const tooltip = WEAPON_ABILITY_TOOLTIPS[currentWeapon][abilityType];
     const rect = e.currentTarget.getBoundingClientRect();
     setTooltipContent(tooltip);
     setTooltipPosition({
       x: rect.left - 721,
-      y: rect.top -  70
+      y: rect.top - 70
     });
   };
 
@@ -55,14 +67,24 @@ export default function LevelCompletionPanel({
     setTooltipContent(null);
   };
 
-  const icons = getAbilityIcons();
-
   const handleIconSelect = (iconId: number) => {
     onSelectIcon(iconId);
-    // iconId 1 is R ability, iconId 2 is passive
-    const abilityType = iconId === 1 ? 'r' : 'passive';
-    onAbilityUnlock(abilityType);
   };
+
+  const handleConfirm = () => {
+    if (selectedIcon === null) return;
+    
+    // Convert iconId to ability type
+    const abilityType = selectedIcon === 1 ? 'r' : selectedIcon === 2 ? 'passive' : 'active';
+    
+    // Unlock the ability
+    onAbilityUnlock(abilityType);
+    
+    // Continue
+    onContinue();
+  };
+
+  const icons = getAbilityIcons();
 
   return (
     <div 
@@ -95,10 +117,25 @@ export default function LevelCompletionPanel({
             <p>[1] Hotkey</p>
           </div>
         </div>
+        {(currentWeapon === WeaponType.SCYTHE || 
+          currentWeapon === WeaponType.SABRES || 
+          currentWeapon === WeaponType.SWORD) && (
+          <div 
+            className={`${styles.icon} ${selectedIcon === 3 ? styles.selected : ''}`}
+            onClick={() => handleIconSelect(3)}
+            onMouseEnter={(e) => handleIconHover(e, 'active')}
+            onMouseLeave={handleIconLeave}
+          >
+            <div className={styles.iconContent}>
+              <img src={icons?.s} alt="Active Ability" style={{ width: '75px', height: '75px' }} />
+              <p>[2] Hotkey</p>
+            </div>
+          </div>
+        )}
       </div>
       <button 
         className={styles.continueButton}
-        onClick={onContinue}
+        onClick={handleConfirm}
         disabled={selectedIcon === null}
       >
         Confirm

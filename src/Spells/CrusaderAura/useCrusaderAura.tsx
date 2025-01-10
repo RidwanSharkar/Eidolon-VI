@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Group, Vector3 } from 'three';
-import { useHealing } from '@/Unit/useHealing';
+import { useHealing } from '@/unit/useHealing';
 
 interface CrusaderAuraProps {
   parentRef: React.RefObject<Group>;
@@ -25,8 +25,8 @@ export const useCrusaderAura = ({
   currentHealth,
   maxHealth
 }: CrusaderAuraProps) => {
-  const HEAL_AMOUNT = 8;
-  const HEAL_CHANCE = 0.175;
+  const HEAL_AMOUNT = 3;
+  const HEAL_CHANCE = 0.25;
   const [showHealingEffect, setShowHealingEffect] = useState(false);
 
   const { processHealing } = useHealing({

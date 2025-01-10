@@ -1,17 +1,19 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { Vector3 } from 'three';
-import { WeaponType } from '../Weapons/weapons';
-import { trunkColors, leafColors } from '../Environment/treeColors';  
-import { generateMountains, generateTrees, generateMushrooms, generateFlowers } from '../Environment/terrainGenerators';
-import { SceneProps, SkeletonProps } from '../Scene/SceneProps';
+import { WeaponType, AbilityType } from '../weapons/weapons';
+import { trunkColors, leafColors } from '../environment/treeColors';  
+import { generateMountains, generateTrees, generateMushrooms, generateFlowers } from '../environment/terrainGenerators';
+import { SceneProps, SkeletonProps } from '../scene/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
-import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '../Weapons/weapons';
+import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '../weapons/weapons';
 import * as THREE from 'three';
-import { WeaponInfo } from '../Unit/UnitProps';
+import { WeaponInfo } from '../unit/UnitProps';
 
-import GameWrapper from '../Scene/GameWrapper';
+import GameWrapper from '../scene/GameWrapper';
 
-// SKELETON SPAWN POINTS
+//might want to specialize this file for kill counter, everything else scattered from 1.0 
+// redistribute dis file throughout scene/unit  or move scene-> pages
+// SKELETON SPAWN POINTS DEPRECATED DUE TO TERRAIN GENERATION.ts
 const generateRandomPosition = () => {
   const radius = 30;
   const angle = Math.random() * Math.PI * 2;
@@ -38,11 +40,12 @@ export default function HomePage() {
   // state for ability unlocks - moved up before its usage
   const [unlockedAbilities, setUnlockedAbilities] = useState({
     r: false,
-    passive: false
+    passive: false,
+    active: false
   });
 
   // ability unlock handler
-  const handleAbilityUnlock = (abilityType: 'r' | 'passive') => {
+  const handleAbilityUnlock = (abilityType: AbilityType) => {
     console.log(`Unlocking ${abilityType} ability`);
     
     setUnlockedAbilities(prev => ({
@@ -53,7 +56,10 @@ export default function HomePage() {
     setAbilities(prev => {
       const newAbilities = { ...prev };
       if (currentWeapon) {
-        newAbilities[currentWeapon][abilityType].isUnlocked = true;
+        newAbilities[currentWeapon][abilityType] = { // PRESERVE EXISTING UNLOCKS 
+          ...newAbilities[currentWeapon][abilityType],
+          isUnlocked: true
+        };
       }
       return newAbilities;
     });
@@ -104,10 +110,10 @@ export default function HomePage() {
     }
   }, [lastHitTime]);
 
-  const handleAbilityUse = (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r' | 'passive') => {
+  const handleAbilityUse = (weapon: WeaponType, abilityType: AbilityType) => {
     setAbilities(prev => {
       const newAbilities = { ...prev };
-      newAbilities[weapon][abilityKey].currentCooldown = getModifiedCooldown(weapon, abilityKey, prev);
+      newAbilities[weapon][abilityType].currentCooldown = getModifiedCooldown(weapon, abilityType, prev);
       return newAbilities;
     });
   };
@@ -119,8 +125,8 @@ export default function HomePage() {
       setAbilities((prev: WeaponInfo) => {
         const newAbilities = { ...prev };
         (Object.keys(newAbilities) as WeaponType[]).forEach(weapon => {
-          ['q', 'e', 'r', 'passive'].forEach(ability => {
-            const key = ability as 'q' | 'e' | 'r' | 'passive';
+          ['q', 'e', 'r', 'passive', 'active'].forEach(ability => {
+            const key = ability as 'q' | 'e' | 'r' | 'passive' | 'active';
             if (newAbilities[weapon][key].currentCooldown > 0) {
               newAbilities[weapon][key].currentCooldown -= 0.15;
             }
@@ -230,7 +236,8 @@ export default function HomePage() {
     setCurrentWeapon(null);  // FORCES WEAPON RESELECTION
     setUnlockedAbilities({
       r: false,
-      passive: false
+      passive: false,
+      active: false
     });
   };
 
@@ -244,7 +251,9 @@ export default function HomePage() {
 
   // sceneProps after handleReset
   const sceneProps: SceneProps = {
+    bossActive: false,
     mountainData,
+    onAbilityUnlock: handleAbilityUnlock,
     treeData,
     mushroomData,
     treePositions,
@@ -277,9 +286,9 @@ export default function HomePage() {
           }
         } : {})
       },
-      onAbilityUse: (weapon: WeaponType, abilityKey: 'q' | 'e' | 'r' | 'passive') => {
+      onAbilityUse: (weapon: WeaponType, abilityType: AbilityType) => {
         if (currentWeapon) {
-          handleAbilityUse(weapon, abilityKey);
+          handleAbilityUse(weapon, abilityType);
         }
       },
       onPositionUpdate: (newPosition: THREE.Vector3) => {
@@ -332,6 +341,7 @@ export default function HomePage() {
         onReset={handleReset}
         killCount={killCount}
         onAbilityUnlock={handleAbilityUnlock}
+        
       />
     </div>
   );
