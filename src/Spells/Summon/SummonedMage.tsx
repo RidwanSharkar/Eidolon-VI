@@ -430,7 +430,7 @@ export default function SummonedMage({ position, isAttacking, isWalking, }: Summ
   const attackAnimationRef = useRef<NodeJS.Timeout>();
 
   const walkSpeed = 4;
-  const attackSpeed = 3;
+  const attackSpeed = 2;
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -485,7 +485,7 @@ export default function SummonedMage({ position, isAttacking, isWalking, }: Summ
           const phase = isRight ? walkCycle + Math.PI : walkCycle;
           
           // Simpler rotation for the entire claw structure
-          const armAngle = Math.sin(phase) * 0.1;
+          const armAngle = Math.sin(phase) * 0.3;
           limb.rotation.x = armAngle;
         }
       });
@@ -493,7 +493,7 @@ export default function SummonedMage({ position, isAttacking, isWalking, }: Summ
 
     if (isAttacking) {
       setAttackCycle((prev) => prev + delta * attackSpeed);
-      const progress = Math.min(attackCycle, Math.PI / 2);
+      const progress = Math.min(attackCycle, Math.PI / 4);
       const armAngle = Math.sin(progress) * Math.PI;
 
       const rightArm = groupRef.current.getObjectByName('RightArm') as Mesh;
@@ -501,8 +501,7 @@ export default function SummonedMage({ position, isAttacking, isWalking, }: Summ
         rightArm.rotation.x = -armAngle;
       }
 
-
-      if (attackCycle > Math.PI / 2) {
+      if (attackCycle > Math.PI / 4) {
         setAttackCycle(0);
       }
     } else {
@@ -522,10 +521,10 @@ export default function SummonedMage({ position, isAttacking, isWalking, }: Summ
       }
     };
   }, []);
+
   return (
-    <group ref={groupRef} position={[position[0], position[1] + 1, position[2]]}>
-      {/* Replace the simple robe with MageRobe component */}
-      <group position={[0, 0.8, 0]}>
+    <group ref={groupRef} position={[position[0], position[1], position[2]]}>
+      <group position={[0, 0.75, 0]}>
         <MageRobe />
       </group>
 
@@ -546,13 +545,13 @@ export default function SummonedMage({ position, isAttacking, isWalking, }: Summ
             position={[0, 1.35, 0]}
           >
             <mesh>
-              <ringGeometry args={[0.6, 0.65, 32]} />
+              <ringGeometry args={[0.6, 0.70, 32]} />
               <meshStandardMaterial 
                 color="#4169E1"
                 emissive="#4169E1"
                 emissiveIntensity={1.5}
                 transparent
-                opacity={0.7}
+                opacity={0.4}
               />
             </mesh>
           </group>

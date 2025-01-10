@@ -380,7 +380,7 @@
               {/* Only render orbs and trails if active ability is unlocked */}
               {hasActiveAbility && (
                 <>
-                  <mesh ref={leftOrbRef} position={[0.9, 0, 0]}>
+                  <mesh ref={leftOrbRef} position={[-0.15, 0, 0]}>
                     <sphereGeometry args={[0.06, 16, 16]} />
                     <meshStandardMaterial
                       color="#0066ff"
@@ -471,7 +471,7 @@
               {/* Only render orbs and trails if active ability is unlocked */}
               {hasActiveAbility && (
                 <>
-                  <mesh ref={rightOrbRef} position={[0.9, 0, 0]}>
+                  <mesh ref={rightOrbRef} position={[-0.15, 0, 0]}>
                     <sphereGeometry args={[0.06, 16, 16]} />
                     <meshStandardMaterial
                       color="#0066ff"

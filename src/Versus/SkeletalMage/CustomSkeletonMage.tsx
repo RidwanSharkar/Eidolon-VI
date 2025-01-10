@@ -246,8 +246,8 @@ function ShoulderPlate() {
         ))}
 
         {/* Top rim */}
-        <mesh position={[0, 0.22, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.065, 0.02, 3, 5]} />
+        <mesh position={[0, 0.22, 0]} rotation={[Math.PI*2, Math.PI*2, Math.PI/2]}>
+          <torusGeometry args={[0.1, 0.025, 3, 5]} />
           <meshStandardMaterial 
             color="#d4d4d4"
             roughness={0.3}
@@ -256,7 +256,7 @@ function ShoulderPlate() {
         </mesh>
 
                 {/* bottom rim */}
-                <mesh position={[0, 0, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
+        <mesh position={[0, 0, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
           <torusGeometry args={[0.16, 0.02, 4, 5]} />
           <meshStandardMaterial 
             color="#d4d4d4"
@@ -276,7 +276,7 @@ function ShoulderPlate() {
 
 
         {/* h0ver rim */}
-        <mesh position={[0, 0.13, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
+        <mesh position={[0, 0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
           <torusGeometry args={[0.125, 0.0175, 6, 6]} />
           <meshStandardMaterial 
             color="#d4d4d4"
@@ -387,7 +387,7 @@ function MageRobe() {
 
       {/* Robe trim */}
       <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.3, 0.3, 0.1, 8]} />
+        <cylinderGeometry args={[0.3, 0.3, 0.23, 8]} />
         <meshStandardMaterial 
           color="#6b0fb3"
           metalness={0.3}
@@ -400,8 +400,8 @@ function MageRobe() {
       {[-1, 1].map((side) => (
         <group 
           key={side}
-          position={[0.3 * side, 1.15, 0]}
-          rotation={[0, 0, 0.62 * side]}
+          position={[0.3 * side, 1.175, -0]}
+          rotation={[0, 0, 0.52 * side]}
         >
           <mesh>
             <cylinderGeometry args={[0.0775, 0.115, 0.275, 6]} />
@@ -434,21 +434,6 @@ function MageRobe() {
         </group>
       ))}
 
-      {/* Magical rune circles */}
-      {[1.25, 1.7, 1.7].map((y, i) => (
-        <group key={i} position={[0, y + 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <mesh>
-            <ringGeometry args={[0.215, 0.255, 36]} />
-            <meshStandardMaterial 
-              color="#4169E1"
-              emissive="#4169E1"
-              emissiveIntensity={0.75}
-              transparent
-              opacity={1.7}
-            />
-          </mesh>
-        </group>
-      ))}
     </group>
   );
 }
@@ -459,8 +444,8 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
   const [attackCycle, setAttackCycle] = useState(0);
   const attackAnimationRef = useRef<NodeJS.Timeout>();
 
-  const walkSpeed = 4;
-  const attackSpeed = 2;
+  const walkSpeed = 3;
+  const attackSpeed = 0.6;
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -561,8 +546,7 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
 
   return (
     <group ref={groupRef} position={[position[0], position[1], position[2]]}>
-      {/* Replace the simple robe with MageRobe component */}
-      <group position={[0, 0.8, 0]}>
+      <group position={[0, 0.75, 0]}>
         <MageRobe />
       </group>
 
@@ -583,13 +567,13 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
             position={[0, 1.35, 0]}
           >
             <mesh>
-              <ringGeometry args={[0.6, 0.65, 32]} />
+              <ringGeometry args={[0.6, 0.70, 32]} />
               <meshStandardMaterial 
                 color="#4169E1"
                 emissive="#4169E1"
                 emissiveIntensity={1.5}
                 transparent
-                opacity={0.7}
+                opacity={0.4}
               />
             </mesh>
           </group>

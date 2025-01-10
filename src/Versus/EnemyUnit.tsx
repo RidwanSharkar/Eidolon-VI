@@ -59,8 +59,8 @@ export default function EnemyUnit({
 
   const ATTACK_RANGE = 2.4;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.18;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.18;
+  const MOVEMENT_SPEED = 0.20;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.20;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 8;
@@ -93,9 +93,10 @@ export default function EnemyUnit({
   useEffect(() => {
     if (position) {
       currentPosition.current.copy(position);
-      targetPosition.current.copy(position);
+      currentPosition.current.y = 0; // Force ground level
+      targetPosition.current.copy(currentPosition.current);
       if (enemyRef.current) {
-        enemyRef.current.position.copy(position);
+        enemyRef.current.position.copy(currentPosition.current);
       }
     }
   }, [position]);
@@ -195,7 +196,7 @@ export default function EnemyUnit({
           // 3. Enemy hasn't moved too far from attack start position
           if (currentHealth.current > 0 && 
               finalDistanceToPlayer <= ATTACK_RANGE && 
-              attackStartPosition.distanceTo(currentPosition.current) < 0.65) {
+              attackStartPosition.distanceTo(currentPosition.current) < 0.75) { // leeway distance 
             onAttackPlayer(ATTACK_DAMAGE);
           }
         }, 865); // REACTION TIME 

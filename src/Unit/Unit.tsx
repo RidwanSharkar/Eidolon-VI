@@ -37,6 +37,7 @@ import Summon from '@/spells/Summon/Summon';
 import { OrbShieldRef } from '@/spells/OrbShield/OrbShield';
 import ChainLightning from '@/spells/ChainLightning/ChainLightning';
 import OrbShield from '@/spells/OrbShield/OrbShield';
+import { FrostExplosion } from '@/spells/OrbShield/FrostExplosion';
 
 
 
@@ -363,6 +364,20 @@ export default function Unit({
               isOrbShield: true
             }];
           });
+
+          // Add frost explosion effect when orb shield damage is dealt
+          const unitPosition = groupRef.current.position.clone();
+          const forward = new Vector3(0, 0, 1)
+            .applyQuaternion(groupRef.current.quaternion)
+            .multiplyScalar(2); // Position 2 units in front
+          
+          setActiveEffects(prev => [...prev, {
+            id: Date.now(),
+            type: 'frostExplosion',
+            position: unitPosition.add(forward),
+            direction: new Vector3(),
+            duration: 0.5
+          }]);
 
           // Consume one orb per attack (not per hit)
           if (!hitCountThisSwing[targetId]) {
@@ -746,7 +761,7 @@ export default function Unit({
     const baseDamage = 11;
     const maxDamage = 51;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
-    const fullChargeDamage = power >= 0.99 ? 66 : 0;
+    const fullChargeDamage = power >= 0.99 ? 56 : 0;
     const finalDamage = scaledDamage + fullChargeDamage;
     
     onHit(targetId, finalDamage);
@@ -1344,6 +1359,18 @@ export default function Unit({
                   }]);
                 }
               }}
+              onComplete={() => {
+                setActiveEffects(prev => 
+                  prev.filter(e => e.id !== effect.id)
+                );
+              }}
+            />
+          );
+        } else if (effect.type === 'frostExplosion') {
+          return (
+            <FrostExplosion
+              key={effect.id}
+              position={effect.position}
               onComplete={() => {
                 setActiveEffects(prev => 
                   prev.filter(e => e.id !== effect.id)

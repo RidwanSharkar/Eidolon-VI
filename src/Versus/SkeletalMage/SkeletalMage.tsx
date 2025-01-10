@@ -55,9 +55,9 @@ export default function SkeletalMage({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 14;
-  const MOVEMENT_SPEED = 0.125;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.125;
+  const ATTACK_RANGE = 15;
+  const MOVEMENT_SPEED = 0.135;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.135;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const SEPARATION_RADIUS = 0.5; // Minimum distance between enemies
@@ -130,6 +130,12 @@ export default function SkeletalMage({
     // Check if we should cast fireball
     if (currentTime - lastFireballTime.current >= FIREBALL_COOLDOWN) {
       if (distanceToPlayer <= ATTACK_RANGE) {
+        // Add rotation to face player while casting
+        const lookTarget = new Vector3()
+          .copy(playerPosition)
+          .setY(currentPosition.current.y);
+        enemyRef.current.lookAt(lookTarget);
+        
         castFireball();
         lastFireballTime.current = currentTime;
       }
