@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { WeaponAbilities, WeaponType } from '../weapons/weapons';
-import { WeaponInfo } from '../unit/UnitProps';
+import { WeaponAbilities, WeaponType } from '@/weapons/weapons';
+import { WeaponInfo } from '@/unit/UnitProps';
 import styles from './Panel.module.css';
 import Image from 'next/image';
 import DamageNotification from './DamageNotification';
-import { WEAPON_ABILITY_TOOLTIPS } from '../weapons/weapons';
+import { WEAPON_ABILITY_TOOLTIPS } from '@/weapons/weapons';
 import Tooltip from './Tooltip';
 
 

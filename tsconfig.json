@@ -24,13 +24,14 @@
     ],
     "paths": {
       "@/*": [
-        "./src/*"
+        "src/*"
       ]
     },
     "types": [
       "three",
       "@types/three"
-    ]
+    ],
+    "baseUrl": "."
   },
   "include": [
     "src",
