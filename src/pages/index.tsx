@@ -1,15 +1,15 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { Vector3 } from 'three';
-import { WeaponType, AbilityType } from '../weapons/weapons';
-import { trunkColors, leafColors } from '../environment/treeColors';  
-import { generateMountains, generateTrees, generateMushrooms, generateFlowers } from '../environment/terrainGenerators';
-import { SceneProps, SkeletonProps } from '../scene/SceneProps';
+import { WeaponType, AbilityType } from '@/weapons/weapons';
+import { trunkColors, leafColors } from '@/environment/treeColors';  
+import { generateMountains, generateTrees, generateMushrooms, generateFlowers } from '@/environment/terrainGenerators';
+import { SceneProps, SkeletonProps } from '@/scene/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
-import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '../weapons/weapons';
+import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '@/weapons/weapons';
 import * as THREE from 'three';
-import { WeaponInfo } from '../unit/UnitProps';
+import { WeaponInfo } from '@/unit/UnitProps';
 
-import GameWrapper from '../scene/GameWrapper';
+import GameWrapper from '@/scene/GameWrapper';
 
 //might want to specialize this file for kill counter, everything else scattered from 1.0 
 // redistribute dis file throughout scene/unit  or move scene-> pages
