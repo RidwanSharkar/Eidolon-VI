@@ -3,7 +3,7 @@ import { Vector3 } from 'three';
 import { useFirebeam } from '@/Spells/Firebeam/useFirebeam';
 import { Enemy } from '@/Versus/enemy';
 import * as THREE from 'three';
-import { ORBITAL_COOLDOWN } from '@/Color/ChargedOrbitals';
+import { ORBITAL_COOLDOWN } from '../../Color/ChargedOrbitals';
 import { DamageNumber } from '@/Unit/useDamageNumbers';
 
 interface FirebeamManagerProps {
