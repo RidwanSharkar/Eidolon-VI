@@ -48,8 +48,11 @@
     const leftOrbRef = useRef<THREE.Mesh>(null);
     const rightOrbRef = useRef<THREE.Mesh>(null);
   
-    const [showLeftExplosion, setShowLeftExplosion] = useState(false);
-    const [showRightExplosion, setShowRightExplosion] = useState(false);
+    // Modify the state management for explosions
+    const [explosions, setExplosions] = useState<Array<{
+      id: number;
+      position: Vector3;
+    }>>([]);
   
     useFrame((_, delta) => {
       if (leftSabreRef.current && rightSabreRef.current) {
@@ -288,15 +291,19 @@
     // Handle explosions when targets are hit
     useEffect(() => {
       if (hasActiveAbility && leftTargetPosition && leftSwingProgress.current > 0) {
-        setShowLeftExplosion(true);
-        setTimeout(() => setShowLeftExplosion(false), 1000);
+        setExplosions(prev => [...prev, {
+          id: Math.random(),
+          position: leftTargetPosition
+        }]);
       }
     }, [hasActiveAbility, leftTargetPosition]);
 
     useEffect(() => {
       if (hasActiveAbility && rightTargetPosition && rightSwingProgress.current > 0) {
-        setShowRightExplosion(true);
-        setTimeout(() => setShowRightExplosion(false), 1000);
+        setExplosions(prev => [...prev, {
+          id: Math.random(),
+          position: rightTargetPosition
+        }]);
       }
     }, [hasActiveAbility, rightTargetPosition]);
 
@@ -495,18 +502,21 @@
         </group>
 
         {/* Add frost explosions */}
-        {hasActiveAbility && showLeftExplosion && leftTargetPosition && (
-          <FrostExplosion position={leftTargetPosition} />
-        )}
-        {hasActiveAbility && showRightExplosion && rightTargetPosition && (
-          <FrostExplosion position={rightTargetPosition} />
-        )}
+        {explosions.map(explosion => (
+          <FrostExplosion
+            key={explosion.id}
+            position={explosion.position}
+            onComplete={() => {
+              setExplosions(prev => prev.filter(e => e.id !== explosion.id));
+            }}
+          />
+        ))}
       </>
     );
   }
 
   // Add this new component for the frost explosion effect
-  const FrostExplosion: React.FC<{ position: Vector3 }> = ({ position }) => {
+  const FrostExplosion: React.FC<{ position: Vector3; onComplete: () => void }> = ({ position, onComplete }) => {
     const [particles, setParticles] = useState(() => 
       Array(15).fill(null).map(() => ({
         position: new Vector3(
@@ -525,12 +535,19 @@
     );
 
     useFrame((_, delta) => {
-      setParticles(prev => prev.map(particle => {
-        particle.velocity.y -= delta * 5;
-        particle.position.add(particle.velocity.multiplyScalar(delta));
-        particle.life -= delta * 1.5;
-        return particle;
-      }).filter(particle => particle.life > 0));
+      setParticles(prev => {
+        const updated = prev.map(particle => {
+          particle.velocity.y -= delta * 5;
+          particle.position.add(particle.velocity.multiplyScalar(delta));
+          particle.life -= delta * 1.5;
+          return particle;
+        }).filter(particle => particle.life > 0);
+        
+        if (updated.length === 0) {
+          onComplete();
+        }
+        return updated;
+      });
     });
 
     return (
