@@ -4,9 +4,9 @@ import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import CustomAbomination from './CustomAbomination';
-import BoneVortex2 from '../../Color/SpawnAnimation';
+import BoneVortex2 from '../../color/SpawnAnimation';
 import { Enemy } from '../enemy';
-import BoneVortex from '../../Color/DeathAnimation';
+import BoneVortex from '../../color/DeathAnimation';
 import { WeaponType } from '../../Weapons/weapons';
 
 

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { ORBITAL_COOLDOWN, ChargeStatus } from '@/Color/ChargedOrbitals';
+import { ORBITAL_COOLDOWN, ChargeStatus } from '@/color/ChargedOrbitals';
 
 interface UseOrbShieldManagerProps {
   charges: Array<ChargeStatus>;

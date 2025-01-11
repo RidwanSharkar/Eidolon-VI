@@ -4,9 +4,9 @@ import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import CustomSkeletonMage from '@/Versus/SkeletalMage/CustomSkeletonMage';
-import BoneVortex2 from '@/Color/SpawnAnimation';
+import BoneVortex2 from '@/color/SpawnAnimation';
 import { Enemy } from '@/Versus/enemy';
-import BoneVortex from '@/Color/DeathAnimation';
+import BoneVortex from '@/color/DeathAnimation';
 import { WeaponType } from '@/Weapons/weapons';
 import MageFireball from '@/Versus/SkeletalMage/MageFireball';
 
@@ -63,7 +63,7 @@ export default function SkeletalMage({
   const SEPARATION_RADIUS = 0.5; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.15; // Strength of the separation force
   const FIREBALL_COOLDOWN = 5000;
-  const FIREBALL_DAMAGE = 1;
+  const FIREBALL_DAMAGE = 20;
 
   // Sync health changes
   useEffect(() => {

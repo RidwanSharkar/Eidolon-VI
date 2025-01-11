@@ -4,9 +4,9 @@ import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import CustomSkeleton from '@/Versus/CustomSkeleton';
-import BoneVortex2 from '@/Color/SpawnAnimation';
+import BoneVortex2 from '@/color/SpawnAnimation';
 import { Enemy } from '@/Versus/enemy';
-import BoneVortex from '@/Color/DeathAnimation';
+import BoneVortex from '@/color/DeathAnimation';
 import { WeaponType } from '@/Weapons/weapons';
 import { FrostExplosion } from '@/Spells/OrbShield/FrostExplosion';
 
@@ -63,7 +63,7 @@ export default function EnemyUnit({
   const SMOOTHING_FACTOR = 0.19;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 0;
+  const ATTACK_DAMAGE = 8;
   const SEPARATION_RADIUS = 1.2; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.4; // Strength of the separation force
 

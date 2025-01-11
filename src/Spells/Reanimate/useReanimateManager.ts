@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
-import { ORBITAL_COOLDOWN } from '../../Color/ChargedOrbitals';
+import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
 
 interface UseReanimateManagerProps {
   parentRef: React.RefObject<Group>;
