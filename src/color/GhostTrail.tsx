@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Vector3, Color } from 'three';
 import * as THREE from 'three';
-import { WeaponType } from '../weapons/weapons';
+import { WeaponType } from '../Weapons/weapons';
 
 interface GhostTrailProps {
   parentRef: React.RefObject<THREE.Group>;

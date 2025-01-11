@@ -1,6 +1,6 @@
    // src/types/SkeletalMageProps.ts
    import { Vector3 } from 'three';
-   import { WeaponType } from '../../weapons/weapons';
+   import { WeaponType } from '../../Weapons/weapons';
 
    export interface SkeletalMageProps {
      id: string;

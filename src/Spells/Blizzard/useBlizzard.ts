@@ -1,7 +1,7 @@
 // src/Spells/Blizzard/useBlizzard.ts
 import { useState, useCallback } from 'react';
 import { Vector3 } from 'three';
-import { calculateBlizzardDamage } from './BlizzardDamage';
+import { calculateBlizzardDamage } from '@/Spells/Blizzard/BlizzardDamage';
 
 interface UseBlizzardProps {
   onHit: (targetId: string, damage: number) => void;

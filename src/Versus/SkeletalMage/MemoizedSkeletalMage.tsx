@@ -1,7 +1,7 @@
 // src/versus/SkeletalMage/MemoizedSkeletalMage.tsx
 import React from 'react';
-import SkeletalMage from './SkeletalMage';
-import { SkeletalMageProps } from './SkeletalMageProps';
+import SkeletalMage from '@/Versus/SkeletalMage/SkeletalMage';
+import { SkeletalMageProps } from '@/Versus/SkeletalMage/SkeletalMageProps';
 
 export const MemoizedSkeletalMage = React.memo(
   SkeletalMage,

@@ -2,42 +2,42 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Vector3, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import Fireball from '../spells/Fireball/Fireball';
+import Fireball from '../Spells/Fireball/Fireball';
 import * as THREE from 'three';
-import { WeaponType, WEAPON_DAMAGES } from '../weapons/weapons';
+import { WeaponType, WEAPON_DAMAGES } from '../Weapons/weapons';
 
-import Scythe from '@/weapons/Scythe';
-import Sword from '@/weapons/Sword';
-import Sabres from '@/weapons/Sabres';
-import EtherealBow from '@/weapons/EtherBow';
+import Scythe from '@/Weapons/Scythe';
+import Sword from '@/Weapons/Sword';
+import Sabres from '@/Weapons/Sabres';
+import EtherealBow from '@/Weapons/EtherBow';
 
-import Smite from '@/spells/Smite/Smite';
-import DamageNumber from '@/interface/DamageNumber';
-import Billboard from '@/interface/Billboard';
-import GhostTrail from '@/color/GhostTrail';
-import BoneWings from '@/gear/BoneWings';
-import BoneAura from '@/color/BoneAura';
-import BonePlate from '@/gear/BonePlate';
-import BoneTail from '@/gear/BoneTail';
-import BoneVortex from '@/color/BoneVortex';
-import { UnitProps } from './UnitProps';
-import { useUnitControls } from '@/unit/useUnitControls';
-import { calculateDamage } from '@/weapons/damage';
-import Boneclaw from '@/spells/Boneclaw/Boneclaw';
-import Blizzard from '@/spells/Blizzard/Blizzard';
-import { useAbilityKeys } from './useAbilityKeys';
-import { useFirebeamManager } from '../spells/Firebeam/useFirebeamManager';
-import Firebeam from '../spells/Firebeam/Firebeam';
-import ChargedOrbitals, { ORBITAL_COOLDOWN } from '@/color/ChargedOrbitals';
-import Reanimate, { ReanimateRef } from '../spells/Reanimate/Reanimate';
-import Oathstrike from '@/spells/Oathstrike/Oathstrike';
-import { useOathstrike } from '../spells/Oathstrike/useOathstrike';
-import CrusaderAura from '../spells/CrusaderAura/CrusaderAura';
-import Summon from '@/spells/Summon/Summon';
-import { OrbShieldRef } from '@/spells/OrbShield/OrbShield';
-import ChainLightning from '@/spells/ChainLightning/ChainLightning';
-import OrbShield from '@/spells/OrbShield/OrbShield';
-import { FrostExplosion } from '@/spells/OrbShield/FrostExplosion';
+import Smite from '@/Spells/Smite/Smite';
+import DamageNumber from '@/Interface/DamageNumber';
+import Billboard from '@/Interface/Billboard';
+import GhostTrail from '@/Color/GhostTrail';
+import BoneWings from '@/Gear/BoneWings';
+import BoneAura from '@/Color/BoneAura';
+import BonePlate from '@/Gear/BonePlate';
+import BoneTail from '@/Gear/BoneTail';
+import BoneVortex from '@/Color/BoneVortex';
+import { UnitProps } from '@/Unit/UnitProps';
+import { useUnitControls } from '@/Unit/useUnitControls';
+import { calculateDamage } from '@/Weapons/damage';
+import Boneclaw from '@/Spells/Boneclaw/Boneclaw';
+import Blizzard from '@/Spells/Blizzard/Blizzard';
+import { useAbilityKeys } from '@/Unit/useAbilityKeys';
+import { useFirebeamManager } from '@/Spells/Firebeam/useFirebeamManager';
+import Firebeam from '@/Spells/Firebeam/Firebeam';
+import ChargedOrbitals, { ORBITAL_COOLDOWN } from '@/Color/ChargedOrbitals';
+import Reanimate, { ReanimateRef } from '../Spells/Reanimate/Reanimate';
+import Oathstrike from '@/Spells/Oathstrike/Oathstrike';
+import { useOathstrike } from '../Spells/Oathstrike/useOathstrike';
+import CrusaderAura from '../Spells/CrusaderAura/CrusaderAura';
+import Summon from '@/Spells/Summon/Summon';
+import { OrbShieldRef } from '@/Spells/OrbShield/OrbShield';
+import ChainLightning from '@/Spells/ChainLightning/ChainLightning';
+import OrbShield from '@/Spells/OrbShield/OrbShield';
+import { FrostExplosion } from '@/Spells/OrbShield/FrostExplosion';
 
 
 
@@ -918,6 +918,18 @@ export default function Unit({
     };
   }, []);
 
+  useEffect(() => {
+    const now = Date.now();
+    setActiveEffects(prev => 
+      prev.filter(effect => {
+        if (effect.startTime && effect.duration) {
+          return now - effect.startTime < effect.duration;
+        }
+        return true;
+      })
+    );
+  }, []);
+
   return (
     <>
       <group ref={groupRef} position={[0, 1, 0]}>
@@ -1364,6 +1376,7 @@ export default function Unit({
                   prev.filter(e => e.id !== effect.id)
                 );
               }}
+              setActiveEffects={setActiveEffects}
             />
           );
         } else if (effect.type === 'frostExplosion') {

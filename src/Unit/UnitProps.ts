@@ -1,8 +1,8 @@
 // src/unit/UnitProps.ts
 import { Vector3, Group } from 'three';
-import { WeaponType, AbilityType } from '../weapons/weapons';
+import { WeaponType, AbilityType } from '../Weapons/weapons';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { Enemy } from '../versus/enemy';
+import { Enemy } from '../Versus/enemy';
 import { RefObject } from 'react';
 
 export interface AbilityButton {

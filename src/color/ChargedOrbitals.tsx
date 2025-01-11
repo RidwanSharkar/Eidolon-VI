@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { WeaponType } from '../weapons/weapons';
+import { WeaponType } from '../Weapons/weapons';
 import * as THREE from 'three';
 
 export interface ChargeStatus {

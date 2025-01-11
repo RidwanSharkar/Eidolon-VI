@@ -1,8 +1,8 @@
 import { useImperativeHandle, forwardRef } from 'react';
 import { Group, Vector3 } from 'three';
-import { useChainLightning } from './useChainLightning';
-import ChainLightningEffect from './ChainLightningEffect';
-import { Enemy } from '@/versus/enemy';
+import { useChainLightning } from '@/Spells/ChainLightning/useChainLightning';
+import ChainLightningEffect from '@/Spells/ChainLightning/ChainLightningEffect';
+import { Enemy } from '@/Versus/enemy';
 
 interface ChainLightningProps {
   parentRef: React.RefObject<Group>;

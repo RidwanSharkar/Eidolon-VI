@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, } from 'three';
 import * as THREE from 'three';
-import { WeaponType } from '@/weapons/weapons';
+import { WeaponType } from '@/Weapons/weapons';
 
 
 interface BoneVortexProps {

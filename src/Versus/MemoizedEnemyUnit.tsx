@@ -1,7 +1,7 @@
 // src/versus/MemoizedEnemyUnit.tsx
 import React from 'react';
-import EnemyUnit from './EnemyUnit';
-import { EnemyUnitProps } from './EnemyUnitProps';
+import EnemyUnit from '@/Versus/EnemyUnit';
+import { EnemyUnitProps } from '@/Versus/EnemyUnitProps';
 
 export const MemoizedEnemyUnit = React.memo(
   EnemyUnit,

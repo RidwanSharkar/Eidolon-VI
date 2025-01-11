@@ -1,8 +1,8 @@
 import { useRef, useImperativeHandle, forwardRef } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { useCrusaderAura } from './useCrusaderAura';
-import CrusaderHealingEffect from './CrusaderHealingEffect';
+import { useCrusaderAura } from '@/Spells/CrusaderAura/useCrusaderAura';
+import CrusaderHealingEffect from '@/Spells/CrusaderAura/CrusaderHealingEffect';
 
 interface CrusaderAuraProps {
   parentRef: React.RefObject<Group>;

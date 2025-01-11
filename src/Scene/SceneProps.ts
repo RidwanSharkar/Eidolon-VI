@@ -1,7 +1,7 @@
 import { Vector3 } from 'three';
-import { WeaponType } from '../weapons/weapons';
-import { GeneratedTree } from '../environment/terrainGenerators';
-import { UnitProps } from '../unit/UnitProps';
+import { WeaponType } from '../Weapons/weapons';
+import { GeneratedTree } from '../Environment/terrainGenerators';
+import { UnitProps } from '../Unit/UnitProps';
 import * as THREE from 'three';
 
 export interface SkeletonProps {

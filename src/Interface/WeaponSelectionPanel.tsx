@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './WeaponSelectionPanel.module.css';
-import { WeaponType } from '@/weapons/weapons';
+import { WeaponType } from '@/Weapons/weapons';
 
 interface WeaponSelectionPanelProps {
   onWeaponSelect: (weapon: WeaponType) => void;

@@ -4,7 +4,7 @@
   import { useRef, useState, useEffect } from 'react';
   import { Group, Shape, Vector3 } from 'three';
   import { useFrame } from '@react-three/fiber';
-  import FireballTrail from '../spells/Fireball/FireballTrail';
+  import FireballTrail from '../Spells/Fireball/FireballTrail';
   import * as THREE from 'three';
 
   const lerp = (start: number, end: number, t: number) => {

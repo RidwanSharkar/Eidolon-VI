@@ -1,7 +1,7 @@
 // src/Versus/Abomination/AbominationProps.ts
 import { Group, Vector3 } from 'three';
 import { TargetId } from '../TargetId';
-import { WeaponType } from '../../weapons/weapons';
+import { WeaponType } from '../../Weapons/weapons';
 
    export interface AbominationProps {
      id: TargetId;

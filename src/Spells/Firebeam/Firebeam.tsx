@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
-import { useFirebeamAnimation } from './useFirebeamAnimation';
+import { useFirebeamAnimation } from '@/Spells/Firebeam/useFirebeamAnimation';
 
 interface FirebeamProps {
   position: Vector3;

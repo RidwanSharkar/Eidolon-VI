@@ -1,9 +1,9 @@
 // src/Scene/LevelManager.tsx
 import React, { useCallback, useState, useEffect } from 'react';
-import Scene from './Scene';
-import Scene2 from './Scene2';
-import Scene3 from './Scene3';
-import { SceneProps } from './SceneProps';
+import Scene from '@/Scene/Scene';
+import Scene2 from '@/Scene/Scene2';
+import Scene3 from '@/Scene/Scene3';
+import { SceneProps } from '@/Scene/SceneProps';
 
 interface LevelManagerProps {
   sceneProps: SceneProps & {
@@ -80,9 +80,9 @@ export default function LevelManager({
           {...sceneProps} 
           onLevelComplete={handleLevelComplete}
           onAbilityUnlock={onAbilityUnlock}
-          spawnInterval={4000}
+          spawnInterval={3250}
           maxSkeletons={13}
-          initialSkeletons={4}
+          initialSkeletons={5}
         />
       )}
       {showScene2 && !showScene3 && (

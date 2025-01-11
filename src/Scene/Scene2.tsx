@@ -1,20 +1,20 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Vector3, Group } from 'three';
-import Terrain from '../environment/Terrain';
-import Mountain from '../environment/Mountain';
-import Tree from '../environment/Tree';
-import Mushroom from '../environment/Mushroom';
-import Unit from '../unit/Unit';
-import { MemoizedEnemyUnit } from '../versus/MemoizedEnemyUnit';
-import { SceneProps as SceneType } from './SceneProps';
-import { UnitProps } from '../unit/UnitProps';
-import Planet from '../environment/Planet';
-import CustomSky from '../environment/Sky';
-import DriftingSouls from '../environment/DriftingSouls';
-import { generateRandomPosition } from '../environment/terrainGenerators';
-import { Enemy } from '../versus/enemy';
+import Terrain from '../Environment/Terrain';
+import Mountain from '../Environment/Mountain';
+import Tree from '../Environment/Tree';
+import Mushroom from '../Environment/Mushroom';
+import Unit from '../Unit/Unit';
+import { MemoizedEnemyUnit } from '../Versus/MemoizedEnemyUnit';
+import { SceneProps as SceneType } from '@/Scene/SceneProps';
+import { UnitProps } from '../Unit/UnitProps';
+import Planet from '../Environment/Planet';
+import CustomSky from '../Environment/Sky';
+import DriftingSouls from '../Environment/DriftingSouls';
+import { generateRandomPosition } from '../Environment/terrainGenerators';
+import { Enemy } from '../Versus/enemy';
 import * as THREE from 'three';
-import { MemoizedSkeletalMage } from '../versus/SkeletalMage/MemoizedSkeletalMage';
+import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMage';
 
 interface SceneProps extends SceneType {
   onLevelComplete: () => void;
@@ -137,16 +137,19 @@ export default function Scene2({
         unitProps.onHealthChange?.(newHealth);
       }
     },
-    enemyData: enemies.map((enemy) => ({
-      id: `enemy-${enemy.id}`,
-      position: enemy.position,
-      initialPosition: enemy.initialPosition,
-      health: enemy.health,
-      maxHealth: enemy.maxHealth
-    })),
+    enemyData: enemies
+      .filter(enemy => !enemy.isDying && enemy.health > 0)  // Only include living enemies
+      .map((enemy) => ({
+        id: `enemy-${enemy.id}`,
+        position: enemy.position.clone(),  // Ensure we clone the position
+        initialPosition: enemy.initialPosition.clone(),
+        health: enemy.health,
+        maxHealth: enemy.maxHealth,
+        type: enemy.type  // Include the enemy type if needed
+      })),
     onDamage: unitProps.onDamage,
     onEnemyDeath: () => {
-      console.log("Kill counted in Scene");  // Debug log
+      console.log("Kill counted in Scene");  // Debug logwd
     },
     onFireballDamage: unitProps.onFireballDamage,
     fireballManagerRef: unitProps.fireballManagerRef,
@@ -291,6 +294,14 @@ export default function Scene2({
       onLevelComplete();
     }
   }, [enemies, totalSpawned, maxSkeletons, onLevelComplete]);
+
+  useEffect(() => {
+    console.log('Enemy Data:', enemies.map(e => ({
+      id: e.id,
+      position: e.position,
+      health: e.health
+    })));
+  }, [enemies]);
 
   return (
     <>

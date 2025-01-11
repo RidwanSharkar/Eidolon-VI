@@ -3,12 +3,12 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import CustomSkeletonMage from '../../versus/SkeletalMage/CustomSkeletonMage';
-import BoneVortex2 from '../../color/SpawnAnimation';
-import { Enemy } from '../../versus/enemy';
-import BoneVortex from '../../color/DeathAnimation';
-import { WeaponType } from '../../weapons/weapons';
-import MageFireball from '../../versus/SkeletalMage/MageFireball';
+import CustomSkeletonMage from '@/Versus/SkeletalMage/CustomSkeletonMage';
+import BoneVortex2 from '@/Color/SpawnAnimation';
+import { Enemy } from '@/Versus/enemy';
+import BoneVortex from '@/Color/DeathAnimation';
+import { WeaponType } from '@/Weapons/weapons';
+import MageFireball from '@/Versus/SkeletalMage/MageFireball';
 
 interface SkeletalMageProps {
   id: string;
@@ -56,14 +56,14 @@ export default function SkeletalMage({
   const currentHealth = useRef(health);
 
   const ATTACK_RANGE = 16;
-  const MOVEMENT_SPEED = 0.135;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.135;
+  const MOVEMENT_SPEED = 0.145;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.145;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const SEPARATION_RADIUS = 0.5; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.15; // Strength of the separation force
   const FIREBALL_COOLDOWN = 5000;
-  const FIREBALL_DAMAGE = 20;
+  const FIREBALL_DAMAGE = 1;
 
   // Sync health changes
   useEffect(() => {

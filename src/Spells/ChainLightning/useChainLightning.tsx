@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Group, Vector3 } from 'three';
-import { Enemy } from '@/versus/enemy';
+import { Enemy } from '@/Versus/enemy';
 
 interface ChainLightningProps {
   parentRef: React.RefObject<Group>;

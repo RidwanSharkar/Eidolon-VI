@@ -1,9 +1,9 @@
 // src/unit/useAbilityKeys.ts
 import { useEffect, useRef, useCallback } from 'react';
 import { Vector3, Group } from 'three';
-import { WeaponType, WeaponInfo, AbilityType } from '../weapons/weapons';
-import { ReanimateRef } from '../spells/Reanimate/Reanimate';
-import { OrbShieldRef } from '../spells/OrbShield/OrbShield';
+import { WeaponType, WeaponInfo, AbilityType } from '../Weapons/weapons';
+import { ReanimateRef } from '../Spells/Reanimate/Reanimate';
+import { OrbShieldRef } from '../Spells/OrbShield/OrbShield';
 
 interface UseAbilityKeysProps {
   keys: React.MutableRefObject<Record<string, boolean>>;

@@ -1,7 +1,7 @@
 // src/versus/EnemyUnitProps.ts
-   import { Group, Vector3 } from 'three';
-   import { TargetId } from './TargetId';
-   import { WeaponType } from '../weapons/weapons';
+import { Group, Vector3 } from 'three';
+import { TargetId } from '@/Versus/TargetId';
+import { WeaponType } from '@/Weapons/weapons';
 
    export interface EnemyUnitProps {
      id: TargetId;

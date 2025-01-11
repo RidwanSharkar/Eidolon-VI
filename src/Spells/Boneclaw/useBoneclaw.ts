@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Vector3 } from 'three';
-import { calculateBoneclawHits } from './BoneclawDamage';
+import { calculateBoneclawHits } from '@/Spells/Boneclaw/BoneclawDamage';
 
 interface UseBoneclawProps {
   onHit: (targetId: string, damage: number, isCritical: boolean, position: Vector3, isBoneclaw?: boolean) => void;

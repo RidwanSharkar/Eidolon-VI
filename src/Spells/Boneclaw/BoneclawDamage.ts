@@ -1,5 +1,5 @@
 import { Vector3 } from 'three';
-import { calculateDamage } from '@/weapons/damage';
+import { calculateDamage } from '@/Weapons/damage';
 
 const BONECLAW_BASE_DAMAGE = 67;
 const BONECLAW_RANGE = 8.5;

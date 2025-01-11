@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
-import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
-import { calculateDamage } from '@/weapons/damage';
-import { useHealing } from '@/unit/useHealing';
+import { ORBITAL_COOLDOWN } from '../../Color/ChargedOrbitals';
+import { calculateDamage } from '@/Weapons/damage';
+import { useHealing } from '@/Unit/useHealing';
 
 interface OathstrikeControllerProps {
   onHit: (targetId: string, damage: number) => void;

@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Color } from 'three';
-import FireballTrail from '../../spells/Fireball/FireballTrail';
+import FireballTrail from '@/Spells/Fireball/FireballTrail';
 import * as THREE from 'three';
 
 interface FireballProps {

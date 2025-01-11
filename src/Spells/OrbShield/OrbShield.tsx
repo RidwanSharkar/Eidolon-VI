@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { Group, Vector3 } from 'three';
-import { useOrbShieldManager } from './useOrbShieldManager';
-import { ChargeStatus } from '@/color/ChargedOrbitals';
+import { useOrbShieldManager } from '@/Spells/OrbShield/useOrbShieldManager';
+import { ChargeStatus } from '@/Color/ChargedOrbitals';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 

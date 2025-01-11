@@ -1,9 +1,9 @@
 import { useRef } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import BlizzardShard from './BlizzardShard';
-import { calculateBlizzardDamage } from './BlizzardDamage';
-import BlizzardAura from './BlizzardAura';
+import BlizzardShard from '@/Spells/Blizzard/BlizzardShard';
+import { calculateBlizzardDamage } from '@/Spells/Blizzard/BlizzardDamage';
+import BlizzardAura from '@/Spells/Blizzard/BlizzardAura';
 
 interface BlizzardProps {
   position: Vector3;

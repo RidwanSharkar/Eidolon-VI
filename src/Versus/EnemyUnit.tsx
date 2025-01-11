@@ -3,12 +3,12 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import CustomSkeleton from './CustomSkeleton';
-import BoneVortex2 from '../color/SpawnAnimation';
-import { Enemy } from './enemy';
-import BoneVortex from '../color/DeathAnimation';
-import { WeaponType } from '../weapons/weapons';
-import { FrostExplosion } from '../spells/OrbShield/FrostExplosion';
+import CustomSkeleton from '@/Versus/CustomSkeleton';
+import BoneVortex2 from '@/Color/SpawnAnimation';
+import { Enemy } from '@/Versus/enemy';
+import BoneVortex from '@/Color/DeathAnimation';
+import { WeaponType } from '@/Weapons/weapons';
+import { FrostExplosion } from '@/Spells/OrbShield/FrostExplosion';
 
 
 interface EnemyUnitProps {
@@ -59,11 +59,11 @@ export default function EnemyUnit({
 
   const ATTACK_RANGE = 2.4;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.20;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.20;
+  const MOVEMENT_SPEED = 0.19;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.19;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 8;
+  const ATTACK_DAMAGE = 0;
   const SEPARATION_RADIUS = 1.2; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.4; // Strength of the separation force
 

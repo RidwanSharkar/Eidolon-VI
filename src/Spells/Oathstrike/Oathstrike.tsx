@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
-import { useOathstrikeAnimation } from './useOathstrikeAnimation';
+import { useOathstrikeAnimation } from '@/Spells/Oathstrike/useOathstrikeAnimation';
 
 
 interface OathstrikeProps {

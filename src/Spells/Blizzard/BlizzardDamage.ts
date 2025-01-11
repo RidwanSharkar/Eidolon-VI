@@ -1,6 +1,6 @@
 // src/Spells/Blizzard/BlizzardDamage.ts
 import { Vector3 } from 'three';
-import { calculateDamage } from '@/weapons/damage';
+import { calculateDamage } from '@/Weapons/damage';
 
 const BLIZZARD_BASE_DAMAGE = 23;
 const BLIZZARD_RADIUS = 5.5;

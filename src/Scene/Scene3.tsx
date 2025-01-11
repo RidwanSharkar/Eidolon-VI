@@ -1,23 +1,23 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Vector3, Group } from 'three';
-import Terrain from '../environment/Terrain';
-import Mountain from '../environment/Mountain';
-import Tree from '../environment/Tree';
-import Mushroom from '../environment/Mushroom';
-import Unit from '../unit/Unit';
-import { SceneProps as SceneType } from './SceneProps';
-import { UnitProps } from '../unit/UnitProps';
-import Planet from '../environment/Planet';
-import CustomSky from '../environment/Sky';
-import DriftingSouls from '../environment/DriftingSouls';
-import { generateRandomPosition } from '../environment/terrainGenerators';
-import { Enemy } from '../versus/enemy';
-import BossUnit from '@/versus/Boss/BossUnit';
-import Flower from '../environment/Flower';
+import Terrain from '../Environment/Terrain';
+import Mountain from '../Environment/Mountain';
+import Tree from '../Environment/Tree';
+import Mushroom from '../Environment/Mushroom';
+import Unit from '../Unit/Unit';
+import { SceneProps as SceneType } from '@/Scene/SceneProps';
+import { UnitProps } from '../Unit/UnitProps';
+import Planet from '../Environment/Planet';
+import CustomSky from '../Environment/Sky';
+import DriftingSouls from '../Environment/DriftingSouls';
+import { generateRandomPosition } from '../Environment/terrainGenerators';
+import { Enemy } from '../Versus/enemy';
+import BossUnit from '@/Versus/Boss/BossUnit';
+import Flower from '../Environment/Flower';
 
 import * as THREE from 'three';
-import { MemoizedEnemyUnit } from '../versus/MemoizedEnemyUnit';
-import { MemoizedSkeletalMage } from '../versus/SkeletalMage/MemoizedSkeletalMage';
+import { MemoizedEnemyUnit } from '../Versus/MemoizedEnemyUnit';
+import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMage';
 
 interface ScenePropsWithCallback extends SceneType {
   onLevelComplete: () => void;

@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { WeaponType } from '../../weapons/weapons';
+import { WeaponType } from '../../Weapons/weapons';
 
 interface SmiteProps {
   weaponType: WeaponType;

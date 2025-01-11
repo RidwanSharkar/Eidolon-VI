@@ -1,8 +1,8 @@
 import { useRef } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { calculateBoneclawHits } from './BoneclawDamage';
-import BoneclawScratch from './BoneClawScratch';
+import { calculateBoneclawHits } from '@/Spells/Boneclaw/BoneclawDamage';
+import BoneclawScratch from '@/Spells/Boneclaw/BoneClawScratch';
 
 interface BoneclawProps {
   position: Vector3;

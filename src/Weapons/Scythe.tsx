@@ -24,7 +24,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
   
   useFrame((_, delta) => {
     if (isSwinging && scytheRef.current) {
-      swingProgress.current += delta * 5.5;
+      swingProgress.current += delta * 6.5;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
       // Complete swing earlier to prevent extra rotation
