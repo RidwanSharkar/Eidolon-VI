@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Group, Mesh } from 'three';
 import { useFrame } from '@react-three/fiber';
-import BonePlate from '../../Gear/BonePlate';
-import DragonSkull from '../../Gear/DragonSkull';
+import BonePlate from '../../gear/BonePlate';
+import DragonSkull from '../../gear/DragonSkull';
 
 interface CustomAbominationProps {
   position: [number, number, number];

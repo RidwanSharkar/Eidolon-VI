@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Group, Mesh } from 'three';
 import { useFrame } from '@react-three/fiber';
-import BonePlate from '../Gear/BonePlate';
+import BonePlate from '../gear/BonePlate';
 
 interface CustomSkeletonProps {
   position: [number, number, number];

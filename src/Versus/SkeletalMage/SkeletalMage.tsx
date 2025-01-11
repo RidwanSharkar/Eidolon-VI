@@ -63,7 +63,7 @@ export default function SkeletalMage({
   const SEPARATION_RADIUS = 0.5; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.15; // Strength of the separation force
   const FIREBALL_COOLDOWN = 5000;
-  const FIREBALL_DAMAGE = 20;
+  const FIREBALL_DAMAGE = 22;
 
   // Sync health changes
   useEffect(() => {

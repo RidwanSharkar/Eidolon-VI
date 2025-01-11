@@ -2,11 +2,11 @@
 import React, { useRef } from 'react';
 import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import BoneTail from '../../Gear/BoneTail';
-import BonePlate from '../../Gear/BonePlate';  
-import BoneWings from '../../Gear/BoneWings';  
+import BoneTail from '../../gear/BoneTail';
+import BonePlate from '../../gear/BonePlate';  
+import BoneWings from '../../gear/BoneWings';  
 import BossBoneVortex from './BossBoneVortex';  
-import DragonSkull from '../../Gear/DragonSkull';  
+import DragonSkull from '../../gear/DragonSkull';  
 import BossTrailEffect from './BossTrailEffect';
 import DexScythe from './DexScythe';
 import LysScythe from './LysScythe';
