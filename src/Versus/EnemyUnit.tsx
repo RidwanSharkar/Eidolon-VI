@@ -63,7 +63,7 @@ export default function EnemyUnit({
   const SMOOTHING_FACTOR = 0.19;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 8;
+  const ATTACK_DAMAGE = 0;
   const SEPARATION_RADIUS = 1.2; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.4; // Strength of the separation force
 
