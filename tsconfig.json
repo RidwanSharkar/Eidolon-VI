@@ -35,8 +35,10 @@
   "include": [
     "src",
     "three-extensions.d.ts",
-    ".next/types/**/*.ts"
-, "src/page.tsxsrc/index.tsx.tsx"  ],
+    ".next/types/**/*.ts",
+    "src/page.tsx",
+    "src/index.tsx"
+  ],
   "exclude": [
     "node_modules"
   ]
