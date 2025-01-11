@@ -3,13 +3,13 @@ import { Vector3 } from 'three';
 import { WeaponType, AbilityType } from '@/Weapons/weapons';
 import { trunkColors, leafColors } from '@/Environment/treeColors';  
 import { generateMountains, generateTrees, generateMushrooms, generateFlowers } from '@/Environment/terrainGenerators';
-import { SceneProps, SkeletonProps } from '@/scene/SceneProps';
+import { SceneProps, SkeletonProps } from '@/Scene/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '@/Weapons/weapons';
 import * as THREE from 'three';
 import { WeaponInfo } from '@/Unit/UnitProps';
 
-import GameWrapper from '@/scene/GameWrapper';
+import GameWrapper from '@/Scene/GameWrapper';
 
 //might want to specialize this file for kill counter, everything else scattered from 1.0 
 // redistribute dis file throughout scene/unit  or move scene-> pages

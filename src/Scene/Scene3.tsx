@@ -5,7 +5,7 @@ import Mountain from '../Environment/Mountain';
 import Tree from '../Environment/Tree';
 import Mushroom from '../Environment/Mushroom';
 import Unit from '../Unit/Unit';
-import { SceneProps as SceneType } from '@/scene/SceneProps';
+import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';

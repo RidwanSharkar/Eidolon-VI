@@ -7,6 +7,8 @@ import TotemModel from '@/Spells/Summon/TotemModel';
 import Fireball from '../Fireball/Fireball';
 import { calculateDamage } from '@/Weapons/damage';
 
+const FIREBALL_SPEED = 0.3; // Match the speed from Fireball.tsx
+
 export default function SummonedHandler({
   position,
   enemyData,
@@ -31,51 +33,51 @@ export default function SummonedHandler({
       startPosition: Vector3;
       maxDistance: number;
       targetId: string;
+      predictedImpactPosition?: Vector3;
     }>
   >([]);
 
-  // Handle fireball impact with explosion effect
-  const handleFireballImpact = (id: number, impactPosition?: Vector3) => {
-    // Find the fireball based on the id to retrieve targetId
+  const predictTargetPosition = (target: Enemy): Vector3 => {
+    return target.position.clone().setY(1.5);
+  };
+
+  const handleFireballImpact = (id: number) => {
     const fireball = fireballs.find(fb => fb.id === id);
-    if (!fireball) {
-      console.warn(`Fireball with id ${id} not found.`);
+    if (!fireball) return;
+
+    const { targetId } = fireball;
+    const targetEnemy = enemyData.find(enemy => 
+      enemy.id === targetId && enemy.health > 0
+    );
+    
+    if (!targetEnemy) {
+      setFireballs(prev => prev.filter(fb => fb.id !== id));
       return;
     }
 
-    const { targetId } = fireball;
+    // Always use target position for impact
+    const actualImpactPos = targetEnemy.position.clone().setY(1.5);
+    const distanceToTarget = actualImpactPos.distanceTo(targetEnemy.position);
+    const HIT_RADIUS = 1.5;
 
-    // Remove the fireball from the state
-    setFireballs(prev => prev.filter(fb => fb.id !== id));
-
-    // Find the target enemy
-    const targetEnemy = enemyData.find(enemy => enemy.id === targetId);
-    if (!targetEnemy || targetEnemy.health <= 0) return;
-
-    // Calculate distance to target
-    const distanceToTarget = impactPosition?.distanceTo(targetEnemy.position) || 0;
-    const HIT_RADIUS = 1.0; // Increased hit radius for better hit detection
-
-    // Only deal damage if within hit radius
     if (distanceToTarget <= HIT_RADIUS) {
       const { damage } = calculateDamage(FIREBALL_DAMAGE);
-      onDamage(targetId, damage, targetEnemy.position);
+      onDamage(targetId, damage, actualImpactPos);
 
-      setActiveEffects(prev => [
-        ...prev,
-        {
-          id: Date.now(),
-          type: 'fireballExplosion',
-          position: targetEnemy.position.clone().setY(1.5),
-          direction: new Vector3(),
-          duration: 0.2,
-          startTime: Date.now(),
-        },
-      ]);
+      setActiveEffects(prev => [...prev, {
+        id: Date.now(),
+        type: 'fireballExplosion',
+        position: actualImpactPos,
+        direction: new Vector3(),
+        duration: 0.2,
+        startTime: Date.now(),
+      }]);
     }
+
+    setFireballs(prev => prev.filter(fb => fb.id !== id));
   };
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!groupRef.current) return;
 
     // Duration check
@@ -85,61 +87,55 @@ export default function SummonedHandler({
       return;
     }
 
-    // Target finding logic - prioritize closest living enemy
-    if (!currentTarget || currentTarget.health <= 0) {
-      const nearestEnemy = enemyData
-        .filter(enemy => enemy.health > 0)
-        .reduce<Enemy | null>((nearest, enemy) => {
-          const distance = position.distanceTo(enemy.position);
-          if (!nearest || distance < position.distanceTo(nearest.position)) {
-            return enemy;
-          }
-          return nearest;
-        }, null);
+    // Update fireball positions
+    setFireballs(prev => prev.map(fireball => {
+      const movement = fireball.direction.clone().multiplyScalar(FIREBALL_SPEED * delta * 60);
+      fireball.position.add(movement);
+      return fireball;
+    }));
 
-      setCurrentTarget(nearestEnemy);
-      if (nearestEnemy) {
-        console.log('New Target:', {
-          id: nearestEnemy.id,
-          position: nearestEnemy.position,
-          health: nearestEnemy.health,
-        });
-      }
-      return;
+    // Improved target finding with prediction
+    if (!currentTarget || currentTarget.health <= 0) {
+      const viableTargets = enemyData
+        .filter(enemy => enemy.health > 0)
+        .map(enemy => ({
+          enemy,
+          predictedPos: predictTargetPosition(enemy),
+          distance: position.distanceTo(enemy.position)
+        }))
+        .filter(({ distance }) => distance <= RANGE);
+
+      const bestTarget = viableTargets.length > 0 
+        ? viableTargets.reduce<{ enemy: Enemy; predictedPos: Vector3; distance: number; } | null>((best, current) => 
+            !best || current.distance < best.distance ? current : best
+          , null)
+        : null;
+
+      setCurrentTarget(bestTarget?.enemy || null);
     }
 
-    // Attack logic - Create new fireball with proper targeting
+    // Improved fireball creation
     const now = Date.now();
     if (now - lastAttackTime.current >= ATTACK_COOLDOWN && currentTarget) {
-      const distanceToTarget = position.distanceTo(currentTarget.position);
+      const predictedPosition = predictTargetPosition(currentTarget);
+      const startPosition = position.clone().add(new Vector3(0, 1.5, 0));
+      
+      const direction = predictedPosition
+        .clone()
+        .sub(startPosition)
+        .normalize();
 
-      if (distanceToTarget <= RANGE) {
-        const startPosition = position.clone().add(new Vector3(0, 1.5, 0));
-        const targetPosition = currentTarget.position.clone();
-        targetPosition.y = 1.5; // Adjust height to target enemy center mass
+      setFireballs(prev => [...prev, {
+        id: Date.now(),
+        position: startPosition.clone(),
+        startPosition: startPosition.clone(),
+        direction: direction,
+        maxDistance: RANGE,
+        targetId: currentTarget.id,
+        predictedImpactPosition: predictedPosition
+      }]);
 
-        const direction = targetPosition.clone().sub(startPosition).normalize();
-
-        console.log('Firing at:', {
-          startPos: startPosition,
-          targetPos: targetPosition,
-          direction: direction,
-        });
-
-        setFireballs(prev => [
-          ...prev,
-          {
-            id: Date.now(),
-            position: startPosition.clone(),
-            startPosition: startPosition.clone(),
-            direction: direction,
-            maxDistance: 35,
-            targetId: currentTarget.id, // Ensure targetId is set
-          },
-        ]);
-
-        lastAttackTime.current = now;
-      }
+      lastAttackTime.current = now;
     }
   });
 
@@ -172,9 +168,7 @@ export default function SummonedHandler({
           key={fireball.id}
           position={fireball.position}
           direction={fireball.direction}
-          onImpact={(impactPosition?: Vector3) =>
-            handleFireballImpact(fireball.id, impactPosition)
-          }
+          onImpact={() => handleFireballImpact(fireball.id)}
         />
       ))}
     </group>

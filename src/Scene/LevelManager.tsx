@@ -1,9 +1,9 @@
 // src/Scene/LevelManager.tsx
 import React, { useCallback, useState, useEffect } from 'react';
-import Scene from '@/scene/Scene';
-import Scene2 from '@/scene/Scene2';
-import Scene3 from '@/scene/Scene3';
-import { SceneProps } from '@/scene/SceneProps';
+import Scene from '@/Scene/Scene';
+import Scene2 from '@/Scene/Scene2';
+import Scene3 from '@/Scene/Scene3';
+import { SceneProps } from '@/Scene/SceneProps';
 
 interface LevelManagerProps {
   sceneProps: SceneProps & {

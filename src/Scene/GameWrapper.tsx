@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import LevelManager from '@/scene/LevelManager'; 
+import LevelManager from '@/Scene/LevelManager'; 
 import Panel from '@/Interface/Panel';
-import { SceneProps } from '@/scene/SceneProps';
+import { SceneProps } from '@/Scene/SceneProps';
 import * as THREE from 'three';
 import { AbilityType, WeaponType } from '@/Weapons/weapons';
 import { WeaponInfo } from '../Unit/UnitProps';
 import WeaponSelectionPanel from '../Interface/WeaponSelectionPanel';
 import LevelCompletionPanel from '../Interface/LevelCompletionPanel';
-import Behavior from '@/scene/Behavior';
-import { GameStateProvider } from '@/scene/GameStateContext';
+import Behavior from '@/Scene/Behavior';
+import { GameStateProvider } from '@/Scene/GameStateContext';
 
 interface GameWrapperProps {
   sceneProps: SceneProps;
