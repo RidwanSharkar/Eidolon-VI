@@ -34,19 +34,19 @@ export default function LevelCompletionPanel({
         return { 
           r: '/Eidolon/icons/r1.svg', 
           p: '/Eidolon/icons/p1.svg',
-          s: '/Eidolon/icons/s1.svg'
+          s: '/Eidolon/icons/a1.svg'
         };
       case WeaponType.SWORD:
         return { 
           r: '/Eidolon/icons/r2.svg', 
           p: '/Eidolon/icons/p2.svg',
-          s: '/Eidolon/icons/s2.svg'
+          s: '/Eidolon/icons/a2.svg'
         };
       case WeaponType.SABRES:
         return { 
           r: '/Eidolon/icons/r3.svg', 
           p: '/Eidolon/icons/p3.svg',
-          s: '/Eidolon/icons/s3.svg'
+          s: '/Eidolon/icons/a3.svg'
         };
       case WeaponType.SABRES2:
         return { r: '/Eidolon/icons/r4.svg', p: '/Eidolon/icons/p4.svg' };

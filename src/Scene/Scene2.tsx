@@ -30,7 +30,7 @@ export default function Scene2({
   mushroomData,
   unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
-  spawnInterval = 9500,
+  spawnInterval = 12500,
   maxSkeletons = 17,
   initialSkeletons = 6,
   spawnCount = 2,
@@ -44,8 +44,8 @@ export default function Scene2({
         id: `skeleton-${index}`,
         position: spawnPosition.clone(),
         initialPosition: spawnPosition.clone(),
-        health: 300,
-        maxHealth: 300,
+        health: 275,
+        maxHealth: 275,
         ref: React.createRef<Group>()
       };
     });
@@ -179,8 +179,8 @@ export default function Scene2({
             id: `skeleton-${totalSpawned}`,
             position: position1.clone(),
             initialPosition: position1.clone(),
-            health: 300,
-            maxHealth: 300,
+            health: 275,
+            maxHealth: 275,
             ref: React.createRef<Group>(),
             type: 'regular' as const
           },
@@ -188,8 +188,8 @@ export default function Scene2({
             id: `skeleton-${totalSpawned + 1}`,
             position: position2.clone(),
             initialPosition: position2.clone(),
-            health: 300,
-            maxHealth: 300,
+            health: 275,
+            maxHealth: 275,
             ref: React.createRef<Group>(),
             type: 'mage' as const
           }
@@ -262,7 +262,7 @@ export default function Scene2({
       prev.forEach(enemy => {
         if (enemy.ref?.current?.parent) {
           enemy.ref.current.parent.remove(enemy.ref.current);
-          // Also dispose of any materials/geometries if they exist
+          //  dispose of any materials/geometries if they exist
           enemy.ref.current.traverse((child) => {
             if ('geometry' in child && child.geometry instanceof THREE.BufferGeometry) {
               child.geometry.dispose();

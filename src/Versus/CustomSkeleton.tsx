@@ -625,10 +625,10 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
       </group>
 
       {/* arms with scaled boss claws */}
-      <group name="LeftArm" position={[-0.35, 1.325, 0]} scale={[-0.4, 0.4, 0.4]} rotation={[0, Math.PI/3, 0]}>
+      <group name="LeftArm" position={[-0.35, 1.325, 0]} scale={[-0.45, 0.45, 0.45]} rotation={[0, Math.PI/3, 0]}>
         <BossClawModel isLeftHand={true} />
       </group>
-      <group name="RightArm" position={[0.35, 1.525, 0.1]} scale={[0.4, 0.4, 0.4]} rotation={[0, -Math.PI/2.5, 0]}>
+      <group name="RightArm" position={[0.35, 1.525, 0.1]} scale={[0.45, 0.45, 0.45]} rotation={[0, -Math.PI/2.5, 0]}>
         <BossClawModel isLeftHand={false} />
       </group>
       {/* Pelvis structure */}

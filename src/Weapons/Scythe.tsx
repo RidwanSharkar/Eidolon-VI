@@ -39,7 +39,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       // SWING ANIMATION
       const forwardPhase = swingPhase <= 0.25
         ? swingPhase * 2
-        : (0.75 - (swingPhase - 0.125) * 1.7);
+        : (0.75 - (swingPhase - 0.125) * 1.675);
       
       const pivotX = basePosition[0] + Math.sin(forwardPhase * Math.PI) * 2.5;
       const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -1.5;
@@ -69,7 +69,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
     shape.moveTo(0, 0);
     
     // Create thick back edge first
-    shape.lineTo(0.4, -0.130); // Slightly thicker at the base   COOL SPOT TO REMOVE VERTEX SET 0 PARAMETER
+    shape.lineTo(0.4, -0.130); // ** COOL SPOT **  REMOVE VERTEX SET 0 param
     shape.bezierCurveTo(
       0.8, 0.22,    // control point 1
       1.33, 0.5,    // control point 2
@@ -112,8 +112,8 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
         </mesh>
         
         {/* Decorative wrappings handle */}
-        {[...Array(10)].map((_, i) => ( // Reduced from 12 to 8 wrappings
-          <mesh key={i} position={[0, 1 - i * 0.2, 0]} rotation={[Math.PI/2, 0, 0]}> {/* Adjusted starting position */}
+        {[...Array(10)].map((_, i) => ( //10 wrappings
+          <mesh key={i} position={[0, 1 - i * 0.2, 0]} rotation={[Math.PI/2, 0, 0]}> {/*  starting position */}
             <torusGeometry args={[0.07, 0.01, 8, 16]} />
             <meshStandardMaterial color="#a86432" metalness={0.3} roughness={0.7} />
           </mesh>

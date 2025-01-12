@@ -18,39 +18,63 @@ export interface OrbShieldRef {
 
 const OrbShieldSparkEffect: React.FC<{ position: Vector3 }> = ({ position }) => {
   const [sparkPositions, setSparkPositions] = React.useState(() => 
-    Array(6).fill(null).map(() => ({
+    Array(15).fill(null).map(() => ({
       offset: new Vector3(
-        (Math.random() - 0.5) * 0.3,
-        (Math.random() - 0.5) * 0.3,
-        (Math.random() - 0.5) * 0.3
+        (Math.random() - 0.5) * 0.8,
+        (Math.random() - 0.5) * 0.4,
+        (Math.random() - 0.5) * 0.8
       ),
       speed: new Vector3(
-        (Math.random() - 0.5) * 0.1,
-        Math.random() * 0.1,
-        (Math.random() - 0.5) * 0.1
+        (Math.random() - 0.5) * 0.55,
+        (Math.random() - 0.5) * 0.15,
+        (Math.random() - 0.5) * 0.55
       ),
-      life: 1.0
+      life: 1.0,
+      orbit: {
+        radius: 0.2 + Math.random() * 0.3,
+        speed: (Math.random() + 0.5) * 2,
+        phase: Math.random() * Math.PI * 2
+      }
     }))
   );
 
   useFrame((_, delta) => {
     setSparkPositions(prev => prev.map(spark => {
-      spark.offset.add(spark.speed);
+      const time = Date.now() * 0.001;
+      const orbitAngle = time * spark.orbit.speed + spark.orbit.phase;
+      
+      spark.offset.x = Math.cos(orbitAngle) * spark.orbit.radius + spark.speed.x;
+      spark.offset.y = Math.sin(orbitAngle) * spark.orbit.radius + spark.speed.y;
+      spark.offset.z = Math.cos(orbitAngle * 0.7) * spark.orbit.radius + spark.speed.z;
+      
+      spark.speed.add(new Vector3(
+        (Math.random() - 0.5) * 0.01,
+        (Math.random() - 0.5) * 0.01,
+        (Math.random() - 0.5) * 0.01
+      ));
+      
+      spark.speed.multiplyScalar(0.95);
+      
       spark.life -= delta * 2;
       
       if (spark.life <= 0) {
         return {
           offset: new Vector3(
-            (Math.random() - 0.5) * 0.3,
-            (Math.random() - 0.5) * 0.3,
-            (Math.random() - 0.5) * 0.3
+            (Math.random() - 0.5) * 0.4,
+            (Math.random() - 0.5) * 0.4,
+            (Math.random() - 0.5) * 0.4
           ),
           speed: new Vector3(
-            (Math.random() - 0.5) * 0.1,
-            Math.random() * 0.1,
-            (Math.random() - 0.5) * 0.1
+            (Math.random() - 0.5) * 0.15,
+            (Math.random() - 0.5) * 0.15,
+            (Math.random() - 0.5) * 0.15
           ),
-          life: 1.0
+          life: 1.0,
+          orbit: {
+            radius: 0.2 + Math.random() * 0.3,
+            speed: (Math.random() + 0.5) * 2,
+            phase: Math.random() * Math.PI * 2
+          }
         };
       }
       return spark;
@@ -61,13 +85,13 @@ const OrbShieldSparkEffect: React.FC<{ position: Vector3 }> = ({ position }) => 
     <group position={position}>
       {sparkPositions.map((spark, i) => (
         <mesh key={i} position={spark.offset.toArray()}>
-          <sphereGeometry args={[0.023, 4, 4]} />
+          <sphereGeometry args={[0.015, 4, 4]} />
           <meshStandardMaterial
             color="#4488ff"
             emissive="#4488ff"
-            emissiveIntensity={2}
+            emissiveIntensity={3}
             transparent
-            opacity={spark.life * 0.7}
+            opacity={spark.life * 0.8}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
           />

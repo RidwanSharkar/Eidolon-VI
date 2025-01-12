@@ -15,4 +15,12 @@ export interface SummonProps {
     duration?: number;
     startTime?: number;
   }>>>;
+  activeEffects: Array<{
+    id: number;
+    type: string;
+    position: Vector3;
+    direction: Vector3;
+    duration?: number;
+    startTime?: number;
+  }>;
 } 

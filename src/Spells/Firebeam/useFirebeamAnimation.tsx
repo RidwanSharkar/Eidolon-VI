@@ -13,7 +13,7 @@ export const useFirebeamAnimation = ({
 }: FirebeamAnimationProps) => {
   const progressRef = useRef(0);
   const startupDuration = 0;
-  const fadeOutDuration = 2.5;
+  const fadeOutDuration = 2500;
   const isActive = useRef(true);
   const isFadingOut = useRef(false);
 
@@ -28,7 +28,7 @@ export const useFirebeamAnimation = ({
           if (currentBeam) {
             currentBeam.scale.z = 0;
           }
-        }, fadeOutDuration * 1000);
+        }, fadeOutDuration * 3000);
       }
     };
   }, [beamRef]);

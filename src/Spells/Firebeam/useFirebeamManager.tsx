@@ -79,7 +79,7 @@ export const useFirebeamManager = ({
 
   const startFirebeam = useCallback(() => {
     const currentTime = Date.now();
-    if (currentTime - lastFireTime.current < 700) { 
+    if (currentTime - lastFireTime.current < 600) { 
       return; // Enforce 1-second cooldown between shots
     }
 
@@ -111,7 +111,7 @@ export const useFirebeamManager = ({
       const angle = direction.angleTo(enemyDir);
       const distance = enemyDir.length();
 
-      if (angle < 0.35 && distance < 20) {
+      if (angle < 0.4 && distance < 20) {
         onHit(enemy.id, damage);
         
         // Add damage number

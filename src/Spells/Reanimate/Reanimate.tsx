@@ -63,7 +63,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
           <meshStandardMaterial
             color="#00ff88"
             emissive="#00ff88"
-            emissiveIntensity={2}
+            emissiveIntensity={1.5}
             transparent
             opacity={opacity * (1 - i * 0.2)}
           />
@@ -76,7 +76,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
         <meshStandardMaterial
           color="#5EFF00"
           emissive="#5EFF00"
-          emissiveIntensity={3}
+          emissiveIntensity={2}
           transparent
           opacity={opacity * 0.3}
         />
@@ -85,23 +85,23 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
       {/* Healing particles */}
       {[...Array(12)].map((_, i) => {
         const angle = (i / 12) * Math.PI * 2;
-        const radius = 1 + progress;
+        const radius = 0.75 + progress;
         const yOffset = progress * 2;
         
         return (
           <mesh
             key={`particle-${i}`}
             position={[
-              Math.cos(angle + time * 2) * radius,
+              Math.cos(angle + time * 2) * radius/1.1,
               yOffset + Math.sin(time * 3 + i) * 0.5,
-              Math.sin(angle + time * 2) * radius
+              Math.sin(angle + time * 2) * radius/1.1
             ]}
           >
-            <sphereGeometry args={[0.1, 8, 8]} />
+            <sphereGeometry args={[0.095, 8, 8]} />
             <meshStandardMaterial
               color="#5EFF00"
               emissive="#5EFF00"
-              emissiveIntensity={1.2}
+              emissiveIntensity={2.5}
               transparent
               opacity={opacity * 0.8}
             />
@@ -112,7 +112,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
       {/* Light source */}
       <pointLight
         color="#00ff88"
-        intensity={4 * opacity}
+        intensity={2 * opacity}
         distance={5}
         decay={2}
       />

@@ -214,13 +214,14 @@ export default function Unit({
 
   const handleFireballImpact = (id: number, impactPosition?: Vector3) => {
     if (impactPosition) {
+      const currentTime = Date.now();
       setActiveEffects(prev => [...prev, {
-        id: Date.now(),
-        type: 'fireballExplosion',
+        id: currentTime,
+        type: 'unitFireballExplosion',
         position: impactPosition,
         direction: new Vector3(),
-        duration: 0.2, // Duration in seconds
-        startTime: Date.now() // Add this line to set the start time
+        duration: 0.2,
+        startTime: currentTime
       }]);
     }
     setFireballs(prev => prev.filter(fireball => fireball.id !== id));
@@ -858,25 +859,31 @@ export default function Unit({
   // Add cleanup for expired effects
   useEffect(() => {
     const cleanup = setInterval(() => {
-
-      
-      setActiveEffects(prev => prev.filter(effect => {
-        // Special handling for boneclaw and blizzard
-        if (effect.type === 'boneclaw' || effect.type === 'blizzard') {
-          return true; // Let these effects manage their own cleanup via onComplete
-        }
-
-        // Handle timed effects
-        if (effect.duration && effect.startTime) {
-          const elapsed = (Date.now() - effect.startTime) / 1000;
-          return elapsed < effect.duration;
-        }
-
-        return true;
-      }));
+      setActiveEffects(prev => 
+        prev.filter(effect => {
+          if (effect.type !== 'unitFireballExplosion') return true;
+          if (!effect.startTime) return false;
+          return Date.now() - effect.startTime < effect.duration! * 1000;
+        })
+      );
     }, 100);
-    
-    return () => clearInterval(cleanup);
+
+    return () => {
+      clearInterval(cleanup);
+      // Only clear unit-specific effects on unmount
+      setActiveEffects(prev => 
+        prev.filter(effect => effect.type !== 'unitFireballExplosion')
+      );
+    };
+  }, []);
+
+  // Add additional cleanup for unmounting
+  useEffect(() => {
+    return () => {
+      setActiveEffects(prev => prev.filter(effect => 
+        effect.type !== 'fireballExplosion'
+      ));
+    };
   }, []);
 
   useEffect(() => {
@@ -929,6 +936,24 @@ export default function Unit({
       })
     );
   }, []);
+
+  // ============================== FIREBALL EXTRA CLEANER TEST
+  useEffect(() => {
+    const cleanupEffects = () => {
+      setActiveEffects(prev => 
+        prev.filter(effect => {
+          if (effect.type !== 'fireballExplosion') return true;
+          const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
+          const duration = effect.duration || 0.2;
+          return elapsed < duration;
+        })
+      );
+    };
+      // ============================== FIREBALL EXTRA CLEANER TEST
+
+    const cleanupInterval = setInterval(cleanupEffects, 100);
+    return () => clearInterval(cleanupInterval);
+  }, [setActiveEffects]);
 
   return (
     <>
@@ -1377,6 +1402,7 @@ export default function Unit({
                 );
               }}
               setActiveEffects={setActiveEffects}
+              activeEffects={activeEffects}
             />
           );
         } else if (effect.type === 'frostExplosion') {
@@ -1421,7 +1447,7 @@ export default function Unit({
       )}
 
       {activeEffects.map(effect => {
-        if (effect.type === 'fireballExplosion') {
+        if (effect.type === 'unitFireballExplosion') {
           const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
           const duration = effect.duration || 0.2;
           const fade = Math.max(0, 1 - (elapsed / duration));

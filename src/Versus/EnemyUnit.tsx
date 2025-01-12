@@ -65,7 +65,7 @@ export default function EnemyUnit({
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 8;
   const SEPARATION_RADIUS = 1.2; // Minimum distance between enemies
-  const SEPARATION_FORCE = 0.4; // Strength of the separation force
+  const SEPARATION_FORCE = 0.225; // Strength of the separation force
 
   // Sync health changes
   useEffect(() => {
@@ -243,7 +243,7 @@ export default function EnemyUnit({
         }}
       >
         <CustomSkeleton
-          position={[0, 0.765, 0]}
+          position={[0, 0.795, 0]}
           isAttacking={isAttacking}
           isWalking={isMoving && currentHealth.current > 0}
           onHit={(damage) => handleDamage(damage, { type: weaponType })}

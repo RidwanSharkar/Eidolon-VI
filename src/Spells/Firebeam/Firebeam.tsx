@@ -97,7 +97,7 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
           <meshStandardMaterial
             color="#58FCEC"
             emissive="#00E5FF"
-            emissiveIntensity={3}
+            emissiveIntensity={15}
             transparent
             opacity={0.95}
           />
@@ -105,11 +105,11 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
 
         {/* Inner glow */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.275, 0.275, 20, 16]} />
+          <cylinderGeometry args={[0.25, 0.275, 20, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
             emissive="#00E5FF"
-            emissiveIntensity={2.5}
+            emissiveIntensity={5}
             transparent
             opacity={0.7}
           />
@@ -117,11 +117,23 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
 
         {/* Outer glow */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.375, 0.375, 20, 16]} />
+          <cylinderGeometry args={[0.30, 0.375, 20, 16]} />
           <meshStandardMaterial
             color="#58FCEC"
             emissive="#00E5FF"
             emissiveIntensity={1}
+            transparent
+            opacity={0.6}
+          />
+        </mesh>
+
+                {/* Outerest glow */}
+                <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.35, 0.375, 20, 16]} />
+          <meshStandardMaterial
+            color="#58FCEC"
+            emissive="#00E5FF"
+            emissiveIntensity={0.75}
             transparent
             opacity={0.6}
           />

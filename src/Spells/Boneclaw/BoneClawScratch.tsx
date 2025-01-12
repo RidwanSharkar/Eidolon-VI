@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Vector3, Group } from 'three';
+import { Vector3, Group, MeshBasicMaterial, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -16,6 +16,10 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
   const delayTimer = useRef(0);
   const startDelay = 0.125;
   const color = new THREE.Color('#39ff14');
+  const scorchedRadius = 3;
+  const scorchedDuration = 2.5;
+  const scorchedRef = useRef<Group>(null);
+  const scorchedProgressRef = useRef(0);
 
   // Calculate three positions, one center and two on the sides
   const centerPosition = new Vector3(
@@ -40,10 +44,12 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
     }
 
     progressRef.current += delta;
+    scorchedProgressRef.current += delta;
     const progress = Math.min(progressRef.current / animationDuration, 1);
+    const scorchedProgress = Math.min(scorchedProgressRef.current / scorchedDuration, 1);
 
     if (progress < 1) {
-      const startY = 3.5; //HEIGHT
+      const startY = 2.5; //HEIGHT
       const currentY = startY * (1 - progress);
       effectRef.current.position.y = currentY;
 
@@ -51,6 +57,21 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
       effectRef.current.scale.set(scale, scale, scale);
     } else {
       onComplete();
+    }
+
+    if (scorchedRef.current) {
+      const fadeOut = scorchedProgress > 0.7 
+        ? 1 - ((scorchedProgress - 0.7) / 0.3)
+        : 1;
+      
+      scorchedRef.current.scale.set(
+        Math.min(scorchedProgress * 1.2, 1),
+        1,
+        Math.min(scorchedProgress * 1.2, 1)
+      );
+      
+      const materials = (scorchedRef.current.children[0] as THREE.Mesh).material as MeshBasicMaterial;
+      materials.opacity = fadeOut * 0.6;
     }
   });
 
@@ -62,7 +83,6 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
         Math.atan2(direction.x, direction.z),
         0
       ]}
-      
     >
       {/* Core beam */}
       <mesh>
@@ -151,6 +171,42 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
         />
       </mesh>
 
+      {/* Spiral effect */}
+      {[...Array(3)].map((_, i) => (
+        <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]}>
+          <torusGeometry args={[1.2, 0.08, 8, 32]} />
+          <meshStandardMaterial
+            color="#FF9D00"
+            emissive="#FF9D00"
+            emissiveIntensity={4}
+            transparent
+            opacity={0.3}
+          />
+        </mesh>
+      ))}
+
+      {/* Floating particles */}
+      {[...Array(8)].map((_, i) => (
+        <mesh
+          key={i}
+          position={[
+            Math.cos((i * Math.PI) / 4) * 1.0,
+            (i - 4) * 2,
+            Math.sin((i * Math.PI) / 4) * 1.0,
+          ]}
+        >
+          <sphereGeometry args={[0.15, 8, 8]} />
+          <meshStandardMaterial
+            color="#ffaa00"
+            emissive="#ff8800"
+            emissiveIntensity={12}
+            transparent
+            opacity={0.6}
+          />
+        </mesh>
+      ))}
+
+
       {/* Impact point glow */}
       <pointLight position={[0, -5, 0]} color={color} intensity={20} distance={6} />
 
@@ -159,11 +215,27 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
     </group>
   );
 
+  const createScorchedGround = () => (
+    <group ref={scorchedRef} position={[centerPosition.x, 0.01, centerPosition.z]}>
+      <mesh rotation={[-Math.PI / 2, 0, Math.atan2(direction.x, direction.z)]}>
+        <planeGeometry args={[scorchedRadius, scorchedRadius * 2]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.6}
+          side={DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  );
+
   return (
     <group
       ref={effectRef}
       visible={delayTimer.current >= startDelay}
     >
+      {createScorchedGround()}
       {createScratchEffect(leftPosition, false)}
       {createScratchEffect(centerPosition, true)}
       {createScratchEffect(rightPosition, false)}

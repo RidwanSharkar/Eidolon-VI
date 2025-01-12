@@ -16,8 +16,8 @@ export default function MageFireball({ position, target, onHit, playerPosition }
   const fireballRef = useRef<Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const initialDirection = target.clone().sub(position).normalize();
-  const speed = 0.20;
-  const hitRadius = 0.5;
+  const speed = 0.30;
+  const hitRadius = 1.0;
   const [showExplosion, setShowExplosion] = useState(false);
   const [explosionStartTime, setExplosionStartTime] = useState<number | null>(null);
   const [, forceUpdate] = useState({});
@@ -97,7 +97,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
 
           <FireballTrail
             color={new Color("#ff3333")}
-            size={0.175}
+            size={0.195}
             meshRef={meshRef}
             opacity={0.7}
           />
@@ -115,7 +115,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
               <>
                 {/* Core explosion sphere */}
                 <mesh>
-                  <sphereGeometry args={[0.4 * (1 + elapsed * 2), 32, 32]} />
+                  <sphereGeometry args={[0.35 * (1 + elapsed * 2), 32, 32]} />
                   <meshStandardMaterial
                     color="#ff3333"
                     emissive="#ff4444"
@@ -129,7 +129,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
                 
                 {/* Inner energy sphere */}
                 <mesh>
-                  <sphereGeometry args={[0.3 * (1 + elapsed * 3), 24, 24]} />
+                  <sphereGeometry args={[0.4 * (1 + elapsed * 3), 24, 24]} />
                   <meshStandardMaterial
                     color="#ff6666"
                     emissive="#ffffff"
@@ -142,7 +142,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
                 </mesh>
 
                 {/* Multiple expanding rings */}
-                {[0.4, 0.65, 0.9, 1.15].map((size, i) => (
+                {[0.45, 0.675, 0.9, 1.175].map((size, i) => (
                   <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
                     <torusGeometry args={[size * (1 + elapsed * 3), 0.045, 16, 32]} />
                     <meshStandardMaterial

@@ -546,11 +546,11 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
 
   return (
     <group ref={groupRef} position={[position[0], position[1], position[2]]}>
-      <group position={[0, 0.75, 0]}>
+      <group position={[0, 0.76, 0]}>
         <MageRobe />
       </group>
 
-      <group name="Body" position={[0, 1.15, 0]} scale={[0.95, 0.8, 0.8]} rotation={[-0.2, 0, 0]}>
+      <group name="Body" position={[0, 1.15, 0]} scale={[0.9, 0.75, 0.775]} rotation={[-0.2, 0, 0]}>
         <BonePlate />
       </group>
 

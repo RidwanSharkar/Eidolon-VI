@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, Shape, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { calculateBoneclawHits } from '@/Spells/Boneclaw/BoneclawDamage';
 import BoneclawScratch from '@/Spells/Boneclaw/BoneClawScratch';
@@ -59,10 +59,65 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
     </group>
   );
 
+  const createSpectralClawShape = () => {
+    const shape = new Shape();
+    shape.moveTo(0, 0);
+    
+    // Create thinner, longer claw shape
+    shape.lineTo(0.2, -0.065);
+    shape.bezierCurveTo(
+      0.4, 0.11,    // control point 1
+      0.665, 0.25,  // control point 2
+      0.8, 0.26     // end point (tip)
+    );
+    
+    // Create sharp edge
+    shape.lineTo(0.56, 0.375);
+    shape.bezierCurveTo(
+      0.25, 0.1,
+      0.11, 0.0,
+      0.05, 0.35
+    );
+    shape.lineTo(0, 0);
+    return shape;
+  };
+
+  const spectralClawSettings = {
+    steps: 1,
+    depth: 0.00010,
+    bevelEnabled: true,
+    bevelThickness: 0.015,
+    bevelSize: 0.0175,
+    bevelSegments: 1,
+    curveSegments: 16
+  };
+
+  const createSpectralClaw = (index: number) => (
+    <group 
+      position={[0.025 * (index - 2), -0.3, 0]} 
+      rotation={[0, 0, Math.PI + Math.PI / 16 + (index - 2) * Math.PI / 24]}
+      scale={[0.7, 0.7, 0.7]}
+    >
+      <mesh>
+        <extrudeGeometry args={[createSpectralClawShape(), spectralClawSettings]} />
+        <meshStandardMaterial 
+          color="#39ff14"
+          emissive="#39ff14"
+          emissiveIntensity={1.3}
+          metalness={0.8}
+          roughness={0.1}
+          opacity={0.85}
+          transparent
+          side={DoubleSide}
+        />
+      </mesh>
+    </group>
+  );
+
   useFrame((_, delta) => {
     if (!clawRef.current || !parentRef?.current) return;
 
-    progressRef.current += delta * 6;
+    progressRef.current += delta * 2.5;
     const swingPhase = Math.min(progressRef.current / Math.PI, 1);
 
     if (swingPhase >= 1) {
@@ -75,7 +130,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
     const parentPosition = parentRef.current.position.clone();
     const parentRotation = parentRef.current.rotation.y;
 
-    const pivotX = -Math.sin(swingPhase * Math.PI) * 2.0 + 2;
+    const pivotX = -Math.sin(swingPhase * Math.PI) * 1.375 + 2;
     const pivotY = Math.cos(swingPhase * Math.PI)  + 1.9;
     const pivotZ = Math.sin(swingPhase * Math.PI) * 2 + 0.5;
 
@@ -90,7 +145,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
 
     const rotationX = Math.cos(swingPhase * Math.PI) / (Math.PI / -1.5);
     const rotationY = parentRotation + Math.PI / 2 - swingPhase * Math.PI;
-    const rotationZ = -Math.sin(swingPhase * Math.PI) * (Math.PI / 4);
+    const rotationZ = -Math.sin(swingPhase * Math.PI) * (Math.PI /2);
 
     clawRef.current.rotation.set(
       rotationX,
@@ -134,8 +189,8 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
       <group 
         ref={clawRef} 
         position={position}
-        rotation={[0, Math.atan2(direction.x, direction.z), Math.PI / 4]}
-        scale={1.25}
+        rotation={[0, Math.atan2(direction.x, direction.z), Math.PI /3]}
+        scale={1.35}
       >
         <group>
           {createParallelBones(1.15, 0.15)}
@@ -177,6 +232,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
                             metalness={0.4}
                           />
                         </mesh>
+                        {createSpectralClaw(i)}
                       </group>
                     </group>
                   ))}

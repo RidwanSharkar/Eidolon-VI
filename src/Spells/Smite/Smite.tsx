@@ -55,7 +55,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         <cylinderGeometry args={[0.175, 0.175, 20, 16]} />
         <meshStandardMaterial
           color="#ffaa00"
-          emissive="#ff8800"
+          emissive="#FF0000"
           emissiveIntensity={25}
           transparent
           opacity={0.95}
@@ -68,7 +68,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         <cylinderGeometry args={[0.42, 0.42, 20, 16]} />
         <meshStandardMaterial
           color="#FF9D00"
-          emissive="#FF9D00"
+          emissive="#FF0000"
           emissiveIntensity={10}
           transparent
           opacity={0.75}
@@ -80,7 +80,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         <cylinderGeometry args={[0.7, 0.6, 20, 16]} />
         <meshStandardMaterial
           color="#FF9D00"
-          emissive="#FF9D00"
+          emissive="#FF0000"
           emissiveIntensity={10}
           transparent
           opacity={0.55}
@@ -91,8 +91,8 @@ export default function Smite({ position, onComplete }: SmiteProps) {
       <mesh>
         <cylinderGeometry args={[0.875, 0.9, 20, 16]} />
         <meshStandardMaterial
-          color="#FF9D00"
-          emissive="#FF9D00"
+          color="#FF0000"
+          emissive="#FF0000"
           emissiveIntensity={2.5}
           transparent
           opacity={0.65}
@@ -104,8 +104,8 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]}>
           <torusGeometry args={[1.2, 0.08, 8, 32]} />
           <meshStandardMaterial
-            color="#FF9D00"
-            emissive="#FF9D00"
+            color="#FF0000"
+            emissive="#FF0000"
             emissiveIntensity={4}
             transparent
             opacity={0.3}
@@ -125,8 +125,8 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         >
           <sphereGeometry args={[0.15, 8, 8]} />
           <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
+            color="#FF0000"
+            emissive="#FF0000"
             emissiveIntensity={12}
             transparent
             opacity={0.6}

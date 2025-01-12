@@ -50,8 +50,8 @@ export default function Scene3({
       position: skeleton.initialPosition.clone(),
       initialPosition: skeleton.initialPosition.clone(),
       currentPosition: skeleton.initialPosition.clone(),
-      health: 350,
-      maxHealth: 350,
+      health: 325,
+      maxHealth: 325,
     }))
   );
 
@@ -233,8 +233,8 @@ export default function Scene3({
             position: position1.clone(),
             initialPosition: position1.clone(),
             currentPosition: position1.clone(),
-            health: 350,
-            maxHealth: 350,
+            health: 325,
+            maxHealth: 325,
             type: 'regular' as const
           },
           {
@@ -242,8 +242,8 @@ export default function Scene3({
             position: position2.clone(),
             initialPosition: position2.clone(),
             currentPosition: position2.clone(),
-            health: 350,
-            maxHealth: 350,
+            health: 325,
+            maxHealth: 325,
             type: 'mage' as const
           }
         ];

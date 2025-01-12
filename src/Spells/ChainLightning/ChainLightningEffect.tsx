@@ -58,7 +58,7 @@ const ChainLightningEffect: React.FC<ChainLightningEffectProps> = ({
               const pos = startPos.clone()
                 .lerp(targetPos, segmentProgress)
                 .add(offset)
-                .add(new Vector3(0, Math.sin(segmentProgress * Math.PI) * 2, 0)); // arc height
+                .add(new Vector3(0, Math.sin(segmentProgress * Math.PI) * 0.75, 0)); // arc height
               
               // Randomize segment thickness
               const thickness = Math.random() * 0.035 + 0.05;

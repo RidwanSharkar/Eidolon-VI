@@ -296,7 +296,7 @@ export default function Sword({
                 position={spark.position.toArray()}
                 scale={[spark.scale, spark.scale, spark.scale]}
               >
-                <sphereGeometry args={[1, 6, 6]} />
+                <sphereGeometry args={[1.25, 6, 6]} />
                 <meshStandardMaterial
                   color={new THREE.Color(0xFFD700)}
                   emissive={new THREE.Color(0xFFA500)}
@@ -308,7 +308,7 @@ export default function Sword({
               </mesh>
             ))}
 
-            {/* Lightning trail during swing */}
+            {/* Lightning trail during swing 
             {isSwinging && (
               <mesh>
                 <tubeGeometry args={[
@@ -331,7 +331,7 @@ export default function Sword({
                   blending={THREE.AdditiveBlending}
                 />
               </mesh>
-            )}
+            )}*/}
           </>
         )}
       </group>
@@ -449,7 +449,7 @@ export default function Sword({
           />
         </group>
         
-        {/* Blade with enhanced purple */}
+        {/* Blade*/}
         <group position={[0, 1, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
           {/* Base blade */}
           <mesh>

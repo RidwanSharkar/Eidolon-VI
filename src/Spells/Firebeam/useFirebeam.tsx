@@ -16,7 +16,7 @@ export const useFirebeam = ({ parentRef }: FirebeamControllerProps) => {
     const position = parentRef.current.position.clone();
     position.y += 1;
 
-    const direction = new Vector3(0, 0, 0.1)
+    const direction = new Vector3(0, 0, 1)
       .applyQuaternion(parentRef.current.quaternion);
 
     setIsActive(true);

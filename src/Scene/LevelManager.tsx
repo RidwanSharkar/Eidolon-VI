@@ -80,9 +80,9 @@ export default function LevelManager({
           {...sceneProps} 
           onLevelComplete={handleLevelComplete}
           onAbilityUnlock={onAbilityUnlock}
-          spawnInterval={3250}
+          spawnInterval={3500}
           maxSkeletons={13}
-          initialSkeletons={5}
+          initialSkeletons={4}
         />
       )}
       {showScene2 && !showScene3 && (
@@ -90,9 +90,9 @@ export default function LevelManager({
           {...sceneProps} 
           onLevelComplete={handleLevelComplete}
           onAbilityUnlock={onAbilityUnlock}
-          spawnInterval={9500}
+          spawnInterval={12000}
           maxSkeletons={17}
-          initialSkeletons={6}
+          initialSkeletons={4}
           spawnCount={2}
         />
       )}
@@ -101,9 +101,9 @@ export default function LevelManager({
           {...sceneProps} 
           onLevelComplete={handleLevelComplete}
           onAbilityUnlock={onAbilityUnlock}
-          spawnInterval={10500}
+          spawnInterval={14500}
           maxSkeletons={23}
-          initialSkeletons={8}
+          initialSkeletons={4}
           spawnCount={2}
         />
       )}
