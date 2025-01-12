@@ -1,5 +1,5 @@
 import { Vector3, Color } from 'three';
-import { trunkColors, leafColors } from '@/Environment/treeColors';
+import { trunkColors, leafColors } from '@/environment/treeColors';
 
 export interface GeneratedTree {
   position: Vector3;

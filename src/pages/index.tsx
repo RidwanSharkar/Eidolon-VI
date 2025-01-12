@@ -1,8 +1,8 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { Vector3 } from 'three';
 import { WeaponType, AbilityType } from '@/Weapons/weapons';
-import { trunkColors, leafColors } from '@/Environment/treeColors';  
-import { generateMountains, generateTrees, generateMushrooms, generateFlowers } from '@/Environment/terrainGenerators';
+import { trunkColors, leafColors } from '@/environment/treeColors';  
+import { generateMountains, generateTrees, generateMushrooms, generateFlowers } from '@/environment/terrainGenerators';
 import { SceneProps, SkeletonProps } from '@/Scene/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '@/Weapons/weapons';
