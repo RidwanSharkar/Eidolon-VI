@@ -1,6 +1,6 @@
 import { Vector3 } from 'three';
 import { WeaponType } from '../Weapons/weapons';
-import { GeneratedTree } from '../environment/terrainGenerators';
+import { GeneratedTree } from '../Environment/terrainGenerators';
 import { UnitProps } from '../Unit/UnitProps';
 import * as THREE from 'three';
 

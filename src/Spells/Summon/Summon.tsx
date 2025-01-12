@@ -55,10 +55,10 @@ export default function SummonedHandler({
       return;
     }
 
-    // Always use target position for impact
+    // Increase hit radius and use 3D distance check
     const actualImpactPos = targetEnemy.position.clone().setY(1.5);
-    const distanceToTarget = actualImpactPos.distanceTo(targetEnemy.position);
-    const HIT_RADIUS = 1.5;
+    const distanceToTarget = fireball.position.distanceTo(targetEnemy.position);
+    const HIT_RADIUS = 2.0; // Increased from 1.5
 
     if (distanceToTarget <= HIT_RADIUS) {
       const { damage } = calculateDamage(FIREBALL_DAMAGE);
@@ -103,14 +103,10 @@ export default function SummonedHandler({
           predictedPos: predictTargetPosition(enemy),
           distance: position.distanceTo(enemy.position)
         }))
-        .filter(({ distance }) => distance <= RANGE);
+        .filter(({ distance }) => distance <= RANGE)
+        .sort((a, b) => a.distance - b.distance); // Sort by distance
 
-      const bestTarget = viableTargets.length > 0 
-        ? viableTargets.reduce<{ enemy: Enemy; predictedPos: Vector3; distance: number; } | null>((best, current) => 
-            !best || current.distance < best.distance ? current : best
-          , null)
-        : null;
-
+      const bestTarget = viableTargets[0];
       setCurrentTarget(bestTarget?.enemy || null);
     }
 
@@ -118,7 +114,7 @@ export default function SummonedHandler({
     const now = Date.now();
     if (now - lastAttackTime.current >= ATTACK_COOLDOWN && currentTarget) {
       const predictedPosition = predictTargetPosition(currentTarget);
-      const startPosition = position.clone().add(new Vector3(0, 1.5, 0));
+      const startPosition = position.clone().add(new Vector3(0, 1.4, 0));
       
       const direction = predictedPosition
         .clone()
