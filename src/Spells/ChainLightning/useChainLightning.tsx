@@ -53,7 +53,7 @@ export const useChainLightning = ({
         if (enemy.isDying || !enemy.position || enemy.health <= 0 || hitTargets.has(enemy.id)) return;
 
         const distance = currentPos.distanceTo(enemy.position);
-        if (distance < shortestDistance && distance < 10) {
+        if (distance < shortestDistance && distance < 12) {
           shortestDistance = distance;
           nearestEnemy = enemy.position;
           enemyId = enemy.id;
@@ -106,7 +106,7 @@ export const useChainLightning = ({
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
           damage,
-          position: nextTarget.position.clone().add(new Vector3(0, 2, 0)),
+          position: nextTarget.position.clone().add(new Vector3(0, 1.5, 0)),
           isCritical: false,
           isChainLightning: true
         }]);

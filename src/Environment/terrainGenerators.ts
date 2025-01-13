@@ -10,20 +10,36 @@ export interface GeneratedTree {
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 50; 
-
+  const numberOfMountains = 20;
+  const radius = 52;
+  
+  // Create evenly spaced mountains around the perimeter
   for (let i = 0; i < numberOfMountains; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const distance = 43;
+    const angle = (i / numberOfMountains) * Math.PI * 2;
+    
+    // Add some controlled randomness to create a more natural look
+    const randomRadius = radius + (Math.random() * 4 - 2); // Varies radius by ±2 units
+    const x = Math.cos(angle) * randomRadius;
+    const z = Math.sin(angle) * randomRadius;
 
-    const x = Math.cos(angle) * distance;
-    const z = Math.sin(angle) * distance;
+    // Vary the scale slightly for visual interest
+    const scale = 0.75 + Math.random() * 0.4; // More consistent scaling
 
-    const scale = 0.6 + Math.random() * 0.8;
-
+    // Add overlapping mountains
     mountains.push({
       position: new Vector3(x, 0, z),
       scale: scale,
+    });
+
+    // Add a second row of mountains slightly offset
+    const innerRadius = radius - 12;
+    const offsetAngle = angle + (Math.PI / numberOfMountains);
+    const innerX = Math.cos(offsetAngle) * innerRadius;
+    const innerZ = Math.sin(offsetAngle) * innerRadius;
+
+    mountains.push({
+      position: new Vector3(innerX, 0, innerZ),
+      scale: scale * 0.9,
     });
   }
 

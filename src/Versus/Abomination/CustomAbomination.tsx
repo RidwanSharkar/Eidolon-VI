@@ -1,98 +1,83 @@
-import React, { useRef, useState, useEffect } from 'react';
 import { Group, Mesh } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../../gear/BonePlate';
-import DragonSkull from '../../gear/DragonSkull';
+import { useRef, useState, useEffect } from 'react';
 
 interface CustomAbominationProps {
   position: [number, number, number];
   isAttacking: boolean;
   isWalking: boolean;
-  onHit?: (damage: number) => void;
+  onHit: (damage: number) => void;
 }
 
 function BoneLegModel() {
-  const createBoneSegment = (length: number, width: number) => (
-    <mesh>
-      <cylinderGeometry args={[width, width * 0.8, length, 8]} />
-      <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-    </mesh>
-  );
-
-  const createJoint = (size: number) => (
-    <mesh>
-      <sphereGeometry args={[size, 8, 8]} />
-      <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-    </mesh>
-  );
-
-  const createParallelBones = (length: number, spacing: number) => (
-    <group>
-      <group position={[spacing/2, 0, 0]}>
-        {createBoneSegment(length, 0.04)}
-      </group>
-      <group position={[-spacing/2, 0, 0]}>
-        {createBoneSegment(length, 0.04)}
-      </group>
-      <group position={[0, length/2, 0]}>
-        {createJoint(0.06)}
-      </group>
-      <group position={[0, -length/2, 0]}>
-        {createJoint(0.06)}
-      </group>
-    </group>
-  );
-
   return (
     <group>
-      {/* Upper leg */}
-      <group>
-        {createParallelBones(0.65, 0.05)}
-        
-        {/* Knee joint */}
-        <group position={[0, -0.35, 0]}>
+      {/* Hip joint connection */}
+      <mesh>
+        <sphereGeometry args={[0.08, 8, 8]} />
+        <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+      </mesh>
+
+      {/* Hip segment (new) */}
+      <group rotation={[0.3, 0, 0]}>
+        <mesh>
+          <cylinderGeometry args={[0.07, 0.06, 0.4, 8]} />
+          <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+        </mesh>
+
+        {/* Hip-to-leg joint */}
+        <group position={[0, -0.2, 0]}>
           <mesh>
-            <sphereGeometry args={[0.08, 12, 12]} />
+            <sphereGeometry args={[0.06, 8, 8]} />
             <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
           </mesh>
-          
-          {/* Lower leg */}
-          <group position={[0, -0.15, 0]}>
-            {createParallelBones(0.7, 0.06)}
+
+          {/* Original leg segments - adjusted positions */}
+          <group position={[0, 0, 0]}>
+            {/* First segment (from body) */}
+            <mesh>
+              <cylinderGeometry args={[0.06, 0.04, 0.8, 8]} />
+              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+            </mesh>
             
-            {/* Ankle */}
-            <group position={[0, -0.25, 0]} rotation={[Math.PI/2, 0, 0]}>
-              {createJoint(0.06)}
+            {/* First joint */}
+            <group position={[0, -0.4, 0]}>
+              <mesh>
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+              </mesh>
               
-              {/* Foot structure */}
-              <group position={[0, -0.015, 0.1]}>
-                {/* Main foot plate */}
+              {/* Second segment (middle) */}
+              <group position={[0, 0, 0]}>
                 <mesh>
-                  <boxGeometry args={[0.15, 0.02, 0.4]} />
+                  <cylinderGeometry args={[0.04, 0.03, 0.9, 8]} />
                   <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
                 </mesh>
                 
-                {/* Toe bones */}
-                {[-0.05, 0, 0.05].map((offset, i) => (
-                  <group key={i} position={[offset, 0.15, 0.25]} rotation={[-Math.PI, 0, 0]}>
-                    {/* Toe bone segments */}
-                    <group>
-                      {createParallelBones(0.15, 0.02)}
-                      
-                      {/* Toe claws */}
-                      <group position={[0, -0.1, 0]} rotation={[Math.PI/6, 0, 0]}>
-                        <mesh>
-                          <coneGeometry args={[0.02, 0.15, 6]} />
-                          <meshStandardMaterial 
-                            color="#d4d4d4"
-                            roughness={0.3}
-                            metalness={0.4}
-                          />
-                        </mesh>
-                      </group>
+                {/* Second joint */}
+                <group position={[0, -0.45, 0]}>
+                  <mesh>
+                    <sphereGeometry args={[0.04, 8, 8]} />
+                    <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+                  </mesh>
+                  
+                  {/* Final segment (tip) */}
+                  <group position={[0, 0, 0]}>
+                    <mesh>
+                      <cylinderGeometry args={[0.03, 0.02, 0.7, 8]} />
+                      <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+                    </mesh>
+                    
+                    {/* Tip claw */}
+                    <group position={[0, -0.35, 0]}>
+                      <mesh>
+                        <coneGeometry args={[0.02, 0.1, 4]} />
+                        <meshStandardMaterial color="#d4d4d4" roughness={0.3} metalness={0.4} />
+                      </mesh>
                     </group>
                   </group>
-                ))}
+                </group>
               </group>
             </group>
           </group>
@@ -203,9 +188,6 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
   );
 }
 
-
-
-
 function ShoulderPlate() {
   const createSpike = (scale = 1) => (
     <group scale={[scale, scale, scale]}>
@@ -294,14 +276,75 @@ function ShoulderPlate() {
   );
 }
 
-export default function CustomAbomination({ position, isAttacking, isWalking, onHit }: CustomAbominationProps) {
+function CustomHorn({ isLeft = false }: { isLeft?: boolean }) {
+  const segments = 14;
+  const heightPerSegment = 0.12;
+  const baseWidth = 0.15;
+  const twistAmount = Math.PI * 1.2;
+  const curveAmount = 1.4;
+  
+  return (
+    <group rotation={[-0.25, isLeft ? -0.3 : 0.3, isLeft ? -0.4 : 0.4]}>
+      {Array.from({ length: segments }).map((_, i) => {
+        const progress = i / (segments - 1);
+        const width = baseWidth * (1 - progress * 0.8);
+        const twist = Math.pow(progress, 1.2) * twistAmount;
+        const curve = Math.pow(progress, 1.3) * curveAmount;
+        
+        return (
+          <group 
+            key={i}
+            position={[
+              curve * (isLeft ? -0.15 : 0.15),
+              i * heightPerSegment,
+              -curve * 0.6
+            ]}
+            rotation={[-0.8 * progress, twist, 0]}
+          >
+            <mesh>
+              <cylinderGeometry 
+                args={[width, width * 0.92, heightPerSegment, 6]}
+              />
+              <meshStandardMaterial 
+                color={`rgb(${139 - progress * 80}, ${0 + progress * 20}, ${0 + progress * 20})`}
+                roughness={0.7}
+                metalness={0.4}
+              />
+            </mesh>
+            
+            {/* Ridge details - now with 6 faces to match reference */}
+            {Array.from({ length: 6 }).map((_, j) => (
+              <group 
+                key={j} 
+                rotation={[0, (j * Math.PI * 2) / 6, 0]}
+              >
+                <mesh position={[width * 0.95, 0, 0]}>
+                  <boxGeometry args={[width * 0.4, heightPerSegment * 1.1, width * 0.2]} />
+                  <meshStandardMaterial 
+                    color={`rgb(${159 - progress * 100}, ${20 + progress * 20}, ${20 + progress * 20})`}
+                    roughness={0.8}
+                    metalness={0.3}
+                  />
+                </mesh>
+              </group>
+            ))}
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+export default function CustomAbomination({ position, isAttacking, isWalking }: CustomAbominationProps) {
   const groupRef = useRef<Group>(null);
   const [walkCycle, setWalkCycle] = useState(0);
   const [attackCycle, setAttackCycle] = useState(0);
   const attackAnimationRef = useRef<NodeJS.Timeout>();
 
   const walkSpeed = 4;
-  const attackSpeed = 3;
+  const attackSpeed = 2;
+  const ARM_DELAY = 150; // 0.15 seconds between arms
+  const TELEGRAPH_TIME = 850; // 850ms telegraph before first hit
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -309,13 +352,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking, on
     if (isWalking) {
       setWalkCycle((prev) => (prev + delta * walkSpeed) % (Math.PI * 2));
       
-      const walkHeightOffset = Math.abs(Math.sin(walkCycle) * 0.1);
-      
-      if (groupRef.current) {
-        groupRef.current.position.y = position[1] - walkHeightOffset;
-      }
-      
-      // Enhanced walking animation for all legs
+      // Spider-like walking animation
       [
         'LeftFrontLeg', 'RightFrontLeg',
         'LeftMiddleFrontLeg', 'RightMiddleFrontLeg',
@@ -325,104 +362,87 @@ export default function CustomAbomination({ position, isAttacking, isWalking, on
         const limb = groupRef.current?.getObjectByName(part) as Mesh;
         if (limb) {
           const isRight = part.includes('Right');
-          // Offset each pair of legs by a quarter of the cycle
-          const phaseOffset = (index % 4) * Math.PI / 2;
-          const phase = isRight ? walkCycle + phaseOffset : walkCycle + Math.PI + phaseOffset;
+          // Spider legs move in alternating groups of 4
+          const phaseOffset = index % 2 === 0 ? 0 : Math.PI;
+          const phase = isRight ? walkCycle + phaseOffset : walkCycle + phaseOffset;
           
-          // Rest of the leg animation logic remains the same
-          const upperLegAngle = Math.sin(phase) * 0.4;
-          limb.rotation.x = upperLegAngle;
-
-          // Find and animate the knee joint
-          const lowerLeg = limb.children[0]?.children[1]; // Access the lower leg group
-          if (lowerLeg) {
-            // Knee flexion happens when leg is moving backward and lifting
-            const kneePhase = phase + Math.PI / 4; // Offset to sync with leg movement
-            const baseKneeAngle = 0.2; // Minimum bend
-            const kneeFlexion = Math.max(0, Math.sin(kneePhase)); // Only bend, don't hyperextend
-            const kneeAngle = baseKneeAngle + kneeFlexion * 0.8; // Increased range of motion
-
-            lowerLeg.rotation.x = kneeAngle;
-            
-            // Add slight inward/outward rotation during stride
-            const twistAngle = Math.sin(phase) * 0.1;
-            lowerLeg.rotation.y = twistAngle;
+          // Lift-and-step motion
+          const liftAmount = Math.max(0, Math.sin(phase)) * 0.3;
+          const stepAmount = Math.cos(phase) * 0.2;
+          
+          // Apply spider-like leg movements
+          limb.rotation.x = stepAmount;
+          limb.position.y = 0.6 + liftAmount;
+          
+          // Find joint segments
+          const firstJoint = limb.children[0]?.children[1];
+          const secondJoint = firstJoint?.children[1]?.children[1];
+          
+          if (firstJoint && secondJoint) {
+            // Inverse kinematics-like motion
+            const jointPhase = phase + Math.PI / 4;
+            firstJoint.rotation.x = Math.sin(jointPhase) * 0.4 - 0.2;
+            secondJoint.rotation.x = -Math.sin(jointPhase) * 0.6 - 0.3;
           }
-
-          // Add slight hip rotation
-          const hipTwist = Math.sin(phase) * 0.05;
-          limb.rotation.y = hipTwist;
-        }
-      });
-
-      // Modified arm swing animation for boss claws
-      ['LeftArm', 'RightArm'].forEach(part => {
-        const limb = groupRef.current?.getObjectByName(part) as Mesh;
-        if (limb) {
-          const isRight = part.includes('Right');
-          const phase = isRight ? walkCycle + Math.PI : walkCycle;
-          
-          // Simpler rotation for the entire claw structure
-          const armAngle = Math.sin(phase) * 0.1;
-          limb.rotation.x = armAngle;
         }
       });
     }
 
     if (isAttacking) {
       setAttackCycle((prev) => prev + delta * attackSpeed);
-      const progress = Math.min(attackCycle, Math.PI / 2);
       
-      // Define different timings and angles for each arm pair
+      // Define arm pairs with their delays and rotations
       const armPairs = [
         { 
           left: 'LeftLowerBackArm', 
-          right: 'RightLowerBackArm', 
-          delay: 0,
-          rotationY: Math.sin(progress) * Math.PI * 0.5 // Horizontal swing
+          right: 'RightLowerBackArm',
+          startTime: TELEGRAPH_TIME / 1000,
+          rotationRange: Math.PI * 0.5
         },
         { 
           left: 'LeftMiddleBackArm', 
-          right: 'RightMiddleBackArm', 
-          delay: 0.2,
-          rotationY: Math.sin(Math.max(0, progress - 0.2)) * Math.PI * 0.5
+          right: 'RightMiddleBackArm',
+          startTime: (TELEGRAPH_TIME + ARM_DELAY) / 1000,
+          rotationRange: Math.PI * 0.5
         },
         { 
           left: 'LeftUpperBackArm', 
-          right: 'RightUpperBackArm', 
-          delay: 0.4,
-          rotationY: Math.sin(Math.max(0, progress - 0.4)) * Math.PI * 0.5
+          right: 'RightUpperBackArm',
+          startTime: (TELEGRAPH_TIME + (ARM_DELAY * 2)) / 1000,
+          rotationRange: Math.PI * 0.5
+        },
+        { 
+          left: 'LeftFrontArm', 
+          right: 'RightFrontArm',
+          startTime: (TELEGRAPH_TIME + (ARM_DELAY * 3)) / 1000,
+          rotationRange: Math.PI * 0.5
         }
       ];
 
-      armPairs.forEach(({ left, right, rotationY }) => {
+      armPairs.forEach(({ left, right, startTime, rotationRange }) => {
         const leftArm = groupRef.current?.getObjectByName(left) as Mesh;
         const rightArm = groupRef.current?.getObjectByName(right) as Mesh;
         
         if (leftArm && rightArm) {
-          // Left arm swings from inside to outside
-          leftArm.rotation.y = -Math.PI * 2 - rotationY;
-          // Right arm swings from inside to outside (mirrored)
-          rightArm.rotation.y = -Math.PI * 2 + rotationY;
+          const armProgress = Math.max(0, Math.min(1, (attackCycle - startTime) * 2));
+          const rotationY = Math.sin(armProgress * Math.PI) * rotationRange;
+          
+          leftArm.rotation.y = Math.PI * 4 + rotationY;
+          rightArm.rotation.y = Math.PI * 4 - rotationY;
         }
       });
 
-      // Deal damage at the peak of the animation
-      if (attackCycle > Math.PI / 4 && onHit && !attackAnimationRef.current) {
-        attackAnimationRef.current = setTimeout(() => {
-          attackAnimationRef.current = undefined;
-        }, 0);
-      }
-
-      if (attackCycle > Math.PI / 2) {
+      // Reset attack cycle after all arms have completed
+      if (attackCycle > (TELEGRAPH_TIME + (ARM_DELAY * 6)) / 1000) {
         setAttackCycle(0);
       }
     } else {
-      // Reset rotations when not attacking
+      // Reset arm positions when not attacking (adjusted default angles)
       const defaultRotations = [
-        { left: 'LeftLowerBackArm', right: 'RightLowerBackArm', y: Math.PI * 2.2 },
-        { left: 'LeftMiddleBackArm', right: 'RightMiddleBackArm', y: Math.PI * 2.1 },
-        { left: 'LeftUpperBackArm', right: 'RightUpperBackArm', y: Math.PI * 2 }
+        { left: 'LeftLowerBackArm', right: 'RightLowerBackArm', y: Math.PI * 4.2 },
+        { left: 'LeftMiddleBackArm', right: 'RightMiddleBackArm', y: Math.PI * 4.1 },
+        { left: 'LeftUpperBackArm', right: 'RightUpperBackArm', y: Math.PI * 4 },
+        { left: 'LeftFrontArm', right: 'RightFrontArm', y: Math.PI * 4.9 }
       ];
 
       defaultRotations.forEach(({ left, right, y }) => {
@@ -439,9 +459,10 @@ export default function CustomAbomination({ position, isAttacking, isWalking, on
 
   // Cleanup timeout on unmount
   useEffect(() => {
+    const currentRef = attackAnimationRef.current;
     return () => {
-      if (attackAnimationRef.current) {
-        clearTimeout(attackAnimationRef.current);
+      if (currentRef) {
+        clearTimeout(currentRef);
       }
     };
   }, []);
@@ -451,16 +472,24 @@ export default function CustomAbomination({ position, isAttacking, isWalking, on
   return (
     <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[1.75, 1.75, 1.75]}>
       
-      <group name="Body" position={[0, 1.15, 0]} scale={[1.25, 0.8, 1.25]} rotation={[-0.2, 0, 0]}>
+      <group name="Body" position={[0, 1.15, 0]} scale={[1.25, 0.8, 1.25]} rotation={[-0.6, 0, 0]}>
         <BonePlate />
       </group>
 
-      
 
-      <group scale={[0.7, 0.7, 0.7]} position={[0, 1.45, +0.05]} rotation={[0.65, 0, 0]}>
+
+      {/*       <group scale={[0.7, 0.7, 0.7]} position={[0, 1.45, +0.05]} rotation={[0.65, 0, 0]}>
         <DragonSkull />
       </group>
+ */}
 
+      <group scale={[0.5, 0.2, 1]} position={[0, 1, -0.35]} rotation={[0.7, 0, -4.25]}>
+        <CustomHorn isLeft={true} />
+      </group>
+
+      <group scale={[0.5, 0.2, 1]} position={[0, 1, -0.35]} rotation={[0.7, 0, 4.25]}>
+        <CustomHorn isLeft={false} />
+      </group>
 
       {/* SKULL POSITIONING */}
       <group name="Head" position={[0, 1.775, 0.2]} scale={[ 0.75, 0.8, 0.8]}>
@@ -636,7 +665,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking, on
 
       {/* Back Arms (Larger) */}
       {/* Upper Back Arms */}
-      <group name="LeftUpperBackArm" position={[-0.75, 1.5, -0.5]} scale={[-0.6, 0.6, 0.6]} rotation={[0.3, Math.PI*2, -0.5]}>
+      <group name="LeftUpperBackArm" position={[-0.75, 1.5, -0.35]} scale={[-0.6, 0.6, 0.6]} rotation={[0.3, Math.PI*2, -0.5]}>
         <BossClawModel isLeftHand={true} />
       </group>
       <group name="RightUpperBackArm" position={[0.75, 1.5, -0.5]} scale={[0.6, 0.6, 0.6]} rotation={[0.3, -Math.PI*2, 0.5]}>
@@ -644,7 +673,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking, on
       </group>
 
       {/* Middle Back Arms */}
-      <group name="LeftMiddleBackArm" position={[-0.65, 1.375, -0.3]} scale={[-0.55, 0.55, 0.55]} rotation={[0.2, Math.PI*2.1, -.4]}>
+      <group name="LeftMiddleBackArm" position={[-0.65, 1.375, -0.275]} scale={[-0.55, 0.55, 0.55]} rotation={[0.2, Math.PI*2.1, -.4]}>
         <BossClawModel isLeftHand={true} />
       </group>
       <group name="RightMiddleBackArm" position={[0.65, 1.375, -0.3]} scale={[0.55, 0.55, 0.55]} rotation={[0.2, -Math.PI*2.1, 0.4]}>
@@ -659,37 +688,49 @@ export default function CustomAbomination({ position, isAttacking, isWalking, on
         <BossClawModel isLeftHand={false} />
       </group>
 
-      {/* Multiple Legs */}
-      {/* Front Legs (Original) */}
-      <group name="LeftFrontLeg" position={[0.2, 0.3, 0.1]}>
+      {/* Multiple Legs with spider-like positioning - adjusted angles and connections */}
+      {/* Front Legs */}
+      <group name="LeftFrontLeg" position={[0.6, 0.75, 0.4]} rotation={[-0.1, -0.6, 0.6]}>
         <BoneLegModel />
       </group>
-      <group name="RightFrontLeg" position={[-0.2, 0.3, 0.1]}>
+      <group name="RightFrontLeg" position={[-0.6, 0.75, 0.4]} rotation={[-0.1, 0.6, -0.6]}>
         <BoneLegModel />
       </group>
 
       {/* Middle Front Legs */}
-      <group name="LeftMiddleFrontLeg" position={[0.25, 0.3, -0.1]} rotation={[0, -0.2, 0]}>
+      <group name="LeftMiddleFrontLeg" position={[0.7, 0.73, 0]} rotation={[0, -0.8, 0.7]}>
         <BoneLegModel />
       </group>
-      <group name="RightMiddleFrontLeg" position={[-0.25, 0.3, -0.1]} rotation={[0, 0.2, 0]}>
+      <group name="RightMiddleFrontLeg" position={[-0.7, 0.73, 0]} rotation={[0, 0.8, -0.7]}>
         <BoneLegModel />
       </group>
 
       {/* Middle Back Legs */}
-      <group name="LeftMiddleBackLeg" position={[0.3, 0.3, -0.3]} rotation={[0, -0.4, 0]}>
+      <group name="LeftMiddleBackLeg" position={[0.7, 0.71, -0.3]} rotation={[0, -1.0, 0.7]}>
         <BoneLegModel />
       </group>
-      <group name="RightMiddleBackLeg" position={[-0.3, 0.3, -0.3]} rotation={[0, 0.4, 0]}>
+      <group name="RightMiddleBackLeg" position={[-0.7, 0.71, -0.3]} rotation={[0, 1.0, -0.7]}>
         <BoneLegModel />
       </group>
 
       {/* Back Legs */}
-      <group name="LeftBackLeg" position={[0.35, 0.3, -0.5]} rotation={[0, -0.6, 0]}>
+      <group name="LeftBackLeg" position={[0.6, 0.7, -0.6]} rotation={[0.1, -1.2, 0.6]}>
         <BoneLegModel />
       </group>
-      <group name="RightBackLeg" position={[-0.35, 0.3, -0.5]} rotation={[0, 0.6, 0]}>
+      <group name="RightBackLeg" position={[-0.6, 0.7, -0.6]} rotation={[0.1, 1.2, -0.6]}>
         <BoneLegModel />
+      </group>
+
+      <group position={[0, 1.775, 0.2]} scale={[0.4, 0.4, 0.4]}>
+        {/* Left Horn */}
+        <group position={[-0.25, 0.2, 0]} rotation={[+0.15, 0, -0.3]}>
+          <CustomHorn isLeft={true} />    
+        </group>
+        
+        {/* Right Horn */}
+        <group position={[0.25, 0.2, 0]} rotation={[0.15, 0, 0.3]}>
+          <CustomHorn isLeft={false} />
+        </group>
       </group>
 
       {/* Pelvis structure */}
@@ -699,8 +740,6 @@ export default function CustomAbomination({ position, isAttacking, isWalking, on
           <cylinderGeometry args={[0.35, 0.34, 0.2, 8]} />
           <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
         </mesh>
-
-   
 
         {/* Sacral vertebrae */}
         <group position={[0, 0.15, -0.16]} rotation={[0.1, 0, 0]}>

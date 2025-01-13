@@ -47,21 +47,21 @@ const ChainLightningEffect: React.FC<ChainLightningEffectProps> = ({
         const startPos = index === 0 ? startPosition : targetPositions[index - 1];
         const direction = targetPos.clone().sub(startPos);
         const distance = direction.length();
-        const segments = Math.ceil(distance * 4); // Increased segment density
+        const segments = Math.ceil(distance * 8); // Increased from 4 to 8 for more density
 
         return (
           <group key={index}>
             {/* Main lightning beam */}
             {[...Array(segments)].map((_, i) => {
               const segmentProgress = i / segments;
-              const offset = getLightningOffset(segmentProgress, 0.3);
+              const offset = getLightningOffset(segmentProgress, 0.15); // Reduced from 0.3 to 0.15
               const pos = startPos.clone()
                 .lerp(targetPos, segmentProgress)
                 .add(offset)
-                .add(new Vector3(0, Math.sin(segmentProgress * Math.PI) * 0.75, 0)); // arc height
+                .add(new Vector3(0, Math.sin(segmentProgress * Math.PI) * 0.5, 0)); // Reduced arc height from 0.75 to 0.5
               
-              // Randomize segment thickness
-              const thickness = Math.random() * 0.035 + 0.05;
+              // Slightly reduced thickness
+              const thickness = Math.random() * 0.025 + 0.04; // Adjusted from 0.035 + 0.05
 
               return (
                 <group key={i}>
@@ -79,7 +79,7 @@ const ChainLightningEffect: React.FC<ChainLightningEffectProps> = ({
                   {/* Branching effect */}
                   {Math.random() < 0.2 && (
                     <mesh
-                      position={pos.clone().add(getLightningOffset(segmentProgress, 0.5)).toArray()}
+                      position={pos.clone().add(getLightningOffset(segmentProgress, 0.25))} // Reduced from 0.5 to 0.25
                     >
                       <sphereGeometry args={[thickness * 0.35, 8, 8]} />
                       <meshStandardMaterial

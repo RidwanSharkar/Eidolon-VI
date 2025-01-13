@@ -21,6 +21,7 @@ export interface DamageNumber {
   isOrbShield?: boolean;
   isChainLightning?: boolean;
   isFireball?: boolean;
+  isSummon?: boolean;
 }
 
 export function useDamageNumbers() {

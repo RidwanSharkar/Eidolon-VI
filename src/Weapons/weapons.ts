@@ -46,12 +46,12 @@ export type WeaponInfo = Record<WeaponType, WeaponAbilities>;
 
 export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   [WeaponType.SWORD]: {
-    normal: 29,
+    normal: 31,
     range: 5.3,
     maxHitsPerSwing: 1
   },
   [WeaponType.SCYTHE]: {
-    normal: 19,
+    normal: 23,
     range: 4.25,
     maxHitsPerSwing: 1
   },
@@ -75,25 +75,25 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
-    q: { type: 'q', key: 'q', cooldown: 0.6750, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 0.6750, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 2, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0.775, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
+    r: { type: 'r', key: 'r', cooldown: 1.75, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
+    passive: { type: 'passive', key: '1', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
     active: { 
       type: 'active', 
       key: '2', 
-      cooldown: 2, 
+      cooldown: 5, 
       currentCooldown: 0, 
       icon: '/Eidolon/icons/a1.svg', 
-      maxCooldown: 2, 
+      maxCooldown: 3, 
       name: 'Summon Skeleton', 
       isUnlocked: false 
     }
   },
 
   [WeaponType.SWORD]: {
-    q: { type: 'q', key: 'q', cooldown: 0.925, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 3.75, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.935, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 3.90, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 1.25, currentCooldown: 0, icon: '/Eidolon/icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
     passive: { 
       type: 'passive', 
@@ -109,8 +109,8 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   },
   
   [WeaponType.SABRES]: {
-    q: { type: 'q', key: 'q', cooldown: 0.575, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.575, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.55, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 0.55, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
@@ -138,7 +138,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   if (weapon === WeaponType.SWORD && 
       ability === 'q' && 
       abilities[WeaponType.SWORD].passive.isUnlocked) {
-    return 0.675;
+    return 0.69;
   }
   
   return baseAbility.cooldown;
@@ -177,17 +177,17 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     passive: {
       title: "Reanimate",
-      description: "Consumes 1 Orb Charge to heal for 10 health."
+      description: "Consumes 1 Orb Charge to heal for health. 0.75 second cooldown."
     },
     active: {
-      title: "Summon Skeleton",
-      description: "Summon an undead mage to fight by your side for 30 seconds.",
+      title: "Chaos Totem",
+      description: "Active: Summon a totem that fights by your side, shooting rapid bolts at enemies within range.",
       cost: "Cooldown: 15 seconds"
     }
   },
   [WeaponType.SWORD]: {
     q: {
-      title: "Slash",
+      title: "Swordstrike",
       description: "A powerful sword strike in an arc - Cooldown: 1.1 seconds - Range: 6.5 feet",
       cost: "1.1",
       range: "6.5",
@@ -195,25 +195,25 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     e: {
       title: "Smite",
-      description: "A devastating holy strike - Cooldown: 3.0 seconds - Range: 6.5 feet",
+      description: "Strikes enemies with a extra swing that will call down a powerful divine smite, damaging all nearby enemies if the initial strike is successful.",
       cost: "30",
       range: "4.0",
       damage: "35"
     },
     r: {
       title: "Oathstrike",
-      description: "Consumes 4 Orb Charges to heal while  damaging enemies in an arc.",
+      description: "Active: Consumes 4 Orb Charges to unleash an invigorating strike that heals while damaging enemies in an arc.",
       cost: "50",
       range: "7.0",
       damage: "65"
     },
     passive: {
       title: "Crusader Aura",
-      description: "Increases attack speed by 35% and gives attacks a 65% chance to trigger chain lightning that deals 25 initial damage."
+      description: "Passive: Increases attack speed by 35% and gives attacks a 65% chance to trigger chain lightning that deals 25 initial damage."
     },
     active: {
       title: "Chain Lightning",
-      description: "Lightning chains between enemies, dealing 10 initial damage and reducing by 2 per jump."
+      description: "Passive: Sword attacks conduct electricity, dealing lightning damage bouncing between enemie."
     }
   },
   [WeaponType.SABRES]: {
@@ -225,7 +225,7 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       damage: "13"
     },
     e: {
-      title: "Ether Bow Shot",
+      title: "Etherbow Shot",
       description: "Damage scales with charge time: 1.75 secondsRange: 80+ feet",
       cost: "Consumes 1 Orb Charge",
       range: "Range: 80 feet",
@@ -233,18 +233,18 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     r: {
       title: "Blizzard",
-      description: "Unleash a devastating ice storm to nearby enemies for 6 seconds - 10 second cooldown",
+      description: "Unleash a devastating ice storm to nearby enemies for 6 seconds - 10 second cooldown.",
       cost: "60",
       range: "12.0",
       damage: "85"
     },
     passive: {
       title: "Frost Lance",
-      description: "Consumes 1 Orb Charge to fire a beam of ice that piereces through all enemies in a line. 4 foot minimum range."
+      description: "Consumes 1 Orb Charge to fire a beam of ice that piereces through all enemies in a line."
     },
     active: {
-      title: "Orb Shield",
-      description: "Placeholder for orb shield ability"
+      title: "Avalanche",
+      description: "Melee attacks passively consume orb charges to extra damage based on the number of charges available."
     }
   },
   // Placeholder tooltips for test weapons
@@ -262,14 +262,4 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     passive: { title: "Test", description: "Test ability" },
     active: { title: "Test", description: "Test ability" }
   }
-}; 
-
-// Add specific configuration for chain lightning
-export const CHAIN_LIGHTNING_CONFIG = {
-  CHANCE: 0.65,
-  INITIAL_DAMAGE: 25,
-  DAMAGE_REDUCTION: 3,
-  MAX_JUMPS: 3,
-  MIN_DAMAGE: 10,
-  RANGE: 15 // Maximum jump distance
 }; 

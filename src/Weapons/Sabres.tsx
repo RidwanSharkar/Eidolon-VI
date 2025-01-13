@@ -72,10 +72,10 @@
           
           // Full rotation plus a bit more to point downward
           leftSabreRef.current.rotation.x = lerp(leftSabreRef.current.rotation.x*1.05,   Math.PI * 0.37, 0.3);  // ~216 degrees
-          leftSabreRef.current.rotation.z = lerp(leftSabreRef.current.rotation.z,   Math.PI * 1.65, 0.20);  // Same side angle
+          leftSabreRef.current.rotation.z = lerp(leftSabreRef.current.rotation.z,   Math.PI  * 1.70, 0.20);  // Same side angle
           
           rightSabreRef.current.rotation.x = lerp(rightSabreRef.current.rotation.x*1.05,   Math.PI * 0.37, 0.3); // ~216 degrees
-          rightSabreRef.current.rotation.z = lerp(rightSabreRef.current.rotation.z,   -Math.PI * 1.65, 0.2); // Same side angle
+          rightSabreRef.current.rotation.z = lerp(rightSabreRef.current.rotation.z,   -Math.PI * 1.70, 0.2); // Same side angle
 
           // Reset swing states when charging bow
           leftSwingProgress.current = 0;

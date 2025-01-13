@@ -11,6 +11,8 @@ import BossTrailEffect from './BossTrailEffect';
 import DexScythe from './DexScythe';
 import LysScythe from './LysScythe';
 import * as THREE from 'three';
+import BossBoneAura from './BossBoneAura';
+import WingTrailEffect from './WingTrailEffect';
 
 interface BossModelProps {
   isAttacking: boolean;
@@ -45,8 +47,8 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
     const targetRotation = new THREE.Euler(0, 0, 0);
     targetRotation.setFromRotationMatrix(lookMatrix);
     
-    // Apply only Y rotation to face player
-    groupRef.current.rotation.y = targetRotation.y;
+    // Apply Y rotation to face player, add PI to correct the facing direction
+    groupRef.current.rotation.y = targetRotation.y + Math.PI;
   });
 
   return (
@@ -58,12 +60,12 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
       }}
     >
       {/* Boss Skull - positioned above the body */}
-      <group scale={[0.57, 0.57, 0.57]} position={[0, 2.05, 0]} rotation={[0.35, 0, 0]}>
+      <group scale={[0.7, 0.7, 0.7]} position={[0, 2.05, 0.25]} rotation={[0.325, 0, 0]}>
         <DragonSkull />
       </group>
 
       {/* Scaled Bone Plate */}
-      <group scale={[1.65 , 1.15, 1.2]} position={[0, 1.6, 0]}>
+      <group scale={[1.45 , 1.15, 1.3]} position={[0, 1.65, 0]} rotation={[0.25, 0, 0]}>
         <BonePlate />
       </group>
 
@@ -76,6 +78,15 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
             isLeftWing={true}
             parentRef={groupRef} 
           />
+          {/* Left Wing Trail Effects */}
+          <WingTrailEffect 
+            parentRef={groupRef} 
+            offset={new THREE.Vector3(-0.75, 0.3, -0.3)} 
+          />
+          <WingTrailEffect 
+            parentRef={groupRef} 
+            offset={new THREE.Vector3(-0.4, -0, -0.2)}  
+          />
         </group>
         
         {/* Right Wing */}
@@ -85,17 +96,26 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
             isLeftWing={false}
             parentRef={groupRef} 
           />
+          {/* Right Wing Trail Effects */}
+          <WingTrailEffect 
+            parentRef={groupRef} 
+            offset={new THREE.Vector3(0.75, 0.3, -0.3)} 
+          />
+          <WingTrailEffect 
+            parentRef={groupRef} 
+            offset={new THREE.Vector3(0.4, -0, -0.2)} 
+          />
         </group>
       </group>
 
       {/* Add Decorative Boneclaws */}
       <group scale={[0.625, 0.625, 0.625]} position={[0, 1.9, 0]}>
         {/* Left Claw */}
-        <group position={[-0.775, 0.25, 0.1]} rotation={[0, Math.PI /-2, 0]}>
+        <group position={[-0.775, 0.15, 0.1]} rotation={[0, Math.PI /-2, 0]}>
           <BossClawModel />
         </group>
         {/* Right Claw */}
-        <group position={[0.775, 0.225, 0.1]} rotation={[0, -Math.PI / 6, 0]}>
+        <group position={[0.775, 0.15, 0.1]} rotation={[0, -Math.PI / 6, 0]}>
           <BossClawModel />
         </group>
       </group>
@@ -164,6 +184,11 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
           onSwingComplete={() => {}} 
           parentRef={groupRef}
         />
+      </group>
+
+      {/* Add the bone aura at the bottom of the boss */}
+      <group position={[0, 0, 0]}>
+        <BossBoneAura parentRef={groupRef} />
       </group>
     </group>
   );

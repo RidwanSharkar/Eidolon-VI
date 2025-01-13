@@ -21,7 +21,7 @@ export const useFirebeam = ({ parentRef }: FirebeamControllerProps) => {
 
     setIsActive(true);
     
-    const baseDamage = 53; // 10 damage per tick
+    const baseDamage = 47; // 10 damage per tick
     
     return {
       position,

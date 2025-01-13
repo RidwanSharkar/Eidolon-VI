@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Vector3, Group, MeshBasicMaterial, DoubleSide } from 'three';
+import { Vector3, Group, MeshBasicMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -16,7 +16,6 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
   const delayTimer = useRef(0);
   const startDelay = 0.125;
   const color = new THREE.Color('#39ff14');
-  const scorchedRadius = 3;
   const scorchedDuration = 2.5;
   const scorchedRef = useRef<Group>(null);
   const scorchedProgressRef = useRef(0);
@@ -49,7 +48,7 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
     const scorchedProgress = Math.min(scorchedProgressRef.current / scorchedDuration, 1);
 
     if (progress < 1) {
-      const startY = 2.5; //HEIGHT
+      const startY = 3.5; //HEIGHT
       const currentY = startY * (1 - progress);
       effectRef.current.position.y = currentY;
 
@@ -113,9 +112,9 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
         />
       </mesh>
 
-      {/* Inner glow */}
-      <mesh>
-        <cylinderGeometry args={[0.2, 0.2, 15, 16]} />
+            {/* inner core beam */}
+            <mesh>
+        <cylinderGeometry args={[0.175, 0.175, 15, 16]} />
         <shaderMaterial
           transparent
           depthWrite={false}
@@ -133,7 +132,7 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
             void main() {
               float strength = 1.0 - length(vUv - vec2(0.5));
               vec3 glowColor = mix(uColor, vec3(1.0), 0.4);
-              gl_FragColor = vec4(glowColor, strength * 0.7);
+              gl_FragColor = vec4(glowColor, strength * 0.8);
             }
           `}
           uniforms={{
@@ -142,9 +141,9 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
         />
       </mesh>
 
-      {/* Outer glow */}
+      {/* Inner glow */}
       <mesh>
-        <cylinderGeometry args={[0.35, 0.35, 15, 16]} />
+        <cylinderGeometry args={[0.25, 0.25, 15, 16]} />
         <shaderMaterial
           transparent
           depthWrite={false}
@@ -162,6 +161,35 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
             void main() {
               float strength = 1.0 - length(vUv - vec2(0.5));
               vec3 glowColor = mix(uColor, vec3(1.0), 0.5);
+              gl_FragColor = vec4(glowColor, strength * 0.6);
+            }
+          `}
+          uniforms={{
+            uColor: { value: color }
+          }}
+        />
+      </mesh>
+
+      {/* Outer glow */}
+      <mesh>
+        <cylinderGeometry args={[0.375, 0.375, 15, 16]} />
+        <shaderMaterial
+          transparent
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          vertexShader={`
+            varying vec2 vUv;
+            void main() {
+              vUv = uv;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={`
+            uniform vec3 uColor;
+            varying vec2 vUv;
+            void main() {
+              float strength = 1.0 - length(vUv - vec2(0.5));
+              vec3 glowColor = mix(uColor, vec3(1.0), 0.6);
               gl_FragColor = vec4(glowColor, strength * 0.4);
             }
           `}
@@ -171,34 +199,35 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
         />
       </mesh>
 
-      {/* Spiral effect */}
-      {[...Array(3)].map((_, i) => (
-        <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]}>
-          <torusGeometry args={[1.2, 0.08, 8, 32]} />
+      {/*Spiral effectSky */}
+      {[...Array(16)].map((_, i) => (
+        <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]} position={[0, +7.45, 0]}>
+          <torusGeometry args={[0.5, 0.08, 32, 32]} />
           <meshStandardMaterial
-            color="#FF9D00"
-            emissive="#FF9D00"
-            emissiveIntensity={4}
+            color={color}
+            emissive={color}
+            emissiveIntensity={3}
             transparent
-            opacity={0.3}
+            opacity={0.4}
           />
         </mesh>
       ))}
 
-      {/* Floating particles */}
-      {[...Array(8)].map((_, i) => (
+
+      {/* Adding Floating particles from Smite */}
+      {[...Array(20)].map((_, i) => (
         <mesh
           key={i}
           position={[
-            Math.cos((i * Math.PI) / 4) * 1.0,
-            (i - 4) * 2,
-            Math.sin((i * Math.PI) / 4) * 1.0,
+            Math.cos((i * Math.PI) / 4) * 0.5 ,
+            (i - 4) * 0.5,
+            Math.sin((i * Math.PI) / 4) * 0.5,
           ]}
         >
-          <sphereGeometry args={[0.15, 8, 8]} />
+          <sphereGeometry args={[0.04, 8, 8]} />
           <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
+            color={color}
+            emissive={color}
             emissiveIntensity={12}
             transparent
             opacity={0.6}
@@ -206,36 +235,20 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
         </mesh>
       ))}
 
-
       {/* Impact point glow */}
-      <pointLight position={[0, -5, 0]} color={color} intensity={20} distance={6} />
+      <pointLight position={[0, 0, 0]} color={color} intensity={20} distance={6} />
 
       {/* Ambient glow */}
       <pointLight position={[0, 0, 0]} color={color} intensity={15} distance={3} />
     </group>
   );
 
-  const createScorchedGround = () => (
-    <group ref={scorchedRef} position={[centerPosition.x, 0.01, centerPosition.z]}>
-      <mesh rotation={[-Math.PI / 2, 0, Math.atan2(direction.x, direction.z)]}>
-        <planeGeometry args={[scorchedRadius, scorchedRadius * 2]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={0.6}
-          side={DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
-    </group>
-  );
 
   return (
     <group
       ref={effectRef}
       visible={delayTimer.current >= startDelay}
     >
-      {createScorchedGround()}
       {createScratchEffect(leftPosition, false)}
       {createScratchEffect(centerPosition, true)}
       {createScratchEffect(rightPosition, false)}

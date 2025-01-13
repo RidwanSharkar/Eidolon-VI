@@ -16,8 +16,8 @@ export default function MageFireball({ position, target, onHit, playerPosition }
   const fireballRef = useRef<Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const initialDirection = target.clone().sub(position).normalize();
-  const speed = 0.30;
-  const hitRadius = 1.0;
+  const speed = 0.35;
+  const hitRadius = 0.5;
   const [showExplosion, setShowExplosion] = useState(false);
   const [explosionStartTime, setExplosionStartTime] = useState<number | null>(null);
   const [, forceUpdate] = useState({});
@@ -97,7 +97,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
 
           <FireballTrail
             color={new Color("#ff3333")}
-            size={0.195}
+            size={0.255}
             meshRef={meshRef}
             opacity={0.7}
           />
@@ -115,7 +115,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
               <>
                 {/* Core explosion sphere */}
                 <mesh>
-                  <sphereGeometry args={[0.35 * (1 + elapsed * 2), 32, 32]} />
+                  <sphereGeometry args={[0.45 * (1 + elapsed * 2), 32, 32]} />
                   <meshStandardMaterial
                     color="#ff3333"
                     emissive="#ff4444"

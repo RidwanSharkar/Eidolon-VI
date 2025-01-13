@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './WeaponSelectionPanel.module.css';
 import { WeaponType } from '@/Weapons/weapons';
+import Image from 'next/image';
 
 interface WeaponSelectionPanelProps {
   onWeaponSelect: (weapon: WeaponType) => void;
@@ -27,7 +28,13 @@ export default function WeaponSelectionPanel({
           onClick={() => onWeaponSelect(WeaponType.SWORD)}
         >
           <div className={styles.iconContent}>
-            <img src="/Eidolon/icons/2.svg" alt="Sword" />
+            <Image 
+              src="/Eidolon/icons/2.svg"
+              alt="Sword"
+              width={280}
+              height={320}
+              unoptimized
+            />
           </div>
         </div>
 
@@ -36,7 +43,13 @@ export default function WeaponSelectionPanel({
           onClick={() => onWeaponSelect(WeaponType.SCYTHE)}
         >
           <div className={styles.iconContent}>
-            <img src="/Eidolon/icons/1.svg" alt="Scythe" />
+            <Image 
+              src="/Eidolon/icons/1.svg"
+              alt="Scythe"
+              width={280}
+              height={320}
+              unoptimized
+            />
           </div>
         </div>
 
@@ -45,7 +58,13 @@ export default function WeaponSelectionPanel({
           onClick={() => onWeaponSelect(WeaponType.SABRES)}
         >
           <div className={styles.iconContent}>
-            <img src="/Eidolon/icons/3.svg" alt="Sabres" />
+            <Image 
+              src="/Eidolon/icons/3.svg"
+              alt="Sabres"
+              width={280}
+              height={320}
+              unoptimized
+            />
           </div>
         </div>
       </div>

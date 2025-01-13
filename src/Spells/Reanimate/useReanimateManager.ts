@@ -1,6 +1,7 @@
 import { useRef, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
+import { WeaponType, DEFAULT_WEAPON_ABILITIES } from '../../Weapons/weapons';
 
 interface UseReanimateManagerProps {
   parentRef: React.RefObject<Group>;
@@ -35,7 +36,8 @@ export function useReanimateManager({
 }: UseReanimateManagerProps) {
   const lastCastTime = useRef<number>(0);
   const HEAL_AMOUNT = 7;
-  const COOLDOWN = 75; // 1 second in milliseconds
+  // Get cooldown from weapons configuration (convert seconds to ms)
+  const COOLDOWN = DEFAULT_WEAPON_ABILITIES[WeaponType.SCYTHE].passive.cooldown * 1000;
 
   const castReanimate = useCallback(() => {
     const now = Date.now();
@@ -91,7 +93,7 @@ export function useReanimateManager({
 
     console.log(`Reanimate casted. Healed for ${HEAL_AMOUNT} points.`);
     return true;
-  }, [charges, setCharges, onHealthChange, parentRef, setDamageNumbers, nextDamageNumberId]);
+  }, [charges, setCharges, onHealthChange, parentRef, setDamageNumbers, nextDamageNumberId, COOLDOWN]);
 
   return {
     castReanimate

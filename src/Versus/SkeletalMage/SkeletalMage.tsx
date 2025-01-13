@@ -55,15 +55,15 @@ export default function SkeletalMage({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 16;
+  const ATTACK_RANGE = 18;
   const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
   const SMOOTHING_FACTOR = 0.15;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const SEPARATION_RADIUS = 0.95; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.15; // Strength of the separation force
-  const FIREBALL_COOLDOWN = 6250;
-  const FIREBALL_DAMAGE = 20;
+  const FIREBALL_COOLDOWN = 3750;
+  const FIREBALL_DAMAGE = 18;
 
   // Sync health changes
   useEffect(() => {
@@ -354,7 +354,7 @@ export default function SkeletalMage({
             
             // Only deal damage if player is still near the target position
             const playerDistanceToTarget = playerPosition.distanceTo(fireball.target);
-            if (playerDistanceToTarget < 0.4) { // Same hit radius as in MageFireball
+            if (playerDistanceToTarget < 1.0) { // Increased from 0.4 to make hits more forgiving
               onAttackPlayer(FIREBALL_DAMAGE);
             }
           }}

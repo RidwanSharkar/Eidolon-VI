@@ -15,6 +15,8 @@ import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import * as THREE from 'three';
 import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMage';
+import { MemoizedAbominationUnit } from '../Versus/Abomination/MemoizedAbomination';
+
 
 interface SceneProps extends SceneType {
   onLevelComplete: () => void;
@@ -22,6 +24,7 @@ interface SceneProps extends SceneType {
   maxSkeletons?: number;
   initialSkeletons?: number;
   spawnCount?: number;
+  killCount: number;
 }
 
 export default function Scene2({
@@ -30,10 +33,11 @@ export default function Scene2({
   mushroomData,
   unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
-  spawnInterval = 12500,
+  spawnInterval = 1000,
   maxSkeletons = 17,
   initialSkeletons = 6,
-  spawnCount = 2,
+  spawnCount = 3,
+  killCount,
 }: SceneProps) {
   // State for enemies (with Scene1-specific health values)
   const [enemies, setEnemies] = useState<Enemy[]>(() => {
@@ -44,8 +48,8 @@ export default function Scene2({
         id: `skeleton-${index}`,
         position: spawnPosition.clone(),
         initialPosition: spawnPosition.clone(),
-        health: 275,
-        maxHealth: 275,
+        health: 300,
+        maxHealth: 300,
         ref: React.createRef<Group>()
       };
     });
@@ -156,53 +160,89 @@ export default function Scene2({
     onSmiteDamage: unitProps.onSmiteDamage
   };
 
+  // Add state for tracking waves and abomination spawn
+  const [currentWave, setCurrentWave] = useState(0);
+  const [abominationSpawned] = useState(false);
 
-
-  // Handle spawning logic
+  // Modify spawning logic
   useEffect(() => {
     if (totalSpawned >= maxSkeletons) return;
-    
-    const spawnTimer = setInterval(() => {
-      setEnemies((prev: Enemy[]) => {
-        if (totalSpawned >= maxSkeletons) {
-          clearInterval(spawnTimer);
-          return prev;
-        }
-        
-        // Generate positions for both enemies
-        const position1 = generateRandomPosition();
-        const position2 = generateRandomPosition();
 
-        // Create one regular skeleton and one mage
-        const newEnemies: Enemy[] = [
-          {
-            id: `skeleton-${totalSpawned}`,
-            position: position1.clone(),
-            initialPosition: position1.clone(),
-            health: 275,
-            maxHealth: 275,
-            ref: React.createRef<Group>(),
-            type: 'regular' as const
-          },
-          {
-            id: `skeleton-${totalSpawned + 1}`,
-            position: position2.clone(),
-            initialPosition: position2.clone(),
-            health: 275,
-            maxHealth: 275,
-            ref: React.createRef<Group>(),
-            type: 'mage' as const
-          }
-        ];
+    const spawnTimer = setInterval(() => {
+      // Wave control based on kill count (adjusted for Scene2)
+      if ((killCount < 12 && currentWave === 0) || 
+          (killCount < 16 && currentWave === 1) || 
+          (killCount < 20 && currentWave === 2) ||
+          (killCount < 22 && currentWave === 3) ||
+          (killCount < 24 && currentWave === 4)) {
+        return;
+      }
+
+      setEnemies(prev => {
+        const remainingSpawns = maxSkeletons - totalSpawned;
         
-        setTotalSpawned(prev => prev + spawnCount);
-        return [...prev, ...newEnemies];
+        // Reserve last spawn for abomination
+        if (remainingSpawns === 1) {
+          const spawnPosition = generateRandomPosition();
+          setTotalSpawned(prev => prev + 1);
+          setCurrentWave(prev => prev + 1);
+          return [...prev, {
+            id: `abomination-${totalSpawned}`,
+            position: spawnPosition.clone(),
+            initialPosition: spawnPosition.clone(),
+            health: 675,
+            maxHealth: 675,
+            isDying: false,
+            type: 'abomination' as const,
+            ref: React.createRef<Group>()
+          }];
+        }
+
+        // Regular wave spawns
+        if (remainingSpawns > 1) {
+          const spawnAmount = spawnCount; // Use spawnCount prop
+          const newEnemies: Enemy[] = Array.from({ length: spawnAmount }, (_, index) => {
+            const spawnPosition = generateRandomPosition();
+            
+            // Spawn mage every 3rd spawn
+            const shouldSpawnMage = (totalSpawned + index) % 3 === 0;
+            
+            if (shouldSpawnMage) {
+              return {
+                id: `mage-${totalSpawned + index}`,
+                position: spawnPosition.clone(),
+                initialPosition: spawnPosition.clone(),
+                health: 340,
+                maxHealth: 340,
+                isDying: false,
+                type: 'mage' as const,
+                ref: React.createRef<Group>()
+              };
+            }
+
+            return {
+              id: `skeleton-${totalSpawned + index}`,
+              position: spawnPosition.clone(),
+              initialPosition: spawnPosition.clone(),
+              health: 312,
+              maxHealth: 312,
+              isDying: false,
+              type: 'regular' as const,
+              ref: React.createRef<Group>()
+            };
+          });
+
+          setTotalSpawned(prev => prev + spawnAmount);
+          setCurrentWave(prev => prev + 1);
+          return [...prev, ...newEnemies];
+        }
+
+        return prev;
       });
     }, spawnInterval);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval, spawnCount]);
-
+  }, [totalSpawned, maxSkeletons, spawnInterval, abominationSpawned, killCount, currentWave, spawnCount]);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -347,23 +387,41 @@ export default function Scene2({
         </group>
 
         {/* Enemy Units (Skeletons only) */}
-        {enemies.map((enemy) => (
-          enemy.type === 'mage' ? (
-            <MemoizedSkeletalMage
-              key={enemy.id}
-              id={enemy.id}
-              initialPosition={enemy.initialPosition}
-              position={enemy.position}
-              health={enemy.health}
-              maxHealth={enemy.maxHealth}
-              isDying={enemy.isDying}
-              onTakeDamage={handleTakeDamage}
-              onPositionUpdate={handleEnemyPositionUpdate}
-              playerPosition={playerPosition}
-              onAttackPlayer={handlePlayerDamage}
-              weaponType={unitProps.currentWeapon}
-            />
-          ) : (
+        {enemies.map((enemy) => {
+          if (enemy.type === 'abomination') {
+            return (
+              <MemoizedAbominationUnit
+                key={enemy.id}
+                id={enemy.id}
+                initialPosition={enemy.initialPosition}
+                position={enemy.position}
+                health={enemy.health}
+                maxHealth={enemy.maxHealth}
+                onTakeDamage={handleTakeDamage}
+                onPositionUpdate={handleEnemyPositionUpdate}
+                playerPosition={playerPosition}
+                onAttackPlayer={handlePlayerDamage}
+                weaponType={unitProps.currentWeapon}
+              />
+            );
+          } else if (enemy.type === 'mage') {
+            return (
+              <MemoizedSkeletalMage
+                key={enemy.id}
+                id={enemy.id}
+                initialPosition={enemy.initialPosition}
+                position={enemy.position}
+                health={enemy.health}
+                maxHealth={enemy.maxHealth}
+                onTakeDamage={handleTakeDamage}
+                onPositionUpdate={handleEnemyPositionUpdate}
+                playerPosition={playerPosition}
+                onAttackPlayer={handlePlayerDamage}
+                weaponType={unitProps.currentWeapon}
+              />
+            );
+          }
+          return (
             <MemoizedEnemyUnit
               key={enemy.id}
               id={enemy.id}
@@ -371,15 +429,16 @@ export default function Scene2({
               position={enemy.position}
               health={enemy.health}
               maxHealth={enemy.maxHealth}
-              isDying={enemy.isDying}
               onTakeDamage={handleTakeDamage}
               onPositionUpdate={handleEnemyPositionUpdate}
               playerPosition={playerPosition}
               onAttackPlayer={handlePlayerDamage}
               weaponType={unitProps.currentWeapon}
             />
-          )
-        ))}
+          );
+        })}
+
+      
 
       </group>
     </>

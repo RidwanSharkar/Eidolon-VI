@@ -58,11 +58,11 @@ export default function BossUnit({
   const [isAttackOnCooldown, setIsAttackOnCooldown] = useState(false);
 
   // Boss-specific constants
-  const ATTACK_RANGE = 5.35;
-  const ATTACK_COOLDOWN_NORMAL = 3250;
-  const ATTACK_COOLDOWN_ENRAGED =2000;
-  const MOVEMENT_SPEED = 0.1675;
-  const SMOOTHING_FACTOR = 0.1675;
+  const ATTACK_RANGE = 5.25;
+  const ATTACK_COOLDOWN_NORMAL = 3350;
+  const ATTACK_COOLDOWN_ENRAGED =2500;
+  const MOVEMENT_SPEED = 0.165;
+  const SMOOTHING_FACTOR = 0.165;
   const ATTACK_DAMAGE = 24;
   const BOSS_HIT_HEIGHT = 2.0;       
   const BOSS_HIT_RADIUS = 4.0;
@@ -252,18 +252,15 @@ export default function BossUnit({
       // Update boss mesh & let parent know
       bossRef.current.position.copy(currentPosition.current);
       
-      // UPDATED ROTATION LOGIC
-      // Calculate the angle to face the player
-      const lookAtPos = new Vector3(
-        playerPosRef.current.x,
-        currentPosition.current.y, // Keep the same Y to avoid tilting
-        playerPosRef.current.z
-      );
+      // FIXED ROTATION LOGIC
+      // Calculate direction to player
+      const lookAtPos = playerPosRef.current.clone();
+      lookAtPos.y = currentPosition.current.y; // Keep same Y to avoid tilting
       
       // Make the boss face the player
       bossRef.current.lookAt(lookAtPos);
-      // Rotate around Y axis since the model might be backwards??
-      bossRef.current.rotateY(Math.PI * 2 + Math.PI/4);
+      // Only need a single rotation to align the model correctly
+      bossRef.current.rotateY(Math.PI);
 
       // If position changed enough, notify parent
       if (currentPosition.current.distanceTo(position) > 0.01) {
@@ -285,7 +282,7 @@ export default function BossUnit({
         ref={bossRef}
         visible={!isSpawning && health > 0}
         position={currentPosition.current}
-        scale={[1.615, 1.615, 1.615]}
+        scale={[1.625, 1.625, 1.625]}
         onClick={(e) => e.stopPropagation()}
       >
         <BossModel

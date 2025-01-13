@@ -107,14 +107,27 @@ export const useFirebeamManager = ({
     // Do instant damage to enemies in the beam's path
     enemyData.forEach(enemy => {
       if (enemy.health <= 0) return;
-      const enemyDir = enemy.position.clone().sub(position);
-      const angle = direction.angleTo(enemyDir);
-      const distance = enemyDir.length();
-
-      if (angle < 0.4 && distance < 20) {
+      
+      // Create 2D positions by ignoring Y axis (similar to projectile hit detection)
+      const beamPos2D = new Vector3(position.x, 0, position.z);
+      const enemyPos2D = new Vector3(enemy.position.x, 0, enemy.position.z);
+      
+      // Project enemy position onto beam line
+      const beamDirection2D = direction.clone().setY(0).normalize();
+      const enemyDirection = enemyPos2D.clone().sub(beamPos2D);
+      const projectedDistance = enemyDirection.dot(beamDirection2D);
+      
+      // Only hit enemies in front of beam origin and within max range
+      if (projectedDistance <= 0 || projectedDistance > 20) return;
+      
+      // Calculate perpendicular distance from enemy to beam line
+      const projectedPoint = beamPos2D.clone().add(beamDirection2D.multiplyScalar(projectedDistance));
+      const perpendicularDistance = enemyPos2D.distanceTo(projectedPoint);
+      
+      // Check if enemy is within beam width (using similar width as projectiles)
+      if (perpendicularDistance < 1.375) {
         onHit(enemy.id, damage);
         
-        // Add damage number
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
           damage,

@@ -3,6 +3,8 @@ import styles from '@/Interface/LevelCompletionPanel.module.css';
 import { AbilityType, WeaponType } from '@/Weapons/weapons';
 import { WEAPON_ABILITY_TOOLTIPS } from '@/Weapons/weapons';
 import Tooltip from '@/Interface/Tooltip';
+import { WeaponInfo } from '@/Weapons/weapons';
+import Image from 'next/image';
 
 interface LevelCompletionPanelProps {
   onContinue: () => void; 
@@ -10,6 +12,7 @@ interface LevelCompletionPanelProps {
   selectedIcon: number | null;
   currentWeapon: WeaponType;
   onAbilityUnlock: (abilityType: AbilityType) => void;
+  abilities: WeaponInfo;
 }
 
 export default function LevelCompletionPanel({ 
@@ -17,7 +20,8 @@ export default function LevelCompletionPanel({
   onSelectIcon, 
   selectedIcon,
   currentWeapon,
-  onAbilityUnlock
+  onAbilityUnlock,
+  abilities
 }: LevelCompletionPanelProps) {
   const [tooltipContent, setTooltipContent] = useState<{
     title: string;
@@ -67,7 +71,8 @@ export default function LevelCompletionPanel({
     setTooltipContent(null);
   };
 
-  const handleIconSelect = (iconId: number) => {
+  const handleIconSelect = (iconId: number, isUnlocked: boolean) => {
+    if (isUnlocked) return;
     onSelectIcon(iconId);
   };
 
@@ -96,24 +101,44 @@ export default function LevelCompletionPanel({
       <p>Choose an ability to unlock:</p>
       <div className={styles.iconSelection}>
         <div 
-          className={`${styles.icon} ${selectedIcon === 1 ? styles.selected : ''}`}
-          onClick={() => handleIconSelect(1)}
+          className={`${styles.icon} 
+            ${selectedIcon === 1 ? styles.selected : ''} 
+            ${abilities[currentWeapon].r.isUnlocked ? styles.disabled : ''}`}
+          onClick={() => handleIconSelect(1, abilities[currentWeapon].r.isUnlocked)}
           onMouseEnter={(e) => handleIconHover(e, 'r')}
           onMouseLeave={handleIconLeave}
         >
           <div className={styles.iconContent}>
-            <img src={icons?.r} alt="R Ability" style={{ width: '75px', height: '75px' }} />
+            {icons?.r && (
+              <Image 
+                src={icons.r} 
+                alt="R Ability" 
+                width={75}
+                height={75}
+                priority
+              />
+            )}
             <p>[R] Hotkey</p>
           </div>
         </div>
         <div 
-          className={`${styles.icon} ${selectedIcon === 2 ? styles.selected : ''}`}
-          onClick={() => handleIconSelect(2)}
+          className={`${styles.icon} 
+            ${selectedIcon === 2 ? styles.selected : ''} 
+            ${abilities[currentWeapon].passive.isUnlocked ? styles.disabled : ''}`}
+          onClick={() => handleIconSelect(2, abilities[currentWeapon].passive.isUnlocked)}
           onMouseEnter={(e) => handleIconHover(e, 'passive')}
           onMouseLeave={handleIconLeave}
         >
           <div className={styles.iconContent}>
-            <img src={icons?.p} alt="Passive Ability" style={{ width: '75px', height: '75px' }} />
+            {icons?.p && (
+              <Image 
+                src={icons.p} 
+                alt="Passive Ability" 
+                width={75}
+                height={75}
+                priority
+              />
+            )}
             <p>[1] Hotkey</p>
           </div>
         </div>
@@ -121,13 +146,23 @@ export default function LevelCompletionPanel({
           currentWeapon === WeaponType.SABRES || 
           currentWeapon === WeaponType.SWORD) && (
           <div 
-            className={`${styles.icon} ${selectedIcon === 3 ? styles.selected : ''}`}
-            onClick={() => handleIconSelect(3)}
+            className={`${styles.icon} 
+              ${selectedIcon === 3 ? styles.selected : ''} 
+              ${abilities[currentWeapon].active.isUnlocked ? styles.disabled : ''}`}
+            onClick={() => handleIconSelect(3, abilities[currentWeapon].active.isUnlocked)}
             onMouseEnter={(e) => handleIconHover(e, 'active')}
             onMouseLeave={handleIconLeave}
           >
             <div className={styles.iconContent}>
-              <img src={icons?.s} alt="Active Ability" style={{ width: '75px', height: '75px' }} />
+              {icons?.s && (
+                <Image 
+                  src={icons.s} 
+                  alt="Active Ability" 
+                  width={75}
+                  height={75}
+                  priority
+                />
+              )}
               <p>[2] Hotkey</p>
             </div>
           </div>

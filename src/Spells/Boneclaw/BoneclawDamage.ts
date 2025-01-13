@@ -3,7 +3,7 @@ import { calculateDamage } from '@/Weapons/damage';
 
 const BONECLAW_BASE_DAMAGE = 67;
 const BONECLAW_RANGE = 8.5;
-const BONECLAW_ARC = Math.PI / 1.5; // 120? degrees arc
+const BONECLAW_ARC = Math.PI / 1.25; // 144 degrees arc
 
 interface BoneclawHitResult {
   targetId: string;

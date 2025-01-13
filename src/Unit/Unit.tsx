@@ -110,6 +110,7 @@ export default function Unit({
     isOrbShield?: boolean;
     isChainLightning?: boolean;
     isFireball?: boolean;
+    isSummon?: boolean;
   }[]>([]);
   const nextDamageNumberId = useRef(0);
   const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
@@ -762,7 +763,7 @@ export default function Unit({
     const baseDamage = 11;
     const maxDamage = 51;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
-    const fullChargeDamage = power >= 0.99 ? 56 : 0;
+    const fullChargeDamage = power >= 0.99 ? 67 : 0;
     const finalDamage = scaledDamage + fullChargeDamage;
     
     onHit(targetId, finalDamage);
@@ -1100,6 +1101,7 @@ export default function Unit({
           isOrbShield={dn.isOrbShield}
           isChainLightning={dn.isChainLightning}
           isFireball={dn.isFireball}
+          isSummon={dn.isSummon}
           onComplete={() => handleDamageNumberComplete(dn.id)}
         />
       ))}
@@ -1379,9 +1381,6 @@ export default function Unit({
           return (
             <Summon
               key={effect.id}
-              onStartCooldown={() => {
-                onAbilityUse(currentWeapon, 'active');
-              }}
               position={effect.position}
               enemyData={enemyData}
               onDamage={(targetId, damage, position) => {
@@ -1392,7 +1391,8 @@ export default function Unit({
                     id: nextDamageNumberId.current++,
                     damage,
                     position: position || targetEnemy.position.clone(),
-                    isCritical: false
+                    isCritical: false,
+                    isSummon: true
                   }]);
                 }
               }}
@@ -1401,8 +1401,13 @@ export default function Unit({
                   prev.filter(e => e.id !== effect.id)
                 );
               }}
+              onStartCooldown={() => {
+                onAbilityUse(currentWeapon, 'active');
+              }}
               setActiveEffects={setActiveEffects}
               activeEffects={activeEffects}
+              setDamageNumbers={setDamageNumbers}
+              nextDamageNumberId={nextDamageNumberId}
             />
           );
         } else if (effect.type === 'frostExplosion') {

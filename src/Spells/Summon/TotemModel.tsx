@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Group } from 'three';
 import BoneAuraTotem from './BoneAuraTotem';
+import UnholyAura from './UnholyAura';
 
 
 
@@ -17,23 +18,23 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
   const totemRef = useRef<Group>(null);
 
   return (
-    <group ref={totemRef} scale={1.5}>
+    <group ref={totemRef} scale={0.475} position={[0, -0.75, 0]}>
       {/* Main tower structure */}
       <mesh position={[0, 2, 0]}>
         <cylinderGeometry args={[0.6, 0.8, 4, 8]} />
         <meshStandardMaterial 
-          color="#1a1a1a"
-          roughness={0.9}
-          metalness={0.3}
+          color="#D2B48C"
+          roughness={1}
+          metalness={0}
         />
-      </mesh>
+      </mesh> 
 
       {/* Jagged spikes around the structure */}
       {[...Array(12)].map((_, i) => (
-        <group key={i} rotation={[0, (Math.PI * 2 * i) / 12, 0]} position={[0, 2.5, 0]}>
-          <mesh position={[0.7, Math.sin(i * 3) * 0.5, 0]} rotation={[0, 0, Math.PI * 0.25]}>
+        <group key={i} rotation={[0, (-Math.PI * 2 * i) / 12, Math.PI * 0.25]} position={[0, 2.5, 0]}>
+          <mesh position={[0.7, Math.sin(i * 3) * 0.5, 0]} rotation={[Math.PI/3, 0, -Math.PI * 0.25]}>
             <coneGeometry args={[0.2, 0.8 + Math.random() * 0.5, 4]} />
-            <meshStandardMaterial color="#2a2a2a" roughness={0.8} metalness={0.2} />
+            <meshStandardMaterial color="#BC8F8F" roughness={1} metalness={0} />
           </mesh>
         </group>
       ))}
@@ -92,7 +93,7 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
             ]}
           >
             <coneGeometry args={[0.15, 1.2, 4]} />
-            <meshStandardMaterial color="#1a1a1a" roughness={0.8} metalness={0.3} />
+            <meshStandardMaterial color="#DEB887" roughness={1} metalness={0} />
           </mesh>
         ))}
         
@@ -110,7 +111,7 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
       {/* Base structure */}
       <mesh position={[0, 0.3, 0]}>
         <cylinderGeometry args={[1, 1.2, 0.6, 8]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.9} metalness={0.3} />
+        <meshStandardMaterial color="#D2B48C" roughness={1} metalness={0} />
       </mesh>
 
       {/* Lightning effects when attacking */}
@@ -135,6 +136,7 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
       ))}
 
       <BoneAuraTotem parentRef={totemRef} />
+      <UnholyAura parentRef={totemRef} />
 
     </group>
   );

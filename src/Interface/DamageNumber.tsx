@@ -21,6 +21,7 @@ interface DamageNumberProps {
   isOrbShield?: boolean;
   isChainLightning?: boolean;
   isFireball?: boolean;
+  isSummon?: boolean;
   onComplete: () => void;
 }
 
@@ -44,6 +45,7 @@ export default function DamageNumber({
   isOrbShield = false,
   isChainLightning = false,
   isFireball = false,
+  isSummon = false,
   onComplete 
 }: DamageNumberProps) {
   console.log('DamageNumber props:', { damage, isCritical, isBlizzard, isLightning, isHealing, isBoneclaw, isOrbShield, isChainLightning });
@@ -95,12 +97,13 @@ export default function DamageNumber({
     if (isChainLightning) return "#ffff00";
     if (isOrbShield) return "#58FCEC";
     if (isCritical) return "#ff0000";
+    if (isSummon) return "#00FF51";
     if (isBoneclaw) return "#39ff14";
     if (isLightning) return "#ffff00";
     if (isOathstrike) return "#FF9441";
     if (isFirebeam) return "#58FCEC";
     if (isBlizzard) return "#61EDFF";
-    if (isFireball) return "#00FF51";
+    if (isFireball) return "#00C946";
     return "#ffffff";
   };
 

@@ -10,7 +10,7 @@ export function useOrbShieldManager({
   charges,
   setCharges,
 }: UseOrbShieldManagerProps) {
-  const DAMAGE_BONUS_PER_ORB = 6;
+  const DAMAGE_BONUS_PER_ORB = 5;
 
   const calculateBonusDamage = useCallback((): number => {
     const availableCharges = charges.filter(charge => charge.available);

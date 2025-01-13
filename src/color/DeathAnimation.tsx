@@ -14,9 +14,9 @@ interface BoneVortexProps {
 const getVortexColor = (weaponType: WeaponType) => {
   switch (weaponType) {
     case WeaponType.SCYTHE:
-      return '#00FF4D'; //  00FF88
+      return '#FF6AAA'; //  00FF88 FF6B6B
     case WeaponType.SWORD:
-      return '#00F7FF';
+      return '#FF7B3E';
     case WeaponType.SABRES:
     case WeaponType.SABRES2:
       return '#00F7FF'; //ice blue 98F5FC 

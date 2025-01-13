@@ -50,15 +50,17 @@ export default function AbominationUnit({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 2.2;
+  const ATTACK_RANGE = 2.75;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.20;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.20;
+  const MOVEMENT_SPEED = 0.165;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.165;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 0;
-  const SEPARATION_RADIUS = 1; // Minimum distance between enemies
-  const SEPARATION_FORCE = 0.25; // Strength of the separation force
+  const ATTACK_DAMAGE = 6;
+  const SEPARATION_RADIUS = 3.5; // Minimum distance between enemies
+  const SEPARATION_FORCE = 0.15; // Strength of the separation force
+  const ARM_DELAY = 125;    // 0.15 seconds between arm strikes
+  const TOTAL_ARMS = 8;     // Total number of arms
 
   // Sync health changes
   useEffect(() => {
@@ -173,27 +175,26 @@ export default function AbominationUnit({
         // Store the initial attack position
         const attackStartPosition = currentPosition.current.clone();
         
-        // Add delay before dealing damage
-        setTimeout(() => {
-          // Get the current positions at time of damage
-          const finalDistanceToPlayer = currentPosition.current.distanceTo(playerPosition);
-          
-          // ONE SECOND TELEGRAPH
-          // 1. Enemy is still alive
-          // 2. Player is still in range
-          // 3. Enemy hasn't moved too far from attack start position
-          if (currentHealth.current > 0 && 
-              finalDistanceToPlayer <= ATTACK_RANGE && 
-              attackStartPosition.distanceTo(currentPosition.current) < 0.65) {
-            onAttackPlayer(ATTACK_DAMAGE);
-          }
-        }, 850);
+        // Schedule damage for each arm with delays
+        for (let i = 0; i < TOTAL_ARMS; i++) {
+          setTimeout(() => {
+            // Check conditions for each arm's damage
+            const finalDistanceToPlayer = currentPosition.current.distanceTo(playerPosition);
+            
+            if (currentHealth.current > 0 && 
+                finalDistanceToPlayer <= ATTACK_RANGE && 
+                attackStartPosition.distanceTo(currentPosition.current) < 0.65) {
+              onAttackPlayer(ATTACK_DAMAGE);
+            }
+          }, 1050 + (i * ARM_DELAY)); // 850ms initial telegraph + staggered delays
+        }
         
         lastAttackTime.current = currentTime;
 
+        // Reset attack animation after all arms have completed
         setTimeout(() => {
           setIsAttacking(false);
-        }, 500);
+        }, 850 + (TOTAL_ARMS * ARM_DELAY));
       }
     }
   });
@@ -238,7 +239,7 @@ export default function AbominationUnit({
         />
 
         <Billboard
-          position={[0, 3.5, 0]}
+          position={[0, 5.5, 0]}
           follow={true}
           lockX={false}
           lockY={false}

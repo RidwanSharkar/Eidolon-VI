@@ -59,13 +59,13 @@ export default function EnemyUnit({
 
   const ATTACK_RANGE = 2.4;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.1875;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.1875;
+  const MOVEMENT_SPEED = 0.19;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.19;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 8;
   const SEPARATION_RADIUS = 1.2; // Minimum distance between enemies
-  const SEPARATION_FORCE = 0.225; // Strength of the separation force
+  const SEPARATION_FORCE = 0.15; // Strength of the separation force
 
   // Sync health changes
   useEffect(() => {

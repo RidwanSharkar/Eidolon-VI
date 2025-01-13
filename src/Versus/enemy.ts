@@ -4,6 +4,8 @@ import { Vector3 } from 'three';
 import { RefObject } from 'react';
 import { Group } from 'three';
 
+export type EnemyType = 'regular' | 'mage' | 'abomination';
+
 export interface Enemy {
   id: string;
   position: Vector3;
@@ -13,6 +15,6 @@ export interface Enemy {
   ref?: RefObject<Group>;
   isDying?: boolean;
   deathStartTime?: number;
-  type?: 'regular' | 'mage';
+  type?: EnemyType;
   currentPosition?: Vector3;
 }

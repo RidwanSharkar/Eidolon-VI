@@ -77,4 +77,14 @@
 .iconContent p {
   font-size: 0.9rem;
   margin: 0;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.disabled img {
+  filter: grayscale(100%);
 } 

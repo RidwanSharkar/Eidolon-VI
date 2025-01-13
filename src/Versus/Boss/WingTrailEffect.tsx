@@ -1,14 +1,14 @@
-// src/versus/Boss/BossTrailEffect.tsx
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-interface BossTrailEffectProps {
+interface WingTrailEffectProps {
   parentRef: React.RefObject<THREE.Group>;
+  offset: THREE.Vector3;
 }
 
-const BossTrailEffect: React.FC<BossTrailEffectProps> = ({ parentRef }) => {
-  const particlesCount = 36;
+const WingTrailEffect: React.FC<WingTrailEffectProps> = ({ parentRef, offset }) => {
+  const particlesCount = 18;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -19,19 +19,27 @@ const BossTrailEffect: React.FC<BossTrailEffectProps> = ({ parentRef }) => {
     if (!particlesRef.current?.parent || !parentRef.current) return;
     
     timeRef.current += delta;
-    const bossPosition = parentRef.current.position;
+    const localPosition = offset.clone();
     
-    // Create a spiral pattern
+    // Create a more elongated, comet-like trail pattern
     for (let i = 0; i < particlesCount; i++) {
-      const angle = (i / particlesCount) * Math.PI * 2 + timeRef.current;
-      const radius =  + Math.sin(timeRef.current * 2 + i * 0.2) * 0.1;
+      const t = i / particlesCount;
+      const angle = t * Math.PI * 0.5 + timeRef.current;
       
-      positionsRef.current[i * 3] = bossPosition.x + Math.cos(angle) * radius;
-      positionsRef.current[i * 3 + 1] = bossPosition.y + Math.sin(timeRef.current + i * 0.1) * 0.0001;
-      positionsRef.current[i * 3 + 2] = bossPosition.z + Math.sin(angle) * radius;
+      // Reduced spread for thinner trail
+      const xSpread = Math.cos(angle) * 0.02;
+      const ySpread = Math.sin(timeRef.current + i * 0.2) * 0.02;
+      const trailLength = (1 - t) * 0.8; // Longer trail
+      
+      positionsRef.current[i * 3] = localPosition.x + xSpread;
+      positionsRef.current[i * 3 + 1] = localPosition.y + ySpread;
+      positionsRef.current[i * 3 + 2] = localPosition.z - trailLength;
 
-      opacitiesRef.current[i] = Math.pow((1 - i / particlesCount), 1.5) * 0.25;
-      scalesRef.current[i] = 0.4 * Math.pow((1 - i / particlesCount), 0.6);
+      // More dramatic opacity falloff
+      opacitiesRef.current[i] = Math.pow((1 - t), 2) * 0.6;
+      
+      // Gradually decreasing particle scale for pointed effect
+      scalesRef.current[i] = 0.12 * Math.pow((1 - t), 1.2);
     }
 
     if (particlesRef.current) {
@@ -67,7 +75,9 @@ const BossTrailEffect: React.FC<BossTrailEffectProps> = ({ parentRef }) => {
       <shaderMaterial
         transparent
         depthWrite={false}
+        depthTest={false}
         blending={THREE.AdditiveBlending}
+        side={THREE.DoubleSide}
         vertexShader={`
           attribute float opacity;
           attribute float scale;
@@ -76,14 +86,14 @@ const BossTrailEffect: React.FC<BossTrailEffectProps> = ({ parentRef }) => {
             vOpacity = opacity;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
             gl_Position = projectionMatrix * mvPosition;
-            gl_PointSize = scale * 20.0 * (300.0 / -mvPosition.z);
+            gl_PointSize = scale * 40.0 * (300.0 / -mvPosition.z);
           }
         `}
         fragmentShader={`
           varying float vOpacity;
           void main() {
-            float d = length(gl_PointCoord - vec2(0.5));
-            float strength = smoothstep(0.5, 0.1, d);
+            float d = length(gl_PointCoord - vec2(0.5, 0.2)); // More pointed shape
+            float strength = smoothstep(0.5, 0.05, d);
             vec3 glowColor = mix(vec3(0.8, 0.1, 0.1), vec3(1.0, 0.3, 0.3), 0.4);
             gl_FragColor = vec4(glowColor, vOpacity * strength);
           }
@@ -93,4 +103,4 @@ const BossTrailEffect: React.FC<BossTrailEffectProps> = ({ parentRef }) => {
   );
 };
 
-export default BossTrailEffect; 
+export default WingTrailEffect; 

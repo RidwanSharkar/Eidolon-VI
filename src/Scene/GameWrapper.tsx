@@ -123,17 +123,17 @@ export default function GameWrapper({
               ref={sceneProps.unitProps.controlsRef}
               enablePan={false}
               maxPolarAngle={Math.PI / 2.25}
-              maxDistance={14}
+              maxDistance={13.5}
               mouseButtons={{
                 LEFT: undefined,
                 MIDDLE: undefined,
                 RIGHT: THREE.MOUSE.ROTATE
               }}
-              minDistance={6}
+              minDistance={5}
               rotateSpeed={0.5}
               enableDamping={true}
               dampingFactor={0.075}
-              zoomSpeed={1.5}
+              zoomSpeed={1.75}
               position={[0, 15, 20]}
               target={[0, 0, 0]}
             />
@@ -170,6 +170,7 @@ export default function GameWrapper({
               selectedIcon={selectedIcon}
               currentWeapon={currentWeapon}
               onAbilityUnlock={onAbilityUnlock}
+              abilities={abilities}
             />
           ) : (
             <Panel 

@@ -39,7 +39,7 @@ const createVortexPiece = () => (
 export default function BossBoneVortex({ parentRef }: BossBoneVortexProps) {
   const vortexPiecesRef = useRef<(Group | null)[]>([]);
   const pieceCount = 25;
-  const baseRadius = 0.425;
+  const baseRadius = 0.45;
   const groupRef = useRef<Group>(null);
   
   useFrame(({ clock }) => {

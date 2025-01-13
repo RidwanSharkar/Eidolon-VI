@@ -4,9 +4,17 @@ import { Enemy } from '../../Versus/enemy';
 export interface SummonProps {
   position: Vector3;
   enemyData: Enemy[];
-  onDamage: (targetId: string, damage: number, position?: Vector3) => void;
+  onDamage: (targetId: string, damage: number, position?: Vector3, isSummon?: boolean) => void;
   onComplete: () => void;
   onStartCooldown: () => void;
+  setDamageNumbers: React.Dispatch<React.SetStateAction<Array<{
+    id: number;
+    damage: number;
+    position: Vector3;
+    isCritical: boolean;
+    isSummon?: boolean;
+  }>>>;
+  nextDamageNumberId: React.MutableRefObject<number>;
   setActiveEffects: React.Dispatch<React.SetStateAction<Array<{
     id: number;
     type: string;

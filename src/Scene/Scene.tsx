@@ -21,6 +21,8 @@ interface SceneProps extends SceneType {
   spawnInterval?: number;
   maxSkeletons?: number;
   initialSkeletons?: number;
+  spawnCount?: number;
+  killCount: number;
 }
 
 export default function Scene({
@@ -29,9 +31,10 @@ export default function Scene({
   mushroomData,
   unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
-  spawnInterval = 3000,
+  spawnInterval = 2000,
   maxSkeletons = 13,
   initialSkeletons = 4,
+  killCount,
 }: SceneProps) {
   // State for enemies (with Scene1-specific health values)
   const [enemies, setEnemies] = useState<Enemy[]>(() => {
@@ -151,38 +154,48 @@ export default function Scene({
     onSmiteDamage: unitProps.onSmiteDamage
   };
 
-
-
-  // Handle spawning logic
+  // Add state to track spawn waves
+  const [currentWave, setCurrentWave] = useState(0);
+  
+  // Modify spawning logic
   useEffect(() => {
     if (totalSpawned >= maxSkeletons) return;
-    
-
 
     const spawnTimer = setInterval(() => {
-      setEnemies((prev: Enemy[]) => {
-        if (totalSpawned >= maxSkeletons) {
-          clearInterval(spawnTimer);
-          return prev;
-        }
-        
-        const spawnPosition = generateRandomPosition();
-        const newEnemy: Enemy = {
-          id: `skeleton-${totalSpawned}`,
-          position: spawnPosition.clone(),
-          initialPosition: spawnPosition.clone(),
-          health: 200,
-          maxHealth: 200,
-          ref: React.createRef<Group>()
-        };
-        
-        setTotalSpawned((prev: number) => prev + 1);
-        return [...prev, newEnemy];
+      // Check kill count requirements for each wave
+      if ((killCount < 1 && currentWave === 0) || 
+          (killCount < 3 && currentWave === 1) || 
+          (killCount < 7 && currentWave === 2)) {
+        return;
+      }
+
+      setEnemies(prev => {
+        // Calculate remaining spawns
+        const remainingSpawns = maxSkeletons - totalSpawned;
+        if (remainingSpawns <= 0) return prev;
+
+        // Spawn 3 enemies at once (or remaining amount if less)
+        const spawnAmount = Math.min(3, remainingSpawns);
+        const newEnemies = Array.from({ length: spawnAmount }, (_, index) => {
+          const spawnPosition = generateRandomPosition();
+          return {
+            id: `skeleton-${totalSpawned + index}`,
+            position: spawnPosition.clone(),
+            initialPosition: spawnPosition.clone(),
+            health: 225,
+            maxHealth: 225,
+            isDying: false
+          };
+        });
+
+        setTotalSpawned(prev => prev + spawnAmount);
+        setCurrentWave(prev => prev + 1);
+        return [...prev, ...newEnemies];
       });
     }, spawnInterval);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval]);
+  }, [totalSpawned, maxSkeletons, spawnInterval, currentWave, killCount]);
 
   // Check for level completion
   useEffect(() => {

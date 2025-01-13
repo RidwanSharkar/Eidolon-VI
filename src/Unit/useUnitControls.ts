@@ -17,11 +17,13 @@ interface UseUnitControlsProps {
   onMovementUpdate?: (direction: Vector3) => void;
 }
 
+const PLAY_AREA_RADIUS = 29.75; // Match this with where mountains start
+
 export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.0675,
+  speed = 0.06575,
   onPositionUpdate,
   health,
   isCharging = false,
@@ -130,7 +132,26 @@ export function useUnitControls({
       const backwardsSpeed = baseSpeed * 0.675; // 45% of normal speed when moving backwards
       const currentSpeed = dotProduct < 0 ? backwardsSpeed : baseSpeed;
       
-      groupRef.current.position.add(moveDirection.multiplyScalar(currentSpeed));
+      // Calculate new position before applying it
+      const newPosition = groupRef.current.position.clone().add(
+        moveDirection.multiplyScalar(currentSpeed)
+      );
+
+      // Check if new position is within bounds
+      const distanceFromCenter = Math.sqrt(
+        newPosition.x * newPosition.x + 
+        newPosition.z * newPosition.z
+      );
+
+      // Only update position if within bounds
+      if (distanceFromCenter < PLAY_AREA_RADIUS) {
+        groupRef.current.position.copy(newPosition);
+      } else {
+        // Optional: Slide along the boundary
+        const angle = Math.atan2(newPosition.z, newPosition.x);
+        groupRef.current.position.x = PLAY_AREA_RADIUS * Math.cos(angle);
+        groupRef.current.position.z = PLAY_AREA_RADIUS * Math.sin(angle);
+      }
     } else if (onMovementUpdate) {
       // Reset movement direction when not moving
       onMovementUpdate(new Vector3());

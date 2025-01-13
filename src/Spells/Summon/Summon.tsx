@@ -28,17 +28,19 @@ export default function SummonedHandler({
   onStartCooldown,
   setActiveEffects,
   activeEffects,
+  setDamageNumbers,
+  nextDamageNumberId,
 }: SummonProps) {
   const groupRef = useRef<Group>(null);
   const [currentTarget, setCurrentTarget] = useState<Enemy | null>(null);
   const lastAttackTime = useRef(0);
-  const ATTACK_COOLDOWN = 875;
+  const ATTACK_COOLDOWN = 1000;
   const RANGE = 40;
-  const DURATION = 10000;
-  const FIREBALL_DAMAGE = 43;
+  const DURATION = 7000;
+  const FIREBALL_DAMAGE = 47;
   const startTime = useRef(Date.now());
   const [projectiles, setProjectiles] = useState<SummonProjectile[]>([]);
-  const EFFECT_DURATION = 251; // ms
+  const EFFECT_DURATION = 200; // ms
 
   // Enhanced Logging for Debugging
   useEffect(() => {
@@ -93,9 +95,16 @@ export default function SummonedHandler({
       const { damage } = calculateDamage(FIREBALL_DAMAGE);
       const impactPosition = targetEnemy.position.clone().setY(1.5);
       
-      console.log(`Projectile ${projectile.id} impacting Enemy ${targetEnemy.id} at position`, impactPosition);
-      onDamage(targetEnemy.id, damage, impactPosition);
+      // Pass the isSummon flag
+      onDamage(targetEnemy.id, damage, impactPosition, true);
       
+      setDamageNumbers(prev => [...prev, {
+        id: nextDamageNumberId.current++,
+        damage,
+        position: impactPosition.clone(),
+        isCritical: false,
+        isSummon: true  // Explicitly set this flag
+      }]);
       //  explicit type for summon explosions
       const effectId = Date.now();
       setActiveEffects(prev => [
@@ -124,7 +133,7 @@ export default function SummonedHandler({
     }
     
     return false;
-  }, [enemyData, FIREBALL_DAMAGE, setActiveEffects, EFFECT_DURATION, onDamage]);
+  }, [enemyData, FIREBALL_DAMAGE, setActiveEffects, EFFECT_DURATION, onDamage, setDamageNumbers, nextDamageNumberId]);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
@@ -160,8 +169,14 @@ export default function SummonedHandler({
 
     // Update and filter projectiles
     setProjectiles(prev => prev.filter(projectile => {
-      // Increase movement speed and make it more direct
-      const speed = 0.4; // Adjusted for better control
+      // Single consistent speed
+      const speed = 0.4;
+      
+      // Apply gravity
+      projectile.direction.y -= 0.0015 * delta * 60;
+      projectile.direction.normalize();
+      
+      // Move projectile
       const movement = projectile.direction.clone().multiplyScalar(speed * delta * 40);
       projectile.position.add(movement);
       projectile.distanceTraveled += movement.length();
@@ -197,11 +212,16 @@ export default function SummonedHandler({
       // Get the totem's world position
       const totemWorldPosition = new Vector3();
       if (groupRef.current) {
-        groupRef.current.getWorldPosition(totemWorldPosition);
+        groupRef.current.updateMatrixWorld(true); // Force matrix update
+        groupRef.current.matrixWorld.decompose(totemWorldPosition, new THREE.Quaternion(), new THREE.Vector3());
+        
+        // Calculate the eye position in world space
+        const eyeHeight = 4 * 0.475;
+        totemWorldPosition.y += eyeHeight;
       }
-      
-      // Add height offset for projectile origin (from the totem's head)
-      const startPos = totemWorldPosition.clone().add(new Vector3(0, 0.5, 0));
+
+      // The projectile should now start from the eye
+      const startPos = totemWorldPosition.clone();
       
       // Get target's position with proper height for targeting
       const targetPos = currentTarget.position.clone().setY(1.5);
@@ -237,12 +257,14 @@ export default function SummonedHandler({
 
     // Update projectile positions with arc
     setProjectiles(prev => prev.filter(projectile => {
-      const speed = 0.405;
+      // Single consistent speed
+      const speed = 0.5;
       
-      // Add gravity effect
+      // Apply gravity
       projectile.direction.y -= 0.0015 * delta * 60;
       projectile.direction.normalize();
       
+      // Move projectile
       const movement = projectile.direction.clone().multiplyScalar(speed * delta * 60);
       projectile.position.add(movement);
       projectile.distanceTraveled += movement.length();
@@ -311,10 +333,10 @@ export default function SummonedHandler({
               emissiveIntensity={2}
             />
           </mesh>
-          <pointLight color="#00ff88" intensity={2} distance={4} />
+          <pointLight color="#00ff88" intensity={1} distance={4} />
           <FireballTrail 
             color={new THREE.Color("#00ff88")}
-            size={0.5}
+            size={0.225}
             meshRef={projectile.meshRef}
             opacity={0.8}
           />
@@ -341,7 +363,7 @@ export default function SummonedHandler({
               </mesh>
               <pointLight
                 color="#00ff88"
-                intensity={2 * fade}
+                intensity={1 * fade}
                 distance={4}
                 decay={2}
               />

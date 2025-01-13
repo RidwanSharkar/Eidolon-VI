@@ -13,7 +13,7 @@ interface SmiteProps {
 export default function Smite({ position, onComplete }: SmiteProps) {
   const lightningRef = useRef<Group>(null);
   const progressRef = useRef(0);
-  const animationDuration = 0.75; // Fixed animation duration (in seconds)
+  const animationDuration = 1; // Fixed animation duration (in seconds)
   const delayTimer = useRef(0);
   const startDelay = 0.1; // Same initial delay
 
@@ -56,7 +56,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         <meshStandardMaterial
           color="#ffaa00"
           emissive="#FF0000"
-          emissiveIntensity={25}
+          emissiveIntensity={50}
           transparent
           opacity={0.95}
         />
@@ -69,21 +69,21 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         <meshStandardMaterial
           color="#FF9D00"
           emissive="#FF0000"
-          emissiveIntensity={10}
+          emissiveIntensity={7}
           transparent
-          opacity={0.75}
+          opacity={0.6}
         />
       </mesh>
 
       {/* Inner glow */}
       <mesh>
-        <cylinderGeometry args={[0.7, 0.6, 20, 16]} />
+        <cylinderGeometry args={[0.75, 0.6, 20, 16]} />
         <meshStandardMaterial
           color="#FF9D00"
           emissive="#FF0000"
-          emissiveIntensity={10}
+          emissiveIntensity={5}
           transparent
-          opacity={0.55}
+          opacity={0.45}
         />
       </mesh>
 
@@ -93,25 +93,41 @@ export default function Smite({ position, onComplete }: SmiteProps) {
         <meshStandardMaterial
           color="#FF0000"
           emissive="#FF0000"
-          emissiveIntensity={2.5}
+          emissiveIntensity={4}
           transparent
-          opacity={0.65}
+          opacity={0.3}
         />
       </mesh>
 
       {/* Spiral effect */}
       {[...Array(3)].map((_, i) => (
-        <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]}>
-          <torusGeometry args={[1.2, 0.08, 8, 32]} />
+        <mesh key={i} rotation={[Math.PI / 4, (i * Math.PI) / 1.5, Math.PI]}>
+          <torusGeometry args={[1.175, 0.1, 8, 32]} />
           <meshStandardMaterial
             color="#FF0000"
             emissive="#FF0000"
-            emissiveIntensity={4}
+            emissiveIntensity={25}
             transparent
-            opacity={0.3}
+            opacity={0.5}
           />
         </mesh>
       ))}
+
+
+      {/*  Spiral effect Sky */}
+      {[...Array(16)].map((_, i) => (
+        <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]} position={[0, +7.45, 0]}>
+          <torusGeometry args={[1, 0.1, 32, 32]} />
+          <meshStandardMaterial
+            color="#FF0000"
+            emissive="#FF0000"
+            emissiveIntensity={25}
+            transparent
+            opacity={0.4}
+          />
+        </mesh>
+      ))}
+
 
       {/* Floating particles */}
       {[...Array(8)].map((_, i) => (
@@ -127,7 +143,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
           <meshStandardMaterial
             color="#FF0000"
             emissive="#FF0000"
-            emissiveIntensity={12}
+            emissiveIntensity={25}
             transparent
             opacity={0.6}
           />
