@@ -13,6 +13,7 @@ import LysScythe from './LysScythe';
 import * as THREE from 'three';
 import BossBoneAura from './BossBoneAura';
 import WingTrailEffect from './WingTrailEffect';
+import BossUnholyAura from './BossUnholyAura';
 
 interface BossModelProps {
   isAttacking: boolean;
@@ -60,7 +61,7 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
       }}
     >
       {/* Boss Skull - positioned above the body */}
-      <group scale={[0.7, 0.7, 0.7]} position={[0, 2.05, 0.25]} rotation={[0.325, 0, 0]}>
+      <group scale={[0.7, 0.65, 0.7]} position={[0, 2.05, 0.25]} rotation={[0.325, 0, 0]}>
         <DragonSkull />
       </group>
 
@@ -70,7 +71,7 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
       </group>
 
       {/* Scaled Wings */}
-      <group scale={[1.75, 1.45, 1.6]} position={[0, 2, 0]}>
+      <group scale={[1.85, 1.55, 1.625]} position={[0, 2, 0]}>
         {/* Left Wing */}
         <group rotation={[0, Math.PI / 7, 0]}>
           <BoneWings 
@@ -81,11 +82,11 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
           {/* Left Wing Trail Effects */}
           <WingTrailEffect 
             parentRef={groupRef} 
-            offset={new THREE.Vector3(-0.75, 0.3, -0.3)} 
+            offset={new THREE.Vector3(-0.55, 0.25, -0.3)} 
           />
           <WingTrailEffect 
             parentRef={groupRef} 
-            offset={new THREE.Vector3(-0.4, -0, -0.2)}  
+            offset={new THREE.Vector3(-0.2, -0.15, -0.2)}  
           />
         </group>
         
@@ -99,11 +100,11 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
           {/* Right Wing Trail Effects */}
           <WingTrailEffect 
             parentRef={groupRef} 
-            offset={new THREE.Vector3(0.75, 0.3, -0.3)} 
+            offset={new THREE.Vector3(0.55, 0.25, -0.3)} 
           />
           <WingTrailEffect 
             parentRef={groupRef} 
-            offset={new THREE.Vector3(0.4, -0, -0.2)} 
+            offset={new THREE.Vector3(0.2, -0.15, -0.2)} 
           />
         </group>
       </group>
@@ -126,7 +127,7 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
       </group>
 
       {/* Add Glowing Core Effect */}
-      <group position={[0,1.85, 0]}>
+      <group position={[0,1.65, 0]}>
       <BossTrailEffect parentRef={groupRef} />
       </group>
 
@@ -164,7 +165,7 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
       <group 
         position={[0.5, 2.6, +0.2]} 
         rotation={[Math.PI/3 + 0.2, 1 + Math.PI + 1.15, 1.45]} 
-        scale={[0.57, 0.57, 0.57]}
+        scale={[0.6, 0.6, 0.6]}
       >
         <LysScythe 
           isSwinging={isAttacking} 
@@ -177,7 +178,7 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
       <group 
         position={[-0.5, 2.31, -1]} 
         rotation={[Math.PI/3 + 0.2, -(1 + Math.PI + 1.15), -1.45]} 
-        scale={[0.57, 0.57, 0.57]}
+        scale={[0.6, 0.6, 0.6]}
       >
         <DexScythe 
           isSwinging={isAttacking} 
@@ -190,6 +191,9 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
       <group position={[0, 0, 0]}>
         <BossBoneAura parentRef={groupRef} />
       </group>
+      <group position={[0, 0, 0]}>
+  <BossUnholyAura parentRef={groupRef} />
+</group>
     </group>
   );
 }

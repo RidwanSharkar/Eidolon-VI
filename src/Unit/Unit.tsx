@@ -38,10 +38,11 @@ import { OrbShieldRef } from '@/Spells/OrbShield/OrbShield';
 import ChainLightning from '@/Spells/ChainLightning/ChainLightning';
 import OrbShield from '@/Spells/OrbShield/OrbShield';
 import { FrostExplosion } from '@/Spells/OrbShield/FrostExplosion';
+import { DragonHorns } from '@/gear/DragonHorns';
 
 
 
-// EIDOLON 1,0 ABILITIES NEED REFACTORING
+// EIDOLON 1,0 ABILITIES NEED REFACTORING DISGUSTING FILE STILL!!!!!!!!!!!
 
 //=====================================================================================================
 
@@ -959,6 +960,7 @@ export default function Unit({
   return (
     <>
       <group ref={groupRef} position={[0, 1, 0]}>
+        <DragonHorns position={[0, -0.65, 0]} scale={0.8} />
         
         {/* Outer glow SPhere layer */}
         <mesh scale={1.085}>
@@ -1396,6 +1398,7 @@ export default function Unit({
                   }]);
                 }
               }}
+              id={effect.id.toString()}
               onComplete={() => {
                 setActiveEffects(prev => 
                   prev.filter(e => e.id !== effect.id)

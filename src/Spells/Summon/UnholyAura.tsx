@@ -127,13 +127,13 @@ export default function UnholyAura({ parentRef }: UnholyAuraProps) {
 
       {/* Ambient glow */}
       <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <ringGeometry args={[2.4, 2.8, 128, 1]} />
+      <ringGeometry args={[2.4, 2.55, 128, 1]} />
         <meshStandardMaterial
           color="#00ff88"
           emissive="#00ff88"
           emissiveIntensity={0.3}
           transparent
-          opacity={1}
+          opacity={0.6}
           depthWrite={false}
         />
       </mesh>

@@ -182,7 +182,7 @@ export default function Scene2({
         const remainingSpawns = maxSkeletons - totalSpawned;
         
         // If we have exactly one spawn left, make it an abomination
-        if (remainingSpawns <= spawnCount && remainingSpawns > 0) {
+        if (remainingSpawns === 1) {
           const spawnPosition = generateRandomPosition();
           setTotalSpawned(prev => prev + 1);
           setCurrentWave(prev => prev + 1);

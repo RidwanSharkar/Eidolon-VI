@@ -31,7 +31,7 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
 
       {/* Jagged spikes around the structure */}
       {[...Array(12)].map((_, i) => (
-        <group key={i} rotation={[0, (-Math.PI * 2 * i) / 12, Math.PI * 0.25]} position={[0, 2.5, 0]}>
+        <group key={i} rotation={[0, (-Math.PI  * i) / 12, Math.PI * 0.25]} position={[0, 2.5, 0]}>
           <mesh position={[0.7, Math.sin(i * 3) * 0.5, 0]} rotation={[Math.PI/3, 0, -Math.PI * 0.25]}>
             <coneGeometry args={[0.2, 0.8 + Math.random() * 0.5, 4]} />
             <meshStandardMaterial color="#BC8F8F" roughness={1} metalness={0} />

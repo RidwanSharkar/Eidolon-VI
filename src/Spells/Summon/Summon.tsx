@@ -32,6 +32,7 @@ export default function SummonedHandler({
   nextDamageNumberId,
 }: SummonProps) {
   const groupRef = useRef<Group>(null);
+  const totemWorldPosition = useRef(position.clone());
   const [currentTarget, setCurrentTarget] = useState<Enemy | null>(null);
   const lastAttackTime = useRef(0);
   const ATTACK_COOLDOWN = 1000;
@@ -41,6 +42,7 @@ export default function SummonedHandler({
   const startTime = useRef(Date.now());
   const [projectiles, setProjectiles] = useState<SummonProjectile[]>([]);
   const EFFECT_DURATION = 200; // ms
+  const hasTriggeredCleanup = useRef(false);
 
   // Enhanced Logging for Debugging
   useEffect(() => {
@@ -135,26 +137,61 @@ export default function SummonedHandler({
     return false;
   }, [enemyData, FIREBALL_DAMAGE, setActiveEffects, EFFECT_DURATION, onDamage, setDamageNumbers, nextDamageNumberId]);
 
+  // Add this effect to keep track of world position
+  useEffect(() => {
+    if (groupRef.current) {
+      groupRef.current.getWorldPosition(totemWorldPosition.current);
+    }
+  }, [position]);
+
+  // Modify the projectile creation logic
+  const createProjectile = useCallback((target: Enemy) => {
+    if (!groupRef.current) return;
+    
+    // Get current world position
+    const currentWorldPos = new Vector3();
+    groupRef.current.getWorldPosition(currentWorldPos);
+    
+    // Calculate eye position in world space
+    const eyeHeight = 4 * 0.475; // Match the totem's height
+    const startPos = currentWorldPos.clone().add(new Vector3(0, eyeHeight, 0));
+    
+    // Calculate direction to target
+    const direction = new Vector3()
+      .subVectors(target.position.clone().setY(1.5), startPos)
+      .normalize();
+    
+    return {
+      id: Date.now(),
+      position: startPos,
+      startPosition: startPos.clone(),
+      direction: direction,
+      maxDistance: RANGE * 1.5,
+      targetId: target.id,
+      distanceTraveled: 0,
+      meshRef: React.createRef<THREE.Mesh>()
+    };
+  }, []);
+
   useFrame((_, delta) => {
     if (!groupRef.current) return;
 
-    // Duration check
-    if (Date.now() - startTime.current > DURATION) {
+    // Duration check with cleanup protection
+    if (Date.now() - startTime.current > DURATION && !hasTriggeredCleanup.current) {
       console.log('Summon duration exceeded. Completing summon.');
+      hasTriggeredCleanup.current = true;
       onComplete();
       onStartCooldown();
       return;
     }
 
-    // target acquisition logic
+    // Target acquisition logic
     if (!currentTarget || currentTarget.health <= 0) {
       const newTarget = findNewTarget();
       if (newTarget) {
-        console.log('New target acquired:', newTarget.id);
         setCurrentTarget(newTarget);
       } else {
-        console.log('No new target found, clearing current target');
-        setCurrentTarget(null); // Explicitly clear the current target
+        setCurrentTarget(null);
       }
     }
 
@@ -163,20 +200,26 @@ export default function SummonedHandler({
       enemyData.find(e => e.id === currentTarget.id && e.health > 0);
     
     if (!targetStillValid && currentTarget) {
-      console.log('Current target no longer valid, forcing new target search');
       setCurrentTarget(null);
     }
 
-    // Update and filter projectiles
+    // Fire new projectile
+    const now = Date.now();
+    if (currentTarget && now - lastAttackTime.current >= ATTACK_COOLDOWN) {
+      const newProjectile = createProjectile(currentTarget);
+      if (newProjectile) {
+        setProjectiles(prev => [...prev, newProjectile]);
+        lastAttackTime.current = now;
+      }
+    }
+
+    // Update projectiles
     setProjectiles(prev => prev.filter(projectile => {
-      // Single consistent speed
       const speed = 0.4;
       
-      // Apply gravity
       projectile.direction.y -= 0.0015 * delta * 60;
       projectile.direction.normalize();
       
-      // Move projectile
       const movement = projectile.direction.clone().multiplyScalar(speed * delta * 40);
       projectile.position.add(movement);
       projectile.distanceTraveled += movement.length();
@@ -188,98 +231,14 @@ export default function SummonedHandler({
           .subVectors(target.position.clone().setY(1.5), projectile.position)
           .normalize();
         
-        // Gradually adjust direction towards target
         projectile.direction.lerp(toTarget, 0.03).normalize();
       }
 
-      // Check max distance
       if (projectile.distanceTraveled > projectile.maxDistance) {
-        console.log(`Projectile ${projectile.id} exceeded max distance. Removing.`);
         return false;
       }
 
-      // Check for impacts
       const impact = handleProjectileImpact(projectile);
-      if (impact) {
-        console.log(`Projectile ${projectile.id} impacted and will be removed.`);
-      }
-      return !impact;
-    }));
-
-    // Fire new projectile
-    const now = Date.now();
-    if (currentTarget && now - lastAttackTime.current >= ATTACK_COOLDOWN) {
-      // Get the totem's world position
-      const totemWorldPosition = new Vector3();
-      if (groupRef.current) {
-        groupRef.current.updateMatrixWorld(true); // Force matrix update
-        groupRef.current.matrixWorld.decompose(totemWorldPosition, new THREE.Quaternion(), new THREE.Vector3());
-        
-        // Calculate the eye position in world space
-        const eyeHeight = 4 * 0.475;
-        totemWorldPosition.y += eyeHeight;
-      }
-
-      // The projectile should now start from the eye
-      const startPos = totemWorldPosition.clone();
-      
-      // Get target's position with proper height for targeting
-      const targetPos = currentTarget.position.clone().setY(1.5);
-      
-      // Calculate initial direction vector from totem to target
-      const direction = new Vector3()
-        .subVectors(targetPos, startPos)
-        .normalize();
-      
-      // Add slight upward arc
-      direction.y += 0.05;
-      direction.normalize();
-
-      console.log('Firing projectile:', {
-        startPos: startPos.toArray(),
-        targetPos: targetPos.toArray(),
-        direction: direction.toArray()
-      });
-
-      setProjectiles(prev => [...prev, {
-        id: Date.now(),
-        position: startPos,
-        startPosition: startPos.clone(),
-        direction: direction,
-        maxDistance: RANGE * 1.5,
-        targetId: currentTarget.id,
-        distanceTraveled: 0,
-        meshRef: React.createRef<THREE.Mesh>()
-      }]);
-
-      lastAttackTime.current = now;
-    }
-
-    // Update projectile positions with arc
-    setProjectiles(prev => prev.filter(projectile => {
-      // Single consistent speed
-      const speed = 0.5;
-      
-      // Apply gravity
-      projectile.direction.y -= 0.0015 * delta * 60;
-      projectile.direction.normalize();
-      
-      // Move projectile
-      const movement = projectile.direction.clone().multiplyScalar(speed * delta * 60);
-      projectile.position.add(movement);
-      projectile.distanceTraveled += movement.length();
-
-      // Check max distance
-      if (projectile.distanceTraveled > projectile.maxDistance) {
-        console.log(`Projectile ${projectile.id} exceeded max distance. Removing.`);
-        return false;
-      }
-
-      // Check for impacts
-      const impact = handleProjectileImpact(projectile);
-      if (impact) {
-        console.log(`Projectile ${projectile.id} impacted and will be removed.`);
-      }
       return !impact;
     }));
   });
@@ -318,9 +277,32 @@ export default function SummonedHandler({
     };
   }, [EFFECT_DURATION, setActiveEffects]);
 
+  // Add cleanup effect
+  useEffect(() => {
+    const safetyCleanup = setTimeout(() => {
+      if (!hasTriggeredCleanup.current) {
+        console.log('Safety cleanup triggered for summon');
+        hasTriggeredCleanup.current = true;
+        onComplete();
+        onStartCooldown();
+      }
+    }, DURATION + 500); // 500ms safety buffer
+
+    return () => {
+      clearTimeout(safetyCleanup);
+      hasTriggeredCleanup.current = false;
+    };
+  }, [onComplete, onStartCooldown]);
+
   return (
     <group ref={groupRef} position={position.toArray()}>
       <TotemModel isAttacking={!!currentTarget} />
+      
+      {/* Debug sphere to show spawn point */}
+      <mesh position={[0, 4 * 0.475, 0]}>
+        <sphereGeometry args={[0.1, 8, 8]} />
+        <meshBasicMaterial color="red" />
+      </mesh>
       
       {/* Render projectiles */}
       {projectiles.map(projectile => (

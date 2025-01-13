@@ -178,9 +178,10 @@ export function useAbilityKeys({
               position: groupRef.current!.position.clone(),
               direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
               onComplete: () => {
-                onAbilityUse(currentWeapon, 'active');
+                console.log('Summon completed');
               },
               onStartCooldown: () => {
+                console.log('Starting cooldown');
                 onAbilityUse(currentWeapon, 'active');
               }
             }]);

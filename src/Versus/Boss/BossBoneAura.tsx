@@ -8,7 +8,7 @@ interface BossBoneAuraProps {
 }
 
 const createBonePiece = () => (
-  <group rotation={[Math.PI / 4, 0, 0]}>
+  <group rotation={[Math.PI / 3.75, 0, 0]}>
     {/* Main bone shaft - larger and more menacing */}
     <mesh>
       <cylinderGeometry args={[0.04, 0.04, 0.7, 8]} />
@@ -43,7 +43,7 @@ const createBonePiece = () => (
 export default function BossBoneAura({ parentRef }: BossBoneAuraProps) {
   const bonesRef = useRef<Mesh[]>([]);
   const boneCount = 18; // More bones for a denser effect
-  const radius = 0.95;   // Larger radius
+  const radius = 0.9150;   // Larger radius
   const groupRef = useRef<Group>(null);
   
   useFrame(() => {

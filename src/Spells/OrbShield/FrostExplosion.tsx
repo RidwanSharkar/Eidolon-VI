@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 interface FrostExplosionProps {
   position: Vector3;
@@ -9,10 +9,14 @@ interface FrostExplosionProps {
 }
 
 export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComplete }) => {
+  const startTime = useRef(Date.now());
+  const hasCompletedRef = useRef(false);
+  const MINIMUM_DURATION = 2000; // 2 seconds minimum duration
+
   const [particles, setParticles] = useState(() => 
-    Array(50).fill(null).map(() => ({
+    Array(40).fill(null).map(() => ({
       position: new Vector3(
-        position.x + (Math.random() - 0.5) * 2,
+        position.x + (Math.random() - 0.5) * 1.65,
         position.y + 3 + Math.random() * 2,
         position.z + (Math.random() - 0.5) * 2
       ),
@@ -38,7 +42,10 @@ export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComp
         life: particle.life - delta
       })).filter(particle => particle.life > 0);
       
-      if (updated.length === 0) {
+      // Only trigger cleanup if minimum duration has passed AND all particles are done
+      const timeSinceStart = Date.now() - startTime.current;
+      if (!hasCompletedRef.current && updated.length === 0 && timeSinceStart >= MINIMUM_DURATION) {
+        hasCompletedRef.current = true;
         onComplete?.();
       }
       

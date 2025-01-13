@@ -86,13 +86,13 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
         float patchPattern2 = snoise(patchUv * 1.5 + time * 0.015); // Second noise for third color
         
         // Base colors
-        vec3 grassColor = vec3(0.2, 0.35, 0.15);      // Dark green base
-        vec3 blueColor = vec3(0.2, 0.3, 0.45);        // Deep blue
-        vec3 lightBlueColor = vec3(0.3, 0.4, 0.55);   // Light blue
+        vec3 grassColor = vec3(0.2, 0.35, 0.15);     // Dark green base
+        vec3 brownColor = vec3(0.45, 0.32, 0.22);     // Brighter earth brown
+        vec3 lightBrownColor = vec3(0.55, 0.42, 0.30); // Light brown
         
         // Mix colors based on noise patterns
-        vec3 baseGroundColor = mix(grassColor, blueColor, patchPattern * 0.7);
-        baseGroundColor = mix(baseGroundColor, lightBlueColor, patchPattern2 * 0.5);
+        vec3 baseGroundColor = mix(grassColor, brownColor, patchPattern * 0.7);
+        baseGroundColor = mix(baseGroundColor, lightBrownColor, patchPattern2 * 0.5);
         
         // Add noise detail
         vec2 uv = vUv * scale;
