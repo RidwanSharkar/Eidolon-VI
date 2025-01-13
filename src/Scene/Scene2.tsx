@@ -181,8 +181,8 @@ export default function Scene2({
       setEnemies(prev => {
         const remainingSpawns = maxSkeletons - totalSpawned;
         
-        // Reserve last spawn for abomination
-        if (remainingSpawns === 1) {
+        // If we have exactly one spawn left, make it an abomination
+        if (remainingSpawns <= spawnCount && remainingSpawns > 0) {
           const spawnPosition = generateRandomPosition();
           setTotalSpawned(prev => prev + 1);
           setCurrentWave(prev => prev + 1);
@@ -198,8 +198,8 @@ export default function Scene2({
           }];
         }
 
-        // Regular wave spawns
-        if (remainingSpawns > 1) {
+        // Regular wave spawns (only if we have room for a full wave)
+        if (remainingSpawns >= spawnCount) {
           const spawnAmount = spawnCount; // Use spawnCount prop
           const newEnemies: Enemy[] = Array.from({ length: spawnAmount }, (_, index) => {
             const spawnPosition = generateRandomPosition();

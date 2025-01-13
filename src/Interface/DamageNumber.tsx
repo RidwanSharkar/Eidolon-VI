@@ -96,8 +96,8 @@ export default function DamageNumber({
     if (isHealing) return "#338C66";
     if (isChainLightning) return "#ffff00";
     if (isOrbShield) return "#58FCEC";
+    if (isSummon && !isCritical) return "#00FF51"; 
     if (isCritical) return "#ff0000";
-    if (isSummon) return "#00FF51";
     if (isBoneclaw) return "#39ff14";
     if (isLightning) return "#ffff00";
     if (isOathstrike) return "#FF9441";

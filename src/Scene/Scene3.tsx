@@ -18,6 +18,7 @@ import Flower from '../Environment/Flower';
 import * as THREE from 'three';
 import { MemoizedEnemyUnit } from '../Versus/MemoizedEnemyUnit';
 import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMage';
+import { MemoizedAbominationUnit } from '../Versus/Abomination/MemoizedAbomination';
 
 interface ScenePropsWithCallback extends SceneType {
   onLevelComplete: () => void;
@@ -38,7 +39,7 @@ export default function Scene3({
   spawnInterval = 1000,
   maxSkeletons = 23,
   initialSkeletons = 6,
-  spawnCount = 4,
+  //spawnCount = 4,
   flowerData,
 }: ScenePropsWithCallback) {
 
@@ -232,13 +233,12 @@ export default function Scene3({
         const remainingSpawns = maxSkeletons - totalSpawned;
         if (remainingSpawns <= 0) return prev;
 
-        // Calculate abomination spawn points (evenly distributed)
-        const shouldSpawnAbomination = 
-          abominationsSpawned < 3 && 
-          totalSpawned >= 8 && // Ensure we've spawned some initial enemies
-          (totalSpawned % 8 === 0); // Spawn every 8th spawn point
+        // Define specific spawn points for abominations (5th, 10th, and 15th spawns)
+        const abominationSpawnPoints = [5, 10, 15];
+        const currentSpawnNumber = totalSpawned - initialSkeletons;
+        const shouldSpawnAbomination = abominationSpawnPoints.includes(currentSpawnNumber);
 
-        if (shouldSpawnAbomination) {
+        if (shouldSpawnAbomination && abominationsSpawned < 3) {
           const spawnPosition = generateRandomPosition();
           setAbominationsSpawned(prev => prev + 1);
           setTotalSpawned(prev => prev + 1);
@@ -255,12 +255,12 @@ export default function Scene3({
           }];
         }
 
-        // Always spawn in groups of 3 (2 regular + 1 mage)
+        // Regular spawns (2 regular skeletons + 1 mage)
         const spawnAmount = Math.min(3, remainingSpawns);
         const newEnemies: Enemy[] = Array.from({ length: spawnAmount }, (_, index) => {
           const spawnPosition = generateRandomPosition();
           
-          // Last unit in each spawn group is always a mage
+          // Last unit in each spawn group is always a mage (2:1 ratio)
           if (index === spawnAmount - 1) {
             return {
               id: `mage-${totalSpawned + index}`,
@@ -293,7 +293,7 @@ export default function Scene3({
     }, spawnInterval);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount, currentWave, spawnCount]);
+  }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount, currentWave, initialSkeletons]);
 
   useEffect(() => {
     if (unitProps.controlsRef.current) {
@@ -427,22 +427,41 @@ export default function Scene3({
       </group>
 
       {/* Enemy Units (Skeletons and Mages) */}
-      {enemies.map((enemy) => (
-        enemy.type === 'mage' ? (
-          <MemoizedSkeletalMage
-            key={enemy.id}
-            id={enemy.id}
-            initialPosition={enemy.initialPosition}
-            position={enemy.position}
-            health={enemy.health}
-            maxHealth={enemy.maxHealth}
-            onTakeDamage={handleTakeDamage}
-            onPositionUpdate={handleEnemyPositionUpdate}
-            playerPosition={playerPosition}
-            onAttackPlayer={handlePlayerDamage}
-            weaponType={unitProps.currentWeapon}
-          />
-        ) : (
+      {enemies.map((enemy) => {
+        if (enemy.type === 'abomination') {
+          return (
+            <MemoizedAbominationUnit
+              key={enemy.id}
+              id={enemy.id}
+              initialPosition={enemy.initialPosition}
+              position={enemy.position}
+              health={enemy.health}
+              maxHealth={enemy.maxHealth}
+              onTakeDamage={handleTakeDamage}
+              onPositionUpdate={handleEnemyPositionUpdate}
+              playerPosition={playerPosition}
+              onAttackPlayer={handlePlayerDamage}
+              weaponType={unitProps.currentWeapon}
+            />
+          );
+        } else if (enemy.type === 'mage') {
+          return (
+            <MemoizedSkeletalMage
+              key={enemy.id}
+              id={enemy.id}
+              initialPosition={enemy.initialPosition}
+              position={enemy.position}
+              health={enemy.health}
+              maxHealth={enemy.maxHealth}
+              onTakeDamage={handleTakeDamage}
+              onPositionUpdate={handleEnemyPositionUpdate}
+              playerPosition={playerPosition}
+              onAttackPlayer={handlePlayerDamage}
+              weaponType={unitProps.currentWeapon}
+            />
+          );
+        }
+        return (
           <MemoizedEnemyUnit
             key={enemy.id}
             id={enemy.id}
@@ -456,8 +475,8 @@ export default function Scene3({
             onAttackPlayer={handlePlayerDamage}
             weaponType={unitProps.currentWeapon}
           />
-        )
-      ))}
+        );
+      })}
 
 
       {isBossSpawned && (

@@ -193,7 +193,7 @@ function ShoulderPlate() {
     <group scale={[scale, scale, scale]}>
       {/* Base segment */}
       <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.08, 0.08, 0.25, 6]} />
+        <cylinderGeometry args={[0.06, 0.06, 0.115, 6]} />
         <meshStandardMaterial 
           color="#e8e8e8"
           roughness={0.4}
@@ -213,7 +213,7 @@ function ShoulderPlate() {
 
       {/* Sharp tip */}
       <mesh position={[0, 0.2, 0.04]} rotation={[0.2, 0, 0]}>
-        <coneGeometry args={[0.03, 0.15, 6]} />
+        <coneGeometry args={[0.04, 0.175, 6]} />
         <meshStandardMaterial 
           color="#d4d4d4"
           roughness={0.3}
@@ -241,7 +241,7 @@ function ShoulderPlate() {
     <group>
       {/* Main shoulder plate */}
       <mesh>
-        <cylinderGeometry args={[0.125, 0.2, 0.30, 6, 1, false, 0, Math.PI*2]} />
+        <cylinderGeometry args={[0.185, 0.2, 0.225, 6, 1, false, 0, Math.PI*2]} />
         <meshStandardMaterial 
           color="#e8e8e8"
           roughness={0.4}
@@ -250,26 +250,26 @@ function ShoulderPlate() {
       </mesh>
       
       {/* Enhanced spikes with different sizes and angles */}
-      <group position={[0, 0.25, 0]}>
+      <group position={[0, 0.25, 0]} rotation={[Math.PI*2, Math.PI/3, 0]}>
         {/* Center spike */}
         <group position={[0, 0, 0]} rotation={[0, 0, 0]}>
-          {createSpike(1.2)}
+          {createSpike(1.5)}
         </group>
         
         {/* Side spikes */}
         <group position={[0, -0.05, 0.15]} rotation={[-0.2, 0, 0]}>
-          {createSpike(0.9)}
+          {createSpike(1.1)}
         </group>
         <group position={[0, -0.05, -0.15]} rotation={[0.2, 0, 0]}>
-          {createSpike(0.9)}
+          {createSpike(1.1)}
         </group>
         
         {/* Smaller corner spikes */}
-        <group position={[0, -0.1, 0.25]} rotation={[-0.4, 0, 0]}>
-          {createSpike(0.7)}
+        <group position={[0, -0.1, 0.15]} rotation={[-0.4, 0, 0]}>
+          {createSpike(1.1)}
         </group>
-        <group position={[0, -0.1, -0.25]} rotation={[0.4, 0, 0]}>
-          {createSpike(0.7)}
+        <group position={[0, -0.1, -0.15]} rotation={[0.4, 0, 0]}>
+          {createSpike(1.1)}
         </group>
       </group>
     </group>
@@ -472,7 +472,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
   return (
     <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[1.75, 1.75, 1.75]}>
       
-      <group name="Body" position={[0, 1.15, 0]} scale={[1.25, 0.8, 1.25]} rotation={[-0.6, 0, 0]}>
+      <group name="Body" position={[0, 1.25, 0]} scale={[1.2, 0.8, 1.25]} rotation={[-0.6, 0, 0]}>
         <BonePlate />
       </group>
 
@@ -648,10 +648,10 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
       </group>
 
       {/* Add shoulder plates just before the arms */}
-      <group position={[-0.34, 1.475, 0]} rotation={[-0.35, -Math.PI - 0.4, -0.35]}>
+      <group position={[-0.34, 1.5, 0]} rotation={[-0.35, -Math.PI, -0.25]}>
         <ShoulderPlate />
       </group>
-      <group position={[0.34, 1.475, 0]} rotation={[-0.35, Math.PI -0.4, 0.35]}>
+      <group position={[0.34, 1.5, 0]} rotation={[-0.35, Math.PI, 0.25]}>
         <ShoulderPlate />
       </group>
 
@@ -688,53 +688,53 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
         <BossClawModel isLeftHand={false} />
       </group>
 
-      {/* Multiple Legs with spider-like positioning - adjusted angles and connections */}
+      {/* Multiple Legs with spider-like positioning - adjusted for more natural downward angles */}
       {/* Front Legs */}
-      <group name="LeftFrontLeg" position={[0.6, 0.75, 0.4]} rotation={[-0.1, -0.6, 0.6]}>
+      <group name="LeftFrontLeg" position={[0.6, 0.75, 0.4]} rotation={[-0.2, -0.6, 0.3]}>
         <BoneLegModel />
       </group>
-      <group name="RightFrontLeg" position={[-0.6, 0.75, 0.4]} rotation={[-0.1, 0.6, -0.6]}>
+      <group name="RightFrontLeg" position={[-0.6, 0.75, 0.4]} rotation={[-0.2, 0.6, -0.3]}>
         <BoneLegModel />
       </group>
 
       {/* Middle Front Legs */}
-      <group name="LeftMiddleFrontLeg" position={[0.7, 0.73, 0]} rotation={[0, -0.8, 0.7]}>
+      <group name="LeftMiddleFrontLeg" position={[0.7, 0.73, 0]} rotation={[0.5, -0.8, 0.4]}>
         <BoneLegModel />
       </group>
-      <group name="RightMiddleFrontLeg" position={[-0.7, 0.73, 0]} rotation={[0, 0.8, -0.7]}>
+      <group name="RightMiddleFrontLeg" position={[-0.7, 0.73, 0]} rotation={[0.5, 0.8, -0.4]}>
         <BoneLegModel />
       </group>
 
       {/* Middle Back Legs */}
-      <group name="LeftMiddleBackLeg" position={[0.7, 0.71, -0.3]} rotation={[0, -1.0, 0.7]}>
+      <group name="LeftMiddleBackLeg" position={[0.7, 0.71, -0.3]} rotation={[+0.3, -1.0, 0.4]}>
         <BoneLegModel />
       </group>
-      <group name="RightMiddleBackLeg" position={[-0.7, 0.71, -0.3]} rotation={[0, 1.0, -0.7]}>
+      <group name="RightMiddleBackLeg" position={[-0.7, 0.71, -0.3]} rotation={[+0.3, 1.0, -0.4]}>
         <BoneLegModel />
       </group>
 
       {/* Back Legs */}
-      <group name="LeftBackLeg" position={[0.6, 0.7, -0.6]} rotation={[0.1, -1.2, 0.6]}>
+      <group name="LeftBackLeg" position={[0.6, 0.7, -0.6]} rotation={[0.55, -1.2, 0.3]}>
         <BoneLegModel />
       </group>
-      <group name="RightBackLeg" position={[-0.6, 0.7, -0.6]} rotation={[0.1, 1.2, -0.6]}>
+      <group name="RightBackLeg" position={[-0.6, 0.7, -0.6]} rotation={[+0.55, 1.2, -0.3]}>
         <BoneLegModel />
       </group>
 
       <group position={[0, 1.775, 0.2]} scale={[0.4, 0.4, 0.4]}>
         {/* Left Horn */}
-        <group position={[-0.25, 0.2, 0]} rotation={[+0.15, 0, -0.3]}>
+        <group position={[-0.25, 0.2, 0]} rotation={[-0.4, 0, -0.3]}>
           <CustomHorn isLeft={true} />    
         </group>
         
         {/* Right Horn */}
-        <group position={[0.25, 0.2, 0]} rotation={[0.15, 0, 0.3]}>
+        <group position={[0.25, 0.2, 0]} rotation={[-0.2, 0, 0.3]}>
           <CustomHorn isLeft={false} />
         </group>
       </group>
 
       {/* Pelvis structure */}
-      <group position={[0, 0.7, -0.25]} scale={[1.1, 1, 1.25]}>
+      <group position={[0, 0.725, -0.25]} scale={[1.1, 1, 1.25]}>
         {/* Main pelvic bowl */}
         <mesh>
           <cylinderGeometry args={[0.35, 0.34, 0.2, 8]} />

@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface FrostExplosionProps {
   position: Vector3;
@@ -28,15 +28,6 @@ export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComp
     }))
   );
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setParticles([]);
-      onComplete?.();
-    }, 1000);
-
-    return () => clearTimeout(timeout);
-  }, [onComplete]);
-
   useFrame((_, delta) => {
     setParticles(prev => {
       const updated = prev.map(particle => ({
@@ -47,10 +38,10 @@ export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComp
         life: particle.life - delta
       })).filter(particle => particle.life > 0);
       
-      if (updated.length === 0 || updated[0].life < -0.5) {
+      if (updated.length === 0) {
         onComplete?.();
-        return [];
       }
+      
       return updated;
     });
   });

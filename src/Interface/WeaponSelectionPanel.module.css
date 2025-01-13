@@ -43,10 +43,12 @@
   pointer-events: auto;
 }
 
-/* Prevent context menu on the entire panel */
+/* Prevent context   ALREADY HAVE
 .panel {
   oncontextmenu: 'return false';
 }
+menu on the entire panel */
+
 
 .panel h2 {
   font-size: 4rem;
