@@ -55,7 +55,7 @@ export default function SkeletalMage({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 17;
+  const ATTACK_RANGE = 16;
   const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
   const SMOOTHING_FACTOR = 0.15;
   const POSITION_UPDATE_THRESHOLD = 0.1;

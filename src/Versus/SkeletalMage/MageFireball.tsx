@@ -76,7 +76,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
       {!showExplosion ? (
         <>
           <mesh ref={meshRef}>
-            <sphereGeometry args={[0.225, 16, 16]} />
+            <sphereGeometry args={[0.2225, 16, 16]} />
             <meshStandardMaterial
               color="#ff3333"
               emissive="#ff0000"
@@ -88,7 +88,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
 
           <MageFireballTrail
             color={new Color("#ff3333")}
-            size={0.23}
+            size={0.2225}
             meshRef={meshRef}
             opacity={0.8}
           />

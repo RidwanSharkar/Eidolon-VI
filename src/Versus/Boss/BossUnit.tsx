@@ -246,7 +246,7 @@ export default function BossUnit({
     }
 
     // If out of melee range + 1 unit, move closer
-    if (distanceToPlayer > ATTACK_RANGE -2 && health > 0) {
+    if (distanceToPlayer > ATTACK_RANGE -1.3 && health > 0) {
       setIsAttacking(false);
 
       const direction = new Vector3()
