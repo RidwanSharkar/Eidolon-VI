@@ -65,7 +65,7 @@ export default function BossUnit({
   const ATTACK_COOLDOWN_ENRAGED =2500;
   const MOVEMENT_SPEED = 0.2;
   const SMOOTHING_FACTOR = 0.2;
-  const ATTACK_DAMAGE = 22;
+  const ATTACK_DAMAGE = 24;
   const BOSS_HIT_HEIGHT = 2.0;       
   const BOSS_HIT_RADIUS = 4.0;
   const BOSS_HIT_HEIGHT_RANGE = 4.0;

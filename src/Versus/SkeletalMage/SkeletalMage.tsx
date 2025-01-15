@@ -55,14 +55,14 @@ export default function SkeletalMage({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 18;
+  const ATTACK_RANGE = 17;
   const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
   const SMOOTHING_FACTOR = 0.15;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const SEPARATION_RADIUS = 0.95; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.125; // Strength of the separation force
-  const FIREBALL_COOLDOWN = 3750;
+  const FIREBALL_COOLDOWN = 4250;
   const FIREBALL_DAMAGE = 16;
 
   // Sync health changes

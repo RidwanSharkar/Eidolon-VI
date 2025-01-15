@@ -183,11 +183,12 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
             <group position={[0, -0.5, 0]} rotation={[0, 0, Math.PI / 5.5]}>
               {createJoint(0.09)}
               
+              {/* ULTRALISK BLADES */}
               <group position={[0, -0.1, 0]}>
                 <group 
-                  position={[isLeftHand ? -0.2 : 0.2, -0.2, 0]} 
-                  rotation={[0, isLeftHand ? Math.PI : 0, Math.PI/2]} 
-                  scale={[0.8, 0.4, 0.8]}
+                  position={[isLeftHand ? -0 : -0, -0.2, 0]} 
+                  rotation={[1.7 + Math.PI/4, 0, Math.PI*2.675 + 0.75]} 
+                  scale={[1.5, 0.55, 1.5]}
                 >
                   <mesh>
                     <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.03 }]} />
@@ -811,10 +812,10 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
 
       {/* Back Arms (Larger) */}
       {/* Upper Back Arms */}
-      <group name="LeftUpperBackArm" position={[-0.55, 1.6, 0]} scale={[-1.1, 0.7, 0.9]} rotation={[0, Math.PI*2, -0.1]}>
+      <group name="LeftUpperBackArm" position={[-0.55, 1.6, 0]} scale={[-1.1, 0.7, 0.9]} rotation={[0, Math.PI*2, -0.4]}>
         <BossClawModel isLeftHand={true} />
       </group>
-      <group name="RightUpperBackArm" position={[0.55, 1.6, 0]} scale={[1.1, 0.7, 0.9]} rotation={[0, -Math.PI*2, 0.1]}>
+      <group name="RightUpperBackArm" position={[0.55, 1.6, 0]} scale={[1.1, 0.7, 0.9]} rotation={[0, -Math.PI*2, 0.4]}>
         <BossClawModel isLeftHand={false} />
       </group>
 

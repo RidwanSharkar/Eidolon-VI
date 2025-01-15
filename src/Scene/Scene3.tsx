@@ -35,6 +35,7 @@ export default function Scene3({
   unitProps,
   skeletonProps,
   killCount,
+  boneDoodadData,
   onLevelComplete,
   spawnInterval = 3000,
   maxSkeletons = 23,
@@ -388,6 +389,7 @@ export default function Scene3({
         color="#FFAFC5" //handled elsewhere 
         roughness={0.9} 
         metalness={0.1}
+        doodadData={boneDoodadData}
       />
       
       {mountainData.map((data, index) => (

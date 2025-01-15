@@ -1,116 +1,140 @@
 import { Vector3, Euler } from 'three';
 
-export const BrokenBonePlate = ({ position, rotation, scale = 1 }: { position: Vector3; rotation: Euler; scale?: number }) => (
-  <group position={position} rotation={rotation} scale={scale}>
-    <mesh>
-      <cylinderGeometry args={[0.4, 0.35, 0.15, 8]} />
-      <meshStandardMaterial color="#e8e8e8" roughness={0.6} metalness={0.2} />
-    </mesh>
-    
-    {/* Broken rib pieces */}
-    {[0.2, -0.2].map((offset, i) => (
-      <group key={i} position={[offset, 0.05, 0]} rotation={[0, 0, Math.PI / 4]}>
-        <mesh>
-          <torusGeometry args={[0.15, 0.02, 6, 8, Math.PI * 0.7]} />
-          <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
-        </mesh>
-      </group>
-    ))}
-  </group>
-);
 
-// Scattered bone pieces
-export const ScatteredBones = ({ position, rotation }: { position: Vector3; rotation: Euler }) => (
-  <group position={position} rotation={rotation}>
+// Scattered rib cage fragment (based on BonePlate design)
+export const RibFragment = ({ position, rotation, scale = 1 }: { position: Vector3; rotation: Euler; scale?: number }) => (
+  <group position={position} rotation={rotation} scale={scale}>
+    {/* Spine segment */}
     <mesh>
-      <cylinderGeometry args={[0.03, 0.025, 0.4, 6]} />
+      <cylinderGeometry args={[0.04, 0.04, 0.4, 4]} />
       <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
     </mesh>
-    <mesh position={[0, 0.2, 0]}>
-      <sphereGeometry args={[0.04, 6, 6]} />
-      <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
-    </mesh>
-  </group>
-);
 
-// Broken shoulder plate
-export const BrokenShoulderPlate = ({ position, rotation }: { position: Vector3; rotation: Euler }) => (
-  <group position={position} rotation={rotation}>
-    <mesh>
-      <cylinderGeometry args={[0.3, 0.25, 0.15, 6]} />
-      <meshStandardMaterial color="#e8e8e8" roughness={0.6} metalness={0.2} />
-    </mesh>
-    {/* Broken spikes */}
-    {[0, 0.5, 1].map((angle, i) => (
-      <group key={i} rotation={[0, angle * Math.PI * 2/3, 0]} position={[0.2, 0, 0]}>
-        <mesh rotation={[0.3, 0, 0]}>
-          <cylinderGeometry args={[0.02, 0.01, 0.15, 4]} />
+    {/* Two vertebrae */}
+    {[-0.1, 0.1].map((yPos, i) => (
+      <group key={i} position={[0, yPos, 0]}>
+        <mesh>
+          <cylinderGeometry args={[0.06, 0.06, 0.04, 6]} />
           <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
+        </mesh>
+      </group>
+    ))}
+
+    {/* Pair of ribs */}
+    {[-1, 1].map((side, i) => (
+      <group key={i} rotation={[0, 0, (Math.PI / 3) * side]}>
+        <mesh position={[side * 0.085, 0.05, 0.08]} rotation={[0.3, side * Math.PI / 2, side * -0.5]}>
+          <torusGeometry args={[0.2, 0.022, 8, 12, Math.PI * 1.1]} />
+          <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
         </mesh>
       </group>
     ))}
   </group>
 );
 
-// Large submerged bone plate with tail
-export const SubmergedBonePlate = ({ position, rotation }: { position: Vector3; rotation: Euler }) => (
-  <group position={position} rotation={rotation}>
-    {/* Main plate - partially submerged */}
-    <group position={[0, -0.2, 0]}>
+// Broken arm fragment (based on Boneclaw design)
+export const BoneClawFragment = ({ position, rotation, scale = 1 }: { position: Vector3; rotation: Euler; scale?: number }) => (
+  <group position={position} rotation={rotation} scale={scale}>
+    {/* Main bone segments */}
+    <group position={[0.075, 0, 0]}>
       <mesh>
-        <cylinderGeometry args={[2.2, 2.0, 0.3, 8]} />
+        <cylinderGeometry args={[0.06, 0.06, 0.8, 8]} />
+        <meshStandardMaterial color="#d6cfc7" roughness={0.9} metalness={0.1} />
+      </mesh>
+    </group>
+    <group position={[-0.075, 0, 0]}>
+      <mesh>
+        <cylinderGeometry args={[0.06, 0.06, 0.8, 8]} />
+        <meshStandardMaterial color="#d6cfc7" roughness={0.9} metalness={0.1} />
+      </mesh>
+    </group>
+
+    {/* Joint sphere */}
+    <mesh position={[0, 0.4, 0]}>
+      <sphereGeometry args={[0.12, 12, 12]} />
+      <meshStandardMaterial color="#d6cfc7" roughness={0.9} metalness={0.1} />
+    </mesh>
+  </group>
+);
+
+// Simple scattered bones (femurs, etc)
+export const ScatteredBones = ({ position, rotation }: { position: Vector3; rotation: Euler }) => {
+  // Generate a random number of bones for this cluster (2-6)
+  const boneCount = 2 + Math.floor(Math.random() * 5);
+  
+  const createBone = (offset: Vector3, individualRotation: Euler) => (
+    <group position={offset} rotation={individualRotation}>
+      {/* Main bone shaft */}
+      <mesh>
+        <cylinderGeometry args={[0.04, 0.035, 0.8, 6]} />
         <meshStandardMaterial color="#e8e8e8" roughness={0.6} metalness={0.2} />
       </mesh>
       
-      {/* Spine protrusions */}
-      {[...Array(6)].map((_, i) => (
-        <group 
-          key={i} 
-          position={[
-            Math.cos(i * Math.PI / 3) * 1.5,
-            0.1,
-            Math.sin(i * Math.PI / 3) * 1.5
-          ]}
-        >
+      {/* Joint ends */}
+      {[-0.35, 0.35].map((yPos, i) => (
+        <group key={i} position={[0, yPos, 0]}>
+          {/* Main joint bulb */}
           <mesh>
-            <cylinderGeometry args={[0.15, 0.2, 0.25, 6]} />
+            <sphereGeometry args={[0.06, 8, 8]} />
+            <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
+          </mesh>
+          
+          {/* Joint protrusions */}
+          <mesh position={[0.06, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <capsuleGeometry args={[0.02, 0.04, 4, 8]} />
             <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
           </mesh>
         </group>
       ))}
     </group>
+  );
 
-    {/* Tail section emerging from ground */}
-    {[...Array(8)].map((_, i) => (
-      <group 
-        key={`tail-${i}`} 
-        position={[0, -0.15 - i * 0.1, 2 + i * 0.5]}
-        rotation={[Math.PI * 0.1, 0, 0]}
-      >
-        <mesh>
-          <cylinderGeometry args={[0.3 - i * 0.02, 0.28 - i * 0.02, 0.4, 8]} />
-          <meshStandardMaterial color="#e8e8e8" roughness={0.5} metalness={0.2} />
-        </mesh>
-        {/* Vertebrae joints */}
-        <mesh position={[0, 0, 0.2]}>
-          <sphereGeometry args={[0.2 - i * 0.015, 8, 8]} />
-          <meshStandardMaterial color="#d8d8d8" roughness={0.6} metalness={0.2} />
-        </mesh>
-      </group>
-    ))}
-  </group>
-);
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Generate multiple bones in the cluster */}
+      {[...Array(boneCount)].map(() => {
+        // Create random offset within a small area
+        const offset = new Vector3(
+          (Math.random() - 0.5) * 0.6,
+          0.02, // Slight height variation to prevent z-fighting
+          (Math.random() - 0.5) * 0.6
+        );
 
-// Update TerrainDoodads to always include one SubmergedBonePlate
-export const getFixedDoodads = (): Array<{ 
-  position: Vector3; 
-  rotation: Euler; 
-  type: string; 
-  scale?: number; 
-}> => [{
-  position: new Vector3(15, -0.2, 10),
-  rotation: new Euler(-Math.PI * 0.05, Math.PI * 1.2, 0),
-  type: 'submerged'
-}];
+        // Random rotation around Y-axis (laying flat)
+        const individualRotation = new Euler(
+          Math.PI / 2, // Rotated 90° to lay flat
+          Math.random() * Math.PI * 2, // Random rotation around Y
+          Math.random() * 0.2 - 0.1 // Slight tilt
+        );
 
-// Add other bone doodad components here... 
+        return createBone(offset, individualRotation);
+      })}
+    </group>
+  );
+};
+
+interface DoodadData {
+  position: Vector3;
+  rotation: Euler;
+  type: 'ribFragment' | 'clawFragment' | 'bones';
+  scale?: number;
+}
+
+export const TerrainDoodads = ({ doodadData }: { doodadData: DoodadData[] }) => {
+  return (
+    <>
+      {doodadData.map((doodad, index) => {
+        switch (doodad.type) {
+          case 'ribFragment':
+            return <RibFragment key={index} {...doodad} />;
+          case 'clawFragment':
+            return <BoneClawFragment key={index} {...doodad} />;
+          case 'bones':
+            return <ScatteredBones key={index} {...doodad} />;
+          default:
+            return null;
+        }
+      })}
+    </>
+  );
+}; 

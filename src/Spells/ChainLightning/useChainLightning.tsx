@@ -25,8 +25,8 @@ export const useChainLightning = ({
   nextDamageNumberId
 }: ChainLightningProps) => {
   const CHAIN_CHANCE = 1;
-  const INITIAL_DAMAGE = 13;
-  const MAX_JUMPS = 5;
+  const INITIAL_DAMAGE = 17;
+  const MAX_JUMPS = 4;
   
   const [lightningTargets, setLightningTargets] = useState<Vector3[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -62,7 +62,7 @@ export const useChainLightning = ({
     };
 
     const chainDamage = (jumpIndex: number) => {
-      const damages = [17, 13, 11, 7, 5]; // CUSTOM DAMAGE PRIMES
+      const damages = [17, 13, 11, 7]; // CUSTOM DAMAGE PRIMES
       return damages[jumpIndex];
     };
 

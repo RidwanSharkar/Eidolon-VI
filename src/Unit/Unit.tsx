@@ -302,7 +302,7 @@ export default function Unit({
         currentPendingTargets.add(target.id);
         
         // Initial hit
-        const { damage, isCritical } = calculateDamage(13);
+        const { damage, isCritical } = calculateDamage(13); // Smite Swing Bonus Damage 
         onHit(target.id, damage);
         
         setDamageNumbers(prev => [...prev, {
@@ -884,7 +884,7 @@ export default function Unit({
     return () => {
       setActiveEffects(prev => prev.filter(effect => 
         effect.type !== 'fireballExplosion'
-      ));
+      )); 
     };
   }, []);
 
@@ -954,6 +954,23 @@ export default function Unit({
       // ============================== FIREBALL EXTRA CLEANER TEST
 
     const cleanupInterval = setInterval(cleanupEffects, 100);
+    return () => clearInterval(cleanupInterval);
+  }, [setActiveEffects]);
+
+  // Add this cleanup effect specifically for frost explosions
+  useEffect(() => {
+    const cleanupFrostEffects = () => {
+      setActiveEffects(prev => 
+        prev.filter(effect => {
+          if (effect.type !== 'frostExplosion') return true;
+          const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
+          const duration = effect.duration || 0.2;
+          return elapsed < duration;
+        })
+      );
+    };
+
+    const cleanupInterval = setInterval(cleanupFrostEffects, 100);
     return () => clearInterval(cleanupInterval);
   }, [setActiveEffects]);
 

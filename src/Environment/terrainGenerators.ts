@@ -10,8 +10,8 @@ export interface GeneratedTree {
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 30;
-  const radius = 53;
+  const numberOfMountains = 32;
+  const radius = 54;
   
   // Create evenly spaced mountains around the perimeter
   for (let i = 0; i < numberOfMountains; i++) {

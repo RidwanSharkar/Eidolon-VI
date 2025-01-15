@@ -35,6 +35,7 @@ export default function Scene({
   maxSkeletons = 13,
   initialSkeletons = 4,
   killCount,
+  boneDoodadData,
 }: SceneProps) {
   // State for enemies (with Scene1-specific health values)
   const [enemies, setEnemies] = useState<Enemy[]>(() => {
@@ -304,6 +305,7 @@ export default function Scene({
           color="#FFAFC5"
           roughness={0.5}
           metalness={0.1}
+          doodadData={boneDoodadData}
         />
         {mountainData.map((data, index) => (
           <Mountain key={`mountain-${index}`} position={data.position} scale={data.scale} />

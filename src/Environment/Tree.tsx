@@ -31,7 +31,7 @@ const TreeComponent: React.FC<TreeProps> = ({
   const leafHeight = 1.7 * scale;
 
   return (
-    <group name="tree" position={position} scale={scale}>
+    <group name="tree" position={position} scale={scale*0.9}>
       <mesh>
         {/* Trunk */}
         <cylinderGeometry args={[trunkRadius, trunkRadius * 1.225, trunkHeight, 8]} />

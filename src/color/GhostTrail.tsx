@@ -29,7 +29,7 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
       case WeaponType.SCYTHE:
         return '#00FF37'; // 39ff14
       case WeaponType.SWORD:
-        return '#FFCC00'; // <--FFB300   FFD500 GOLDER F9A602 YELLOWER <--- 8783D1 FF9441
+        return '#FFB300'; // <--FFB300   FFD500 GOLDER F9A602 YELLOWER <--- 8783D1 FF9441
       case WeaponType.SABRES:
         return '#00BFFF'; //78DFFF
     }

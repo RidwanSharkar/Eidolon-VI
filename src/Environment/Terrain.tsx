@@ -1,15 +1,9 @@
-import { Mesh, Shape, DoubleSide, } from 'three';
-import React, { useRef, useEffect } from 'react';
+import { Mesh, Shape, DoubleSide } from 'three';
+import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Vector3, Euler } from 'three';
-import { BrokenBonePlate, ScatteredBones, BrokenShoulderPlate, SubmergedBonePlate, getFixedDoodads } from './BoneDoodads';
-
-interface TerrainProps {
-  color?: string;
-  roughness?: number;
-  metalness?: number;
-}
+import { ScatteredBones, RibFragment, BoneClawFragment } from './BoneDoodads';
 
 // Helper function to generate random positions within map bounds
 const getRandomPosition = () => {
@@ -19,17 +13,48 @@ const getRandomPosition = () => {
   return new Vector3(x, 0, z);
 };
 
-export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness = 0.1 }: TerrainProps) {
-  // All hooks must be at the top level
+interface TerrainProps {
+  color?: string;
+  roughness?: number;
+  metalness?: number;
+  doodadData: Array<{
+    position: Vector3;
+    rotation: Euler;
+    type: string;
+    scale?: number;
+  }>;
+}
+
+const TerrainDoodads = ({ doodadData }: { doodadData: TerrainProps['doodadData'] }) => {
+  return (
+    <>
+      {doodadData.map((doodad, index) => {
+        switch (doodad.type) {
+          case 'submerged':
+            return <BoneClawFragment key={index} {...doodad} />;
+          case 'plate':
+            return <RibFragment key={index} {...doodad} />;
+          case 'bones':
+            return <ScatteredBones key={index} {...doodad} />;
+          default:
+            return null;
+        }
+      })}
+    </>
+  );
+};
+
+export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness = 0.1, doodadData }: TerrainProps) {
   const terrainRef = useRef<Mesh>(null);
   const octagonRef = useRef<Shape | null>(null);
+  const [combinedDoodads, setCombinedDoodads] = useState(doodadData);
   
   // Create the shader material
   const snowMaterial = useRef(new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
       scale: { value: 20.0 },
-      elevation: { value: 0.3 }, // hmm irrelvant cuz flat geometry**
+      elevation: { value: 0.3 }, // Irrelevant because geometry is flat
       groundScale: { value: 0. },
       patchScale: { value: 0.1 },
       baseColor: { value: new THREE.Color(color) },
@@ -160,7 +185,7 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
   })).current;
 
   // Initialize octagon shape
-  useEffect(() => {
+  React.useEffect(() => {
     if (!octagonRef.current) {
       const shape = new Shape();
       const radius = 50;
@@ -183,79 +208,21 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
     }
   });
 
-  const TerrainDoodads = () => {
-    const doodads = useRef<Array<{ 
-      position: Vector3; 
-      rotation: Euler; 
-      type: string; 
-      scale?: number; 
-    }>>([]);
+  // Update the useEffect to properly manage the combined doodads
+  useEffect(() => {
+    const additionalDoodads = [
+      {
+        position: getRandomPosition(),
+        rotation: new Euler(0, Math.random() * Math.PI * 2, 0),
+        type: 'plate',
+        scale: 1.0,
+      },
+      // Add more doodads as needed
+    ];
 
-    useEffect(() => {
-      // Start with fixed doodads
-      const newDoodads = [...getFixedDoodads()];
-      
-      // Add random doodads
-      // Add bone plates (1-2)
-      for (let i = 0; i < 1 + Math.floor(Math.random()); i++) {
-        newDoodads.push({
-          position: getRandomPosition(),
-          rotation: new Euler(0, Math.random() * Math.PI * 2, 0),
-          type: 'plate',
-          scale: 0.8 + Math.random() * 0.4
-        });
-      }
-      
-      // Add scattered bones (20-40)
-      const boneCount = 20 + Math.floor(Math.random() * 20);
-      for (let i = 0; i < boneCount; i++) {
-        newDoodads.push({
-          position: getRandomPosition(),
-          rotation: new Euler(
-            Math.random() * 0.5,
-            Math.random() * Math.PI * 2,
-            Math.random() * 0.5
-          ),
-          type: 'bones'
-        });
-      }
-      
-      // Add shoulder plates and other decorative pieces (10-20)
-      const decorativeCount = 10 + Math.floor(Math.random() * 10);
-      for (let i = 0; i < decorativeCount; i++) {
-        newDoodads.push({
-          position: getRandomPosition(),
-          rotation: new Euler(
-            Math.random() * 0.3,
-            Math.random() * Math.PI * 2,
-            Math.random() * 0.3
-          ),
-          type: 'shoulder'
-        });
-      }
-      
-      doodads.current = newDoodads;
-    }, []);
-
-    return (
-      <>
-        {doodads.current.map((doodad, index) => {
-          switch (doodad.type) {
-            case 'submerged':
-              return <SubmergedBonePlate key={index} {...doodad} />;
-            case 'plate':
-              return <BrokenBonePlate key={index} {...doodad} />;
-            case 'bones':
-              return <ScatteredBones key={index} {...doodad} />;
-            case 'shoulder':
-              return <BrokenShoulderPlate key={index} {...doodad} />;
-            default:
-              return null;
-          }
-        })}
-      </>
-    );
-  };
+    // Update the state with combined doodads
+    setCombinedDoodads([...doodadData, ...additionalDoodads]);
+  }, [doodadData]);
 
   return (
     <group>
@@ -265,7 +232,8 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
         <primitive object={snowMaterial} attach="material" />
       </mesh>  
 
-      <TerrainDoodads />
+      {/* Update TerrainDoodads to use combinedDoodads */}
+      <TerrainDoodads doodadData={combinedDoodads} />
     </group>
   );
 }

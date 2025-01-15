@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface FrostExplosionProps {
   position: Vector3;
@@ -11,7 +11,19 @@ interface FrostExplosionProps {
 export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComplete }) => {
   const startTime = useRef(Date.now());
   const hasCompletedRef = useRef(false);
-  const MINIMUM_DURATION = 1000; // 2 seconds minimum duration
+  const MINIMUM_DURATION = 1250;
+  const MAXIMUM_DURATION = 2850; // Force cleanup after 2 seconds
+
+  useEffect(() => {
+    const forceCleanupTimer = setTimeout(() => {
+      if (!hasCompletedRef.current) {
+        hasCompletedRef.current = true;
+        onComplete?.();
+      }
+    }, MAXIMUM_DURATION);
+
+    return () => clearTimeout(forceCleanupTimer);
+  }, [onComplete]);
 
   const [particles, setParticles] = useState(() => 
     Array(40).fill(null).map(() => ({

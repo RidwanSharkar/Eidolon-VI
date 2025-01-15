@@ -18,7 +18,7 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale, variant = 'pink' }
       case 'green':
         return new THREE.Color("#00FFFF");
       case 'blue':
-        return new THREE.Color("#FC9C82"); // ORANGE 
+        return new THREE.Color("#FF9058"); // ORANGE 
       default:
         return new THREE.Color("#F096CC"); // PINK 
     }
@@ -42,7 +42,7 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale, variant = 'pink' }
   });
 
   return (
-    <group position={position} scale={scale}>
+    <group position={position} scale={scale*0.8}>
       {/* Stem */}
       <mesh ref={mushroomRef}>
         <cylinderGeometry args={[0.1, 0.12, 0.8, 16]} />
@@ -51,7 +51,7 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale, variant = 'pink' }
           roughness={0.4}
           metalness={0.1}
           emissive={mushroomColor}
-          emissiveIntensity={0.2}
+          emissiveIntensity={0.25}
         />
       </mesh>
       
@@ -63,7 +63,7 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale, variant = 'pink' }
           roughness={0.4}
           metalness={0.1}
           emissive={mushroomColor}
-          emissiveIntensity={0.35}
+          emissiveIntensity={0.375}
         />
       </mesh>
 
@@ -82,7 +82,7 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale, variant = 'pink' }
           <meshStandardMaterial 
             color={spotColor}
             emissive={spotColor}
-            emissiveIntensity={0.2}
+            emissiveIntensity={0.25}
           />
         </mesh>
       ))}
