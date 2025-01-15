@@ -188,7 +188,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
                 <group 
                   position={[isLeftHand ? -0 : -0, -0.2, 0]} 
                   rotation={[1.7 + Math.PI/4, 0, Math.PI*2.675 + 0.75]} 
-                  scale={[1.5, 0.55, 1.5]}
+                  scale={[1.4, 0.55, 1.4]}
                 >
                   <mesh>
                     <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.03 }]} />

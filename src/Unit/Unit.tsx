@@ -180,6 +180,10 @@ export default function Unit({
   // Add with other refs
   const chainLightningRef = useRef<{ processChainLightning: () => void }>(null);
 
+  // Add near other refs at top of component
+  const lastFrostExplosionTime = useRef(0);
+  const FROST_EXPLOSION_COOLDOWN = 1000; // 1 second cooldown between frost explosions
+
 
 
 
@@ -368,19 +372,33 @@ export default function Unit({
             }];
           });
 
-          // Add frost explosion effect when orb shield damage is dealt
-          const unitPosition = groupRef.current.position.clone();
-          const forward = new Vector3(0, 0, 1)
-            .applyQuaternion(groupRef.current.quaternion)
-            .multiplyScalar(2); // Position 2 units in front
-          
-          setActiveEffects(prev => [...prev, {
-            id: Date.now(),
-            type: 'frostExplosion',
-            position: unitPosition.add(forward),
-            direction: new Vector3(),
-            duration: 0.5
-          }]);
+          // Add rate-limited frost explosion effect
+          const now = Date.now();
+          if (now - lastFrostExplosionTime.current >= FROST_EXPLOSION_COOLDOWN) {
+            lastFrostExplosionTime.current = now;
+            
+            const unitPosition = groupRef.current.position.clone();
+            const forward = new Vector3(0, 0, 1)
+              .applyQuaternion(groupRef.current.quaternion)
+              .multiplyScalar(2);
+            
+            setActiveEffects(prev => {
+              // Clean up any old frost explosions first
+              const filtered = prev.filter(effect => 
+                effect.type !== 'frostExplosion' || 
+                (effect.startTime && Date.now() - effect.startTime < 2000)
+              );
+              
+              return [...filtered, {
+                id: Date.now(),
+                type: 'frostExplosion',
+                position: unitPosition.add(forward),
+                direction: new Vector3(),
+                duration: 0.5,
+                startTime: Date.now()
+              }];
+            });
+          }
 
           // Consume one orb per attack (not per hit)
           if (!hitCountThisSwing[targetId]) {
@@ -467,14 +485,14 @@ export default function Unit({
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 1.65, 1); // 2 seconds for full charge - 1.5 no movemvent
+      const progress = Math.min(chargeTime / 1.575, 1); // 2 seconds for full charge - 1.5 no movemvent
       setBowChargeProgress(progress);
       setBowGroundEffectProgress(progress); // Update ground effect progress
 
       // Smooth charge line opacity using delta
       const targetOpacity = progress;
       const currentOpacity = bowChargeLineOpacity.current;
-      bowChargeLineOpacity.current += (targetOpacity - currentOpacity) * delta * 15;
+      bowChargeLineOpacity.current += (targetOpacity - currentOpacity) * delta * 12.5;
 
       if (progress >= 1) {
         releaseBowShot(1);
@@ -487,7 +505,7 @@ export default function Unit({
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       
       if (distanceTraveled < projectile.maxDistance) {
-        const speed = projectile.power >= 1 ? 0.50 : 0.35;
+        const speed = projectile.power >= 1 ? 0.525 : 0.35;
         projectile.position.add(
           projectile.direction
             .clone()
@@ -590,7 +608,7 @@ export default function Unit({
     
     const now = Date.now();
     const timeSinceLastShot = now - lastBowShotTime;
-    if (timeSinceLastShot < 500) { // 250ms cooldown between shots
+    if (timeSinceLastShot < 332) { // 250ms cooldown between shots
         return;
     }
     setLastBowShotTime(now);
@@ -764,7 +782,7 @@ export default function Unit({
     const baseDamage = 11;
     const maxDamage = 51;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
-    const fullChargeDamage = power >= 0.99 ? 67 : 0;
+    const fullChargeDamage = power >= 0.99 ? 66 : 0;
     const finalDamage = scaledDamage + fullChargeDamage;
     
     onHit(targetId, finalDamage);

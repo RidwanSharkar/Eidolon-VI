@@ -57,7 +57,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SABRES]: {
     normal: 17,
-    range: 4.05,
+    range: 4.1,
     maxHitsPerSwing: 2
   },
   
@@ -76,7 +76,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
     q: { type: 'q', key: 'q', cooldown: 0.725, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 0.725, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 1.95, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
     active: { 
@@ -92,7 +92,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   },
 
   [WeaponType.SWORD]: {
-    q: { type: 'q', key: 'q', cooldown: 0.95, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.925, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 4, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 1.25, currentCooldown: 0, icon: '/Eidolon/icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
     passive: { 
@@ -110,7 +110,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   
   [WeaponType.SABRES]: {
     q: { type: 'q', key: 'q', cooldown: 0.625, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.51, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 0.333, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
