@@ -7,12 +7,33 @@ import * as THREE from 'three';
 interface MushroomProps {
   position: THREE.Vector3;
   scale: number;
+  variant?: 'pink' | 'green' | 'blue';
 }
 
-const Mushroom: React.FC<MushroomProps> = ({ position, scale }) => {
+const Mushroom: React.FC<MushroomProps> = ({ position, scale, variant = 'pink' }) => {
   const mushroomRef = useRef<Mesh>(null!);
-  const mushroomColor = useMemo(() => new THREE.Color("#A8DBFF"), []);
-  const spotColor = useMemo(() => new THREE.Color("#9b4f96"), []); // Purple spot color
+  
+  const mushroomColor = useMemo(() => {
+    switch (variant) {
+      case 'green':
+        return new THREE.Color("#00FFFF");
+      case 'blue':
+        return new THREE.Color("#FC9C82"); // ORANGE 
+      default:
+        return new THREE.Color("#F096CC"); // PINK 
+    }
+  }, [variant]);
+
+  const spotColor = useMemo(() => {
+    switch (variant) {
+      case 'green':
+        return new THREE.Color("#2eb82e");
+      case 'blue':
+        return new THREE.Color("#0000FF");
+      default:
+        return new THREE.Color("#9b4f96");
+    }
+  }, [variant]);
 
   useFrame((state) => {
     if (mushroomRef.current) {
@@ -36,7 +57,7 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale }) => {
       
       {/* Cap */}
       <mesh position={[0, 0.4, 0]}>
-        <sphereGeometry args={[0.32, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <sphereGeometry args={[0.3, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial 
           color={mushroomColor}
           roughness={0.4}

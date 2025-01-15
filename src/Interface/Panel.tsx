@@ -6,6 +6,7 @@ import Image from 'next/image';
 import DamageNotification from '@/Interface/DamageNotification';
 import { WEAPON_ABILITY_TOOLTIPS } from '@/Weapons/weapons';
 import Tooltip from '@/Interface/Tooltip';
+import { Vector3 } from 'three';
 
 
 interface PanelProps {
@@ -16,6 +17,16 @@ interface PanelProps {
   abilities: WeaponInfo;
   onReset: () => void;
   killCount: number;
+  activeEffects?: Array<{
+    id: number;
+    type: string;
+    position: Vector3;
+    direction: Vector3;
+    duration?: number;
+    startTime?: number;
+    summonId?: number;
+    targetId?: string;
+  }>;
 }
 
 interface DamageNotificationData {
@@ -64,7 +75,14 @@ const RoundedSquareProgress: React.FC<{
   );
 };
 
-export default function Panel({ currentWeapon, playerHealth, maxHealth, abilities, killCount }: PanelProps) {
+export default function Panel({ 
+  currentWeapon, 
+  playerHealth, 
+  maxHealth, 
+  abilities, 
+  killCount,
+  activeEffects 
+}: PanelProps) {
   const [damageNotifications, setDamageNotifications] = useState<DamageNotificationData[]>([]);
   const nextNotificationId = useRef(0);
   const prevHealth = useRef(playerHealth);
@@ -196,7 +214,15 @@ export default function Panel({ currentWeapon, playerHealth, maxHealth, abilitie
                   height={40}
                   className={styles.abilityIcon}
                 />
-                {ability.currentCooldown > 0 && (
+                {key === 'active' && 
+                 currentWeapon === WeaponType.SCYTHE && 
+                 abilities[WeaponType.SCYTHE].active.isUnlocked &&
+                 abilities[WeaponType.SCYTHE].active.currentCooldown <= 0 &&
+                 activeEffects?.some((effect) => effect.type === 'summon') ? (
+                  <div className={styles.activeOverlay}>
+                    <div className={styles.activeIndicator} />
+                  </div>
+                ) : ability.currentCooldown > 0 && (
                   <div className={styles.cooldownOverlay}>
                     <RoundedSquareProgress
                       size={50}

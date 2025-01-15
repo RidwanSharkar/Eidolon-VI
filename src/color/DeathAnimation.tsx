@@ -9,17 +9,18 @@ interface BoneVortexProps {
   onComplete?: () => void;
   isSpawning?: boolean;
   weaponType: WeaponType;
+  scale?: number;
 }
 
 const getVortexColor = (weaponType: WeaponType) => {
   switch (weaponType) {
     case WeaponType.SCYTHE:
-      return '#FF6AAA'; //  00FF88 FF6B6B
+      return '#00FF4D'; //  00FF88 FF6B6B FF6AAA
     case WeaponType.SWORD:
-      return '#FFE551';
+      return '#FFC200';
     case WeaponType.SABRES:
     case WeaponType.SABRES2:
-      return '#00F7FF'; //ice blue 98F5FC 
+      return '#00BBFF'; //ice blue 98F5FC 
     default:
       return '#00ff44'; // 00FF37
   }
@@ -36,7 +37,7 @@ const createVortexSegment = (weaponType: WeaponType) => {
           transparent
           opacity={0.525}
           emissive={color}
-          emissiveIntensity={0.65}
+          emissiveIntensity={0.75}
         />
       </mesh>
     </group>

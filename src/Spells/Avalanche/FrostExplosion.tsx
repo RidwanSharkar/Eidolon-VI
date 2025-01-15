@@ -11,7 +11,7 @@ interface FrostExplosionProps {
 export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComplete }) => {
   const startTime = useRef(Date.now());
   const hasCompletedRef = useRef(false);
-  const MINIMUM_DURATION = 2000; // 2 seconds minimum duration
+  const MINIMUM_DURATION = 1000; // 2 seconds minimum duration
 
   const [particles, setParticles] = useState(() => 
     Array(40).fill(null).map(() => ({

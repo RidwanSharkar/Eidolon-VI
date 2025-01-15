@@ -61,9 +61,9 @@ export default function SkeletalMage({
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const SEPARATION_RADIUS = 0.95; // Minimum distance between enemies
-  const SEPARATION_FORCE = 0.15; // Strength of the separation force
+  const SEPARATION_FORCE = 0.125; // Strength of the separation force
   const FIREBALL_COOLDOWN = 3750;
-  const FIREBALL_DAMAGE = 0;
+  const FIREBALL_DAMAGE = 16;
 
   // Sync health changes
   useEffect(() => {
@@ -271,9 +271,26 @@ export default function SkeletalMage({
 
         {/* Visual telegraph when casting */}
         {isCastingFireball && (
-          <group position={[0, 2.265, 0]}>
+          <group position={[0.4, 2.265, 0]}>
             <mesh>
-              <sphereGeometry args={[0.2, 16, 16]} />
+              <sphereGeometry args={[0.125, 16, 16]} />
+              <meshStandardMaterial
+                color="#ff3333"
+                emissive="#ff0000"
+                emissiveIntensity={1}
+                transparent
+                opacity={0.8}
+              />
+            </mesh>
+            <pointLight color="#ff3333" intensity={2} distance={3} />
+          </group>
+        )}
+
+                {/* Visual telegraph when casting */}
+                {isCastingFireball && (
+          <group position={[-.4, 2.265, -0.05]}>
+            <mesh>
+              <sphereGeometry args={[0.125, 16, 16]} />
               <meshStandardMaterial
                 color="#ff3333"
                 emissive="#ff0000"
@@ -285,6 +302,7 @@ export default function SkeletalMage({
             <pointLight color="#ff3333" intensity={2} distance={3} />
           </group>
         )}
+
 
         <Billboard
           position={[0, 3.5, 0]}
@@ -346,15 +364,12 @@ export default function SkeletalMage({
           position={fireball.position}
           target={fireball.target}
           playerPosition={playerPosition}
-          onHit={() => {
-            // Remove this fireball from active fireballs
+          onHit={(didHitPlayer) => {
             setActiveFireballs(prev => 
               prev.filter(f => f.id !== fireball.id)
             );
             
-            // Only deal damage if player is still near the target position
-            const playerDistanceToTarget = playerPosition.distanceTo(fireball.target);
-            if (playerDistanceToTarget < 1.0) { // Increased from 0.4 to make hits more forgiving
+            if (didHitPlayer) {
               onAttackPlayer(FIREBALL_DAMAGE);
             }
           }}

@@ -8,7 +8,7 @@ import BoneVortex2 from '@/color/SpawnAnimation';
 import { Enemy } from '@/Versus/enemy';
 import BoneVortex from '@/color/DeathAnimation';
 import { WeaponType } from '@/Weapons/weapons';
-import { FrostExplosion } from '@/Spells/OrbShield/FrostExplosion';
+import { FrostExplosion } from '@/Spells/Avalanche/FrostExplosion';
 
 
 interface EnemyUnitProps {
@@ -57,15 +57,15 @@ export default function EnemyUnit({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 2.4;
-  const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.19;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.19;
+  const ATTACK_RANGE = 2.35;
+  const ATTACK_COOLDOWN = 2250;
+  const MOVEMENT_SPEED = 0.1925;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.1925;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 0;
-  const SEPARATION_RADIUS = 1.2; // Minimum distance between enemies
-  const SEPARATION_FORCE = 0.15; // Strength of the separation force
+  const ATTACK_DAMAGE = 8;
+  const SEPARATION_RADIUS = 1.25; // Minimum distance between enemies
+  const SEPARATION_FORCE = 0.155; // Strength of the separation force
 
   // Sync health changes
   useEffect(() => {

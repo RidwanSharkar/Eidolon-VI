@@ -1,4 +1,4 @@
-import { Vector3 } from 'three';
+import { Vector3, Euler } from 'three';
 import { WeaponType } from '../Weapons/weapons';
 import { GeneratedTree } from '../Environment/terrainGenerators';
 import { UnitProps } from '../Unit/UnitProps';
@@ -16,7 +16,17 @@ export interface SkeletonProps {
 export interface SceneProps {
   mountainData: { position: Vector3; scale: number; }[];
   treeData: GeneratedTree[];
-  mushroomData: { position: Vector3; scale: number; }[];
+  mushroomData: Array<{
+    position: Vector3;
+    scale: number;
+    variant: 'pink' | 'green' | 'blue';
+  }>;
+  boneDoodadData: Array<{
+    position: Vector3;
+    rotation: Euler;
+    type: string;
+    scale?: number;
+  }>;
   treePositions: { mainTree: Vector3; };
   interactiveTrunkColor: THREE.Color;
   interactiveLeafColor: THREE.Color;

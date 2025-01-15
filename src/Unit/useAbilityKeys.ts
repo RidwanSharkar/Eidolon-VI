@@ -3,7 +3,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { Vector3, Group } from 'three';
 import { WeaponType, WeaponInfo, AbilityType } from '../Weapons/weapons';
 import { ReanimateRef } from '../Spells/Reanimate/Reanimate';
-import { OrbShieldRef } from '../Spells/OrbShield/OrbShield';
+import { OrbShieldRef } from '../Spells/Avalanche/OrbShield';
 
 interface UseAbilityKeysProps {
   keys: React.MutableRefObject<Record<string, boolean>>;
@@ -20,7 +20,23 @@ interface UseAbilityKeysProps {
   setIsBowCharging: (value: boolean) => void;
   setBowChargeStartTime: (value: number | null) => void;
   setSmiteEffects: (callback: (prev: Array<{ id: number; position: Vector3 }>) => Array<{ id: number; position: Vector3 }>) => void;
-  setActiveEffects: (callback: (prev: Array<{ id: number; type: string; position: Vector3; direction: Vector3 }>) => Array<{ id: number; type: string; position: Vector3; direction: Vector3 }>) => void;
+  setActiveEffects: (callback: (prev: Array<{
+    id: number;
+    type: string;
+    position: Vector3;
+    direction: Vector3;
+    duration?: number;
+    startTime?: number;
+    summonId?: number;
+  }>) => Array<{
+    id: number;
+    type: string;
+    position: Vector3;
+    direction: Vector3;
+    duration?: number;
+    startTime?: number;
+    summonId?: number;
+  }>) => void;
   onAbilityUse: (weapon: WeaponType, abilityType: AbilityType) => void;
   shootFireball: () => void;
   releaseBowShot: (progress: number) => void;
@@ -167,26 +183,45 @@ export function useAbilityKeys({
         const activeAbility = abilities[currentWeapon].active;
         if (
           activeAbility.isUnlocked && 
-          activeAbility.currentCooldown <= 0
+          activeAbility.currentCooldown <= 0 &&
+          currentWeapon === WeaponType.SCYTHE
         ) {
-          if (currentWeapon === WeaponType.SABRES) {
-            onAbilityUse(currentWeapon, 'active');
-          } else if (currentWeapon === WeaponType.SCYTHE) {
-            setActiveEffects(prev => [...prev, {
-              id: Math.random(),
-              type: 'summon',
-              position: groupRef.current!.position.clone(),
-              direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
-              onComplete: () => {
-                console.log('Summon completed');
-              },
-              onStartCooldown: () => {
-                console.log('Starting cooldown');
-                onAbilityUse(currentWeapon, 'active');
+          // Don't start cooldown immediately anymore
+          // onAbilityUse(currentWeapon, 'active'); // Remove this line
+          
+          const summonId = Date.now();
+          console.log('Creating new summon with ID:', summonId);
+          
+          setActiveEffects(prev => {
+            // Prevent multiple summons by checking if one already exists
+            if (prev.some(effect => effect.type === 'summon')) {
+              return prev;
+            }
+
+            return [
+              ...prev.filter(effect => effect.type !== 'summon'),
+              {
+                id: summonId,
+                type: 'summon',
+                position: groupRef.current!.position.clone(),
+                direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
+                onComplete: () => {
+                  console.log('Summon completed, ID:', summonId);
+                  // Start cooldown only when totem expires
+                  onAbilityUse(currentWeapon, 'active');
+                  setActiveEffects(current => 
+                    current.filter(effect => 
+                      effect.id !== summonId && 
+                      (effect.type !== 'summonExplosion' || effect.summonId !== summonId)
+                    )
+                  );
+                },
+                onStartCooldown: () => {
+                  console.log('Starting cooldown for summon:', summonId);
+                }
               }
-            }]);
-            onAbilityUse(currentWeapon, 'active');
-          }
+            ];
+          });
         }
       }
 

@@ -1,7 +1,6 @@
 // src/versus/Boss/BossModel.tsx
 import React, { useRef } from 'react';
 import { Group } from 'three';
-import { useFrame } from '@react-three/fiber';
 import BoneTail from '../../gear/BoneTail';
 import BonePlate from '../../gear/BonePlate';  
 import BoneWings from '../../gear/BoneWings';  
@@ -22,56 +21,23 @@ interface BossModelProps {
   isWalking: boolean;
 }
 
-export default function BossModel({ isAttacking, playerPosition }: BossModelProps) {
+export default function BossModel({ isAttacking }: BossModelProps) {
   const groupRef = useRef<Group>(null);
 
-
-  useFrame(() => {
-    if (!groupRef.current) return;
-
-
-    // Calculate direction to player while keeping boss upright
-    const directionToPlayer = new THREE.Vector3()
-      .subVectors(playerPosition, groupRef.current.position)
-      .setY(0)  // Ignore Y difference to prevent tilting
-      .normalize();
-
-    // Create rotation matrix for smooth facing
-    const lookMatrix = new THREE.Matrix4();
-    lookMatrix.lookAt(
-      new THREE.Vector3(0, 0, 0),
-      directionToPlayer,
-      new THREE.Vector3(0, 1, 0)
-    );
-    
-    // Extract rotation while keeping Y-axis locked
-    const targetRotation = new THREE.Euler(0, 0, 0);
-    targetRotation.setFromRotationMatrix(lookMatrix);
-    
-    // Apply Y rotation to face player, add PI to correct the facing direction
-    groupRef.current.rotation.y = targetRotation.y + Math.PI;
-  });
-
   return (
-    <group 
-      ref={groupRef}
-      onClick={(e) => {
-        e.stopPropagation();
-
-      }}
-    >
+    <group ref={groupRef}>
       {/* Boss Skull - positioned above the body */}
-      <group scale={[0.7, 0.65, 0.7]} position={[0, 2.05, 0.25]} rotation={[0.325, 0, 0]}>
+      <group scale={[0.7, 0.65, 0.7]} position={[0, 2.05, 0.35]} rotation={[0.5, 0, 0]}>
         <DragonSkull />
       </group>
 
       {/* Scaled Bone Plate */}
-      <group scale={[1.45 , 1.15, 1.3]} position={[0, 1.65, 0]} rotation={[0.25, 0, 0]}>
+      <group scale={[1.45 , 1.1, 1.3]} position={[0, 1.5, 0]} rotation={[0.35, 0, 0]}>
         <BonePlate />
       </group>
 
       {/* Scaled Wings */}
-      <group scale={[1.85, 1.55, 1.625]} position={[0, 2, 0]}>
+      <group scale={[1.85, 1.55, 1.625]} position={[0, 1.85, 0]}>
         {/* Left Wing */}
         <group rotation={[0, Math.PI / 7, 0]}>
           <BoneWings 
@@ -82,11 +48,11 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
           {/* Left Wing Trail Effects */}
           <WingTrailEffect 
             parentRef={groupRef} 
-            offset={new THREE.Vector3(-0.55, 0.25, -0.3)} 
+            offset={new THREE.Vector3(-0.6, 0.25, -0.15)} 
           />
           <WingTrailEffect 
             parentRef={groupRef} 
-            offset={new THREE.Vector3(-0.2, -0.15, -0.2)}  
+            offset={new THREE.Vector3(-0.425, -0.05, 0.25)}  
           />
         </group>
         
@@ -100,17 +66,17 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
           {/* Right Wing Trail Effects */}
           <WingTrailEffect 
             parentRef={groupRef} 
-            offset={new THREE.Vector3(0.55, 0.25, -0.3)} 
+            offset={new THREE.Vector3(0.6, 0.25, -0.15)} 
           />
           <WingTrailEffect 
             parentRef={groupRef} 
-            offset={new THREE.Vector3(0.2, -0.15, -0.2)} 
+            offset={new THREE.Vector3(0.425, -0.05, 0.25)} 
           />
         </group>
       </group>
 
       {/* Add Decorative Boneclaws */}
-      <group scale={[0.625, 0.625, 0.625]} position={[0, 1.9, 0]}>
+      <group scale={[0.625, 0.625, 0.625]} position={[0, 1.6, 0]}>
         {/* Left Claw */}
         <group position={[-0.775, 0.15, 0.1]} rotation={[0, Math.PI /-2, 0]}>
           <BossClawModel />
@@ -127,7 +93,11 @@ export default function BossModel({ isAttacking, playerPosition }: BossModelProp
       </group>
 
       {/* Add Glowing Core Effect */}
-      <group position={[0,1.65, 0]}>
+      <group position={[0,1.4, 0]} scale={[1.25, 1.25, 1.25]}>
+      <BossTrailEffect parentRef={groupRef} />
+      </group>
+
+      <group position={[0, 2.15, 0.275]} scale={[0.525, 0.525, 0.525]}>
       <BossTrailEffect parentRef={groupRef} />
       </group>
 
@@ -238,11 +208,106 @@ function BossClawModel() {
     </group>
   );
 
+  const createSpike = (scale = 1) => (
+    <group scale={[scale, scale, scale]}>
+      {/* Base segment */}
+      <mesh position={[0, 0, 0]}>
+        <cylinderGeometry args={[0.06, 0.02, 0.12, 6]} />
+        <meshStandardMaterial 
+          color="#e8e8e8"
+          roughness={0.4}
+          metalness={0.3}
+        />
+      </mesh>
+
+      {/* Middle segment with slight curve */}
+      <mesh position={[0, 0.1, 0.02]} rotation={[0.05, 0, 0]}>
+        <cylinderGeometry args={[0.025, 0.025, 0.12, 6]} />
+        <meshStandardMaterial 
+          color="#e8e8e8"
+          roughness={0.4}
+          metalness={0.3}
+        />
+      </mesh>
+
+      {/* Sharp tip */}
+      <mesh position={[0, 0.2, 0.04]} rotation={[0.1, 0, 0]}>
+        <coneGeometry args={[0.03, 0.15, 6]} />
+        <meshStandardMaterial 
+          color="#d4d4d4"
+          roughness={0.3}
+          metalness={0.5}
+        />
+      </mesh>
+
+      {/* Decorative ridges */}
+      {[0, Math.PI/4, Math.PI*1/2, Math.PI, Math.PI*3/2, Math.PI*5/4].map((angle, i) => (
+        <group key={i} rotation={[0, angle, 0]}>
+          <mesh position={[0.04, 0.05, 0]}>
+            <boxGeometry args={[0.01, 0.12, 0.02]} />
+            <meshStandardMaterial 
+              color="#d4d4d4"
+              roughness={0.5}
+              metalness={0.3}
+            />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+
   return (
     <group>
       <group>
         {createParallelBones(1.0, 0.15)}
         
+        {/* Add shoulder spikes group */}
+        <group position={[0, 0.7, 0]} rotation={[-1, 1, 1]} scale={0.5}>
+          {[-0.03, -0.01, 0, 0.01, 0.03].map((offset, i) => (
+            <group 
+              key={i} 
+              position={[offset, -0.275, -0.15]}
+              rotation={[0.4, 0, (i - 2) * Math.PI / 6]}
+            >
+              <group position={[0, 0.4, 0]} scale={[1.35, 1.35, 1.35]}>
+                {/* Main shoulder plate */}
+                <mesh>
+                  <cylinderGeometry args={[0.075, 0.5, 0.20, 4, 1, false, 0, Math.PI*2]} />
+                  <meshStandardMaterial 
+                    color="#e8e8e8"
+                    roughness={0.4}
+                    metalness={0.3}
+                  />
+                </mesh>
+                
+                {/* Enhanced spikes with different sizes and angles */}
+                <group position={[0, 0.25, 0]}>
+                  {/* Center spike */}
+                  <group position={[0, 0, 0]} rotation={[0, 0, 0]}>
+                    {createSpike(2)}
+                  </group>
+                  
+                  {/* Side spikes */}
+                  <group position={[0, -0.05, 0.15]} rotation={[-0.1, 0, 0]}>
+                    {createSpike(0.9)}
+                  </group>
+                  <group position={[0, -0.05, -0.15]} rotation={[0.1, 0, 0]}>
+                    {createSpike(0.9)}
+                  </group>
+                  
+                  {/* Smaller corner spikes */}
+                  <group position={[0, -0.1, 0.25]} rotation={[-0.2, 0, 0]}>
+                    {createSpike(0.7)}
+                  </group>
+                  <group position={[0, -0.1, -0.25]} rotation={[0.2, 0, 0]}>
+                    {createSpike(0.7)}
+                  </group>
+                </group>
+              </group>
+            </group>
+          ))}
+        </group>
+
         <group position={[0.25, -0.85, 0.21]}> 
           <mesh>
             <sphereGeometry args={[0.12, 12, 12]} />

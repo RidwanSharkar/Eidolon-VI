@@ -45,8 +45,8 @@ export default function Scene({
         id: `skeleton-${index}`,
         position: spawnPosition.clone(),
         initialPosition: spawnPosition.clone(),
-        health: 200,
-        maxHealth: 200,
+        health: 196,
+        maxHealth: 196,
         ref: React.createRef<Group>()
       };
     });
@@ -320,10 +320,16 @@ export default function Scene({
           />
         ))}
 
-        {/* Render all mushrooms */}
-        {mushroomData.map((data, index) => (
-          <Mushroom key={`mushroom-${index}`} position={data.position} scale={data.scale} />
-        ))}
+ 
+      {/* Render all mushrooms */}
+      {mushroomData.map((mushroom, index) => (
+        <Mushroom
+          key={`mushroom-${index}`}
+          position={mushroom.position}
+          scale={mushroom.scale}
+          variant={mushroom.variant}
+        />
+      ))}
 
 
 

@@ -6,6 +6,7 @@ export interface SummonProps {
   position: Vector3;
   groupRef?: React.RefObject<Group>;
   enemyData: Enemy[];
+  targetId?: string;
   onDamage: (targetId: string, damage: number, position?: Vector3, isSummon?: boolean) => void;
   onComplete: () => void;
   onStartCooldown: () => void;
@@ -24,6 +25,8 @@ export interface SummonProps {
     direction: Vector3;
     duration?: number;
     startTime?: number;
+    summonId?: number;
+    targetId?: string;
   }>>>;
   activeEffects: Array<{
     id: number;
@@ -32,5 +35,7 @@ export interface SummonProps {
     direction: Vector3;
     duration?: number;
     startTime?: number;
+    summonId?: number;
+    targetId?: string;
   }>;
 } 

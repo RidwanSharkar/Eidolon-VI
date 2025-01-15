@@ -23,6 +23,7 @@ interface BossUnitProps {
   onPositionUpdate: (id: string, position: Vector3) => void;
   playerPosition: Vector3;
   onAttackPlayer: (damage: number) => void;
+  onEnrageSpawn?: () => void;
 }
 
 export default function BossUnit({
@@ -35,6 +36,7 @@ export default function BossUnit({
   onPositionUpdate,
   playerPosition,
   onAttackPlayer,
+  onEnrageSpawn,
 }: BossUnitProps & Pick<Enemy, 'position'>) {
   const bossRef = useRef<Group>(null);
   
@@ -58,17 +60,17 @@ export default function BossUnit({
   const [isAttackOnCooldown, setIsAttackOnCooldown] = useState(false);
 
   // Boss-specific constants
-  const ATTACK_RANGE = 5.25;
-  const ATTACK_COOLDOWN_NORMAL = 3350;
+  const ATTACK_RANGE = 5;
+  const ATTACK_COOLDOWN_NORMAL = 3500;
   const ATTACK_COOLDOWN_ENRAGED =2500;
-  const MOVEMENT_SPEED = 0.165;
-  const SMOOTHING_FACTOR = 0.165;
-  const ATTACK_DAMAGE = 24;
+  const MOVEMENT_SPEED = 0.2;
+  const SMOOTHING_FACTOR = 0.2;
+  const ATTACK_DAMAGE = 22;
   const BOSS_HIT_HEIGHT = 2.0;       
   const BOSS_HIT_RADIUS = 4.0;
   const BOSS_HIT_HEIGHT_RANGE = 4.0;
-  const METEOR_COOLDOWN_NORMAL = 9000;
-  const METEOR_COOLDOWN_ENRAGED = 5000;
+  const METEOR_COOLDOWN_NORMAL = 7500;
+  const METEOR_COOLDOWN_ENRAGED = 4750;
 
   // Current cooldown refs
   const currentAttackCooldown = useRef(ATTACK_COOLDOWN_NORMAL);
@@ -97,15 +99,22 @@ export default function BossUnit({
   // ENRAGE LOGIC
   useEffect(() => {
     const isEnraged = health <= maxHealth / 2;
+    const wasNotEnragedBefore = currentAttackCooldown.current === ATTACK_COOLDOWN_NORMAL;
+    
+    if (isEnraged && wasNotEnragedBefore) {
+      // Boss just became enraged
+      onEnrageSpawn?.();  // Trigger abomination spawn
+    }
+    
     currentAttackCooldown.current = isEnraged ? ATTACK_COOLDOWN_ENRAGED : ATTACK_COOLDOWN_NORMAL;
     currentMeteorCooldown.current = isEnraged ? METEOR_COOLDOWN_ENRAGED : METEOR_COOLDOWN_NORMAL;
-  }, [health, maxHealth]);
+  }, [health, maxHealth, onEnrageSpawn]);
 
   // Hide boss for a short spawn animation
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsSpawning(false);
-    }, 3000);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -212,8 +221,11 @@ export default function BossUnit({
 
   // Meteor cast logic
   const castMeteor = useCallback(() => {
-    if (!isCastingMeteor) {
+    // Check cooldown before casting
+    if (!isCastingMeteor && Date.now() - lastMeteorTime.current >= currentMeteorCooldown.current) {
       setIsCastingMeteor(true);
+      lastMeteorTime.current = Date.now();  // Update last cast time
+      
       // METEOR CAST TIME
       setTimeout(() => {
         setIsCastingMeteor(false);
@@ -225,17 +237,16 @@ export default function BossUnit({
   useFrame(() => {
     if (!bossRef.current || health <= 0) return;
 
-    const currentTime = Date.now();
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosRef.current);
 
-    // Possibly cast meteor if off cooldown
-    if (currentTime - lastMeteorTime.current >= currentMeteorCooldown.current && health > 0) {
+    // Check if we should cast meteor (when not casting and cooldown is up)
+    if (!isCastingMeteor && 
+        Date.now() - lastMeteorTime.current >= currentMeteorCooldown.current) {
       castMeteor();
-      lastMeteorTime.current = currentTime;
     }
 
-    // If out of melee range, move closer
-    if (distanceToPlayer > ATTACK_RANGE && health > 0) {
+    // If out of melee range + 1 unit, move closer
+    if (distanceToPlayer > ATTACK_RANGE -2 && health > 0) {
       setIsAttacking(false);
 
       const direction = new Vector3()
@@ -252,15 +263,20 @@ export default function BossUnit({
       // Update boss mesh & let parent know
       bossRef.current.position.copy(currentPosition.current);
       
-      // FIXED ROTATION LOGIC
-      // Calculate direction to player
+      // UPDATED ROTATION LOGIC
       const lookAtPos = playerPosRef.current.clone();
       lookAtPos.y = currentPosition.current.y; // Keep same Y to avoid tilting
       
-      // Make the boss face the player
-      bossRef.current.lookAt(lookAtPos);
-      // Only need a single rotation to align the model correctly
-      bossRef.current.rotateY(Math.PI);
+      // Calculate direction to player
+      const directionToPlayer = new Vector3()
+        .subVectors(lookAtPos, currentPosition.current)
+        .normalize();
+      
+      // Calculate the angle to rotate
+      const targetRotation = Math.atan2(directionToPlayer.x, directionToPlayer.z);
+      
+      // Smoothly interpolate the rotation
+      bossRef.current.rotation.y = targetRotation;
 
       // If position changed enough, notify parent
       if (currentPosition.current.distanceTo(position) > 0.01) {
@@ -268,9 +284,9 @@ export default function BossUnit({
       }
     } else {
       // Within range => attempt attack if cooldown is up
-      if (currentTime - lastAttackTime.current >= currentAttackCooldown.current) {
+      if (Date.now() - lastAttackTime.current >= currentAttackCooldown.current) {
         startAttack();
-        lastAttackTime.current = currentTime;
+        lastAttackTime.current = Date.now();
       }
     }
   });

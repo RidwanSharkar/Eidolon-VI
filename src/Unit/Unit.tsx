@@ -34,10 +34,10 @@ import Oathstrike from '@/Spells/Oathstrike/Oathstrike';
 import { useOathstrike } from '../Spells/Oathstrike/useOathstrike';
 import CrusaderAura from '../Spells/CrusaderAura/CrusaderAura';
 import Summon from '@/Spells/Summon/Summon';
-import { OrbShieldRef } from '@/Spells/OrbShield/OrbShield';
+import { OrbShieldRef } from '@/Spells/Avalanche/OrbShield';
 import ChainLightning from '@/Spells/ChainLightning/ChainLightning';
-import OrbShield from '@/Spells/OrbShield/OrbShield';
-import { FrostExplosion } from '@/Spells/OrbShield/FrostExplosion';
+import OrbShield from '@/Spells/Avalanche/OrbShield';
+import { FrostExplosion } from '@/Spells/Avalanche/FrostExplosion';
 import { DragonHorns } from '@/gear/DragonHorns';
 
 
@@ -302,7 +302,7 @@ export default function Unit({
         currentPendingTargets.add(target.id);
         
         // Initial hit
-        const { damage, isCritical } = calculateDamage(17);
+        const { damage, isCritical } = calculateDamage(13);
         onHit(target.id, damage);
         
         setDamageNumbers(prev => [...prev, {
@@ -487,7 +487,7 @@ export default function Unit({
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       
       if (distanceTraveled < projectile.maxDistance) {
-        const speed = projectile.power >= 1 ? 0.60 : 0.375;
+        const speed = projectile.power >= 1 ? 0.50 : 0.35;
         projectile.position.add(
           projectile.direction
             .clone()
@@ -960,8 +960,16 @@ export default function Unit({
   return (
     <>
       <group ref={groupRef} position={[0, 1, 0]}>
-        <DragonHorns position={[0, -0.65, 0]} scale={0.8} />
-        
+
+        {/* DRAGON HORNS */}
+        <group scale={[0.335, 0.335, 0.335]} position={[-0.05, 0.215, 0.35]} rotation={[+0.15, 0, -5]}>
+          <DragonHorns isLeft={true} />
+        </group>
+
+       <group scale={[0.335, 0.335, 0.335]} position={[0.05, 0.215, 0.35]} rotation={[+0.15, 0, 5]}>
+        <DragonHorns isLeft={false} />
+
+      </group>
         {/* Outer glow SPhere layer */}
         <mesh scale={1.085}>
           <sphereGeometry args={[0.415, 32, 32]} />
@@ -1012,7 +1020,7 @@ export default function Unit({
           charges={fireballCharges}
           weaponType={currentWeapon}
         />
-      <group scale={[0.9 , 0.70, 0.8]} position={[0, 0.04, -0.015]} rotation={[0.3, 0, 0]}>
+      <group scale={[0.8 , 0.55, 0.8]} position={[0, 0.04, -0.015]} rotation={[0.4, 0, 0]}>
         <BonePlate />
       </group>
       <group scale={[0.85  , 0.85, 0.85]} position={[0, 0.05, +0.1]}>

@@ -7,6 +7,7 @@ interface BoneVortexProps {
   position: Vector3;
   onComplete?: () => void;
   isSpawning?: boolean;
+  scale?: number;
 }
 
 const createVortexSegment = () => (
@@ -14,22 +15,22 @@ const createVortexSegment = () => (
     <mesh>
       <cylinderGeometry args={[0.03, 0.025, 0.3, 8]} />
       <meshStandardMaterial 
-        color="#91FF5E"
+        color="#E13F3F" // FF6AAA 91FF5E FF3B6C FF4271
         transparent
-        opacity={0.525}
-        emissive="#00FF37"
-        emissiveIntensity={0.65}
+        opacity={0.55}
+        emissive="#F33FAE"
+        emissiveIntensity={0.75}
       />
     </mesh>
   </group>
 );
 
-export default function BoneVortex2({ position, onComplete, isSpawning = false }: BoneVortexProps) {
+export default function BoneVortex2({ position, onComplete, isSpawning = false, scale = 1 }: BoneVortexProps) {
     const segmentsRef = useRef<Mesh[]>([]);
     const layerCount = 16;
     const segmentsPerLayer = 10;
-    const maxRadius = 1.15;
-    const height = 2.75;
+    const maxRadius = 1.15 * scale;
+    const height = 2.75 * scale;
     const groupRef = useRef<Group>(null);
     const startTime = useRef(Date.now());
     const animationDuration = 1500;

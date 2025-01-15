@@ -6,15 +6,25 @@ interface UseOrbShieldManagerProps {
   setCharges: React.Dispatch<React.SetStateAction<Array<ChargeStatus>>>;
 }
 
+// DAMAGE SCALING BY ORB COUNT
+const DAMAGE_BY_ORB_COUNT: Record<number, number> = {
+  1: 7,
+  2: 11,
+  3: 17,
+  4: 23,
+  5: 29,
+  6: 43,
+  7: 59,
+  8: 73
+};
+
 export function useOrbShieldManager({
   charges,
   setCharges,
 }: UseOrbShieldManagerProps) {
-  const DAMAGE_BONUS_PER_ORB = 5;
-
   const calculateBonusDamage = useCallback((): number => {
     const availableCharges = charges.filter(charge => charge.available);
-    return availableCharges.length * DAMAGE_BONUS_PER_ORB;
+    return DAMAGE_BY_ORB_COUNT[availableCharges.length] || 0;
   }, [charges]);
 
   const consumeOrb = useCallback(() => {
@@ -27,18 +37,18 @@ export function useOrbShieldManager({
       charge.id === orbToConsume.id ? {
         ...charge,
         available: false,
-        cooldownStartTime: Date.now()
+        cooldownStartTime: Date.now() + 200
       } : charge
     ));
 
-    // Handle cooldown recovery
+    // Handle cooldown recovery with adjusted timing
     setTimeout(() => {
       setCharges(prev => prev.map(c => 
         c.id === orbToConsume.id
           ? { ...c, available: true, cooldownStartTime: null }
           : c
       ));
-    }, ORBITAL_COOLDOWN);
+    }, ORBITAL_COOLDOWN + 200);
   }, [charges, setCharges]);
 
   return { calculateBonusDamage, consumeOrb };

@@ -11,7 +11,7 @@ const createBonePiece = () => (
   <group rotation={[Math.PI / 4, 0, 0]}>
     {/* Main bone shaft - thinner and more angular */}
     <mesh>
-      <cylinderGeometry args={[0.015, 0.015, 0.15, 4]} />
+      <cylinderGeometry args={[0.0175, 0.0175, 0.175, 4]} />
       <meshStandardMaterial 
         color="#ffffff"
         roughness={0.4}
@@ -30,7 +30,7 @@ const createBonePiece = () => (
     </mesh>
 
     <mesh position={new THREE.Vector3(0, -0.1, 0)} rotation={new THREE.Euler(0, 0, -Math.PI / 6)}>
-      <sphereGeometry args={[0.03, 4, 4]} />
+      <sphereGeometry args={[0.0325, 4, 4]} />
       <meshStandardMaterial 
         color="#a4a4a4"
         roughness={0.5}

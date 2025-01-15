@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
+//  FF00A6
+
 const SunsetSkyShader = {
   uniforms: {
-    topColor: { value: new THREE.Color('#FF00A6') },
+    topColor: { value: new THREE.Color('#1500FF') },  //  FF00A6
     middleColor: { value: new THREE.Color('#FF79AF') },
     bottomColor: { value: new THREE.Color('#FFCDA2') },
     offset: { value: 33 },

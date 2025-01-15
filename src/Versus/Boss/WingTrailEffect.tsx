@@ -8,7 +8,7 @@ interface WingTrailEffectProps {
 }
 
 const WingTrailEffect: React.FC<WingTrailEffectProps> = ({ parentRef, offset }) => {
-  const particlesCount = 8;
+  const particlesCount = 14;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));

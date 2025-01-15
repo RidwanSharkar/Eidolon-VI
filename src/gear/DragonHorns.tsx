@@ -1,85 +1,59 @@
-import { GroupProps } from "@react-three/fiber";
-import { useRef, useEffect } from "react";
-import { Group, Mesh, Color } from "three";
-import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import * as THREE from 'three';
 
-interface DragonHornsProps extends GroupProps {
-  scale?: number;
-}
-
-export function DragonHorns({ scale = 1, ...props }: DragonHornsProps) {
-  const groupRef = useRef<Group>(null);
-  const hornMeshes = useRef<Mesh[]>([]);
-
-  // Merge geometries for better performance
-  useEffect(() => {
-    if (groupRef.current) {
-      const geometries: THREE.BufferGeometry[] = [];
-      hornMeshes.current.forEach((mesh) => {
-        if (mesh.geometry) {
-          geometries.push(mesh.geometry.clone().applyMatrix4(mesh.matrixWorld));
-        }
-      });
-      
-      if (geometries.length > 0) {
-        const mergedGeometry = BufferGeometryUtils.mergeGeometries(geometries);
-        // Apply merged geometry to first mesh and hide others
-        if (hornMeshes.current[0] && mergedGeometry) {
-          hornMeshes.current[0].geometry = mergedGeometry;
-          hornMeshes.current.slice(1).forEach(mesh => mesh.visible = false);
-        }
-      }
-    }
-  }, []);
-
-  const createHornSegment = (
-    height: number,
-    radiusTop: number,
-    radiusBottom: number,
-    position: [number, number, number],
-    rotation: [number, number, number],
-    gradientOffset: number = 0
-  ) => {
-    return (
-      <mesh
-        ref={(mesh) => {
-          if (mesh) hornMeshes.current.push(mesh as Mesh);
-        }}
-        position={position}
-        rotation={rotation}
-      >
-        <cylinderGeometry 
-          args={[radiusTop, radiusBottom, height, 12, 4, false]} 
-        />
-        <meshStandardMaterial
-          color={new Color('#ff3333').multiplyScalar(1 - gradientOffset * 0.5)}
-          roughness={0.4 + gradientOffset * 0.3}
-          metalness={0.6 - gradientOffset * 0.3}
-          emissive={new Color('#330000')}
-          emissiveIntensity={0.2 + gradientOffset * 0.3}
-        />
-      </mesh>
-    );
-  };
-
+export function DragonHorns({ isLeft = false }: { isLeft?: boolean }) {
+  const segments = 18;
+  const heightPerSegment = 0.0675;
+  const baseWidth = 0.075;
+  const twistAmount = Math.PI *1.75;
+  const curveAmount = 3.25;
+  //   <group rotation={[-0.45, isLeft ? -0.1 : 0.1, isLeft ? -0.6 : 0.6]}>
   return (
-    <group ref={groupRef} scale={scale} {...props}>
-      {/* Left Horn */}
-      <group position={[-0.25, 0.5, 0]} rotation={[0.3, -0.2, 0]}>
-        {createHornSegment(0.4, 0.06, 0.08, [0, 0.2, 0], [0.3, 0, 0], 0)}
-        {createHornSegment(0.3, 0.05, 0.06, [0, 0.4, 0.1], [0.4, 0, 0], 0.3)}
-        {createHornSegment(0.25, 0.04, 0.05, [0, 0.6, 0.2], [0.5, 0, 0], 0.6)}
-        {createHornSegment(0.2, 0.03, 0.04, [0, 0.75, 0.3], [0.6, 0, 0], 0.9)}
-      </group>
-
-      {/* Right Horn */}
-      <group position={[0.25, 0.5, 0]} rotation={[0.3, 0.2, 0]}>
-        {createHornSegment(0.4, 0.06, 0.08, [0, 0.2, 0], [0.3, 0, 0], 0)}
-        {createHornSegment(0.3, 0.05, 0.06, [0, 0.4, 0.1], [0.4, 0, 0], 0.3)}
-        {createHornSegment(0.25, 0.04, 0.05, [0, 0.6, 0.2], [0.5, 0, 0], 0.6)}
-        {createHornSegment(0.2, 0.03, 0.04, [0, 0.75, 0.3], [0.6, 0, 0], 0.9)}
-      </group>
+    <group rotation={[-0.45, isLeft ? -0.7 : 0.7, isLeft ? -0.15 : 0.15]}> 
+      {Array.from({ length: segments }).map((_, i) => {
+        const progress = i / (segments + 1);
+        const width = baseWidth * (1 - progress * 0.725);
+        const twist = Math.pow(progress, 0.2) * twistAmount;
+        const curve = Math.pow(progress, 2.7) * curveAmount;
+        
+        return (
+          <group 
+            key={i}
+            position={[
+              curve * (isLeft ? -0.15 : 0.15),
+              i * heightPerSegment,
+              -curve * 0.725
+            ]}
+            rotation={[-1.5 * progress, twist ,0]} // ROTATION?
+          >
+            <mesh>
+              <cylinderGeometry 
+                args={[width, width * 1.5, heightPerSegment, 10]}
+              />
+              <meshStandardMaterial 
+                color={`rgb(${139 - progress * 80}, ${0 + progress * 20}, ${0 + progress * 20})`}
+                roughness={0.7}
+                metalness={0.4}
+              />
+            </mesh>
+            
+            {/* Ridge details - now with 6 faces to match reference */}
+            {Array.from({ length: 6 }).map((_, j) => (
+              <group 
+                key={j} 
+                rotation={[0, (j * Math.PI / 2 ) , 0]}
+              >
+                <mesh position={[width * 0.95, 0, 0]}>
+                  <boxGeometry args={[width * 0.3, heightPerSegment * 1.25 + 0.175, width * 1.5]} />
+                  <meshStandardMaterial 
+                    color={`rgb(${159 - progress * 100}, ${20 + progress * 20}, ${20 + progress * 20})`}
+                    roughness={0.8}
+                    metalness={0.3}
+                  />
+                </mesh>
+              </group>
+            ))}
+          </group>
+        );
+      })}
     </group>
   );
 }

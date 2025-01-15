@@ -1,4 +1,4 @@
-import { Vector3, Color } from 'three';
+import { Vector3, Color, Euler } from 'three';
 import { trunkColors, leafColors } from '@/Environment/treeColors';
 
 export interface GeneratedTree {
@@ -10,8 +10,8 @@ export interface GeneratedTree {
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 20;
-  const radius = 52;
+  const numberOfMountains = 30;
+  const radius = 53;
   
   // Create evenly spaced mountains around the perimeter
   for (let i = 0; i < numberOfMountains; i++) {
@@ -87,23 +87,32 @@ export const generateTrees = (): GeneratedTree[] => {
   return trees;
 };
 
-export const generateMushrooms = (): Array<{ position: Vector3; scale: number }> => {
-  const mushrooms: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMushrooms = 60; 
-
+export const generateMushrooms = (): Array<{ position: Vector3; scale: number; variant: 'pink' | 'green' | 'blue' }> => {
+  const mushrooms: Array<{ position: Vector3; scale: number; variant: 'pink' | 'green' | 'blue' }> = [];
+  const numberOfMushrooms = 60;
 
   for (let i = 0; i < numberOfMushrooms; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const distance = Math.random() * 48; // Within the baseRadius + layers
-
+    const distance = Math.random() * 48;
     const x = distance * Math.cos(angle);
     const z = distance * Math.sin(angle);
+    const scale = 0.45 + Math.random() * 0.175;
 
-    const scale = 0.45 + Math.random() * 0.175; // Small mushrooms
+    // Determine variant based on ratio (30:60:10)
+    let variant: 'pink' | 'green' | 'blue';
+    const random = Math.random() * 100;
+    if (random < 60) {
+      variant = 'pink';
+    } else if (random < 90) {
+      variant = 'green';
+    } else {
+      variant = 'blue';
+    }
 
     mushrooms.push({
       position: new Vector3(x, 0, z),
-      scale: scale,
+      scale,
+      variant,
     });
   }
 
@@ -112,7 +121,7 @@ export const generateMushrooms = (): Array<{ position: Vector3; scale: number }>
 
 export const generateRandomPosition = (): Vector3 => {
   const angle = Math.random() * Math.PI * 2;
-  const distance = Math.random() * 20; // REAL SPAWN RADIUS!?
+  const distance = Math.random() * 22.5; // REAL SPAWN RADIUS!?
 
   const x = Math.cos(angle) * distance;
   const z = Math.sin(angle) * distance;
@@ -140,4 +149,60 @@ export const generateFlowers = (): Array<{ position: Vector3; scale: number }> =
   }
 
   return flowers;
+};
+
+export const generateBoneDoodads = () => {
+  const doodads: Array<{
+    position: Vector3;
+    rotation: Euler;
+    type: string;
+    scale?: number;
+  }> = [];
+
+  // Add the fixed submerged bone plate
+  doodads.push({
+    position: new Vector3(15, -0.2, 10),
+    rotation: new Euler(-Math.PI * 0.05, Math.PI * 1.2, 0),
+    type: 'submerged'
+  });
+
+  // Add random bone plates (1-2)
+  for (let i = 0; i < 1 + Math.floor(Math.random()); i++) {
+    doodads.push({
+      position: new Vector3((Math.random() - 0.5) * 100, 0, (Math.random() - 0.5) * 100),
+      rotation: new Euler(0, Math.random() * Math.PI * 2, 0),
+      type: 'plate',
+      scale: 0.8 + Math.random() * 0.4
+    });
+  }
+
+  // Add scattered bones (20-40)
+  const boneCount = 20 + Math.floor(Math.random() * 20);
+  for (let i = 0; i < boneCount; i++) {
+    doodads.push({
+      position: new Vector3((Math.random() - 0.5) * 100, 0, (Math.random() - 0.5) * 100),
+      rotation: new Euler(
+        Math.random() * 0.5,
+        Math.random() * Math.PI * 2,
+        Math.random() * 0.5
+      ),
+      type: 'bones'
+    });
+  }
+
+  // Add shoulder plates (10-20)
+  const shoulderCount = 10 + Math.floor(Math.random() * 10);
+  for (let i = 0; i < shoulderCount; i++) {
+    doodads.push({
+      position: new Vector3((Math.random() - 0.5) * 100, 0, (Math.random() - 0.5) * 100),
+      rotation: new Euler(
+        Math.random() * 0.3,
+        Math.random() * Math.PI * 2,
+        Math.random() * 0.3
+      ),
+      type: 'shoulder'
+    });
+  }
+
+  return doodads;
 };

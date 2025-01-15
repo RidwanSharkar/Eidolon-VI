@@ -10,7 +10,7 @@ export interface ChargeStatus {
   cooldownStartTime: number | null;
 }
 
-export const ORBITAL_COOLDOWN = 8000; // ORB CHARGE COOLDOWN
+export const ORBITAL_COOLDOWN = 7850; // ORB CHARGE COOLDOWN
 
 interface ChargedOrbitalsProps {
   parentRef: React.RefObject<Group>;
@@ -36,12 +36,12 @@ export default function ChargedOrbitals({
   const getOrbitalColor = () => {
     switch (weaponType) {
       case WeaponType.SCYTHE:
-        return '#5EFF00';
+        return '#00FF37';
       case WeaponType.SWORD:
-        return '#FF9748'; //  FF9C50
+        return '#FF831D'; //  FF9C50
       case WeaponType.SABRES:
       case WeaponType.SABRES2:
-        return '#00AAFF'; // 78F6FF
+        return '#0091FF'; // 78F6FF
       default:
         return '#00ff44';  // Default to scythe 78F6FF
     }

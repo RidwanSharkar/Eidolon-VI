@@ -8,7 +8,7 @@ interface BossUnholyAuraProps {
 
 export default function BossUnholyAura({ parentRef }: BossUnholyAuraProps) {
   const auraRef = useRef<Group>(null);
-  const rotationSpeed = 0.08; // Slightly slower for more menacing feel
+  const rotationSpeed = 0.1; // Slightly slower for more menacing feel
 
   useFrame(() => {
     if (auraRef.current && parentRef.current) {
@@ -22,7 +22,7 @@ export default function BossUnholyAura({ parentRef }: BossUnholyAuraProps) {
     <group ref={auraRef} scale={0.75}>  {/* Slightly larger scale */}
       {/* Outer corrupted circle */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.2, 0]}>
-        <ringGeometry args={[1.4, 1.75, 16, 1]} />
+        <ringGeometry args={[1.2, 1.65, 16, 1]} />
         <meshStandardMaterial
           color="#ff0000"
           emissive="#ff2200"
@@ -35,13 +35,13 @@ export default function BossUnholyAura({ parentRef }: BossUnholyAuraProps) {
 
       {/* Spinning rune marks */}
       <group position={[0, -0.225, 0]}>
-        {[...Array(12)].map((_, i) => (  // Increased to 12 marks
+        {[...Array(10)].map((_, i) => (  // Adjusted to 10 marks
           <mesh
             key={i}
-            rotation={[-Math.PI / 2, 0, (i / 12) * Math.PI * 2 + Date.now() * 0.001]}
+            rotation={[-Math.PI / 2, 0, (i / 10) * Math.PI * 2 + Date.now() * 0.001]}
             position={[0, 0, 0]}
           >
-            <planeGeometry args={[0.5, 2.8]} />
+            <circleGeometry args={[0.1, 32]} />  
             <meshStandardMaterial
               color="#ff0000"
               emissive="#ff3300"
@@ -69,7 +69,7 @@ export default function BossUnholyAura({ parentRef }: BossUnholyAuraProps) {
               ]}
               rotation={[-Math.PI / 2, 0, angle + Math.PI / 2]}
             >
-              <planeGeometry args={[0.8, 0.8]} />
+              <circleGeometry args={[0.8, 32]} />
               <meshStandardMaterial
                 color="#cc0000"
                 emissive="#ff0000"

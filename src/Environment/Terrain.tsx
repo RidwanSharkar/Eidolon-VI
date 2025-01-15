@@ -2,12 +2,22 @@ import { Mesh, Shape, DoubleSide, } from 'three';
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { Vector3, Euler } from 'three';
+import { BrokenBonePlate, ScatteredBones, BrokenShoulderPlate, SubmergedBonePlate, getFixedDoodads } from './BoneDoodads';
 
 interface TerrainProps {
   color?: string;
   roughness?: number;
   metalness?: number;
 }
+
+// Helper function to generate random positions within map bounds
+const getRandomPosition = () => {
+  const mapSize = 100; // Adjust based on your terrain size
+  const x = (Math.random() - 0.5) * mapSize;
+  const z = (Math.random() - 0.5) * mapSize;
+  return new Vector3(x, 0, z);
+};
 
 export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness = 0.1 }: TerrainProps) {
   // All hooks must be at the top level
@@ -19,12 +29,14 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
     uniforms: {
       time: { value: 0 },
       scale: { value: 20.0 },
-      elevation: { value: 0.3 },
+      elevation: { value: 0.3 }, // hmm irrelvant cuz flat geometry**
       groundScale: { value: 0. },
       patchScale: { value: 0.1 },
       baseColor: { value: new THREE.Color(color) },
       roughnessValue: { value: roughness },
       metalnessValue: { value: metalness },
+      crackIntensity: { value: 2.0 },
+      glowStrength: { value: 0.8 },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -79,20 +91,40 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
         return 130.0 * dot(m, g);
       }
       
+      uniform float crackIntensity;
+      uniform float glowStrength;
+
+      float getCrackPattern(vec2 uv) {
+        // Create sharp, vein-like cracks
+        float noise1 = abs(snoise(uv * 3.0));
+        float noise2 = abs(snoise(uv * 6.0 + 1234.5));
+        
+        // Combine noises to create crack pattern
+        float crack = smoothstep(0.7, 0.8, noise1 * noise2);
+        return crack;
+      }
+
       void main() {
         // Create brown patches
         vec2 patchUv = vUv * patchScale;
         float patchPattern = snoise(patchUv + time * 0.01);
         float patchPattern2 = snoise(patchUv * 1.5 + time * 0.015); // Second noise for third color
         
-        // Base colors
-        vec3 grassColor = vec3(0.2, 0.35, 0.15);     // Dark green base
-        vec3 brownColor = vec3(0.45, 0.32, 0.22);     // Brighter earth brown
-        vec3 lightBrownColor = vec3(0.55, 0.42, 0.30); // Light brown
+        // Add a third noise pattern for light blue patches
+        vec2 lightPatchUv = vUv * 0.1; // Larger scale for light patches
+        float lightPattern = smoothstep(0.4, 0.6, snoise(lightPatchUv + time * 0.007));
+        
+        // Base colors - muted blue fantasy theme with light accents
+        vec3 grassColor = vec3(0.2, 0.265, 0.6);      // Deeper muted blue
+        vec3 brownColor = vec3(0.20, 0.3, 0.7);    // Medium muted blue
+        vec3 lightBrownColor = vec3(0.3, 0.4, 0.8); // Lighter muted blue
+        vec3 accentColor = vec3(0.5, 0.6, 0.95);    // Very light blue accent
         
         // Mix colors based on noise patterns
-        vec3 baseGroundColor = mix(grassColor, brownColor, patchPattern * 0.7);
-        baseGroundColor = mix(baseGroundColor, lightBrownColor, patchPattern2 * 0.5);
+        vec3 baseGroundColor = mix(grassColor, brownColor, patchPattern * 0.6);
+        baseGroundColor = mix(baseGroundColor, lightBrownColor, patchPattern2 * 0.4);
+        // Add light blue accents
+        baseGroundColor = mix(baseGroundColor, accentColor, lightPattern * 0.3);
         
         // Add noise detail
         vec2 uv = vUv * scale;
@@ -102,6 +134,25 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
         // Apply detail to final color
         vec3 finalColor = mix(baseGroundColor, baseGroundColor * 1.2, n * 0.3);
         
+        // Add cracks
+        vec2 crackUv = vUv * crackIntensity + time * 0.05;
+        float crackPattern = getCrackPattern(crackUv);
+        
+        // Create glowing effect for cracks
+        vec3 glowColor = vec3(0.2, 0.8, 0.3); // Green gas color
+        float glow = smoothstep(0.2, 0.8, crackPattern) * glowStrength;
+        
+        // Pulse the glow
+        float pulse = sin(time * 2.0) * 0.5 + 0.5;
+        glow *= 0.8 + 0.2 * pulse;
+        
+        // Mix the crack glow with the base terrain
+        finalColor = mix(finalColor, glowColor, glow * 0.6);
+        
+        // Add extra brightness to crack centers
+        float crackCenter = smoothstep(0.85, 0.95, crackPattern);
+        finalColor += glowColor * crackCenter * 0.5;
+
         gl_FragColor = vec4(finalColor, 1.0);
       }
     `,
@@ -132,6 +183,79 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
     }
   });
 
+  const TerrainDoodads = () => {
+    const doodads = useRef<Array<{ 
+      position: Vector3; 
+      rotation: Euler; 
+      type: string; 
+      scale?: number; 
+    }>>([]);
+
+    useEffect(() => {
+      // Start with fixed doodads
+      const newDoodads = [...getFixedDoodads()];
+      
+      // Add random doodads
+      // Add bone plates (1-2)
+      for (let i = 0; i < 1 + Math.floor(Math.random()); i++) {
+        newDoodads.push({
+          position: getRandomPosition(),
+          rotation: new Euler(0, Math.random() * Math.PI * 2, 0),
+          type: 'plate',
+          scale: 0.8 + Math.random() * 0.4
+        });
+      }
+      
+      // Add scattered bones (20-40)
+      const boneCount = 20 + Math.floor(Math.random() * 20);
+      for (let i = 0; i < boneCount; i++) {
+        newDoodads.push({
+          position: getRandomPosition(),
+          rotation: new Euler(
+            Math.random() * 0.5,
+            Math.random() * Math.PI * 2,
+            Math.random() * 0.5
+          ),
+          type: 'bones'
+        });
+      }
+      
+      // Add shoulder plates and other decorative pieces (10-20)
+      const decorativeCount = 10 + Math.floor(Math.random() * 10);
+      for (let i = 0; i < decorativeCount; i++) {
+        newDoodads.push({
+          position: getRandomPosition(),
+          rotation: new Euler(
+            Math.random() * 0.3,
+            Math.random() * Math.PI * 2,
+            Math.random() * 0.3
+          ),
+          type: 'shoulder'
+        });
+      }
+      
+      doodads.current = newDoodads;
+    }, []);
+
+    return (
+      <>
+        {doodads.current.map((doodad, index) => {
+          switch (doodad.type) {
+            case 'submerged':
+              return <SubmergedBonePlate key={index} {...doodad} />;
+            case 'plate':
+              return <BrokenBonePlate key={index} {...doodad} />;
+            case 'bones':
+              return <ScatteredBones key={index} {...doodad} />;
+            case 'shoulder':
+              return <BrokenShoulderPlate key={index} {...doodad} />;
+            default:
+              return null;
+          }
+        })}
+      </>
+    );
+  };
 
   return (
     <group>
@@ -141,7 +265,7 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
         <primitive object={snowMaterial} attach="material" />
       </mesh>  
 
-
+      <TerrainDoodads />
     </group>
   );
 }

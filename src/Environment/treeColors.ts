@@ -7,10 +7,13 @@ export const trunkColors = [
 ];
 
 export const leafColors = [ 
-  "#FF8DAC", // Pink
+  "#53BADF", // Pink
+  "#618C4E", // green 729F5F
+  "#E780CC", // orange
+
+
   "#FF98B7", // Light pink
-  "#93E66C", // Light green
-  "#C6E48B", // Light green
+  "#74893A", // Light green
 
 
   "#ACBF85", // Light green

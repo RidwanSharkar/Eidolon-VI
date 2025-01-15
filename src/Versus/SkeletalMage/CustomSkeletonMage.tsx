@@ -215,7 +215,7 @@ function ShoulderPlate() {
         <mesh>
           <cylinderGeometry args={[0.123, 0.19, 0.175, 6, 1, false, 0, Math.PI*2]} />
           <meshStandardMaterial 
-            color="#e8e8e8"
+            color="#97EFFF"
             roughness={0.4}
             metalness={0.3}
           />
@@ -227,7 +227,7 @@ function ShoulderPlate() {
             <mesh position={[0.11, 0, 0]} rotation={[0, Math.PI / 6, 0]}>
               <boxGeometry args={[0.12, 0.19, 0.02]} />
               <meshStandardMaterial 
-                color="#d4d4d4"
+                color="#97EFFF"
                 roughness={0.5}
                 metalness={0.4}
               />
@@ -245,11 +245,11 @@ function ShoulderPlate() {
           </group>
         ))}
 
-        {/* Top rim */}
-        <mesh position={[0, 0.22, 0]} rotation={[Math.PI*2, Math.PI*2, Math.PI/2]}>
-          <torusGeometry args={[0.1, 0.025, 3, 5]} />
+        {/* hover Top rim */}
+        <mesh position={[0, 0.22, 0]} rotation={[0, 0.25, Math.PI/2]}>
+          <torusGeometry args={[0.2, 0.035, 3, 5]} />
           <meshStandardMaterial 
-            color="#d4d4d4"
+            color="#97EFFF"
             roughness={0.3}
             metalness={0.5}
           />
@@ -259,7 +259,7 @@ function ShoulderPlate() {
         <mesh position={[0, 0, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
           <torusGeometry args={[0.16, 0.02, 4, 5]} />
           <meshStandardMaterial 
-            color="#d4d4d4"
+            color="#00D9FF"
             roughness={0.3}
             metalness={0.5}
           />
@@ -268,18 +268,18 @@ function ShoulderPlate() {
                 <mesh position={[0, -0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
           <torusGeometry args={[0.20, 0.02, 4, 5]} />
           <meshStandardMaterial 
-            color="#d4d4d4"
+            color="#00D9FF"
             roughness={0.3}
             metalness={0.5}
           />
         </mesh>
 
 
-        {/* h0ver rim */}
+        {/* bottom rim */}
         <mesh position={[0, 0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.125, 0.0175, 6, 6]} />
+          <torusGeometry args={[0.175, 0.0175, 6, 6]} />
           <meshStandardMaterial 
-            color="#d4d4d4"
+            color="#00D9FF"
             roughness={0.3}
             metalness={0.5}
           />
@@ -376,18 +376,18 @@ function MageRobe() {
     <group>
       {/* Main robe body */}
       <mesh position={[0, -0.15, 0]}>
-        <cylinderGeometry args={[0.17, 0.4, 1.625, 8]} />
+        <cylinderGeometry args={[0.17, 0.45, 1.65, 8]} />
         <meshStandardMaterial 
-          color="#2a0845"
+          color="#896BFF"
           roughness={0.7}
           transparent
-          opacity={0.75}
+          opacity={0.7}
         />
       </mesh>
 
       {/* Robe trim */}
       <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.3, 0.3, 0.23, 8]} />
+        <cylinderGeometry args={[0.285, 0.285, 0.135, 8]} />
         <meshStandardMaterial 
           color="#6b0fb3"
           metalness={0.3}
@@ -396,7 +396,7 @@ function MageRobe() {
       </mesh>
 
 
-      {/* Shoulder cape pieces */}
+      {/* EXTRA float
       {[-1, 1].map((side) => (
         <group 
           key={side}
@@ -414,6 +414,7 @@ function MageRobe() {
           </mesh>
         </group>
       ))}
+         */}
 
       {/* Shoulder cape pieces */}
       {[-1, 1].map((side) => (
@@ -545,8 +546,8 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
   }, []);
 
   return (
-    <group ref={groupRef} position={[position[0], position[1], position[2]]}>
-      <group position={[0, 0.76, 0]}>
+    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[0.925, 0.935, 0.8]}>
+      <group position={[0, 0.775, 0.025]}>
         <MageRobe />
       </group>
 
@@ -564,10 +565,10 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
           <group 
             key={i} 
             rotation={[0, (Math.PI * 2 * i) / 3, 0]}
-            position={[0, 1.35, 0]}
+            position={[0, 1.3, 0]}
           >
             <mesh>
-              <ringGeometry args={[0.6, 0.70, 32]} />
+              <ringGeometry args={[0.575, 0.7, 32]} />
               <meshStandardMaterial 
                 color="#4169E1"
                 emissive="#4169E1"
@@ -610,7 +611,7 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
       ))}
 
       {/* SKULL POSITIONING */}
-      <group name="Head" position={[0, 1.775, 0.1]} scale={[ 0.75, 0.8, 0.8]}>
+      <group name="Head" position={[0, 1.7, 0.1]} scale={[ 0.75, 0.8, 0.8]}>
         {/* Main skull shape */}
         <group>
           {/* Back of cranium */}
@@ -766,10 +767,10 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
       </group>
 
       {/* Add shoulder plates just before the arms */}
-      <group position={[-0.34, 1.475, 0]} rotation={[-0.15, -Math.PI - 0.4, -0.35]}>
+      <group position={[-0.36, 1.475, 0]} rotation={[-0.15, -Math.PI - 0.4, -0.35]}>
         <ShoulderPlate />
       </group>
-      <group position={[0.34, 1.475, 0]} rotation={[-0.15, Math.PI -0.4, 0.35]}>
+      <group position={[0.36, 1.475, 0]} rotation={[-0.15, Math.PI -0.4, 0.35]}>
         <ShoulderPlate />
       </group>
 
@@ -811,11 +812,11 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
         ))}
       </group>
 
-      {/* Legs - keep same ground position but connect to higher pelvis */}
-      <group name="LeftLeg" position={[0.2, 0.3, 0]}>
+      {/* Legs -  */}
+      <group name="LeftLeg" position={[0.2, 0.36, 0]}>
         <BoneLegModel />
       </group>
-      <group name="RightLeg" position={[-0.2, 0.3, 0]}>
+      <group name="RightLeg" position={[-0.2, 0.36, 0]}>
         <BoneLegModel />
       </group>
 

@@ -296,7 +296,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
   useFrame((_, delta) => {
     if (!clawRef.current || !parentRef?.current) return;
 
-    progressRef.current += delta * 5.75;
+    progressRef.current += delta * 5;
     const swingPhase = Math.min(progressRef.current / Math.PI, 1);
 
     if (swingPhase >= 1) {

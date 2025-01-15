@@ -2,13 +2,13 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Color } from 'three';
-import FireballTrail from '@/Spells/Fireball/FireballTrail';
 import * as THREE from 'three';
+import MageFireballTrail from './MageFireballTrail';
 
 interface FireballProps {
   position: Vector3;
   target: Vector3;
-  onHit: () => void;
+  onHit: (didHitPlayer: boolean) => void;
   playerPosition: Vector3;
 }
 
@@ -16,11 +16,12 @@ export default function MageFireball({ position, target, onHit, playerPosition }
   const fireballRef = useRef<Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const initialDirection = target.clone().sub(position).normalize();
-  const speed = 0.35;
+  const speed = 0.275;
   const hitRadius = 0.5;
   const [showExplosion, setShowExplosion] = useState(false);
   const [explosionStartTime, setExplosionStartTime] = useState<number | null>(null);
   const [, forceUpdate] = useState({});
+  const hasDealtDamage = useRef(false);
 
   useFrame(() => {
     if (!fireballRef.current) return;
@@ -28,43 +29,51 @@ export default function MageFireball({ position, target, onHit, playerPosition }
     if (showExplosion) {
       forceUpdate({});
       
+      if (!hasDealtDamage.current) {
+        hasDealtDamage.current = true;
+        onHit(true);
+      }
+      
       if (explosionStartTime && Date.now() - explosionStartTime > 200) {
-        onHit();
+        onHit(false);
         return;
       }
       return;
     }
     
-    // Move in the initial direction
     fireballRef.current.position.add(initialDirection.clone().multiplyScalar(speed));
     
-    // Calculate distance to the original target position
+    const distanceToPlayer = fireballRef.current.position.distanceTo(playerPosition);
+    const directHitRadius = 0.75;
+    
+    if (distanceToPlayer < directHitRadius) {
+      setShowExplosion(true);
+      setExplosionStartTime(Date.now());
+      return;
+    }
+    
     const distanceToTarget = fireballRef.current.position.distanceTo(target);
     
-    // When we reach the target position (with small threshold)
     if (distanceToTarget < hitRadius) {
-      // Only deal damage if player is still within hit radius of the target position
       const playerDistanceToTarget = playerPosition.distanceTo(target);
       if (playerDistanceToTarget < hitRadius) {
         setShowExplosion(true);
         setExplosionStartTime(Date.now());
       } else {
-        onHit(); // Call onHit without explosion if player dodged
+        onHit(false);
       }
       return;
     }
 
-    // Remove fireball if it goes too far
     const distanceFromStart = fireballRef.current.position.distanceTo(position);
     if (distanceFromStart > 60) {
-      onHit();
+      onHit(false);
     }
   });
 
   return (
     <group ref={fireballRef} position={position}>
       {!showExplosion ? (
-        // Normal fireball
         <>
           <mesh ref={meshRef}>
             <sphereGeometry args={[0.225, 16, 16]} />
@@ -77,29 +86,18 @@ export default function MageFireball({ position, target, onHit, playerPosition }
             />
           </mesh>
 
-          <mesh scale={0.7}>
-            <sphereGeometry args={[0.235, 16, 16]} />
-            <meshStandardMaterial
-              color="#ff6666"
-              emissive="#ff3333"
-              emissiveIntensity={2}
-              transparent
-              opacity={0.7}
-            />
-          </mesh>
+          <MageFireballTrail
+            color={new Color("#ff3333")}
+            size={0.255}
+            meshRef={meshRef}
+            opacity={0.8}
+          />
 
           <pointLight 
             color="#ff3333" 
             intensity={2} 
             distance={3}
             decay={2}
-          />
-
-          <FireballTrail
-            color={new Color("#ff3333")}
-            size={0.255}
-            meshRef={meshRef}
-            opacity={0.7}
           />
         </>
       ) : (

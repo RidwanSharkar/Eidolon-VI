@@ -36,9 +36,9 @@ export default function Scene3({
   skeletonProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 1000,
+  spawnInterval = 3000,
   maxSkeletons = 23,
-  initialSkeletons = 6,
+  initialSkeletons = 5,
   //spawnCount = 4,
   flowerData,
 }: ScenePropsWithCallback) {
@@ -51,8 +51,8 @@ export default function Scene3({
       position: skeleton.initialPosition.clone(),
       initialPosition: skeleton.initialPosition.clone(),
       currentPosition: skeleton.initialPosition.clone(),
-      health: 356,
-      maxHealth: 356,
+      health: 361,
+      maxHealth: 361,
     }))
   );
 
@@ -67,13 +67,12 @@ export default function Scene3({
 
   // Add boss state
   const [isBossSpawned, setIsBossSpawned] = useState(false);
-  const [bossHealth, setBossHealth] = useState(5184);
+  const [bossHealth, setBossHealth] = useState(6084);
 
   // Add state to track boss position
   const [bossPosition, setBossPosition] = useState<Vector3>(BOSS_SPAWN_POSITION.clone());
 
   // Add state for tracking waves and abomination spawns
-  const [currentWave, setCurrentWave] = useState(0);
   const [abominationsSpawned, setAbominationsSpawned] = useState(0);
 
   // Callback to handle damage to enemies
@@ -179,7 +178,7 @@ export default function Scene3({
         position: bossPosition, // tracked boss position instead of BOSS_SPAWN_POSITION
         initialPosition: BOSS_SPAWN_POSITION,
         health: bossHealth,
-        maxHealth: 5184
+        maxHealth: 6084
       }] : [])
     ],
     onDamage: unitProps.onDamage,
@@ -211,7 +210,7 @@ export default function Scene3({
     // 5-second delay before allowing spawns
     const initialDelay = setTimeout(() => {
       setSpawnStarted(true);
-    }, 1000);
+    }, 50);
 
     return () => clearTimeout(initialDelay);
   }, []);
@@ -221,34 +220,30 @@ export default function Scene3({
     if (totalSpawned >= maxSkeletons) return;
 
     const spawnTimer = setInterval(() => {
-      // Wave control based on kill count (adjusted for Scene3)
-      if ((killCount < 30 && currentWave === 0) || 
-          (killCount < 33 && currentWave === 1) || 
-          (killCount < 36 && currentWave === 2) ||
-          (killCount < 40 && currentWave === 3)) {
-        return;
-      }
+      // WAVE CONTROL
+      if (killCount < 33) return; // Only basic requirement to start spawning
 
       setEnemies(prev => {
         const remainingSpawns = maxSkeletons - totalSpawned;
         if (remainingSpawns <= 0) return prev;
 
-        // Define specific spawn points for abominations (5th, 10th, and 15th spawns)
-        const abominationSpawnPoints = [5, 10, 15];
-        const currentSpawnNumber = totalSpawned - initialSkeletons;
-        const shouldSpawnAbomination = abominationSpawnPoints.includes(currentSpawnNumber);
+        // Define specific spawn points for abominations
+        const shouldSpawnAbomination = 
+          (killCount >= 36 && abominationsSpawned === 0) ||
+          (killCount >= 41 && abominationsSpawned === 1) ||
+          (killCount >= 46 && abominationsSpawned === 2);
 
         if (shouldSpawnAbomination && abominationsSpawned < 3) {
           const spawnPosition = generateRandomPosition();
-          setAbominationsSpawned(prev => prev + 1);
           setTotalSpawned(prev => prev + 1);
-          setCurrentWave(prev => prev + 1);
+          setAbominationsSpawned(prev => prev + 1);
+          
           return [...prev, {
             id: `abomination-${totalSpawned}`,
             position: spawnPosition.clone(),
             initialPosition: spawnPosition.clone(),
-            health: 675,
-            maxHealth: 675,
+            health: 961,
+            maxHealth: 961,
             isDying: false,
             type: 'abomination' as const,
             ref: React.createRef<Group>()
@@ -266,8 +261,8 @@ export default function Scene3({
               id: `mage-${totalSpawned + index}`,
               position: spawnPosition.clone(),
               initialPosition: spawnPosition.clone(),
-              health: 344,
-              maxHealth: 344,
+              health: 324,
+              maxHealth: 324,
               isDying: false,
               type: 'mage' as const,
               ref: React.createRef<Group>()
@@ -278,8 +273,8 @@ export default function Scene3({
             id: `skeleton-${totalSpawned + index}`,
             position: spawnPosition.clone(),
             initialPosition: spawnPosition.clone(),
-            health: 344,
-            maxHealth: 344,
+            health: 361,
+            maxHealth: 361,
             isDying: false,
             type: 'regular' as const,
             ref: React.createRef<Group>()
@@ -287,13 +282,12 @@ export default function Scene3({
         });
 
         setTotalSpawned(prev => prev + spawnAmount);
-        setCurrentWave(prev => prev + 1);
         return [...prev, ...newEnemies];
       });
     }, spawnInterval);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount, currentWave, initialSkeletons]);
+  }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount]);
 
   useEffect(() => {
     if (unitProps.controlsRef.current) {
@@ -359,7 +353,7 @@ export default function Scene3({
       setTotalSpawned(initialSkeletons);
       setBossPosition(BOSS_SPAWN_POSITION.clone());
       setIsBossSpawned(false);
-      setBossHealth(5184);
+      setBossHealth(6084);
     };
   }, [initialSkeletons]);
 
@@ -412,8 +406,13 @@ export default function Scene3({
       ))}
 
       {/* Render all mushrooms */}
-      {mushroomData.map((data, index) => (
-        <Mushroom key={`mushroom-${index}`} position={data.position} scale={data.scale} />
+      {mushroomData.map((mushroom, index) => (
+        <Mushroom
+          key={`mushroom-${index}`}
+          position={mushroom.position}
+          scale={mushroom.scale}
+          variant={mushroom.variant}
+        />
       ))}
 
       {/* Render all flowers */}
@@ -486,13 +485,27 @@ export default function Scene3({
           initialPosition={BOSS_SPAWN_POSITION}
           position={BOSS_SPAWN_POSITION}
           health={bossHealth}
-          maxHealth={5184}
+          maxHealth={6084}
           onTakeDamage={(id, damage) => {
             setBossHealth(prev => Math.max(0, prev - damage));
           }}
           onPositionUpdate={handleEnemyPositionUpdate}
           playerPosition={playerPosition}
           onAttackPlayer={handlePlayerDamage}
+          onEnrageSpawn={() => {
+            // Spawn one abomination at a random position
+            const spawnPosition = generateRandomPosition();
+            setEnemies(prev => [...prev, {
+              id: `abomination-enraged-${Date.now()}`,
+              position: spawnPosition.clone(),
+              initialPosition: spawnPosition.clone(),
+              health: 1024,
+              maxHealth: 1024,
+              isDying: false,
+              type: 'abomination' as const,
+              ref: React.createRef<Group>()
+            }]);
+          }}
         />
       )}
 

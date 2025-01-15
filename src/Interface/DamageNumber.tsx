@@ -92,19 +92,18 @@ export default function DamageNumber({
 
   // ***ORDER IS CRUCIAL ***
   const getTextColor = () => {
-    console.log('Getting text color, isOrbShield:', isOrbShield);
     if (isHealing) return "#338C66";
     if (isChainLightning) return "#ffff00";
-    if (isOrbShield) return "#58FCEC";
-    if (isSummon && !isCritical) return "#00FF51"; 
-    if (isCritical) return "#ff0000";
-    if (isBoneclaw) return "#39ff14";
-    if (isLightning) return "#ffff00";
+    if (isOrbShield) return "#13F3FF"; // 58FCEC
+    if (isCritical) return "#FF2D22";  //ff0000
+    if (isSummon) return "#B999FF"; // 00FF51 00FF59 NO CRIT FOR TOTEM
+    if (isBoneclaw) return "#00FF11"; // 39ff14
+    if (isLightning) return "#FFD000";
     if (isOathstrike) return "#FF9441";
-    if (isFirebeam) return "#58FCEC";
-    if (isBlizzard) return "#61EDFF";
-    if (isFireball) return "#00C946";
-    return "#ffffff";
+    if (isFirebeam) return "#00FFE5";
+    if (isBlizzard) return "#00B7FF"; // 61EDFF
+    if (isFireball) return "#00C946"; // 00C946
+    return "#EBEBEB";
   };
 
   console.log('Text color:', getTextColor(), 'isHealing:', isHealing);

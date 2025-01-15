@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { Vector3 } from 'three';
 import { WeaponType, AbilityType } from '@/Weapons/weapons';
 import { trunkColors, leafColors } from '@/Environment/treeColors';  
-import { generateMountains, generateTrees, generateMushrooms, generateFlowers } from '@/Environment/terrainGenerators';
+import { generateMountains, generateTrees, generateMushrooms, generateFlowers, generateBoneDoodads } from '@/Environment/terrainGenerators';
 import { SceneProps, SkeletonProps } from '@/Scene/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '@/Weapons/weapons';
@@ -82,6 +82,9 @@ export default function HomePage() {
   // Memoize flower data
   const flowerData = useMemo(() => generateFlowers(), []);
 
+  // Memoize bone doodad data
+  const boneDoodadData = useMemo(() => generateBoneDoodads(), []);
+
   // Assign consistent colors to the interactive tree using useMemo
   const [interactiveTrunkColor, setInteractiveTrunkColor] = useState<THREE.Color>();
   const [interactiveLeafColor, setInteractiveLeafColor] = useState<THREE.Color>();
@@ -155,8 +158,8 @@ export default function HomePage() {
         id: `skeleton-${index}`,
         initialPosition,
         position: initialPosition.clone(),
-        health: 175,
-        maxHealth: 175,
+        health: 196,
+        maxHealth: 196,
         onTakeDamage: (id: string, damage: number) => {
           setSkeletonProps(prev => prev.map(skeleton => 
             skeleton.id === id 
@@ -311,8 +314,8 @@ export default function HomePage() {
     killCount,
     onFireballDamage: handleFireballDamage,
     onWeaponSelect: handleWeaponSelect,
-    flowerData: flowerData
-
+    flowerData: flowerData,
+    boneDoodadData,
   };
 
   useEffect(() => {

@@ -105,7 +105,7 @@ export default function GameWrapper({
           touchAction: 'none'
         }}>
           <Canvas>
-            <ambientLight intensity={0.2} />
+            <ambientLight intensity={0.175} />
             {gameStarted && (
               <Suspense fallback={null}>
                 <LevelManager 
@@ -123,13 +123,13 @@ export default function GameWrapper({
               ref={sceneProps.unitProps.controlsRef}
               enablePan={false}
               maxPolarAngle={Math.PI / 2.25}
-              maxDistance={13.5}
+              maxDistance={13}
               mouseButtons={{
                 LEFT: undefined,
                 MIDDLE: undefined,
                 RIGHT: THREE.MOUSE.ROTATE
               }}
-              minDistance={5}
+              minDistance={6.5}
               rotateSpeed={0.5}
               enableDamping={true}
               dampingFactor={0.075}

@@ -1,7 +1,9 @@
-import { Group, Mesh } from 'three';
+import { Group, Mesh, Shape } from 'three';
+import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../../gear/BonePlate';
 import { useRef, useState, useEffect } from 'react';
+import AbominationTrailEffect from './AbominationTrailEffect';
 
 interface CustomAbominationProps {
   position: [number, number, number];
@@ -29,12 +31,12 @@ function BoneLegModel() {
         {/* Hip-to-leg joint */}
         <group position={[0, -0.2, 0]}>
           <mesh>
-            <sphereGeometry args={[0.06, 8, 8]} />
+            <sphereGeometry args={[0.09, 8, 8]} />
             <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
           </mesh>
 
           {/* Original leg segments - adjusted positions */}
-          <group position={[0, 0, 0]}>
+          <group position={[0, 0, -0.5]}>
             {/* First segment (from body) */}
             <mesh>
               <cylinderGeometry args={[0.06, 0.04, 0.8, 8]} />
@@ -127,6 +129,39 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
     </group>
   );
 
+  const createBladeShape = () => {
+    const shape = new Shape();
+    shape.moveTo(0, 0);
+    
+    // Create thick back edge first
+    shape.lineTo(0.4, -0.130);
+    shape.bezierCurveTo(
+      0.8, 0.22,    // control point 1
+      1.33, 0.5,    // control point 2
+      1.6, 0.515    // end point (tip)
+    );
+    
+    // Create sharp edge
+    shape.lineTo(1.125, 0.75);
+    shape.bezierCurveTo(
+      0.5, 0.2,
+      0.225, 0.0,
+      0.1, 0.7
+    );
+    shape.lineTo(0, 0);
+    return shape;
+  };
+
+  const bladeExtradeSettings = {
+    steps: 1,
+    depth: 0.00010,
+    bevelEnabled: true,
+    bevelThickness: 0.030,
+    bevelSize: 0.035,
+    bevelSegments: 1,
+    curveSegments: 16
+  };
+
   return (
     <group>
       <group>
@@ -149,6 +184,33 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
               {createJoint(0.09)}
               
               <group position={[0, -0.1, 0]}>
+                <group 
+                  position={[isLeftHand ? -0.2 : 0.2, -0.2, 0]} 
+                  rotation={[0, isLeftHand ? Math.PI : 0, Math.PI/2]} 
+                  scale={[0.8, 0.4, 0.8]}
+                >
+                  <mesh>
+                    <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.03 }]} />
+                    <meshStandardMaterial 
+                      color="#9c27b0"
+                      emissive="#9c27b0"
+                      emissiveIntensity={1.3}
+                      metalness={0.8}
+                      roughness={0.1}
+                      opacity={1}
+                      transparent
+                      side={THREE.DoubleSide}
+                    />
+                  </mesh>
+                  
+                  <pointLight
+                    color="#9c27b0"
+                    intensity={1}
+                    distance={2}
+                    decay={2}
+                  />
+                </group>
+
                 <mesh>
                   <boxGeometry args={[0.2, 0.15, 0.08]} />
                   <meshStandardMaterial color="#e8e8e8" roughness={0.4} />
@@ -190,7 +252,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
 
 function ShoulderPlate() {
   const createSpike = (scale = 1) => (
-    <group scale={[scale, scale, scale]}>
+    <group scale={[scale, scale, scale]} position={[0, -0.125, 0]}>
       {/* Base segment */}
       <mesh position={[0, 0, 0]}>
         <cylinderGeometry args={[0.06, 0.06, 0.115, 6]} />
@@ -202,7 +264,7 @@ function ShoulderPlate() {
       </mesh>
 
       {/* Middle segment with slight curve */}
-      <mesh position={[0, 0.1, 0.02]} rotation={[0.1, 0, 0]}>
+      <mesh position={[0, 0.1, 0.0275]} rotation={[0, 0, 0]}>
         <cylinderGeometry args={[0.04, 0.03, 0.12, 6]} />
         <meshStandardMaterial 
           color="#e8e8e8"
@@ -346,6 +408,37 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
   const ARM_DELAY = 150; // 0.15 seconds between arms
   const TELEGRAPH_TIME = 850; // 850ms telegraph before first hit
 
+  const LEG_PAIRS = [
+    {
+      left: 'LeftFrontLeg',
+      right: 'RightFrontLeg',
+      baseRotation: { x: 0.2, y: -0.6, z: 0.6 },
+      rightBaseRotation: { x: 0.2, y: 0.6, z: -0.6 },
+      phase: 0
+    },
+    {
+      left: 'LeftMiddleFrontLeg',
+      right: 'RightMiddleFrontLeg',
+      baseRotation: { x: 0.25, y: -0.8, z: 0.7 },
+      rightBaseRotation: { x: 0.25, y: 0.8, z: -0.7 },
+      phase: Math.PI
+    },
+    {
+      left: 'LeftMiddleBackLeg',
+      right: 'RightMiddleBackLeg',
+      baseRotation: { x: 0.5, y: -1.0, z: 0.7 },
+      rightBaseRotation: { x: 0.5, y: 1.0, z: -0.7 },
+      phase: 0
+    },
+    {
+      left: 'LeftBackLeg',
+      right: 'RightBackLeg',
+      baseRotation: { x: 1, y: -1.2, z: 0.6 },
+      rightBaseRotation: { x: 1, y: 1.2, z: -0.6 },
+      phase: Math.PI
+    }
+  ];
+
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
@@ -424,17 +517,35 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
         const rightArm = groupRef.current?.getObjectByName(right) as Mesh;
         
         if (leftArm && rightArm) {
-          const armProgress = Math.max(0, Math.min(1, (attackCycle - startTime) * 2));
+          const armProgress = Math.max(0, Math.min(1, (attackCycle - startTime) * 1));
           const rotationY = Math.sin(armProgress * Math.PI) * rotationRange;
           
+          // Add forward pivot using sine wave for smooth animation
+          const forwardPivot = Math.sin(armProgress * Math.PI) * 0.5; // Adjust 0.8 for more/less forward motion
+          
+          // Apply rotations
           leftArm.rotation.y = Math.PI * 4 + rotationY;
           rightArm.rotation.y = Math.PI * 4 - rotationY;
+          
+          // Apply forward pivot
+          leftArm.rotation.z = forwardPivot;
+          rightArm.rotation.z = forwardPivot;
         }
       });
 
       // Reset attack cycle after all arms have completed
       if (attackCycle > (TELEGRAPH_TIME + (ARM_DELAY * 6)) / 1000) {
         setAttackCycle(0);
+        
+        // Reset forward pivot when attack ends
+        armPairs.forEach(({ left, right }) => {
+          const leftArm = groupRef.current?.getObjectByName(left) as Mesh;
+          const rightArm = groupRef.current?.getObjectByName(right) as Mesh;
+          if (leftArm && rightArm) {
+            leftArm.rotation.z = 0;
+            rightArm.rotation.z = 0;
+          }
+        });
       }
     } else {
       // Reset arm positions when not attacking (adjusted default angles)
@@ -455,6 +566,38 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
         }
       });
     }
+
+    if (!isAttacking) {
+      // Walking animation
+      const walkSpeed = 3; // Adjust for faster/slower walking
+      const walkAmplitude = 0.15; // Adjust for larger/smaller steps
+      
+      LEG_PAIRS.forEach(({ left, right, baseRotation, rightBaseRotation, phase }) => {
+        const leftLeg = groupRef.current?.getObjectByName(left) as Mesh;
+        const rightLeg = groupRef.current?.getObjectByName(right) as Mesh;
+        
+        if (leftLeg && rightLeg) {
+          const time = state.clock.getElapsedTime() * walkSpeed;
+          
+          // Calculate leg movements with phase offset
+          const leftCycle = Math.sin(time + phase);
+          const rightCycle = Math.sin(time + phase + Math.PI); // Opposite phase
+          
+          // Apply animations relative to base rotations
+          leftLeg.rotation.set(
+            baseRotation.x + leftCycle * walkAmplitude,
+            baseRotation.y + leftCycle * walkAmplitude * 0.3,
+            baseRotation.z + leftCycle * walkAmplitude * 0.5
+          );
+          
+          rightLeg.rotation.set(
+            rightBaseRotation.x + rightCycle * walkAmplitude,
+            rightBaseRotation.y + rightCycle * walkAmplitude * 0.3,
+            rightBaseRotation.z + rightCycle * walkAmplitude * 0.5
+          );
+        }
+      });
+    }
   });
 
   // Cleanup timeout on unmount
@@ -470,9 +613,12 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
   
 
   return (
-    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[1.75, 1.75, 1.75]}>
-      
-      <group name="Body" position={[0, 1.25, 0]} scale={[1.2, 0.8, 1.25]} rotation={[-0.6, 0, 0]}>
+    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[1.625, 1.625, 1.625]}>
+      <group position={[0, 0.15, -0]}>
+        <AbominationTrailEffect parentRef={groupRef} />
+      </group>
+
+      <group name="Body" position={[0, 1.2, -0.25]} scale={[1.8, 1.4, 1.65]} rotation={[0.25, 0, 0]}>
         <BonePlate />
       </group>
 
@@ -483,16 +629,16 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
       </group>
  */}
 
-      <group scale={[0.5, 0.2, 1]} position={[0, 1, -0.35]} rotation={[0.7, 0, -4.25]}>
+      <group scale={[0.65, 0.5, 1]} position={[0, 1, -0.15]} rotation={[0.7, 0, -4.25]}>
         <CustomHorn isLeft={true} />
       </group>
 
-      <group scale={[0.5, 0.2, 1]} position={[0, 1, -0.35]} rotation={[0.7, 0, 4.25]}>
+      <group scale={[0.65, 0.5, 1]} position={[0, 1, -0.15]} rotation={[0.7, 0, 4.25]}>
         <CustomHorn isLeft={false} />
       </group>
 
       {/* SKULL POSITIONING */}
-      <group name="Head" position={[0, 1.775, 0.2]} scale={[ 0.75, 0.8, 0.8]}>
+      <group name="Head" position={[0, 1.925, 0.2]} scale={[ 0.95, 0.8, 0.8]}>
         {/* Main skull shape */}
         <group>
           {/* Back of cranium */}
@@ -648,96 +794,90 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
       </group>
 
       {/* Add shoulder plates just before the arms */}
-      <group position={[-0.34, 1.5, 0]} rotation={[-0.35, -Math.PI, -0.25]}>
+      <group position={[-0.55, 1.75, 0.05]} rotation={[-0.45, -Math.PI/1.2, -.525]}>
         <ShoulderPlate />
       </group>
-      <group position={[0.34, 1.5, 0]} rotation={[-0.35, Math.PI, 0.25]}>
+      <group position={[0.55, 1.75, 0.05]} rotation={[-0.45, Math.PI/1.2, 0.525 ]}>
         <ShoulderPlate />
       </group>
 
       {/* Front Arms (Original) */}
-      <group name="LeftFrontArm" position={[-0.35, 1.325, 0]} scale={[-0.4, 0.4, 0.4]} rotation={[0, Math.PI/3, 0]}>
+      <group name="LeftFrontArm" position={[-0.35, 1.525, 0.25]} scale={[-0.525, 0.425, 0.525]} rotation={[0.2, Math.PI/3, 0]}>
         <BossClawModel isLeftHand={true} />
       </group>
-      <group name="RightFrontArm" position={[0.35, 1.525, 0.1]} scale={[0.4, 0.4, 0.4]} rotation={[0, -Math.PI/2.5, 0]}>
+      <group name="RightFrontArm" position={[0.35, 1.525, -0.25]} scale={[0.525, 0.425, 0.525]} rotation={[0.2, -Math.PI/2.5, 0]}>
         <BossClawModel isLeftHand={false} />
       </group>
 
       {/* Back Arms (Larger) */}
       {/* Upper Back Arms */}
-      <group name="LeftUpperBackArm" position={[-0.75, 1.5, -0.35]} scale={[-0.6, 0.6, 0.6]} rotation={[0.3, Math.PI*2, -0.5]}>
+      <group name="LeftUpperBackArm" position={[-0.55, 1.6, 0]} scale={[-1.1, 0.7, 0.9]} rotation={[0, Math.PI*2, -0.1]}>
         <BossClawModel isLeftHand={true} />
       </group>
-      <group name="RightUpperBackArm" position={[0.75, 1.5, -0.5]} scale={[0.6, 0.6, 0.6]} rotation={[0.3, -Math.PI*2, 0.5]}>
+      <group name="RightUpperBackArm" position={[0.55, 1.6, 0]} scale={[1.1, 0.7, 0.9]} rotation={[0, -Math.PI*2, 0.1]}>
         <BossClawModel isLeftHand={false} />
       </group>
 
       {/* Middle Back Arms */}
-      <group name="LeftMiddleBackArm" position={[-0.65, 1.375, -0.275]} scale={[-0.55, 0.55, 0.55]} rotation={[0.2, Math.PI*2.1, -.4]}>
+      <group name="LeftMiddleBackArm" position={[-0.45, 1.5, -0.1]} scale={[-0.75, 0.75, 0.75]} rotation={[0.4, Math.PI*2.1, -.4]}>
         <BossClawModel isLeftHand={true} />
       </group>
-      <group name="RightMiddleBackArm" position={[0.65, 1.375, -0.3]} scale={[0.55, 0.55, 0.55]} rotation={[0.2, -Math.PI*2.1, 0.4]}>
+      <group name="RightMiddleBackArm" position={[0.45, 1.5, -0.1]} scale={[0.75, 0.75, 0.75]} rotation={[0.4, -Math.PI*2.1, 0.4]}>
         <BossClawModel isLeftHand={false} />
       </group>
 
-      {/* Lower Back Arms */}
-      <group name="LeftLowerBackArm" position={[-0.48, 1.1, -0.2]} scale={[-0.65, 0.65, 0.65]} rotation={[0.1, Math.PI*2.2, 0]}>
-        <BossClawModel isLeftHand={true} />
-      </group>
-      <group name="RightLowerBackArm" position={[0.48, 1.1, -0.2]} scale={[0.65, 0.65, 0.65]} rotation={[0.1, -Math.PI*2.2, 0]}>
-        <BossClawModel isLeftHand={false} />
-      </group>
 
-      {/* Multiple Legs with spider-like positioning - adjusted for more natural downward angles */}
+
+      {/* Multiple Legs with spider-like positioning - adjusted angles and connections */}
       {/* Front Legs */}
-      <group name="LeftFrontLeg" position={[0.6, 0.75, 0.4]} rotation={[-0.2, -0.6, 0.3]}>
+      <group name="LeftFrontLeg" position={[0.4, 0.75, 0.4]} rotation={[0.2, -0.6, 0.6]}>
         <BoneLegModel />
       </group>
-      <group name="RightFrontLeg" position={[-0.6, 0.75, 0.4]} rotation={[-0.2, 0.6, -0.3]}>
+      <group name="RightFrontLeg" position={[-0.4, 0.75, 0.4]} rotation={[0.2, 0.6, -0.6]}>
         <BoneLegModel />
       </group>
 
       {/* Middle Front Legs */}
-      <group name="LeftMiddleFrontLeg" position={[0.7, 0.73, 0]} rotation={[0.5, -0.8, 0.4]}>
+      <group name="LeftMiddleFrontLeg" position={[0.6, 0.73, 0]} rotation={[0.25, -0.8, 0.7]}>
         <BoneLegModel />
       </group>
-      <group name="RightMiddleFrontLeg" position={[-0.7, 0.73, 0]} rotation={[0.5, 0.8, -0.4]}>
+      <group name="RightMiddleFrontLeg" position={[-0.6, 0.73, 0]} rotation={[0.25, 0.8, -0.7]}>
         <BoneLegModel />
       </group>
 
       {/* Middle Back Legs */}
-      <group name="LeftMiddleBackLeg" position={[0.7, 0.71, -0.3]} rotation={[+0.3, -1.0, 0.4]}>
+      <group name="LeftMiddleBackLeg" position={[0.5, 0.71, -0.35]} rotation={[0.5, -1.0, 0.7]}>
         <BoneLegModel />
       </group>
-      <group name="RightMiddleBackLeg" position={[-0.7, 0.71, -0.3]} rotation={[+0.3, 1.0, -0.4]}>
+      <group name="RightMiddleBackLeg" position={[-0.5, 0.71, -0.35]} rotation={[0.5, 1.0, -0.7]}>
         <BoneLegModel />
       </group>
 
       {/* Back Legs */}
-      <group name="LeftBackLeg" position={[0.6, 0.7, -0.6]} rotation={[0.55, -1.2, 0.3]}>
+      <group name="LeftBackLeg" position={[0.4, 0.7, -0.725]} rotation={[1, -1.2, 0.6]}>
         <BoneLegModel />
       </group>
-      <group name="RightBackLeg" position={[-0.6, 0.7, -0.6]} rotation={[+0.55, 1.2, -0.3]}>
+      <group name="RightBackLeg" position={[-0.4, 0.7, -0.725]} rotation={[1, 1.2, -0.6]}>
         <BoneLegModel />
       </group>
 
-      <group position={[0, 1.775, 0.2]} scale={[0.4, 0.4, 0.4]}>
+      <group position={[0, 1.925, 0.245]} scale={[0.405, 0.425, 0.275]}>
         {/* Left Horn */}
-        <group position={[-0.25, 0.2, 0]} rotation={[-0.4, 0, -0.3]}>
+        <group position={[0.2, 0.2, 0]} rotation={[-0.4, 0.5, -0.2]}>
           <CustomHorn isLeft={true} />    
         </group>
         
         {/* Right Horn */}
-        <group position={[0.25, 0.2, 0]} rotation={[-0.2, 0, 0.3]}>
+        <group position={[-0.2, 0.2, 0]} rotation={[-0.3, -0.5, 0.3]}>
           <CustomHorn isLeft={false} />
         </group>
       </group>
 
       {/* Pelvis structure */}
-      <group position={[0, 0.725, -0.25]} scale={[1.1, 1, 1.25]}>
+      <group position={[0, 0.5, -0.25]} scale={[1.9, 1, 1.75]}>
         {/* Main pelvic bowl */}
         <mesh>
-          <cylinderGeometry args={[0.35, 0.34, 0.2, 8]} />
+          <cylinderGeometry args={[0.35, 0.34, 0.27, 8]} />
           <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
         </mesh>
 
