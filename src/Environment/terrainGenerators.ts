@@ -182,9 +182,9 @@ export const generateBoneDoodads = () => {
     doodads.push({
       position: new Vector3((Math.random() - 0.5) * 100, 0, (Math.random() - 0.5) * 100),
       rotation: new Euler(
-        Math.random() * 0.5,
+        0,
         Math.random() * Math.PI * 2,
-        Math.random() * 0.5
+        0
       ),
       type: 'bones'
     });

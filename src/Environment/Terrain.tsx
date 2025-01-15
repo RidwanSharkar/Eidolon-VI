@@ -1,17 +1,8 @@
 import { Mesh, Shape, DoubleSide } from 'three';
-import React, { useRef, useEffect, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { Vector3, Euler } from 'three';
-import { ScatteredBones, RibFragment, BoneClawFragment } from './BoneDoodads';
 
-// Helper function to generate random positions within map bounds
-const getRandomPosition = () => {
-  const mapSize = 100; // Adjust based on your terrain size
-  const x = (Math.random() - 0.5) * mapSize;
-  const z = (Math.random() - 0.5) * mapSize;
-  return new Vector3(x, 0, z);
-};
 
 interface TerrainProps {
   color?: string;
@@ -25,29 +16,10 @@ interface TerrainProps {
   }>;
 }
 
-const TerrainDoodads = ({ doodadData }: { doodadData: TerrainProps['doodadData'] }) => {
-  return (
-    <>
-      {doodadData.map((doodad, index) => {
-        switch (doodad.type) {
-          case 'submerged':
-            return <BoneClawFragment key={index} {...doodad} />;
-          case 'plate':
-            return <RibFragment key={index} {...doodad} />;
-          case 'bones':
-            return <ScatteredBones key={index} {...doodad} />;
-          default:
-            return null;
-        }
-      })}
-    </>
-  );
-};
-
-export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness = 0.1, doodadData }: TerrainProps) {
+export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness = 0.1 }: TerrainProps) {
   const terrainRef = useRef<Mesh>(null);
   const octagonRef = useRef<Shape | null>(null);
-  const [combinedDoodads, setCombinedDoodads] = useState(doodadData);
+
   
   // Create the shader material
   const snowMaterial = useRef(new THREE.ShaderMaterial({
@@ -201,28 +173,6 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
     }
   }, []);
 
-  // Animate snow sparkle
-  useFrame(({ clock }) => {
-    if (snowMaterial.uniforms) {
-      snowMaterial.uniforms.time.value = clock.getElapsedTime();
-    }
-  });
-
-  // Update the useEffect to properly manage the combined doodads
-  useEffect(() => {
-    const additionalDoodads = [
-      {
-        position: getRandomPosition(),
-        rotation: new Euler(0, Math.random() * Math.PI * 2, 0),
-        type: 'plate',
-        scale: 1.0,
-      },
-      // Add more doodads as needed
-    ];
-
-    // Update the state with combined doodads
-    setCombinedDoodads([...doodadData, ...additionalDoodads]);
-  }, [doodadData]);
 
   return (
     <group>
@@ -232,8 +182,7 @@ export default function Terrain({ color = "#FFCAE5", roughness = 0.5, metalness 
         <primitive object={snowMaterial} attach="material" />
       </mesh>  
 
-      {/* Update TerrainDoodads to use combinedDoodads */}
-      <TerrainDoodads doodadData={combinedDoodads} />
+
     </group>
   );
 }

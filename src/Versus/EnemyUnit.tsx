@@ -52,8 +52,8 @@ export default function EnemyUnit({
   const [showFrostEffect, setShowFrostEffect] = useState(false);
   
   // Use refs for position tracking
-  const currentPosition = useRef(initialPosition.clone());
-  const targetPosition = useRef(initialPosition.clone());
+  const currentPosition = useRef(initialPosition.clone().setY(0));
+  const targetPosition = useRef(initialPosition.clone().setY(0));
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 

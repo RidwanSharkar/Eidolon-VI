@@ -42,6 +42,7 @@ export default function Scene({
     // Initialize with initial skeletons
     return Array.from({ length: initialSkeletons }, (_, index) => {
       const spawnPosition = generateRandomPosition();
+      spawnPosition.y = 0;
       return {
         id: `skeleton-${index}`,
         position: spawnPosition.clone(),
