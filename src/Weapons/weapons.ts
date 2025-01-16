@@ -170,18 +170,18 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     r: {
       title: "Bone Claw",
-      description: "Summon skeletal lazer claws - Cooldown: 1.8 seconds - Range: 4.0-8.0 feet",
+      description: "Summon skeletal lazer claws to damage enemies within mid-range - 2 second cooldown.",
       cost: "Cooldown: 2.5 seconds",
       range: "Range: 8.0 feet",
       damage: "Damage: 67"
     },
     passive: {
       title: "Reanimate",
-      description: "Consumes 1 Orb Charge to heal for health. 0.75 second cooldown."
+      description: "Active: Consumes 1 Orb Charge to heal for 7 HP - 0.75 second cooldown."
     },
     active: {
       title: "Chaos Totem",
-      description: "Active: Summon a totem that fights by your side, shooting rapid bolts at enemies within range.",
+      description: "Active: Summons a totem that fights by your side for 12 seconds, shooting rapid bolts at enemies within range - 5 second cooldown.",
       cost: "Cooldown: 15 seconds"
     }
   },
@@ -202,18 +202,18 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     r: {
       title: "Oathstrike",
-      description: "Active: Consumes 4 Orb Charges to unleash an invigorating strike that heals while damaging enemies in an arc.",
+      description: "Active: Consumes 4 Orb Charges to unleash a powerful strike that heals while damaging enemies in an arc.",
       cost: "50",
       range: "7.0",
       damage: "65"
     },
     passive: {
       title: "Crusader Aura",
-      description: "Passive: Increases attack speed by 35% and gives attacks a 65% chance to trigger chain lightning that deals 25 initial damage."
+      description: "Passive: Increases attack speed by 30% and gives attacks a chance to heal for 3 HP."
     },
     active: {
       title: "Chain Lightning",
-      description: "Passive: Sword attacks conduct electricity, dealing lightning damage bouncing between enemie."
+      description: "Passive: Sword attacks conduct electricity, bouncing lightning damage to nearby enemies on every hit."
     }
   },
   [WeaponType.SABRES]: {
@@ -233,18 +233,18 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     r: {
       title: "Blizzard",
-      description: "Unleash a devastating ice storm to nearby enemies for 6 seconds - 10 second cooldown.",
+      description: "Active: Unleash a devastating ice storm to nearby enemies for 6 seconds - 10 second cooldown.",
       cost: "60",
       range: "12.0",
       damage: "85"
     },
     passive: {
       title: "Frost Lance",
-      description: "Consumes 1 Orb Charge to fire a beam of ice that piereces through all enemies in a line."
+      description: "Active: Consumes 1 Orb Charge to fire a beam of ice that piereces through all enemies in a line - 0.5 second cooldown."
     },
     active: {
       title: "Avalanche",
-      description: "Melee attacks passively consume orb charges to extra damage based on the number of charges available."
+      description: "Passive: Melee attacks passively consume orb charges to extra damage based on the number of charges available."
     }
   },
   // Placeholder tooltips for test weapons
