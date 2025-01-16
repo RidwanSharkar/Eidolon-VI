@@ -49,7 +49,7 @@ const TreeComponent: React.FC<TreeProps> = ({
             roughness={0.4}
             metalness={0.1}
             emissive={variedLeafColor}
-            emissiveIntensity={0.475}
+            emissiveIntensity={0.375}
           />
         </mesh>
         
@@ -62,7 +62,7 @@ const TreeComponent: React.FC<TreeProps> = ({
             roughness={0.4}
             metalness={0.1}
             emissive={variedLeafColor}
-            emissiveIntensity={0.45}
+            emissiveIntensity={0.475}
           />
         </mesh>
 
@@ -75,7 +75,7 @@ const TreeComponent: React.FC<TreeProps> = ({
             roughness={0.4}
             metalness={0.1}
             emissive={variedLeafColor}
-            emissiveIntensity={0.49}
+            emissiveIntensity={0.60}
           />
         </mesh>
 
@@ -90,7 +90,7 @@ const TreeComponent: React.FC<TreeProps> = ({
             roughness={0.4}
             metalness={0.1}
             emissive={variedLeafColor}
-            emissiveIntensity={0.485}
+            emissiveIntensity={0.585}
           />
         </mesh>
       </mesh>

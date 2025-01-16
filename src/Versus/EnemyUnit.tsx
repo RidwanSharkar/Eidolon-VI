@@ -57,10 +57,10 @@ export default function EnemyUnit({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 2.35;
-  const ATTACK_COOLDOWN = 2000;
+  const ATTACK_RANGE = 2.25;
+  const ATTACK_COOLDOWN = 1750;
   const MOVEMENT_SPEED = 0.1925;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.1925;
+  const SMOOTHING_FACTOR = 0.1925;                    // KEEP this the same as MOVEMENT_SPEED
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 6;

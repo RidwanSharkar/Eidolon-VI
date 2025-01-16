@@ -186,8 +186,8 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
               {/* ULTRALISK BLADES */}
               <group position={[0, -0.1, 0]}>
                 <group 
-                  position={[isLeftHand ? -0 : -0, -0.2, 0]} 
-                  rotation={[1.7 + Math.PI/4, 0, Math.PI*2.675 + 0.75]} 
+                  position={[isLeftHand ? -0 : -0, -0.2, 0.1]} 
+                  rotation={[2 + Math.PI/4, -1, Math.PI*2.675 + 0.85]} 
                   scale={[1.4, 0.55, 1.4]}
                 >
                   <mesh>
@@ -795,18 +795,18 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
       </group>
 
       {/* Add shoulder plates just before the arms */}
-      <group position={[-0.55, 1.75, 0.05]} rotation={[-0.45, -Math.PI/1.2, -.525]}>
+      <group position={[-0.55, 1.8, 0.05]} rotation={[-0.45, -Math.PI/1.2, -.525]}>
         <ShoulderPlate />
       </group>
-      <group position={[0.55, 1.75, 0.05]} rotation={[-0.45, Math.PI/1.2, 0.525 ]}>
+      <group position={[0.55, 1.8, 0.05]} rotation={[-0.45, Math.PI/1.2, 0.525 ]}>
         <ShoulderPlate />
       </group>
 
       {/* Front Arms (Original) */}
-      <group name="LeftFrontArm" position={[-0.35, 1.525, 0.25]} scale={[-0.525, 0.425, 0.525]} rotation={[0.2, Math.PI/3, 0]}>
+      <group name="LeftFrontArm" position={[-0.4, 1.525, 0.1]} scale={[-0.525, 0.425, 0.525]} rotation={[0.2, Math.PI/3, 0]}>
         <BossClawModel isLeftHand={true} />
       </group>
-      <group name="RightFrontArm" position={[0.35, 1.525, -0.25]} scale={[0.525, 0.425, 0.525]} rotation={[0.2, -Math.PI/2.5, 0]}>
+      <group name="RightFrontArm" position={[0.4, 1.525, 0.1]} scale={[0.525, 0.425, 0.525]} rotation={[0.2, -Math.PI/3, 0]}>
         <BossClawModel isLeftHand={false} />
       </group>
 

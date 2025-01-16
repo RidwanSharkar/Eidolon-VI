@@ -186,11 +186,7 @@ export function useAbilityKeys({
           activeAbility.currentCooldown <= 0 &&
           currentWeapon === WeaponType.SCYTHE
         ) {
-          // Don't start cooldown immediately anymore
-          // onAbilityUse(currentWeapon, 'active'); // Remove this line
-          
           const summonId = Date.now();
-          console.log('Creating new summon with ID:', summonId);
           
           setActiveEffects(prev => {
             // Prevent multiple summons by checking if one already exists
@@ -199,20 +195,18 @@ export function useAbilityKeys({
             }
 
             return [
-              ...prev.filter(effect => effect.type !== 'summon'),
+              ...prev,
               {
                 id: summonId,
-                type: 'summon',
+                type: 'summon',  // This is the main effect that controls the totem
                 position: groupRef.current!.position.clone(),
                 direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
                 onComplete: () => {
                   console.log('Summon completed, ID:', summonId);
-                  // Start cooldown only when totem expires
                   onAbilityUse(currentWeapon, 'active');
                   setActiveEffects(current => 
                     current.filter(effect => 
-                      effect.id !== summonId && 
-                      (effect.type !== 'summonExplosion' || effect.summonId !== summonId)
+                      effect.id !== summonId
                     )
                   );
                 },

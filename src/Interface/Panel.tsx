@@ -42,12 +42,13 @@ interface DamageNotificationData {
 const RoundedSquareProgress: React.FC<{
   size: number;
   strokeWidth: number;
-  percentage: number; // 0 to 100
+  percentage: number;
   borderRadius: number;
-}> = ({ size, strokeWidth, percentage, borderRadius }) => {
+  isActive?: boolean;
+}> = ({ size, strokeWidth, percentage, borderRadius, isActive }) => {
   const halfStroke = strokeWidth / 2;
   const adjustedSize = size - strokeWidth;
-  const perimeter = 4 * adjustedSize; // Approximate perimeter for a rounded square
+  const perimeter = 4 * adjustedSize;
   const dashOffset = perimeter - (perimeter * percentage) / 100;
 
   return (
@@ -56,7 +57,6 @@ const RoundedSquareProgress: React.FC<{
       height={size}
       className={styles.roundedSquareProgress}
     >
-      {/* Foreground Rect for Sweeping Animation */}
       <rect
         x={halfStroke}
         y={halfStroke}
@@ -64,7 +64,7 @@ const RoundedSquareProgress: React.FC<{
         height={adjustedSize}
         rx={borderRadius}
         ry={borderRadius}
-        stroke="#39ff14"
+        stroke={isActive ? "#ff3333" : "#39ff14"}
         strokeWidth={strokeWidth}
         fill="none"
         strokeDasharray={perimeter}
@@ -217,10 +217,15 @@ export default function Panel({
                 {key === 'active' && 
                  currentWeapon === WeaponType.SCYTHE && 
                  abilities[WeaponType.SCYTHE].active.isUnlocked &&
-                 abilities[WeaponType.SCYTHE].active.currentCooldown <= 0 &&
-                 activeEffects?.some((effect) => effect.type === 'summon') ? (
+                 activeEffects?.some(effect => effect.type === 'summon') ? (
                   <div className={styles.activeOverlay}>
-                    <div className={styles.activeIndicator} />
+                    <RoundedSquareProgress
+                      size={50}
+                      strokeWidth={4}
+                      percentage={100}
+                      borderRadius={8}
+                      isActive={true}
+                    />
                   </div>
                 ) : ability.currentCooldown > 0 && (
                   <div className={styles.cooldownOverlay}>

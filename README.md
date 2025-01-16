@@ -1,4 +1,4 @@
-# Eidolon
+# Eidolon IV
 Death offers an alluring covenant laced with grotesque mockery... moths entranced by a flame's fatal caress, they mistake the Reaper's gilded embrace for salvation. 
 
 ![bloomscythe](https://github.com/user-attachments/assets/242617d9-403b-4d6b-b380-9c3c36c3945c)

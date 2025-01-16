@@ -17,13 +17,13 @@ interface UseUnitControlsProps {
   onMovementUpdate?: (direction: Vector3) => void;
 }
 
-const PLAY_AREA_RADIUS = 29.75; // Match this with where mountains start
+const PLAY_AREA_RADIUS = 31.25 // MAP BOUNDARY
 
 export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.065,
+  speed = 0.066,
   onPositionUpdate,
   health,
   isCharging = false,
@@ -94,7 +94,7 @@ export function useUnitControls({
 
     const currentRotation = groupRef.current.rotation.y;
     const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-    const rotationSpeed = 0.05; // 0.1 defaulted 
+    const rotationSpeed = 0.065; // 0.1 defaulted 
     
     groupRef.current.rotation.y = currentRotation + (targetRotation - currentRotation) * rotationSpeed;
 
@@ -147,7 +147,7 @@ export function useUnitControls({
       if (distanceFromCenter < PLAY_AREA_RADIUS) {
         groupRef.current.position.copy(newPosition);
       } else {
-        // Optional: Slide along the boundary
+        // Slide along the boundary
         const angle = Math.atan2(newPosition.z, newPosition.x);
         groupRef.current.position.x = PLAY_AREA_RADIUS * Math.cos(angle);
         groupRef.current.position.z = PLAY_AREA_RADIUS * Math.sin(angle);
