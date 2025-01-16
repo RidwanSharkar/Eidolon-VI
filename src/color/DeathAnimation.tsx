@@ -17,7 +17,7 @@ const getVortexColor = (weaponType: WeaponType) => {
     case WeaponType.SCYTHE:
       return '#00FF4D'; //  00FF88 FF6B6B FF6AAA
     case WeaponType.SWORD:
-      return '#FFC200';
+      return '#FF831D';
     case WeaponType.SABRES:
     case WeaponType.SABRES2:
       return '#00BBFF'; //ice blue 98F5FC 
