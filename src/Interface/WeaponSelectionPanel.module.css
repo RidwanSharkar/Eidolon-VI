@@ -272,8 +272,8 @@ menu on the entire panel */
 
 .abilityIcon {
   position: relative;
-  width: 70px;
-  height: 80px;
+  width: 110px;
+  height: 120px;
   cursor: pointer;
   transition: all 0.4s ease;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
@@ -348,4 +348,42 @@ menu on the entire panel */
 .tooltip {
   /* Ensure Tooltip is above the panel */
   z-index: 1001; /* Already handled in Tooltip.module.css */
+}
+
+/* Add glow effect to ability icons when parent weapon is selected */
+.selected ~ .abilityIcons .abilityIcon {
+  background: rgba(0, 255, 128, 0.08);
+  /* Add subtle pulsing animation */
+  animation: pulseAbility 2s infinite ease-in-out;
+}
+
+.selected ~ .abilityIcons .abilityIcon::after {
+  border-color: rgba(0, 255, 128, 0.3);
+  box-shadow: 0 0 15px rgba(0, 255, 128, 0.2);
+}
+
+.selected ~ .abilityIcons .abilityIcon img {
+  filter: drop-shadow(0 0 8px rgba(0, 255, 128, 0.6));
+}
+
+/* Pulsing animation for ability icons when weapon is selected */
+@keyframes pulseAbility {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Enhance hover effect when parent is selected */
+.selected ~ .abilityIcons .abilityIcon:hover {
+  background: rgba(0, 255, 128, 0.15);
+  transform: translateY(-4px) scale(1.05);
+}
+
+.selected ~ .abilityIcons .abilityIcon:hover::after {
+  border-color: rgba(0, 255, 128, 0.5);
+  box-shadow: 0 0 20px rgba(0, 255, 128, 0.3);
+}
+
+.selected ~ .abilityIcons .abilityIcon:hover img {
+  filter: drop-shadow(0 0 12px rgba(0, 255, 128, 0.8));
 }
