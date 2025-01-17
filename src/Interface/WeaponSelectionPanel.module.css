@@ -52,6 +52,7 @@ menu on the entire panel */
 .panel h2 {
   font-size: 4rem;
   margin-bottom: 2.5rem;
+  margin-top: 0rem;
   font-family: 'Times New Roman', serif;
   letter-spacing: 4px;
   text-transform: uppercase;
@@ -82,7 +83,7 @@ menu on the entire panel */
 .iconSelection {
   display: flex;
   justify-content: center;
-  gap: 4.5rem;
+  gap: 5.5rem;
   margin: 2rem 0;
   width: 100%;
   padding: 0 2rem;
@@ -272,7 +273,7 @@ menu on the entire panel */
 
 .abilityIcon {
   position: relative;
-  width: 110px;
+  width: 120px;
   height: 120px;
   cursor: pointer;
   transition: all 0.4s ease;
@@ -350,40 +351,32 @@ menu on the entire panel */
   z-index: 1001; /* Already handled in Tooltip.module.css */
 }
 
-/* Add glow effect to ability icons when parent weapon is selected */
-.selected ~ .abilityIcons .abilityIcon {
+/* Change the selector to target ability icons when parent container has selected weapon */
+.weaponContainer:has(.selected) .abilityIcons .abilityIcon {
   background: rgba(0, 255, 128, 0.08);
-  /* Add subtle pulsing animation */
   animation: pulseAbility 2s infinite ease-in-out;
 }
 
-.selected ~ .abilityIcons .abilityIcon::after {
+.weaponContainer:has(.selected) .abilityIcons .abilityIcon::after {
   border-color: rgba(0, 255, 128, 0.3);
   box-shadow: 0 0 15px rgba(0, 255, 128, 0.2);
 }
 
-.selected ~ .abilityIcons .abilityIcon img {
+.weaponContainer:has(.selected) .abilityIcons .abilityIcon img {
   filter: drop-shadow(0 0 8px rgba(0, 255, 128, 0.6));
 }
 
-/* Pulsing animation for ability icons when weapon is selected */
-@keyframes pulseAbility {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-/* Enhance hover effect when parent is selected */
-.selected ~ .abilityIcons .abilityIcon:hover {
+/* Update hover effects for selected weapon's abilities */
+.weaponContainer:has(.selected) .abilityIcons .abilityIcon:hover {
   background: rgba(0, 255, 128, 0.15);
   transform: translateY(-4px) scale(1.05);
 }
 
-.selected ~ .abilityIcons .abilityIcon:hover::after {
+.weaponContainer:has(.selected) .abilityIcons .abilityIcon:hover::after {
   border-color: rgba(0, 255, 128, 0.5);
   box-shadow: 0 0 20px rgba(0, 255, 128, 0.3);
 }
 
-.selected ~ .abilityIcons .abilityIcon:hover img {
+.weaponContainer:has(.selected) .abilityIcons .abilityIcon:hover img {
   filter: drop-shadow(0 0 12px rgba(0, 255, 128, 0.8));
 }
