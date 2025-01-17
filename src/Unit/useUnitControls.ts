@@ -23,7 +23,7 @@ export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.0666,
+  speed = 0.0675,
   onPositionUpdate,
   health,
   isCharging = false,

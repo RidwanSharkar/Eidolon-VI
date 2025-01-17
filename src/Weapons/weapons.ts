@@ -155,16 +155,16 @@ interface AbilityTooltip {
 export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbilities, AbilityTooltip>> = {
   [WeaponType.SCYTHE]: {
     q: {
-      title: "Reap",
-      description: "A swift scythe attack in an arc - Cooldown: 0.75 seconds - Range: 4.2 feet",
+      title: "Scythe",
+      description: "Swift reaping attack in an arc",
       cost: "Cooldown: 0.75 seconds",
       range: "Range: 4.2 feet",
       damage: "Damage: 17"
     },
     e: {
-      title: "Chaos Bolt",
-      description: "Consumes 1 Orb Charge to fire a long range bolt to a single enemy.",
-      cost: "Consumes 1 Orb Charge",
+      title: "Entropic Bolt",
+      description: "Consumes 1 orb charge to fire a ball of chaotic energy at a single target.",
+      cost: "Cooldown: 0.75 seconds",
       range: "Range: 80 feet",
       damage: "Damage: 53"
     },
@@ -187,22 +187,22 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
   },
   [WeaponType.SWORD]: {
     q: {
-      title: "Swordstrike",
-      description: "A powerful sword strike in an arc - Cooldown: 1.1 seconds - Range: 6.5 feet",
+      title: "Greatsword",
+      description: "Slow powerful swing in a wide arc.",
       cost: "1.1",
       range: "6.5",
       damage: "29"
     },
     e: {
-      title: "Smite",
-      description: "Strikes enemies with a extra swing that will call down a powerful divine smite, damaging all nearby enemies if the initial strike is successful.",
+      title: "Divine Smite",
+      description: "Unleashes an extra strike that calls down radiant energy upon nearby enemies.",
       cost: "30",
       range: "4.0",
       damage: "35"
     },
     r: {
       title: "Oathstrike",
-      description: "Active: Consumes 4 Orb Charges to unleash a powerful strike that heals while damaging enemies in an arc.",
+      description: "Active: Consumes 4 Orb Charges to unleash a devastating strike that heals while damaging enemies in an arc.",
       cost: "50",
       range: "7.0",
       damage: "65"
@@ -218,16 +218,16 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
   },
   [WeaponType.SABRES]: {
     q: {
-      title: "Double Slash",
-      description: "Quick dual-wielding attack",
+      title: "Twin Sabres",
+      description: "Fast dual-wielding slashes at close range",
       cost: "12",
       range: "3.8",
       damage: "13"
     },
     e: {
-      title: "Etherbow Shot",
-      description: "Damage scales with charge time: 1.75 secondsRange: 80+ feet",
-      cost: "Consumes 1 Orb Charge",
+      title: "Etherbow",
+      description: "Conjures an arrow that deals damage based on charging time. Fully charged shots are guarnateed to critical hit.",
+      cost: " ",
       range: "Range: 80 feet",
       damage: "Damage: 53"
     },
