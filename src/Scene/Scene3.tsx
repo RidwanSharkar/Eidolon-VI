@@ -37,7 +37,7 @@ export default function Scene3({
   killCount,
   boneDoodadData,
   onLevelComplete,
-  spawnInterval = 2000,
+  spawnInterval = 3000,
   maxSkeletons = 23,
   initialSkeletons = 6,
   //spawnCount = 4,
@@ -254,7 +254,7 @@ export default function Scene3({
 
     const spawnTimer = setInterval(() => {
       // WAVE CONTROL
-      if (killCount < 30) return; // Only basic requirement to start spawning
+      if (killCount < 31) return; // Only basic requirement to start spawning
 
       setEnemies(prev => {
         const remainingSpawns = maxSkeletons - totalSpawned;
@@ -262,9 +262,9 @@ export default function Scene3({
 
         // Define specific spawn points for abominations
         const shouldSpawnAbomination = 
-          (killCount >= 33 && abominationsSpawned === 0) ||
-          (killCount >= 40 && abominationsSpawned === 1) ||
-          (killCount >= 46 && abominationsSpawned === 2);
+          (killCount >= 35 && abominationsSpawned === 0) ||
+          (killCount >= 42 && abominationsSpawned === 1) ||
+          (killCount >= 47 && abominationsSpawned === 2);
 
         if (shouldSpawnAbomination && abominationsSpawned < 3) {
           const spawnPosition = generateRandomPosition();
