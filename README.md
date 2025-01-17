@@ -12,7 +12,8 @@
 1. [Introduction](#introduction)  
 2. [Gameplay & Lore](#gameplay--lore)  
 3. [Controls](#controls)  
-4. [Changelog](#changelog)  
+4. [Tactics](#tactics)  
+5. [Early Development](#early-development)  
    - [v0.9 - Orb Charges](#v09---orb-charges)  
    - [v0.8 - Sabre Bow](#v08---sabre-bow)  
    - [v0.7 - Starter Corpse](#v07---starter-corpse)  
@@ -36,7 +37,7 @@ In this **graveyard of stars**, Death grants all a bleak choice:
 
 ## Gameplay & Lore
 
-A dark fusion of action-combat, surreal artistry, and cosmic horror. **Eidolon IV** thrusts you into a drifting cemetery of worlds, where your choices—and the remains of your foes—shape your power and ultimate fate.
+A dark fusion of action-combat, , and cosmic horror. **Eidolon IV** thrusts you into a drifting cemetery of worlds, where your choices—and the remains of your foes—shape your power and ultimate fate.
 
 ---
 
@@ -65,7 +66,7 @@ A dark fusion of action-combat, surreal artistry, and cosmic horror. **Eidolon I
 
 ---
 
-## Changelog
+## Early Development
 
 ### v0.9 - Orb Charges
 ![8orbcharges](https://github.com/user-attachments/assets/90c55e1c-8263-4d38-96b0-38ea42274176)

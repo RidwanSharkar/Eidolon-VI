@@ -332,7 +332,13 @@ menu on the entire panel */
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 12px;
+  padding: 8px;
+  transform: scale(1.2);
+  transition: transform 0.3s ease;
+}
+
+.abilityIcon:hover img {
+  transform: scale(1.3);
 }
 
 .tooltip {
