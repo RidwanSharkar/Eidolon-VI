@@ -272,7 +272,7 @@ menu on the entire panel */
 
 .abilityIcon {
   position: relative;
-  width: 80px;
+  width: 70px;
   height: 80px;
   cursor: pointer;
   transition: all 0.4s ease;
