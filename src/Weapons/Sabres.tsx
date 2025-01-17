@@ -515,7 +515,7 @@
     );
   }
 
-  // Add this new component for the frost explosion effect
+  // FROST ORBS 
   const FrostExplosion: React.FC<{ position: Vector3; onComplete: () => void }> = ({ position, onComplete }) => {
     const [particles, setParticles] = useState(() => 
       Array(15).fill(null).map(() => ({

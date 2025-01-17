@@ -485,14 +485,14 @@ export default function Unit({
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 1.575, 1); // 2 seconds for full charge - 1.5 no movemvent
+      const progress = Math.min(chargeTime / 1.4, 1); // BOWCHARGE CHARGETIME - 1.5 no movemvent
       setBowChargeProgress(progress);
       setBowGroundEffectProgress(progress); // Update ground effect progress
 
       // Smooth charge line opacity using delta
       const targetOpacity = progress;
       const currentOpacity = bowChargeLineOpacity.current;
-      bowChargeLineOpacity.current += (targetOpacity - currentOpacity) * delta * 12.5;
+      bowChargeLineOpacity.current += (targetOpacity - currentOpacity) * delta * 5;
 
       if (progress >= 1) {
         releaseBowShot(1);
@@ -779,7 +779,7 @@ export default function Unit({
         [hitKey]: 1
     }));
 
-    const baseDamage = 11;
+    const baseDamage = 13;
     const maxDamage = 51;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
     const fullChargeDamage = power >= 0.99 ? 66 : 0;

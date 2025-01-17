@@ -17,21 +17,19 @@ export const generateMountains = (): Array<{ position: Vector3; scale: number }>
   for (let i = 0; i < numberOfMountains; i++) {
     const angle = (i / numberOfMountains) * Math.PI * 2;
     
-    // Add some controlled randomness to create a more natural look
+    // controlled randomness
     const randomRadius = radius + (Math.random() * 4 - 2); // Varies radius by ±2 units
     const x = Math.cos(angle) * randomRadius;
     const z = Math.sin(angle) * randomRadius;
-
-    // Vary the scale slightly for visual interest
     const scale = 0.75 + Math.random() * 0.4; // More consistent scaling
 
-    // Add overlapping mountains
+    // Overlapping mountains
     mountains.push({
       position: new Vector3(x, 0, z),
       scale: scale,
     });
 
-    // Add a second row of mountains slightly offset
+    // Second row of mountains slightly offset
     const innerRadius = radius - 12;
     const offsetAngle = angle + (Math.PI / numberOfMountains);
     const innerX = Math.cos(offsetAngle) * innerRadius;
@@ -50,16 +48,16 @@ export const generateTrees = (): GeneratedTree[] => {
   const trees: GeneratedTree[] = [
     // Dense cluster 1 (left side)
     { position: new Vector3(-15, 0, -5), scale: 1.3, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
-    { position: new Vector3(-25, 0, -10.5), scale: 0.75, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    { position: new Vector3(-25, 0, -10.5), scale: 1, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     { position: new Vector3(-12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     { position: new Vector3(-12, 0, -13.5), scale: 0.8, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     
     { position: new Vector3(30, 0, 5), scale: 1.3, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
-    { position: new Vector3(16, 0, -10), scale: 0.75, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    { position: new Vector3(16, 0, -10), scale: 1, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     { position: new Vector3(12, 0, 8), scale: 1.25, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     
     { position: new Vector3(-11, 0, 5), scale: 1.3, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
-    { position: new Vector3(-12, 0, -28.5), scale: 0.75, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
+    { position: new Vector3(-12, 0, -28.5), scale: 1, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     { position: new Vector3(12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     { position: new Vector3(-12, 0, 23.5), scale: 0.8, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]) },
     
@@ -68,7 +66,7 @@ export const generateTrees = (): GeneratedTree[] => {
     { position: new Vector3(18, 0, -8), scale: 1.1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
     { position: new Vector3(17.5, 0, -10), scale: 0.9, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
     { position: new Vector3(15, 0, -11.5), scale: 1.1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
-    { position: new Vector3(16.5, 0, -6.5), scale: 0.75, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
+    { position: new Vector3(16.5, 0, -6.5), scale: 1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]) },
     
     // Back forest cluster 
     { position: new Vector3(-20, 0, -20), scale: 1.2, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]) },
@@ -89,21 +87,37 @@ export const generateTrees = (): GeneratedTree[] => {
 
 export const generateMushrooms = (): Array<{ position: Vector3; scale: number; variant: 'pink' | 'green' | 'blue' }> => {
   const mushrooms: Array<{ position: Vector3; scale: number; variant: 'pink' | 'green' | 'blue' }> = [];
-  const numberOfMushrooms = 60;
+  const numberOfMushrooms = 80;
+  const trees = generateTrees(); // Get tree positions for reference
 
   for (let i = 0; i < numberOfMushrooms; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const distance = Math.random() * 48;
-    const x = distance * Math.cos(angle);
-    const z = distance * Math.sin(angle);
+    let x: number, z: number;
     const scale = 0.45 + Math.random() * 0.175;
 
-    // Determine variant based on ratio (30:60:10)
+    // 70% chance to spawn near trees, 30% chance for random placement
+    if (Math.random() < 0.7 && trees.length > 0) {
+      // Pick a random tree
+      const randomTree = trees[Math.floor(Math.random() * trees.length)];
+      
+      // Generate position near the tree
+      const angleFromTree = Math.random() * Math.PI * 2;
+      const distanceFromTree = Math.random() * 4; // 0-4 units from tree
+      x = randomTree.position.x + Math.cos(angleFromTree) * distanceFromTree;
+      z = randomTree.position.z + Math.sin(angleFromTree) * distanceFromTree;
+    } else {
+      // Random placement anywhere
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 48;
+      x = distance * Math.cos(angle);
+      z = distance * Math.sin(angle);
+    }
+
+    // Even distribution of variants (33:33:33)
     let variant: 'pink' | 'green' | 'blue';
     const random = Math.random() * 100;
-    if (random < 60) {
+    if (random < 33.33) {
       variant = 'pink';
-    } else if (random < 90) {
+    } else if (random < 66.66) {
       variant = 'green';
     } else {
       variant = 'blue';

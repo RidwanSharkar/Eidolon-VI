@@ -17,13 +17,13 @@ interface UseUnitControlsProps {
   onMovementUpdate?: (direction: Vector3) => void;
 }
 
-const PLAY_AREA_RADIUS = 31.25 // MAP BOUNDARY
+const PLAY_AREA_RADIUS = 32.375 // MAP BOUNDARY
 
 export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.066,
+  speed = 0.0666,
   onPositionUpdate,
   health,
   isCharging = false,

@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import BonePlate from '../../gear/BonePlate';
 import { useRef, useState, useEffect } from 'react';
 import AbominationTrailEffect from './AbominationTrailEffect';
+import DragonSkull from '@/gear/DragonSkull';
 
 interface CustomAbominationProps {
   position: [number, number, number];
@@ -405,9 +406,9 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
   const attackAnimationRef = useRef<NodeJS.Timeout>();
 
   const walkSpeed = 4;
-  const attackSpeed = 2;
-  const ARM_DELAY = 150; // 0.15 seconds between arms
-  const TELEGRAPH_TIME = 850; // 850ms telegraph before first hit
+  const attackSpeed = 3;
+  const ARM_DELAY = 300; // 0.15 seconds between arms
+  const TELEGRAPH_TIME = 650; // 850ms telegraph before first hit
 
   const LEG_PAIRS = [
     {
@@ -625,16 +626,24 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
 
 
 
-      {/*       <group scale={[0.7, 0.7, 0.7]} position={[0, 1.45, +0.05]} rotation={[0.65, 0, 0]}>
+         <group scale={[0.7, 0.7, 0.7]} position={[0, 1.25, -0.1]} rotation={[0.25, 0, 0]}>
         <DragonSkull />
       </group>
- */}
+ 
 
-      <group scale={[0.65, 0.5, 1]} position={[0, 1, -0.15]} rotation={[0.7, 0, -4.25]}>
+      <group scale={[0.7, 0.5, 0.7]} position={[0, 1.3, -0.3]} rotation={[1, 0, -4.25]}>
         <CustomHorn isLeft={true} />
       </group>
 
-      <group scale={[0.65, 0.5, 1]} position={[0, 1, -0.15]} rotation={[0.7, 0, 4.25]}>
+      <group scale={[0.7, 0.5, 0.7]} position={[0, 1.3, -0.3]} rotation={[1, 0, 4.25]}>
+        <CustomHorn isLeft={false} />
+      </group>
+
+      <group scale={[0.7, 0.5, 0.7]} position={[0, 0.7, -0.6]} rotation={[1, 0, -4.25]}>
+        <CustomHorn isLeft={true} />
+      </group>
+
+      <group scale={[0.7, 0.5, 0.7]} position={[0, 0.7, -0.6]} rotation={[1, 0, 4.25]}>
         <CustomHorn isLeft={false} />
       </group>
 

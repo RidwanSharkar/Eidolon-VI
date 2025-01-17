@@ -16,11 +16,11 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale, variant = 'pink' }
   const mushroomColor = useMemo(() => {
     switch (variant) {
       case 'green':
-        return new THREE.Color("#00FFFF");
+        return new THREE.Color("#00FFC3"); // teal
       case 'blue':
-        return new THREE.Color("#FF9058"); // ORANGE 
+        return new THREE.Color("#FFB574"); // ORANGE 
       default:
-        return new THREE.Color("#F096CC"); // PINK 
+        return new THREE.Color("#FF9BFC"); // PINK 
     }
   }, [variant]);
 
@@ -45,7 +45,7 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale, variant = 'pink' }
     <group position={position} scale={scale*0.8}>
       {/* Stem */}
       <mesh ref={mushroomRef}>
-        <cylinderGeometry args={[0.1, 0.12, 0.8, 16]} />
+        <cylinderGeometry args={[0.1, 0.12, 0.7, 16]} />
         <meshStandardMaterial 
           color={mushroomColor.clone().multiplyScalar(0.9)}
           roughness={0.4}
@@ -56,36 +56,46 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale, variant = 'pink' }
       </mesh>
       
       {/* Cap */}
-      <mesh position={[0, 0.4, 0]}>
+      <mesh position={[0, 0.35, 0]}>
         <sphereGeometry args={[0.3, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial 
           color={mushroomColor}
           roughness={0.4}
           metalness={0.1}
           emissive={mushroomColor}
-          emissiveIntensity={0.375}
+          emissiveIntensity={0.475}
         />
       </mesh>
 
       {/* Spots */}
-      {[...Array(6)].map((_, i) => (
-        <mesh 
-          key={i} 
-          position={[
-            Math.sin(i * Math.PI / 3) * 0.15,
-            0.3,
-            Math.cos(i * Math.PI / 3) * 0.15
-          ]}
-          rotation={[Math.PI / 2, 0, 0]}
-        >
-          <circleGeometry args={[0.04, 16]} />
-          <meshStandardMaterial 
-            color={spotColor}
-            emissive={spotColor}
-            emissiveIntensity={0.25}
-          />
-        </mesh>
-      ))}
+      {[...Array(6)].map((_, i) => {
+        // Calculate angle for spot position
+        const angle = (i * Math.PI / 3);
+        // Calculate spot position on curved surface
+        return (
+          <mesh 
+            key={i} 
+            position={[
+              Math.sin(angle) * 0.15,
+              0.4 + Math.cos(angle) * 0.1, // Raise spots to cap surface
+              Math.cos(angle) * 0.15
+            ]}
+            // Rotate to follow cap curvature
+            rotation={[
+              -Math.PI / 3, // Tilt spots to follow cap curve
+              0,
+              -angle // Rotate each spot to face outward
+            ]}
+          >
+            <circleGeometry args={[0.04, 16]} />
+            <meshStandardMaterial 
+              color={spotColor}
+              emissive={spotColor}
+              emissiveIntensity={1.25}
+            />
+          </mesh>
+        );
+      })}
     </group>
   );
 };

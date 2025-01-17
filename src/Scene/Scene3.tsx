@@ -198,7 +198,39 @@ export default function Scene3({
     const shouldSpawnBoss = allEnemiesDefeated && hasStartedSpawning && killCount >= 50 && !isBossSpawned;
     
     if (shouldSpawnBoss) {
-      setIsBossSpawned(true);
+      // Add a delay before spawning the boss to allow for cleanup
+      setTimeout(() => {
+        // Clean up existing enemies first
+        setEnemies(prev => {
+          prev.forEach(enemy => {
+            if (enemy.ref?.current?.parent) {
+              enemy.ref.current.parent.remove(enemy.ref.current);
+              enemy.ref.current.traverse((child) => {
+                if ('geometry' in child && child.geometry instanceof THREE.BufferGeometry) {
+                  child.geometry.dispose();
+                }
+                if ('material' in child) {
+                  const material = child.material as THREE.Material | THREE.Material[];
+                  if (Array.isArray(material)) {
+                    material.forEach(m => m.dispose());
+                  } else {
+                    material?.dispose();
+                  }
+                }
+              });
+            }
+          });
+          return [];
+        });
+
+        // Force a garbage collection hint if available
+        if (window.gc) {
+          window.gc();
+        }
+
+        // Now spawn the boss
+        setIsBossSpawned(true);
+      }, 2000); // 2-second delay
     }
     // Only call onLevelComplete when boss is defeated
     if (isBossSpawned && bossHealth <= 0) {

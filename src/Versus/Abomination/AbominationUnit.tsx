@@ -50,17 +50,17 @@ export default function AbominationUnit({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 2.55;
-  const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.18;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.18;
+  const ATTACK_RANGE = 2.575;
+  const ATTACK_COOLDOWN = 3000;
+  const MOVEMENT_SPEED = 0.1800;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.1800;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 0;
+  const ATTACK_DAMAGE = 8;
   const SEPARATION_RADIUS = 4; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.15; // Strength of the separation force
-  const ARM_DELAY = 200;    // 0.15 seconds between arm strikes
-  const TOTAL_ARMS = 4;     // Total number of arms
+  const ARM_DELAY = 300;    // 0.15 seconds between arm strikes
+  const TOTAL_ARMS = 6;     // Total number of arms
 
   // Sync health changes
   useEffect(() => {
@@ -186,7 +186,7 @@ export default function AbominationUnit({
                 attackStartPosition.distanceTo(currentPosition.current) < 0.65) {
               onAttackPlayer(ATTACK_DAMAGE);
             }
-          }, 850 + (i * ARM_DELAY)); // 850ms initial telegraph + staggered delays
+          }, 650 + (i * ARM_DELAY)); // 850ms initial telegraph + staggered delays
         }
         
         lastAttackTime.current = currentTime;
@@ -277,7 +277,7 @@ export default function AbominationUnit({
             setIsSpawning(false);
           }}
           isSpawning={true}
-          scale={1.75}
+          scale={1.5}
         />
       )}
 
@@ -289,7 +289,7 @@ export default function AbominationUnit({
           }}
           isSpawning={false}
           weaponType={weaponType}
-          scale={1.75}
+          scale={1.5}
         />
       )}
     </>
