@@ -165,7 +165,7 @@ export default function LevelManager({
           {...sceneProps} 
           onLevelComplete={handleLevelComplete}
           onAbilityUnlock={onAbilityUnlock}
-          spawnInterval={3500}
+          spawnInterval={5000}
           maxSkeletons={23}
           initialSkeletons={5}
           spawnCount={4}
