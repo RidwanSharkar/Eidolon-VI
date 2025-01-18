@@ -3,7 +3,7 @@
 > - Linger in an ossuary for the restless, eternally locked in combat—where ambition and despair intertwine, and where the fallen fuel the ascent of those hungrier to covet hope.  <br>
 > - Devour the essence of unwitting tributes that challenge your claim—their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny, forging a being from the echoes of those who dared to dream and ascended to scale the jagged peaks anchoring the souls to this stygian ark.
 
-![bloomscythe](https://github.com/user-attachments/assets/242617d9-403b-4d6b-b380-9c3c36c3945c)
+![Eidolon Cover 1](https://github.com/user-attachments/assets/1535c3e9-b8fa-4581-aaae-669cecab789e)
 
 ---
 
@@ -49,8 +49,11 @@
 
 ---
 
+![Eidolon Cover 2](https://github.com/user-attachments/assets/8e8d251d-fa7c-40f6-a7cd-58865aeec3bf)
+
+
 ## Introduction
-Eidolon IV is a 3D action fantasy combat game built with React Three Fiber (R3F), Three.js, and TypeScript. Drawing inspiration from classic hack-and-slash RPGs and roguelikes, it combines fast-paced combat with character progression and ability unlocks.
+Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game built with React Three Fiber (R3F), Three.js, and TypeScript. Drawing inspiration from classic hack-and-slash RPGs and roguelikes, it combines fast-paced combat with character progression and ability unlocks.
 
 ### Game Overview
 - **Genre**: Action RPG / Hack-and-Slash / Roguelike
