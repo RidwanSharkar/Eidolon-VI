@@ -1,7 +1,7 @@
 # Eidolon IV
 > In this graveyard of stars, Death grants all a bleak choice: <br>
-> Linger in an ossuary for the restless, eternally locked in combat—where ambition and despair intertwine, and where the fallen fuel the ascent of those hungrier to covet hope.  <br>
-> Devour the essence of unwitting tributes that challenge your claim—their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny, forging a being from the echoes of those who dared to dream and ascended to scale the jagged peaks anchoring the souls to this stygian ark.
+> - Linger in an ossuary for the restless, eternally locked in combat—where ambition and despair intertwine, and where the fallen fuel the ascent of those hungrier to covet hope.  <br>
+> - Devour the essence of unwitting tributes that challenge your claim—their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny, forging a being from the echoes of those who dared to dream and ascended to scale the jagged peaks anchoring the souls to this stygian ark.
 
 ![bloomscythe](https://github.com/user-attachments/assets/242617d9-403b-4d6b-b380-9c3c36c3945c)
 
@@ -74,8 +74,8 @@ Eidolon IV is a 3D action fantasy combat game built with React Three Fiber (R3F)
 | Action             | Input                |
 |--------------------|----------------------|
 | **Movement**       | `WASD`               |
-| **Camera**         | `Right-click (hold)`   |
-| **Auto-Attack**    | `Right-click (hold)`   |
+| **Camera**         | `Right-click` (hold)   |
+| **Auto-Attack**    | `Right-click` (hold)   |
 | **Zoom**           | `Scroll Wheel`         |
 
 - **A mouse is highly recommended for optimal gameplay.**
@@ -108,7 +108,7 @@ Eidolon IV is a 3D action fantasy combat game built with React Three Fiber (R3F)
 |-----------|-----------------|----------|----------|---------------------|----------------|-------|
 | Scythe    | Entropic Bolt   | 1        | 0.7s     | 53                 | Single Target  | -     |
 | Sword     | Divine Smite    | 0        | 4.0s     | (31+17)+41           | Area of Effect | Smite damage requires successful sword hit |
-| Sabres    | Etherbow        | 0        | 0.33s     | 13 + (charge bonus) | Pierces in a Line           | Fully charged shots (1.5s) are guaranteed critical |
+| Sabres    | Etherbow        | 0        | 0.33s     | 13 + (charge bonus) | Pierces in a Line           | Fully charged shots (1.5s) are guaranteed critical hits |
 
 ### Unlockable Abilities
 - **('R' - '1' - '2')**  hotkeys are for the 3 ability choices that are available for each weapon to unlock at the completion of a level. The designations ‘Active' or ‘Passive’ determine whether or not an ability’s hotkey needs to be pressed to trigger its effect. 
@@ -135,11 +135,11 @@ Eidolon IV is a 3D action fantasy combat game built with React Three Fiber (R3F)
 ## Custom Model Creation
 All my own stunts - no external models/imports/assets used. First time I've ever done anything like this, so stuck with a 'bone' theme that seemed easier to work with. 
 
-- built unit and weapon models by combining primitive geometries like cylinders, spheres
-- created unique shapes using Three.js Shape class to create 2D shapes with mathematical functions, that are then extruded into 3D
-- special effect animations using `useFrame` and mathematical functions
-- glowing effects using emissive materials and point lights
-- particle effects using instanced meshes and shader materials
+- Built unit and weapon models by combining primitive geometries like cylinders, spheres
+- Created unique shapes using Three.js Shape class to create 2D shapes with mathematical functions, that are then extruded into 3D
+- Special effect animations using `useFrame` and mathematical functions
+- Glowing effects using emissive materials and point lights
+- Particle effects using instanced meshes and shader materials
 
 ### Bone Wings
 ![BONEWING CREATION](https://github.com/user-attachments/assets/dde85184-7ff0-4899-b287-e9c7116630c5)
@@ -249,5 +249,5 @@ All my own stunts - no external models/imports/assets used. First time I've ever
 --- 
 
 ## Epilogue
-Didn't think I'd be able to do this with React, but I've always wanted to make a game - and what started off as procrastination had turned into an amazing learning experience. There are a million things I'd like to add to this game, as well as what I would do differently should i choose to create another one (particularly with component reuse and better optimization of hooks & how to potentially avoid hours of refactoring down the line - OR just not make a game with React next time) BUT this has already gone well past 200 hours of work - glad i got my exp. 
+Didn't think I'd be able to do this with React, but I've always wanted to make a game - and what started off as procrastination had turned into an amazing learning experience. There are a million things I'd like to add to this game, as well as what I would do differently should i choose to create another one (particularly with component reuse and better optimization of hooks & how to potentially avoid hours of refactoring down the line - OR just not making a game with React next time) BUT this has already gone well past 200 hours of work - glad i got my exp. 
 
