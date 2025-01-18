@@ -1,6 +1,6 @@
 # Eidolon IV
-> In this graveyard of stars, Death grants all a bleak choice:
-> Linger in an ossuary for the restless, eternally locked in combat—where ambition and despair intertwine, and where the fallen fuel the ascent of those hungrier to covet hope.  
+> In this graveyard of stars, Death grants all a bleak choice: <br>
+> Linger in an ossuary for the restless, eternally locked in combat—where ambition and despair intertwine, and where the fallen fuel the ascent of those hungrier to covet hope.  <br>
 > Devour the essence of unwitting tributes that challenge your claim—their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny, forging a being from the echoes of those who dared to dream and ascended to scale the jagged peaks anchoring the souls to this stygian ark.
 
 ![bloomscythe](https://github.com/user-attachments/assets/242617d9-403b-4d6b-b380-9c3c36c3945c)
@@ -10,17 +10,19 @@
 ## Table of Contents
 
 1. [Introduction](#introduction)  
-2. [Game Mechanics](#game-mechanics)
+   - [Game Overview](#game-overview)
+   - [Core Features](#core-features)
+2. [Movement and Camera Controls](#movement-and-camera-controls)
+   - [Basic Controls](#basic-controls)
+3. [Weapons and Combat](#weapons-and-combat)
+   - [Base Attacks](#base-attacks)
+   - [Special Abilities](#special-abilities)
+   - [Unlockable Abilities](#unlockable-abilities)
+4. [Game Mechanics](#game-mechanics)
    - [Orb Charges](#orb-charges)
    - [Health](#health)
    - [Critical Hit Chance](#critical-hit-chance)
    - [Enemies](#enemies)
-3. [Movement and Camera Controls](#movement-and-camera-controls)
-   - [Basic Controls](#basic-controls)
-4. [Weapons and Combat Controls](#weapons-and-combat-controls)
-   - [Base Attacks](#base-attacks)
-   - [Special Abilities](#special-abilities)
-   - [Unlockable Abilities](#unlockable-abilities)
 5. [Custom Model Creation](#custom-model-creation)
    - [Bone Wings](#bone-wings)  
    - [Sword Guard](#sword-guard)  
@@ -48,7 +50,68 @@
 ---
 
 ## Introduction
-Eidolon IV is a 3D action fantasy combat game built with React Three Fiber (R3F), Three.js, and TypeScript.
+Eidolon IV is a 3D action fantasy combat game built with React Three Fiber (R3F), Three.js, and TypeScript. Drawing inspiration from classic hack-and-slash RPGs and roguelikes, it combines fast-paced combat with character progression and ability unlocks.
+
+### Game Overview
+- **Genre**: Action RPG / Hack-and-Slash / Roguelike
+- **Perspective**: Third-person, top-down camera
+- **Combat Style**: Real-time combat with 3 distinct weapon classes
+
+### Core Features
+- **Weapon System**: Each weapon has unique base attacks and special abilities
+- **Progression**: Gain power through enemy defeats and level-up choices
+- **Combat Mechanics**: 
+  - Tactical positioning and timing
+  - Weapon-specific combo systems
+  - Resource management with orb charges
+  - Dodging and positioning mechanics
+
+---
+
+## Movement and Camera Controls
+
+### Basic Controls
+| Action             | Input                |
+|--------------------|----------------------|
+| **Movement**       | `WASD`               |
+| **Camera**         | `Right-click (hold)`   |
+| **Auto-Attack**    | `Right-click (hold)`   |
+| **Zoom**           | `Scroll Wheel`         |
+
+- **A mouse is highly recommended for optimal gameplay.**
+
+- Holding the Right-Click WHILE moving with W-A-S-D keys will allow smooth movement with camera control. This will also allow you to quickly switch targets, reposition, and efficiently aim at targets in front of you. 
+
+- Holding the Left-Click will also perform an auto-attack that is the same as the weapon’s ‘Q’ ability, or regular attack swing. All combat ability buttons {Q,E,R,1,2} can be held down as well; they will cast automatically within their cooldown frame.
+
+- The A key to move backwards will come in very handy when you want to evade attacks while also dealing damage to enemies that are encroaching on you. However, **walking backwards will incur a movement speed penalty**. 
+
+- W-A-S-D can be held in combinations such as holding ‘W’ and ‘A’ together to go Northwest, S-D to go Southeast, etc. 
+
+---
+
+## Weapons and Combat
+
+### Base Attacks
+- **(‘Q’)**  is the default attack of the weapon that can also be triggered by the Left-Click:
+
+| Weapon    | Range    | Cooldown | Damage | Swing Arc    |
+|-----------|----------|----------|--------|-------------|
+| Scythe    | 4.5 ft   | 0.8s     | 23     | Medium      |
+| Sword     | 6.0 ft   | 1.0s     | 31     | Wide        |
+| Sabres    | 4.0 ft   | 0.6s     | 17x2   | Narrow      |
+
+### Special Abilities
+- **('E')** is the weapon’s core special ability: 
+
+| Weapon    | Ability         | Orb Cost | Cooldown | Damage              | Type           | Notes |
+|-----------|-----------------|----------|----------|---------------------|----------------|-------|
+| Scythe    | Entropic Bolt   | 1        | 0.7s     | 53                 | Single Target  | -     |
+| Sword     | Divine Smite    | 0        | 4.0s     | (31+17)+41           | Area of Effect | Smite damage requires successful sword hit |
+| Sabres    | Etherbow        | 0        | 0.33s     | 13 + (charge bonus) | Pierces in a Line           | Fully charged shots (1.5s) are guaranteed critical |
+
+### Unlockable Abilities
+- **('R' - '1' - '2')**  hotkeys are for the 3 ability choices that are available for each weapon to unlock at the completion of a level. The designations ‘Active' or ‘Passive’ determine whether or not an ability’s hotkey needs to be pressed to trigger its effect. 
 
 ---
 
@@ -66,54 +129,6 @@ Eidolon IV is a 3D action fantasy combat game built with React Three Fiber (R3F)
 
 ### Enemies
 - When an enemy begins its attack animation, there is a 1-second delay before any damage can be registered, allowing a short window to reposition and evade the attack. ALL attacks outrange enemy attacks, but vary in degree based on weapon choice. 
-
----
-
-## Movement and Camera Controls
-
-- A mouse is highly recommended for optimal gameplay.
-
-- Holding the Right-Click WHILE moving with W-A-S-D keys will allow smooth movement with camera control. This will also allow you to quickly switch targets, reposition, and efficiently aim at targets in front of you. 
-
-- Holding the Left-Click will also perform an auto-attack that is the same as the weapon’s ‘Q’ ability, or regular attack swing. All combat ability buttons {Q,E,R,1,2} can be held down as well; they will cast automatically within their cooldown frame.
-
-- The A key to move backwards will come in very handy when you want to evade attacks while also dealing damage to enemies that are encroaching on you. However, **walking backwards will incur a movement speed penalty**. 
-
-- W-A-S-D can be held in combinations such as holding ‘W’ and ‘A’ together to go Northwest, S-D to go Southeast, etc. 
-
-
-### Basic Controls
-
-| Action             | Input                |
-|--------------------|----------------------|
-| **Movement**       | `WASD`               |
-| **Camera**         | Right-click (hold)   |
-| **Auto-Attack**    | Right-click (hold)   |
-| **Zoom**           | Scroll Wheel         |
-
-
-## Weapons and Combat Controls
-
-### Base Attacks
-- **(‘Q’)**  is the default attack of the weapon that can also be triggered by the Left-Click:
-
-| Weapon    | Range    | Cooldown | Damage | Swing Arc    |
-|-----------|----------|----------|--------|-------------|
-| Scythe    | 4.5 ft   | 0.8s     | 23     | Medium      |
-| Sword     | 6.0 ft   | 1.0s     | 31     | Wide        |
-| Sabres    | 4.0 ft   | 0.6s     | 17x2   | Narrow      |
-
-### Special Abilities
-- **('E')** is the weapon’s core special ability: 
-
-| Weapon    | Ability         | Orb Cost | Cooldown | Damage              | Type           | Notes |
-|-----------|-----------------|----------|----------|---------------------|----------------|-------|
-| Scythe    | Entropic Bolt   | 1        | 0.7s     | 53                 | Single Target  | -     |
-| Sword     | Divine Smite    | 0        | 4.0s     | 31+17+41           | Area of Effect | Smite damage requires successful sword hit |
-| Sabres    | Etherbow        | 0        | 0.5s     | 13+ (charge bonus) | Line           | Full charge = guaranteed critical |
-
-### Unlockable Abilities
-- **('R' - '1' - '2')**  hotkeys are for the 3 ability choices that are available for each weapon to unlock at the completion of a level. The designations ‘Active' or ‘Passive’ determine whether or not an ability’s hotkey needs to be pressed to trigger its effect. 
 
 ---
 
