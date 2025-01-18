@@ -16,8 +16,12 @@
    - [Critical Hit Chance](#critical-hit-chance)
    - [Enemies](#enemies)
 3. [Controls](#controls)
-   - [Movement and Camera](#movement-and-camera)
-   - [Combat Controls](#combat-controls)
+   - [Movement and Camera Controls](#movement-and-camera-controls)
+   - [Basic Controls](#basic-controls)
+   - [Weapons and Combat Controls](#weapons-and-combat-controls)
+     - [Base Attacks](#base-attacks)
+     - [Special Abilities](#special-abilities)
+     - [Unlockable Abilities](#unlockable-abilities)
 4. [Custom Model Creation](#custom-model-creation)
    - [Bone Wings](#bone-wings)  
    - [Sword Guard](#sword-guard)  
@@ -40,6 +44,7 @@
    - [v0.2 - Weapon Models](#v02---weapon-models)  
    - [v0.1 - Baseline](#v01---baseline)
    - [v0.0 - Inception](#v00---inception)
+7. [Epilogue](#epilogue)
 
 ---
 
@@ -57,7 +62,7 @@ In this graveyard of stars, Death grants all a bleak choice:
 - All weapons have 8 orb charges, each with an 8 second cooldown. Only the Scythe consumes these orbs with its ‘E’ ability at the beginning of Level 1. Note that abilities that have an orb cost may still possess separate cooldowns. 
 
 ### Health
-- Each kill grants 1 point of maximum health (the kill counter is the right circle next to the experience bar), which also effectively heals for 1 HP (+1 Current HP /+1 Maximum HP). 
+- Each enemy kill grants 1 point of maximum health (the kill counter is the right circle next to the experience bar), which also effectively heals for 1 HP (+1 Current HP /+1 Maximum HP). 
 - There is no passive health regeneration; however, the Scythe and Greatsword have option(s) for healing that they may choose to unlock. 
 
 ### Critical Hit Chance
@@ -68,34 +73,7 @@ In this graveyard of stars, Death grants all a bleak choice:
 
 ---
 
-## Controls
-
-### Basic Controls
-
-| Action             | Input                |
-|--------------------|----------------------|
-| **Movement**       | `WASD`               |
-| **Camera**         | Right-click (hold)   |
-| **Auto-Attack**    | Right-click (hold)   |
-| **Zoom**           | Scroll Wheel         |
-
-### Weapon Base Attacks ('Q')
-
-| Weapon    | Range    | Cooldown | Damage | Arc Type    |
-|-----------|----------|----------|--------|-------------|
-| Scythe    | 4.5 ft   | 0.8s     | 23     | Medium      |
-| Sword     | 6.0 ft   | 1.0s     | 31     | Wide        |
-| Sabres    | 4.0 ft   | 0.6s     | 17x2   | Narrow      |
-
-### Special Abilities ('E')
-
-| Weapon    | Ability         | Orb Cost | Cooldown | Damage              | Type           | Notes |
-|-----------|-----------------|----------|----------|---------------------|----------------|-------|
-| Scythe    | Entropic Bolt   | 1        | 0.7s     | 53                 | Single Target  | -     |
-| Sword     | Divine Smite    | 0        | 4.0s     | 31+17+41           | Area of Effect | Smite damage requires successful sword hit |
-| Sabres    | Etherbow        | 0        | 0.5s     | 13+ (charge bonus) | Line           | Full charge = guaranteed critical |
-
-### Movement and Camera
+## Movement and Camera Controls
 
 - A mouse is highly recommended for optimal gameplay.
 
@@ -107,20 +85,38 @@ In this graveyard of stars, Death grants all a bleak choice:
 
 - W-A-S-D can be held in combinations such as holding ‘W’ and ‘A’ together to go Northwest, S-D to go Southeast, etc. 
 
-### Combat Controls
 
+### Basic Controls
+
+| Action             | Input                |
+|--------------------|----------------------|
+| **Movement**       | `WASD`               |
+| **Camera**         | Right-click (hold)   |
+| **Auto-Attack**    | Right-click (hold)   |
+| **Zoom**           | Scroll Wheel         |
+
+
+## Weapons and Combat Controls
+
+### Base Attacks
 - **(‘Q’)**  is the default attack of the weapon that can also be triggered by the Left-Click:
-	- Scythe: 4.5 ft range - 0.8 second cooldown - Damage: 23- Medium Arc
-	- Sword: 6.0 ft range - 1.00 second cooldown - Damage: 31 - Wide Arc
-	- Sabres: 4.0 ft range - 0.6 second cooldown - Damage: 17x2 - Narrow Arc 
 
+| Weapon    | Range    | Cooldown | Damage | Swing Arc    |
+|-----------|----------|----------|--------|-------------|
+| Scythe    | 4.5 ft   | 0.8s     | 23     | Medium      |
+| Sword     | 6.0 ft   | 1.0s     | 31     | Wide        |
+| Sabres    | 4.0 ft   | 0.6s     | 17x2   | Narrow      |
+
+### Special Abilities
 - **('E')** is the weapon’s core special ability: 
-	- Scythe: ‘Entropic Bolt’ - Orb Cost: 1 - Cooldown: 0.7s - Damage: 53 - single target
-	- Sword: ‘Divine Smite’ - Orb Cost: 0 - Cooldown: 4s - Damage: 31+17 (sword) + 41 (smite) - area of effect
-		- Note: Smite damage will only trigger if the ability’s sword damage successfully hits a target. 
-	- Scythe: ‘Etherbow’ - Orb Cost: 0 - Cooldown: 0.5s - Damage: 13 base, scaling with charge time - in a line
-		- Note: Fully charged shots are guaranteed critical strikes. 
 
+| Weapon    | Ability         | Orb Cost | Cooldown | Damage              | Type           | Notes |
+|-----------|-----------------|----------|----------|---------------------|----------------|-------|
+| Scythe    | Entropic Bolt   | 1        | 0.7s     | 53                 | Single Target  | -     |
+| Sword     | Divine Smite    | 0        | 4.0s     | 31+17+41           | Area of Effect | Smite damage requires successful sword hit |
+| Sabres    | Etherbow        | 0        | 0.5s     | 13+ (charge bonus) | Line           | Full charge = guaranteed critical |
+
+### Unlockable Abilities
 - **('R' - '1' - '2')**  hotkeys are for the 3 ability choices that are available for each weapon to unlock at the completion of a level. The designations ‘Active' or ‘Passive’ determine whether or not an ability’s hotkey needs to be pressed to trigger its effect. 
 
 ---
