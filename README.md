@@ -53,7 +53,7 @@
 
 
 ## Introduction
-Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game built with React Three Fiber (R3F), Three.js, and TypeScript. Drawing inspiration from classic hack-and-slash RPGs and roguelikes, it combines fast-paced combat with character progression and ability unlocks.
+Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game built with React Three Fiber (R3F), Three.js, and TypeScript. Drawing inspiration from classic hack-and-slash RPGs and roguelikes, it combines fast-paced combat with character progression and ability unlocks on level completion.
 
 ### Game Overview
 - **Genre**: Action RPG / Hack-and-Slash / Roguelike
@@ -64,10 +64,9 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 - **Weapon System**: Each weapon has unique base attacks and special abilities
 - **Progression**: Gain power through enemy defeats and level-up choices
 - **Combat Mechanics**: 
-  - Tactical positioning and timing
+  - Tactical positioning, dodging, and timing
   - Weapon-specific combo systems
-  - Resource management with orb charges
-  - Dodging and positioning mechanics
+  - Resource management with orb charges and cooldowns 
 
 ---
 
@@ -76,20 +75,20 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 ### Basic Controls
 | Action             | Input                |
 |--------------------|----------------------|
-| **Movement**       | `WASD`               |
+| **Movement**       | `W`-`A`-`S`-`D`               |
 | **Camera**         | `Right-click` (hold)   |
 | **Auto-Attack**    | `Right-click` (hold)   |
 | **Zoom**           | `Scroll Wheel`         |
 
 - **A mouse is highly recommended for optimal gameplay.**
 
-- Holding the Right-Click WHILE moving with W-A-S-D keys will allow smooth movement with camera control. This will also allow you to quickly switch targets, reposition, and efficiently aim at targets in front of you. 
+- Holding the `Right-Click` WHILE moving with `W`-`A`-`S`-`D` keys will allow smooth movement with camera control. This will also allow you to quickly switch targets, reposition, and efficiently aim at targets in front of you. 
 
-- Holding the Left-Click will also perform an auto-attack that is the same as the weapon’s ‘Q’ ability, or regular attack swing. All combat ability buttons {Q,E,R,1,2} can be held down as well; they will cast automatically within their cooldown frame.
+- Holding the `Left-Click` will also perform an auto-attack that is the same as the weapon’s ‘Q’ ability, or regular attack swing. All combat ability buttons {`Q`, `E`, `R`, `1`, `2`} can be held down as well; they will cast automatically within their cooldown frame.
 
-- The A key to move backwards will come in very handy when you want to evade attacks while also dealing damage to enemies that are encroaching on you. However, **walking backwards will incur a movement speed penalty**. 
+- The `A` key to move backwards will come in very handy when you want to evade attacks while also dealing damage to enemies that are encroaching on you. However, **walking backwards will incur a movement speed penalty**. 
 
-- W-A-S-D can be held in combinations such as holding ‘W’ and ‘A’ together to go Northwest, S-D to go Southeast, etc. 
+- `W`-`A`-`S`-`D` can be held in combinations such as holding `W` and `A` together to go Northwest, `S`-`D` to go Southeast, etc. 
 
 ---
 
@@ -136,7 +135,7 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 ---
 
 ## Custom Model Creation
-All my own stunts - no external models/imports/assets used. First time I've ever done anything like this, so stuck with a 'bone' theme that seemed easier to work with. 
+No external models/imports/assets used. First time I've ever done anything like this, so stuck with a 'bone' theme that seemed easier to work with. 
 
 - Built unit and weapon models by combining primitive geometries like cylinders, spheres
 - Created unique shapes using Three.js Shape class to create 2D shapes with mathematical functions, that are then extruded into 3D
@@ -252,5 +251,5 @@ All my own stunts - no external models/imports/assets used. First time I've ever
 --- 
 
 ## Epilogue
-Didn't think I'd be able to do this with React, but I've always wanted to make a game - and what started off as procrastination had turned into an amazing learning experience. There are a million things I'd like to add to this game, as well as what I would do differently should i choose to create another one (particularly with component reuse and better optimization of hooks & how to potentially avoid hours of refactoring down the line - OR just not making a game with React next time) BUT this has already gone well past 200 hours of work - glad i got my exp. 
+Didn't think I'd be able to do this with React, but I've always wanted to make a game - and what started off as procrastination turned into an amazing learning experience. There are a million things I'd like to add to this game, as well as what I would do differently from the ground up should i choose to create another one (particularly with component reuse and better optimization of hooks & how to potentially avoid hours of refactoring down the line - OR just not making a game with React next time) BUT this has already gone well past 200 hours of work - glad i got my exp. Considering this my self-assigned 'capstone project' for Rutgers '25. 
 
