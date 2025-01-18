@@ -18,11 +18,17 @@
 3. [Controls](#controls)
    - [Movement and Camera](#movement-and-camera)
    - [Combat Controls](#combat-controls)
-4. [Custom Models](#custom-models)
+4. [Custom Model Creation](#custom-model-creation)
    - [Bone Wings](#bone-wings)  
    - [Sword Guard](#sword-guard)  
    - [Shoulder Plates](#shoulder-plates)   
-5. [Early Development](#early-development)
+5. [Technical Details](#technical-details)
+   - [Unit System](#unit-system)
+   - [Animation & Effects](#animation--effects)
+   - [Scene Management](#scene-management)
+   - [State Management](#state-management)
+   - [Performance](#performance)
+6. [Early Development](#early-development)
    - [v1.0 - Initial Release](#v10---initial-release)  
    - [v0.9 - Orb Charges](#v09---orb-charges)  
    - [v0.8 - Etherbow](#v08---etherbow)  
@@ -64,13 +70,30 @@ In this graveyard of stars, Death grants all a bleak choice:
 
 ## Controls
 
+### Basic Controls
+
 | Action             | Input                |
 |--------------------|----------------------|
-| **Movement**       |   `WASD`               |
-| **Camera**         | Right-click (hold)  |
+| **Movement**       | `WASD`               |
+| **Camera**         | Right-click (hold)   |
 | **Auto-Attack**    | Right-click (hold)   |
-| **Zoom**           | Scroll Wheel          |
+| **Zoom**           | Scroll Wheel         |
 
+### Weapon Base Attacks ('Q')
+
+| Weapon    | Range    | Cooldown | Damage | Arc Type    |
+|-----------|----------|----------|--------|-------------|
+| Scythe    | 4.5 ft   | 0.8s     | 23     | Medium      |
+| Sword     | 6.0 ft   | 1.0s     | 31     | Wide        |
+| Sabres    | 4.0 ft   | 0.6s     | 17x2   | Narrow      |
+
+### Special Abilities ('E')
+
+| Weapon    | Ability         | Orb Cost | Cooldown | Damage              | Type           | Notes |
+|-----------|-----------------|----------|----------|---------------------|----------------|-------|
+| Scythe    | Entropic Bolt   | 1        | 0.7s     | 53                 | Single Target  | -     |
+| Sword     | Divine Smite    | 0        | 4.0s     | 31+17+41           | Area of Effect | Smite damage requires successful sword hit |
+| Sabres    | Etherbow        | 0        | 0.5s     | 13+ (charge bonus) | Line           | Full charge = guaranteed critical |
 
 ### Movement and Camera
 
@@ -86,12 +109,12 @@ In this graveyard of stars, Death grants all a bleak choice:
 
 ### Combat Controls
 
-- **(‘Q’)**  is the default attack of the weapon that can also be triggered by the Left-Click.
+- **(‘Q’)**  is the default attack of the weapon that can also be triggered by the Left-Click:
 	- Scythe: 4.5 ft range - 0.8 second cooldown - Damage: 23- Medium Arc
 	- Sword: 6.0 ft range - 1.00 second cooldown - Damage: 31 - Wide Arc
 	- Sabres: 4.0 ft range - 0.6 second cooldown - Damage: 17x2 - Narrow Arc 
 
-- **('E')** is the weapon’s unique ability: 
+- **('E')** is the weapon’s core special ability: 
 	- Scythe: ‘Entropic Bolt’ - Orb Cost: 1 - Cooldown: 0.7s - Damage: 53 - single target
 	- Sword: ‘Divine Smite’ - Orb Cost: 0 - Cooldown: 4s - Damage: 31+17 (sword) + 41 (smite) - area of effect
 		- Note: Smite damage will only trigger if the ability’s sword damage successfully hits a target. 
@@ -102,18 +125,53 @@ In this graveyard of stars, Death grants all a bleak choice:
 
 ---
 
-## Custom Models
+## Custom Model Creation
 
 ### Bone Wings
 ![BONEWING CREATION](https://github.com/user-attachments/assets/dde85184-7ff0-4899-b287-e9c7116630c5)
+
+### Sword Guard
+![SWORD GUARD MODEL](https://github.com/user-attachments/assets/ddfd1eb6-b9e6-4314-ada7-3815697372be)
 
 ### Shoulder Plates
 ![SHOULDERPLATE CREATION 1](https://github.com/user-attachments/assets/7ba462a9-649f-41a9-8bdc-835a2b3d56cd)
 ![SHOULDERPLATE CREATION 2](https://github.com/user-attachments/assets/e680194a-3ae9-4a66-8922-12bb1e2ddab7)
 
-### Sword Guard
-![SWORD GUARD MODEL](https://github.com/user-attachments/assets/ddfd1eb6-b9e6-4314-ada7-3815697372be)
 
+---
+
+## Technical Details
+
+### Unit System
+- Models are React components using R3F
+- Position tracking via `useRef` and Three.js `Group` components
+- Health and state management through React's `useState`
+- Collision detection using raycasting and distance calculations
+
+### Animation & Effects
+- Particle systems using instanced meshes
+- Effect lifecycle management with unique IDs
+- Projectile tracking and collision detection
+- Shader-based visual effects for abilities
+
+### Scene Management
+- Dynamic enemy spawning system
+- Environment generation with procedural elements
+- Level progression and state tracking
+- Resource cleanup between scenes
+
+### State Management
+- Weapon selection and swapping
+- Health and damage tracking
+- Ability cooldowns and unlocks
+- Kill counting and progression
+
+### Performance
+- Object pooling for particles and effects* (pending)
+- Automatic disposal of Three.js resources
+- Enemy unit memoization
+- Batched updates for state changes
+- Memory management and cache clearing
 
 --- 
 
