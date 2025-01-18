@@ -1,7 +1,7 @@
 # Eidolon IV
-
-> Death offers an alluring covenant laced with grotesque mockery...  
-> Moths entranced by a flame's fatal caress, they mistake the Reaper's gilded embrace for salvation.
+> In this graveyard of stars, Death grants all a bleak choice:
+> Linger in an ossuary for the restless, eternally locked in combat—where ambition and despair intertwine, and where the fallen fuel the ascent of those hungrier to covet hope.  
+> Devour the essence of unwitting tributes that challenge your claim—their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny, forging a being from the echoes of those who dared to dream and ascended to scale the jagged peaks anchoring the souls to this stygian ark.
 
 ![bloomscythe](https://github.com/user-attachments/assets/242617d9-403b-4d6b-b380-9c3c36c3945c)
 
@@ -48,10 +48,7 @@
 ---
 
 ## Introduction
-In this graveyard of stars, Death grants all a bleak choice:
-
-- Linger in an ossuary for the restless, eternally locked in combat—where ambition and despair intertwine, and where the fallen fuel the ascent of those hungrier to covet hope.  
-- Devour the essence of unwitting tributes that challenge your claim—their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny, forging a being from the echoes of those who dared to dream and ascended to scale the jagged peaks anchoring the souls to this stygian ark.
+Eidolon IV is a 3D action fantasy combat game built with React Three Fiber (R3F), Three.js, and TypeScript.
 
 ---
 
@@ -121,6 +118,13 @@ In this graveyard of stars, Death grants all a bleak choice:
 ---
 
 ## Custom Model Creation
+All my own stunts - no external models/imports/assets used. First time I've ever done anything like this, so stuck with a 'bone' theme that seemed easier to work with. 
+
+- built unit and weapon models by combining primitive geometries like cylinders, spheres
+- created unique shapes using Three.js Shape class to create 2D shapes with mathematical functions, that are then extruded into 3D
+- special effect animations using `useFrame` and mathematical functions
+- glowing effects using emissive materials and point lights
+- particle effects using instanced meshes and shader materials
 
 ### Bone Wings
 ![BONEWING CREATION](https://github.com/user-attachments/assets/dde85184-7ff0-4899-b287-e9c7116630c5)
@@ -144,7 +148,8 @@ In this graveyard of stars, Death grants all a bleak choice:
 - Collision detection using raycasting and distance calculations
 
 ### Animation & Effects
-- Particle systems using instanced meshes
+- Weapon swing animations using `useFrame` with pivot and rotation in 3 dimensions 
+- Ability particle systems using instanced meshes
 - Effect lifecycle management with unique IDs
 - Projectile tracking and collision detection
 - Shader-based visual effects for abilities
@@ -156,17 +161,16 @@ In this graveyard of stars, Death grants all a bleak choice:
 - Resource cleanup between scenes
 
 ### State Management
-- Weapon selection and swapping
 - Health and damage tracking
 - Ability cooldowns and unlocks
-- Kill counting and progression
+- Kill count and progression
 
 ### Performance
-- Object pooling for particles and effects* (pending)
 - Automatic disposal of Three.js resources
 - Enemy unit memoization
 - Batched updates for state changes
 - Memory management and cache clearing
+- Object pooling for particles and effects*
 
 --- 
 
@@ -226,3 +230,9 @@ In this graveyard of stars, Death grants all a bleak choice:
 ![0 0](https://github.com/user-attachments/assets/83d421de-dede-4131-82d5-27951e388829)
 
 - Earliest video I could find (11/20/24) with basic movement and camera rotation. Was definitely procrastinating here..
+
+--- 
+
+## Epilogue
+Didn't think I'd be able to do this with React, but I've always wanted to make a game - and what started off as procrastination had turned into an amazing learning experience. There are a million things I'd like to add to this game, as well as what I would do differently should i choose to create another one (particularly with component reuse and better optimization of hooks & how to potentially avoid hours of refactoring down the line - OR just not make a game with React next time) BUT this has already gone well past 200 hours of work - glad i got my exp. 
+
