@@ -202,14 +202,14 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     r: {
       title: "Oathstrike",
-      description: "Active: Consumes 4 Orb Charges to unleash a devastating strike that heals while damaging enemies in an arc.",
+      description: "Active: Consumes 4 Orb Charges to unleash a devastating strike in an arc that heals the wielder if at least one enemy is hit.",
       cost: "50",
       range: "7.0",
       damage: "65"
     },
     passive: {
       title: "Crusader Aura",
-      description: "Passive: Increases attack speed by 30% and gives attacks a chance to heal for 3 HP."
+      description: "Passive: Increases attack speed by 30% and gives attacks a 20% chance to heal for 3 HP."
     },
     active: {
       title: "Chain Lightning",

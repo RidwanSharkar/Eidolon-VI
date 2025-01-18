@@ -117,25 +117,25 @@ export const useOathstrike = ({
 
     setIsActive(true);
 
-    // Use processHealing instead of direct onHealthChange
-    processHealing(HEAL_AMOUNT, position);
-
     // Calculate arc for damage
     const forward = direction.clone();
     const DAMAGE_RANGE = 5.5;
     const ARC_ANGLE = Math.PI * 0.6; // 108-degree arc
 
+    // Track if we hit any enemies
+    let hitEnemies = false;
+
     // Check enemies in arc
     enemyData.forEach(enemy => {
       if (enemy.health <= 0) return;
-  
+
       const toEnemy = enemy.position.clone().sub(position);
       const distance = toEnemy.length();
-  
+
       if (distance <= DAMAGE_RANGE) {
         const angle = Math.abs(forward.angleTo(toEnemy));
         if (angle <= ARC_ANGLE / 2) {
-          // Add damage number creation
+          hitEnemies = true;
           const { damage, isCritical } = calculateDamage(43); // DAMAGE
           onHit(enemy.id, damage);
           
@@ -149,6 +149,11 @@ export const useOathstrike = ({
         }
       }
     });
+
+    // Only heal if we hit at least one enemy
+    if (hitEnemies) {
+      processHealing(HEAL_AMOUNT, position);
+    }
     
     return {
       position,
