@@ -30,7 +30,7 @@
 6. [Technical Details](#technical-details)
    - [Unit System](#unit-system)
    - [Animation & Effects](#animation--effects)
-   - [Mathematics & Physics](#mathematics--physics)
+   - [Math & Physics](#math--physics)
      - [Vector3 Operations](#vector3-operations)
      - [Quaternion Rotations](#quaternion-rotations)
      - [Interpolation Systems](#interpolation-systems)
@@ -139,11 +139,9 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 ---
 
 ## Custom Model Creation
-No external models/imports/assets used. First time I've ever done anything like this, so stuck with a 'bone' theme that seemed easier to work with. 
-
+No external models/imports/assets used. First time I've ever done anything like this, so stuck with a 'bone' theme that seemed easier to work with, given their versatility.
 - Built unit and weapon models by combining primitive geometries like cylinders, spheres
-- Created unique shapes using Three.js Shape class to create 2D shapes with mathematical functions, that are then extruded into 3D
-- Special effect animations using `useFrame` and mathematical functions
+- Created unique shapes using Three.js `Shape` class to create 2D shapes using mathematical functions that are then extruded into 3D.
 - Glowing effects using emissive materials and point lights
 - Particle effects using instanced meshes and shader materials
 
@@ -190,7 +188,7 @@ No external models/imports/assets used. First time I've ever done anything like 
   - Smooth weapon rotation animations
   - Character orientation
   - Camera angle calculations
-  - Preventing gimbal lock in 3D rotations
+  - Preventing gimbal lock in 3D rotations*
 
 - **Interpolation Systems**
   - Linear interpolation (Lerp) for smooth transitions
