@@ -30,8 +30,12 @@
 6. [Technical Details](#technical-details)
    - [Unit System](#unit-system)
    - [Animation & Effects](#animation--effects)
-   - [Scene Management](#scene-management)
+   - [Mathematics & Physics](#mathematics--physics)
+     - [Vector3 Operations](#vector3-operations)
+     - [Quaternion Rotations](#quaternion-rotations)
+     - [Interpolation Systems](#interpolation-systems)
    - [State Management](#state-management)
+   - [Scene Management](#scene-management)
    - [Performance](#performance)
 7. [Early Development](#early-development)
    - [v1.0 - Initial Release](#v10---initial-release)  
@@ -159,7 +163,7 @@ No external models/imports/assets used. First time I've ever done anything like 
 ## Technical Details
 
 ### Unit System
-- Models are React components using R3F
+- Models are React components using React Three Fiber (R3F)
 - Position tracking via `useRef` and Three.js `Group` components
 - Health and state management through React's `useState`
 - Collision detection using raycasting and distance calculations
@@ -169,18 +173,42 @@ No external models/imports/assets used. First time I've ever done anything like 
 - Ability particle systems using instanced meshes
 - Effect lifecycle management with unique IDs
 - Projectile tracking and collision detection
-- Shader-based visual effects for abilities
+
+- **Shader Programming**
+   - Shader-based visual effects for abilities, terrain, and environment details 
+   - GLSL (WebGL Shading Language)
+   - Custom fragment shader and vertex shaders
+
+### Math & Physics
+- **Vector3 Operations**
+  - Position tracking in 3D space (x, y, z)
+  - Velocity and direction calculations (projectile trajectories)
+  - Distance and collision checks (enemy detection)
+  - Normalized direction vectors for character movement
+
+- **Quaternion Rotations**
+  - Smooth weapon rotation animations
+  - Character orientation
+  - Camera angle calculations
+  - Preventing gimbal lock in 3D rotations
+
+- **Interpolation Systems**
+  - Linear interpolation (Lerp) for smooth transitions
+  - Spherical interpolation (Slerp) for rotations
+  - Easing functions for natural movement
+  - Special effects and animation curve calculations
+
+### State Management
+- React hooks: `useState`, `useEffect`, `useRef`, `useFrame` (R3F) to manage game states, including:
+   - Health and damage tracking
+   - Ability cooldowns and unlocks
+   - Kill count and progression
 
 ### Scene Management
 - Dynamic enemy spawning system
 - Environment generation with procedural elements
 - Level progression and state tracking
 - Resource cleanup between scenes
-
-### State Management
-- Health and damage tracking
-- Ability cooldowns and unlocks
-- Kill count and progression
 
 ### Performance
 - Automatic disposal of Three.js resources
@@ -251,5 +279,5 @@ No external models/imports/assets used. First time I've ever done anything like 
 --- 
 
 ## Epilogue
-Didn't think I'd be able to do this with React, but I've always wanted to make a game - and what started off as procrastination turned into an amazing learning experience. There are a million things I'd like to add to this game, as well as what I would do differently from the ground up should i choose to create another one (particularly with component reuse and better optimization of hooks & how to potentially avoid hours of refactoring down the line - OR just not making a game with React next time) BUT this has already gone well past 200 hours of work - glad i got my exp. Considering this my self-assigned 'capstone project' for Rutgers '25. 
+Didn't think I'd be able to do this with React, but I've always wanted to make a game - and what started off as procrastination turned into an amazing learning experience. There are a million things I'd like to add to this game, as well as what I would do differently from the ground up should i choose to create another one (particularly with component reuse and better optimization of hooks & how to potentially avoid hours of refactoring down the line - OR just not making a game with React next time) BUT this has already gone well past 200 hours of work - glad i got my exp. Considering this my self-assigned 'capstone project' for Rutgers CS '25. 
 

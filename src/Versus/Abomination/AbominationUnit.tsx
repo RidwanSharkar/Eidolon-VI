@@ -52,8 +52,8 @@ export default function AbominationUnit({
 
   const ATTACK_RANGE = 2.575;
   const ATTACK_COOLDOWN = 3000;
-  const MOVEMENT_SPEED = 0.1850;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.1850;
+  const MOVEMENT_SPEED = 0.1875;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.1875;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 8;
@@ -186,7 +186,7 @@ export default function AbominationUnit({
                 attackStartPosition.distanceTo(currentPosition.current) < 0.65) {
               onAttackPlayer(ATTACK_DAMAGE);
             }
-          }, 650 + (i * ARM_DELAY)); // 850ms initial telegraph + staggered delays
+          }, 450 + (i * ARM_DELAY)); // 850ms initial telegraph + staggered delays
         }
         
         lastAttackTime.current = currentTime;

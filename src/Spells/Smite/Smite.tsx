@@ -113,13 +113,13 @@ export default function Smite({ position, onComplete }: SmiteProps) {
 
       {/* Outer glow */}
       <mesh>
-        <cylinderGeometry args={[0.825, 0.9, 20, 16]} />
+        <cylinderGeometry args={[0.8, 0.9, 20, 16]} />
         <meshStandardMaterial
           color="#FF7300"
           emissive="#FF8812"
           emissiveIntensity={1}
           transparent
-          opacity={0.325}
+          opacity={0.2}
         />
       </mesh>
 
@@ -130,7 +130,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
           <meshStandardMaterial
             color="#FF0000"
             emissive="#FF8812"
-            emissiveIntensity={25}
+            emissiveIntensity={10}
             transparent
             opacity={0.5}
           />
@@ -145,7 +145,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
           <meshStandardMaterial
             color="#FF0000"
             emissive="#FF8812"
-            emissiveIntensity={25}
+            emissiveIntensity={10}
             transparent
             opacity={0.4}
           />
@@ -167,7 +167,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
           <meshStandardMaterial
             color="#FF0000"
             emissive="#FF8812"
-            emissiveIntensity={25}
+            emissiveIntensity={10}
             transparent
             opacity={0.665}
           />
