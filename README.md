@@ -1,4 +1,4 @@
-# Eidolon IV
+![ScytheQE](https://github.com/user-attachments/assets/13ed7e30-382d-4a4c-8b33-e81be35c9fd4)# Eidolon IV
 > In this graveyard of stars, Death grants all a bleak choice: <br>
 > - Linger in an ossuary for the restless, eternally locked in combat—where ambition and despair intertwine, and where the fallen fuel the ascent of those hungrier to covet hope.  <br>
 > - Devour the essence of unwitting tributes that challenge your claim—their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny, forging a being from the echoes of those who dared to dream and ascended to scale the jagged peaks anchoring the souls to this stygian ark.
@@ -70,7 +70,9 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 - **Combat Mechanics**: 
   - Tactical positioning, dodging, and timing
   - Weapon-specific combo systems
-  - Resource management with orb charges and cooldowns 
+  - Resource management with orb charges and cooldowns
+ 
+![ScytheQE](https://github.com/user-attachments/assets/d8c8c80c-9156-4f9c-a4b0-20b4f35db74c)
 
 ---
 
@@ -79,7 +81,7 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 ### Basic Controls
 | Action             | Input                |
 |--------------------|----------------------|
-| **Movement**       | `W`-`A`-`S`-`D`               |
+| **Movement**       | `W`-`A`-`S`-`D`        |
 | **Camera**         | `Right-click` (hold)   |
 | **Auto-Attack**    | `Right-click` (hold)   |
 | **Zoom**           | `Scroll Wheel`         |
@@ -98,14 +100,17 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 
 ## Weapons and Combat
 
+
 ### Base Attacks
 - **(‘Q’)**  is the default attack of the weapon that can also be triggered by the Left-Click:
 
-| Weapon    | Range    | Cooldown | Damage | Swing Arc    |
+| Weapon    | Range    | Cooldown | Damage | Swing Arc   |
 |-----------|----------|----------|--------|-------------|
 | Scythe    | 4.5 ft   | 0.8s     | 23     | Medium      |
 | Sword     | 6.0 ft   | 1.0s     | 31     | Wide        |
 | Sabres    | 4.0 ft   | 0.6s     | 17x2   | Narrow      |
+
+![SwordQE](https://github.com/user-attachments/assets/e1b5db46-bf82-43c3-b99a-e986e6fb95c1)
 
 ### Special Abilities
 - **('E')** is the weapon’s core special ability: 
@@ -115,6 +120,8 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 | Scythe    | Entropic Bolt   | 1        | 0.7s     | 53                 | Single Target  | -     |
 | Sword     | Divine Smite    | 0        | 4.0s     | (31+17)+41           | Area of Effect | Smite damage requires successful sword hit |
 | Sabres    | Etherbow        | 0        | 0.33s     | 13 + (charge bonus) | Pierces in a Line           | Fully charged shots (1.5s) are guaranteed critical hits |
+
+![SabreQE](https://github.com/user-attachments/assets/5dfc8352-71ec-4a60-93e2-9c9ab8e9de5a)
 
 ### Unlockable Abilities
 - **('R' - '1' - '2')**  hotkeys are for the 3 ability choices that are available for each weapon to unlock at the completion of a level. The designations ‘Active' or ‘Passive’ determine whether or not an ability’s hotkey needs to be pressed to trigger its effect. 
