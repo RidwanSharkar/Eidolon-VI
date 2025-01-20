@@ -71,6 +71,8 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
   - Tactical positioning, dodging, and timing
   - Weapon-specific combo systems
   - Resource management with orb charges and cooldowns
+ 
+![ScytheQE](https://github.com/user-attachments/assets/d8c8c80c-9156-4f9c-a4b0-20b4f35db74c)
 
 ---
 
