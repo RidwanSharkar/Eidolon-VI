@@ -70,7 +70,7 @@ export default function WeaponSelectionPanel({
               <Image 
                 src="/Eidolon/icons/q2.svg"
                 alt="Q Ability"
-                width={120}
+                width={100}
                 height={120}
                 unoptimized
               />
@@ -84,7 +84,7 @@ export default function WeaponSelectionPanel({
               <Image 
                 src="/Eidolon/icons/e2.svg"
                 alt="E Ability"
-                width={120}
+                width={100}
                 height={120}
                 unoptimized
               />
@@ -117,7 +117,7 @@ export default function WeaponSelectionPanel({
               <Image 
                 src="/Eidolon/icons/q1.svg"
                 alt="Q Ability"
-                width={120}
+                width={100}
                 height={120}
                 unoptimized
               />
@@ -131,7 +131,7 @@ export default function WeaponSelectionPanel({
               <Image 
                 src="/Eidolon/icons/e1.svg"
                 alt="E Ability"
-                width={120}
+                width={100}
                 height={120}
                 unoptimized
               />
@@ -164,7 +164,7 @@ export default function WeaponSelectionPanel({
               <Image 
                 src="/Eidolon/icons/q3.svg"
                 alt="Q Ability"
-                width={120}
+                width={100}
                 height={120}
                 unoptimized
               />
@@ -178,7 +178,7 @@ export default function WeaponSelectionPanel({
               <Image 
                 src="/Eidolon/icons/e3.svg"
                 alt="E Ability"
-                width={120}
+                width={100}
                 height={120}
                 unoptimized
               />

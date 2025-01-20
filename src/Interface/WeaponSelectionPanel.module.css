@@ -51,7 +51,7 @@ menu on the entire panel */
 
 .panel h2 {
   font-size: 4rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
   margin-top: 0rem;
   font-family: 'Times New Roman', serif;
   letter-spacing: 4px;
@@ -179,7 +179,7 @@ menu on the entire panel */
   font-size: 1.4rem;
   text-transform: uppercase;
   letter-spacing: 7px;
-  margin-top: 3rem;
+  margin-top: 1rem;
   transition: all 0.4s ease;
   color: #00ffaa;
   cursor: pointer;
@@ -266,14 +266,14 @@ menu on the entire panel */
 
 .abilityIcons {
   display: flex;
-  gap: 2.5rem;
+  gap: 2.75rem;
   margin-top: 0rem;
   justify-content: center;
 }
 
 .abilityIcon {
   position: relative;
-  width: 120px;
+  width: 100px;
   height: 120px;
   cursor: pointer;
   transition: all 0.4s ease;
