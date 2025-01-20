@@ -1,4 +1,4 @@
-![ScytheQE](https://github.com/user-attachments/assets/13ed7e30-382d-4a4c-8b33-e81be35c9fd4)# Eidolon IV
+# Eidolon IV
 > In this graveyard of stars, Death grants all a bleak choice: <br>
 > - Linger in an ossuary for the restless, eternally locked in combat—where ambition and despair intertwine, and where the fallen fuel the ascent of those hungrier to covet hope.  <br>
 > - Devour the essence of unwitting tributes that challenge your claim—their fading hopes now yours to wield, crystallizing within your form. Weave the harvested bones into the tapestry of your destiny, forging a being from the echoes of those who dared to dream and ascended to scale the jagged peaks anchoring the souls to this stygian ark.
@@ -71,8 +71,6 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
   - Tactical positioning, dodging, and timing
   - Weapon-specific combo systems
   - Resource management with orb charges and cooldowns
- 
-![ScytheQE](https://github.com/user-attachments/assets/d8c8c80c-9156-4f9c-a4b0-20b4f35db74c)
 
 ---
 
