@@ -123,13 +123,13 @@ export default function GameWrapper({
               ref={sceneProps.unitProps.controlsRef}
               enablePan={false}
               maxPolarAngle={Math.PI / 2.25}
-              maxDistance={13.5}
+              maxDistance={12}
               mouseButtons={{
                 LEFT: undefined,
                 MIDDLE: undefined,
                 RIGHT: THREE.MOUSE.ROTATE
               }}
-              minDistance={10}
+              minDistance={12}
               rotateSpeed={0.5}
               enableDamping={true}
               dampingFactor={0.075}
