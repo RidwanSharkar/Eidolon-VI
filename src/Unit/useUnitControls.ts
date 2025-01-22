@@ -17,7 +17,7 @@ interface UseUnitControlsProps {
   onMovementUpdate?: (direction: Vector3) => void;
 }
 
-const PLAY_AREA_RADIUS = 32.375 // MAP BOUNDARY
+const PLAY_AREA_RADIUS = 32.25 // MAP BOUNDARY
 
 export function useUnitControls({
   groupRef,
@@ -94,7 +94,7 @@ export function useUnitControls({
 
     const currentRotation = groupRef.current.rotation.y;
     const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-    const rotationSpeed = 0.09; // 0.1 defaulted 
+    const rotationSpeed = 0.1; // 0.1 defaulted 
     
     groupRef.current.rotation.y = currentRotation + (targetRotation - currentRotation) * rotationSpeed;
 
@@ -128,8 +128,8 @@ export function useUnitControls({
       const dotProduct = moveDirection.dot(cameraDirection);
       
       // Adjust speed based on movement direction and charging state
-      const baseSpeed = isCharging ? 0.001 : speed; // BOW CHARGING NO MOVEMENT SPEED
-      const backwardsSpeed = baseSpeed * 0.7; // 45% of normal speed when moving backwards
+      const baseSpeed = isCharging ? 0.01 : speed; // BOW CHARGING NO MOVEMENT SPEED
+      const backwardsSpeed = baseSpeed * 0.675; // 45% of normal speed when moving backwards
       const currentSpeed = dotProduct < 0 ? backwardsSpeed : baseSpeed;
       
       // Calculate new position before applying it

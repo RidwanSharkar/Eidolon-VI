@@ -116,7 +116,7 @@ export default function Unit({
   const nextDamageNumberId = useRef(0);
   const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
 
-  // BOW CHARGES 
+  // BOW CHARGING
   const [bowChargeProgress, setBowChargeProgress] = useState(0);
   const bowChargeStartTime = useRef<number | null>(null);
   const bowChargeLineOpacity = useRef(0);
@@ -134,7 +134,7 @@ export default function Unit({
   }>>([]);
 
 
-  // FIREBALL ORBITAL CHARGES
+  // ORBITAL CHARGES
   const [fireballCharges, setFireballCharges] = useState<Array<{
     id: number;
     available: boolean;
@@ -485,7 +485,7 @@ export default function Unit({
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 1.4, 1); // BOWCHARGE CHARGETIME - 1.5 no movemvent
+      const progress = Math.min(chargeTime / 1.35, 1); // BOWCHARGE CHARGETIME - 1.5 no movemvent
       setBowChargeProgress(progress);
       setBowGroundEffectProgress(progress); // Update ground effect progress
 
@@ -526,7 +526,7 @@ export default function Unit({
           );
           const distanceToEnemy = projectilePos2D.distanceTo(enemyPos2D);
           
-          if (distanceToEnemy < 1.375) { // Hit radius
+          if (distanceToEnemy < 1.3) { // Hit radius
             handleProjectileHit(projectile.id, enemy.id, projectile.power, projectile.position);
           }
         });
@@ -608,7 +608,7 @@ export default function Unit({
     
     const now = Date.now();
     const timeSinceLastShot = now - lastBowShotTime;
-    if (timeSinceLastShot < 332) { // 250ms cooldown between shots
+    if (timeSinceLastShot < 750) { // 250ms cooldown between shots
         return;
     }
     setLastBowShotTime(now);
@@ -771,7 +771,7 @@ export default function Unit({
 
     // Check distance in 2D space (ignoring Y axis)
     const distanceToEnemy = projectilePos2D.distanceTo(enemyPos2D);
-    if (distanceToEnemy > 1.4) return; // Hit radius check in 2D
+    if (distanceToEnemy > 1.3) return; // Hit radius check in 2D
 
     // Mark this specific projectile-target combination as hit
     setHitCountThisSwing(prev => ({
@@ -779,7 +779,7 @@ export default function Unit({
         [hitKey]: 1
     }));
 
-    const baseDamage = 13;
+    const baseDamage = 19;
     const maxDamage = 51;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
     const fullChargeDamage = power >= 0.99 ? 66 : 0;

@@ -16,7 +16,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
   const fireballRef = useRef<Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const initialDirection = target.clone().sub(position).normalize();
-  const speed = 0.25;
+  const speed = 0.325;
   const hitRadius = 0.5;
   const [showExplosion, setShowExplosion] = useState(false);
   const [explosionStartTime, setExplosionStartTime] = useState<number | null>(null);

@@ -105,7 +105,7 @@ export default function GameWrapper({
           touchAction: 'none'
         }}>
           <Canvas>
-            <ambientLight intensity={0.175} />
+            <ambientLight intensity={0.2} />
             {gameStarted && (
               <Suspense fallback={null}>
                 <LevelManager 
@@ -130,7 +130,7 @@ export default function GameWrapper({
                 RIGHT: THREE.MOUSE.ROTATE
               }}
               minDistance={12}
-              rotateSpeed={0.5}
+              rotateSpeed={0.65}
               enableDamping={true}
               dampingFactor={0.075}
               zoomSpeed={1.25}

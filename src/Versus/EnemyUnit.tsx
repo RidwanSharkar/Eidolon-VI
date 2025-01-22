@@ -57,13 +57,13 @@ export default function EnemyUnit({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 2.35;
+  const ATTACK_RANGE = 2.4;
   const ATTACK_COOLDOWN = 1850;
-  const MOVEMENT_SPEED = 0.1925;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.1925;                    // KEEP this the same as MOVEMENT_SPEED
+  const MOVEMENT_SPEED = 0.194;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.194;                    // KEEP this the same as MOVEMENT_SPEED
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 6;
+  const ATTACK_DAMAGE = 8;
   const SEPARATION_RADIUS = 1.25; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.155; // Strength of the separation force
 
@@ -199,7 +199,7 @@ export default function EnemyUnit({
               attackStartPosition.distanceTo(currentPosition.current) < 0.75) { // leeway distance 
             onAttackPlayer(ATTACK_DAMAGE);
           }
-        }, 865); // REACTION TIME 
+        }, 935); // REACTION TIME 
         
         lastAttackTime.current = currentTime;
 
