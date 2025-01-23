@@ -88,7 +88,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
 
           <MageFireballTrail
             color={new Color("#ff3333")}
-            size={0.185}
+            size={0.12}
             meshRef={meshRef}
             opacity={0.8}
           />
@@ -101,7 +101,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
           />
         </>
       ) : (
-        // New explosion effect copied from Unit.tsx
+        // explosion effect copied from Unit.tsx
         <>
           {/* Calculate fade  */}
           {(() => {
