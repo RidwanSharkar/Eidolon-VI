@@ -81,15 +81,15 @@ export function useAbilityKeys({
   setIsOathstriking,
   orbShieldRef,
 }: UseAbilityKeysProps) {
-  // Add a ref to track the last Q usage time
+  // Ref to track the last Q usage time
   const lastQUsageTime = useRef(0);
 
-  // Add ref to track if game is over
+  // Ref to track if game is over
   const isGameOver = useRef(false);
 
-  // Add at the top of useAbilityKeys
+  // DEBOUNCE
   const lastAttackTime = useRef(0);
-  const ATTACK_DEBOUNCE = 250; // ms
+  const ATTACK_DEBOUNCE = 200; // ms
 
   // Shared attack logic function
   const tryAttack = useCallback(() => {

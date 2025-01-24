@@ -237,7 +237,7 @@ export default function Unit({
 
   // ATTACK LOGIC
   const lastHitDetectionTime = useRef<Record<string, number>>({});
-  const HIT_DETECTION_DEBOUNCE = 250; // ms
+  const HIT_DETECTION_DEBOUNCE = 200; // ms
 
   const handleWeaponHit = (targetId: string) => {
     if (!groupRef.current || !isSwinging) return;

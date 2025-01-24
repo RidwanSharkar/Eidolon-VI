@@ -10,14 +10,14 @@ interface FireballProps {
   target: Vector3;
   onHit: (didHitPlayer: boolean) => void;
   playerPosition: Vector3;
-}
+} 
 
 export default function MageFireball({ position, target, onHit, playerPosition }: FireballProps) {
   const fireballRef = useRef<Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const initialDirection = target.clone().sub(position).normalize();
   const speed = 0.3;
-  const hitRadius = 0.5;
+  const hitRadius = 0.6;
   const [showExplosion, setShowExplosion] = useState(false);
   const [explosionStartTime, setExplosionStartTime] = useState<number | null>(null);
   const [, forceUpdate] = useState({});
@@ -88,7 +88,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
 
           <MageFireballTrail
             color={new Color("#ff3333")}
-            size={0.1825}
+            size={0.185}
             meshRef={meshRef}
             opacity={0.8}
           />
