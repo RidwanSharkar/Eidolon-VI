@@ -137,7 +137,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
       ));
 
       if (playerDistance <= DAMAGE_RADIUS) {
-        onImpact(0);
+        onImpact(72);
       }
     }
 
