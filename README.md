@@ -119,7 +119,7 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 |-----------|-----------------|----------|----------|---------------------|----------------|-------|
 | Scythe    | Entropic Bolt   | 1        | 0.7s     | 53                 | Single Target  | -     |
 | Sword     | Divine Smite    | 0        | 4.0s     | (31+17)+41           | Area of Effect | Smite damage requires successful sword hit |
-| Sabres    | Etherbow        | 0        | 0.33s     | 13 + (charge bonus) | Pierces in a Line           | Fully charged shots (1.5s) are guaranteed critical hits |
+| Sabres    | Etherbow        | 0        | 0.65s     | 19 + (charge bonus) | Pierces in a Line           | Fully charged shots are guaranteed criticals - Cannot move while charging |
 
 ![SabreQE](https://github.com/user-attachments/assets/5dfc8352-71ec-4a60-93e2-9c9ab8e9de5a)
 

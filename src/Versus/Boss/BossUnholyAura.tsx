@@ -41,7 +41,7 @@ export default function BossUnholyAura({ parentRef }: BossUnholyAuraProps) {
             rotation={[-Math.PI / 2, 0, (i / 10) * Math.PI * 2 + Date.now() * 0.001]}
             position={[0, 0, 0]}
           >
-            <circleGeometry args={[0.1, 32]} />  
+            <circleGeometry args={[0.05, 32]} />  
             <meshStandardMaterial
               color="#ff0000"
               emissive="#ff3300"
