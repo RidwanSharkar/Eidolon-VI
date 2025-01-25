@@ -59,7 +59,7 @@ export default function AbominationUnit({
   const ATTACK_DAMAGE = 6;
   const SEPARATION_RADIUS = 4; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.15; // Strength of the separation force
-  const ARM_DELAY = 125;    // 0.15 seconds between arm strikes
+  const ARM_DELAY = 150;    // 0.15 seconds between arm strikes
   const TOTAL_ARMS = 6;     // Total number of arms
 
   // Sync health changes

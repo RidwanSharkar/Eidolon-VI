@@ -47,12 +47,12 @@ export type WeaponInfo = Record<WeaponType, WeaponAbilities>;
 export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   [WeaponType.SWORD]: {
     normal: 31,
-    range: 5.425,
+    range: 5.5,
     maxHitsPerSwing: 1
   },
   [WeaponType.SCYTHE]: {
     normal: 23,
-    range: 4.375,
+    range: 4.5,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {

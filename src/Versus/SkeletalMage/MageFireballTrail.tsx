@@ -15,7 +15,7 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
   meshRef,
   opacity = 1
 }) => {
-  const particlesCount = 40;
+  const particlesCount = 28;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
