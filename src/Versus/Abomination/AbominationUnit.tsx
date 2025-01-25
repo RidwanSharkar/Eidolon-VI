@@ -50,10 +50,10 @@ export default function AbominationUnit({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 2.6;
+  const ATTACK_RANGE = 2.5;
   const ATTACK_COOLDOWN = 1750;
-  const MOVEMENT_SPEED = 0.188;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.188;
+  const MOVEMENT_SPEED = 0.185;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.185;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 6;

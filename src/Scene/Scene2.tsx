@@ -33,7 +33,6 @@ export default function Scene2({
   mushroomData,
   unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
-  spawnInterval = 1000,
   maxSkeletons = 17,
   initialSkeletons = 6,
   killCount,
@@ -170,9 +169,9 @@ export default function Scene2({
 
     const spawnTimer = setInterval(() => {
       // Wave control based on kill count
-      if ((killCount < 14 && currentWave === 0) || 
+      if ((killCount < 15 && currentWave === 0) || 
           (killCount < 19 && currentWave === 1) || 
-          (killCount < 24 && currentWave === 2)) {
+          (killCount < 27 && currentWave === 2)) {
         return;
       }
 
@@ -197,45 +196,37 @@ export default function Scene2({
           }];
         }
 
-        // Regular spawns (2 regular skeletons + 1 mage)
-        const spawnAmount = Math.min(3, remainingSpawns - 1); // Reserve 1 spot for abomination
-        const newEnemies: Enemy[] = Array.from({ length: spawnAmount }, (_, index) => {
-          const spawnPosition = generateRandomPosition();
-          
-          // Last unit in each spawn group is a mage
-          if (index === spawnAmount - 1) {
-            return {
-              id: `mage-${totalSpawned + index}`,
-              position: spawnPosition.clone(),
-              initialPosition: spawnPosition.clone(),
-              health: 289,
-              maxHealth: 289,
-              isDying: false,
-              type: 'mage' as const,
-              ref: React.createRef<Group>()
-            };
-          }
+        // Spawn single enemy at a time
+        const spawnPosition = generateRandomPosition();
+        const isMage = (totalSpawned + 1) % 3 === 0; // Every third spawn is a mage
 
-          return {
-            id: `skeleton-${totalSpawned + index}`,
-            position: spawnPosition.clone(),
-            initialPosition: spawnPosition.clone(),
-            health: 324,
-            maxHealth: 324,
-            isDying: false,
-            type: 'regular' as const,
-            ref: React.createRef<Group>()
-          };
-        });
+        const newEnemy: Enemy = isMage ? {
+          id: `mage-${totalSpawned}`,
+          position: spawnPosition.clone(),
+          initialPosition: spawnPosition.clone(),
+          health: 289,
+          maxHealth: 289,
+          isDying: false,
+          type: 'mage' as const,
+          ref: React.createRef<Group>()
+        } : {
+          id: `skeleton-${totalSpawned}`,
+          position: spawnPosition.clone(),
+          initialPosition: spawnPosition.clone(),
+          health: 324,
+          maxHealth: 324,
+          isDying: false,
+          type: 'regular' as const,
+          ref: React.createRef<Group>()
+        };
 
-        setTotalSpawned(prev => prev + spawnAmount);
-        setCurrentWave(prev => prev + 1);
-        return [...prev, ...newEnemies];
+        setTotalSpawned(prev => prev + 1);
+        return [...prev, newEnemy];
       });
-    }, spawnInterval);
+    }, 2000); // Changed to 2000ms (2 seconds) between spawns
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval, killCount, currentWave]);
+  }, [totalSpawned, maxSkeletons, killCount, currentWave]);
 
   useEffect(() => {
     if (controlsRef.current) {

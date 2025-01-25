@@ -262,9 +262,9 @@ export default function Scene3({
 
         // Define specific spawn points for abominations
         const shouldSpawnAbomination = 
-          (killCount >= 34 && abominationsSpawned === 0) ||
-          (killCount >= 42 && abominationsSpawned === 1) ||
-          (killCount >= 47 && abominationsSpawned === 2);
+          (killCount >= 33 && abominationsSpawned === 0) ||
+          (killCount >= 40 && abominationsSpawned === 1) ||
+          (killCount >= 46 && abominationsSpawned === 2);
 
         if (shouldSpawnAbomination && abominationsSpawned < 3) {
           const spawnPosition = generateRandomPosition();
@@ -283,41 +283,36 @@ export default function Scene3({
           }];
         }
 
-        // Regular spawns (2 regular skeletons + 1 mage)
-        const spawnAmount = Math.min(3, remainingSpawns);
-        const newEnemies: Enemy[] = Array.from({ length: spawnAmount }, (_, index) => {
-          const spawnPosition = generateRandomPosition();
-          
-          // Last unit in each spawn group is always a mage (2:1 ratio)
-          if (index === spawnAmount - 1) {
-            return {
-              id: `mage-${totalSpawned + index}`,
-              position: spawnPosition.clone(),
-              initialPosition: spawnPosition.clone(),
-              health: 324,
-              maxHealth: 324,
-              isDying: false,
-              type: 'mage' as const,
-              ref: React.createRef<Group>()
-            };
-          }
+        // Spawn single enemy at a time instead of groups
+        const spawnPosition = generateRandomPosition();
+        
+        // Every third spawn is a mage (2:1 ratio maintained)
+        const isMage = (totalSpawned + 1) % 3 === 0;
+        
+        const newEnemy: Enemy = isMage ? {
+          id: `mage-${totalSpawned}`,
+          position: spawnPosition.clone(),
+          initialPosition: spawnPosition.clone(),
+          health: 324,
+          maxHealth: 324,
+          isDying: false,
+          type: 'mage' as const,
+          ref: React.createRef<Group>()
+        } : {
+          id: `skeleton-${totalSpawned}`,
+          position: spawnPosition.clone(),
+          initialPosition: spawnPosition.clone(),
+          health: 361,
+          maxHealth: 361,
+          isDying: false,
+          type: 'regular' as const,
+          ref: React.createRef<Group>()
+        };
 
-          return {
-            id: `skeleton-${totalSpawned + index}`,
-            position: spawnPosition.clone(),
-            initialPosition: spawnPosition.clone(),
-            health: 361,
-            maxHealth: 361,
-            isDying: false,
-            type: 'regular' as const,
-            ref: React.createRef<Group>()
-          };
-        });
-
-        setTotalSpawned(prev => prev + spawnAmount);
-        return [...prev, ...newEnemies];
+        setTotalSpawned(prev => prev + 1);
+        return [...prev, newEnemy];
       });
-    }, spawnInterval);
+    }, 2000); // Changed to 2000ms (2 seconds) between spawns
 
     return () => clearInterval(spawnTimer);
   }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount]);
