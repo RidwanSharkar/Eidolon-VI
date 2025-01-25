@@ -170,9 +170,9 @@ export default function Scene2({
 
     const spawnTimer = setInterval(() => {
       // Wave control based on kill count
-      if ((killCount < 13 && currentWave === 0) || 
-          (killCount < 18 && currentWave === 1) || 
-          (killCount < 23 && currentWave === 2)) {
+      if ((killCount < 14 && currentWave === 0) || 
+          (killCount < 19 && currentWave === 1) || 
+          (killCount < 24 && currentWave === 2)) {
         return;
       }
 
