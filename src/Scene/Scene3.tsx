@@ -263,7 +263,7 @@ export default function Scene3({
         // Define specific spawn points for abominations
         const shouldSpawnAbomination = 
         (killCount >= 34 && abominationsSpawned === 0) ||
-        (killCount >= 43 && abominationsSpawned === 1) ||
+        (killCount >= 41 && abominationsSpawned === 1) ||
         (killCount >= 48 && abominationsSpawned === 2);
 
         if (shouldSpawnAbomination && abominationsSpawned < 3) {
@@ -312,7 +312,7 @@ export default function Scene3({
         setTotalSpawned(prev => prev + 1);
         return [...prev, newEnemy];
       });
-    }, 2000); // Changed to 2000ms (2 seconds) between spawns
+    }, 2750); // Changed to 2000ms (2 seconds) between spawns
 
     return () => clearInterval(spawnTimer);
   }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount]);

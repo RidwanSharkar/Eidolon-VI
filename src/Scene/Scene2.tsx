@@ -170,8 +170,8 @@ export default function Scene2({
     const spawnTimer = setInterval(() => {
       // Wave control based on kill count
       if ((killCount < 15 && currentWave === 0) || 
-          (killCount < 19 && currentWave === 1) || 
-          (killCount < 27 && currentWave === 2)) {
+          (killCount < 20 && currentWave === 1) || 
+          (killCount < 28 && currentWave === 2)) {
         return;
       }
 
@@ -223,7 +223,7 @@ export default function Scene2({
         setTotalSpawned(prev => prev + 1);
         return [...prev, newEnemy];
       });
-    }, 2000); // Changed to 2000ms (2 seconds) between spawns
+    }, 2750); // Changed to 2000ms (2 seconds) between spawns
 
     return () => clearInterval(spawnTimer);
   }, [totalSpawned, maxSkeletons, killCount, currentWave]);
