@@ -198,7 +198,8 @@ export default function Scene2({
 
         // Spawn single enemy at a time
         const spawnPosition = generateRandomPosition();
-        const isMage = (totalSpawned + 1) % 3 === 0; // Every third spawn is a mage
+        // Changed to every fourth spawn is a mage (3:1 ratio instead of 2:1)
+        const isMage = (totalSpawned + 1) % 4 === 0;
 
         const newEnemy: Enemy = isMage ? {
           id: `mage-${totalSpawned}`,
@@ -223,7 +224,7 @@ export default function Scene2({
         setTotalSpawned(prev => prev + 1);
         return [...prev, newEnemy];
       });
-    }, 2750); // Changed to 2000ms (2 seconds) between spawns
+    }, 2750);
 
     return () => clearInterval(spawnTimer);
   }, [totalSpawned, maxSkeletons, killCount, currentWave]);

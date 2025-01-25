@@ -8,7 +8,7 @@ interface BossUnholyAuraProps {
 
 export default function BossUnholyAura({ parentRef }: BossUnholyAuraProps) {
   const auraRef = useRef<Group>(null);
-  const rotationSpeed = 0.1; // Slightly slower for more menacing feel
+  const rotationSpeed = 0.1;
 
   useFrame(() => {
     if (auraRef.current && parentRef.current) {
@@ -19,14 +19,14 @@ export default function BossUnholyAura({ parentRef }: BossUnholyAuraProps) {
   });
 
   return (
-    <group ref={auraRef} scale={0.75}>  {/* Slightly larger scale */}
+    <group ref={auraRef} scale={0.65}>  {/* Slightly larger scale */}
       {/* Outer corrupted circle */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.2, 0]}>
         <ringGeometry args={[1.2, 1.65, 16, 1]} />
         <meshStandardMaterial
           color="#ff0000"
           emissive="#ff2200"
-          emissiveIntensity={2}
+          emissiveIntensity={1}
           transparent
           opacity={0.4}
           depthWrite={false}
@@ -44,7 +44,7 @@ export default function BossUnholyAura({ parentRef }: BossUnholyAuraProps) {
             <circleGeometry args={[0.05, 32]} />  
             <meshStandardMaterial
               color="#ff0000"
-              emissive="#ff3300"
+              emissive="#FF0000"
               emissiveIntensity={2.5}
               transparent
               opacity={0.5 + Math.sin(Date.now() * 0.002 + i) * 0.3}

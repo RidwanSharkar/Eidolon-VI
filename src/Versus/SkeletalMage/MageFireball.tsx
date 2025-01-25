@@ -1,5 +1,5 @@
 // src/versus/SkeletalMage/MageFireball.tsx
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Color } from 'three';
 import * as THREE from 'three';
@@ -12,12 +12,25 @@ interface FireballProps {
   playerPosition: Vector3;
 } 
 
+const fireballPool: Group[] = [];
+const MAX_POOL_SIZE = 10;
+
+export function getFireballFromPool(): Group | null {
+  return fireballPool.pop() || null;
+}
+
+export function returnFireballToPool(fireball: Group) {
+  if (fireballPool.length < MAX_POOL_SIZE) {
+    fireballPool.push(fireball);
+  }
+}
+
 export default function MageFireball({ position, target, onHit, playerPosition }: FireballProps) {
   const fireballRef = useRef<Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const initialDirection = target.clone().sub(position).normalize();
   const speed = 0.275;
-  const hitRadius = 0.6;
+  const hitRadius = 0.65;
   const [showExplosion, setShowExplosion] = useState(false);
   const [explosionStartTime, setExplosionStartTime] = useState<number | null>(null);
   const [, forceUpdate] = useState({});
@@ -70,6 +83,24 @@ export default function MageFireball({ position, target, onHit, playerPosition }
       onHit(false);
     }
   });
+
+  useEffect(() => {
+    const mesh = meshRef.current;
+    return () => {
+      if (mesh) {
+        if (mesh.geometry) {
+          mesh.geometry.dispose();
+        }
+        if (mesh.material) {
+          const material = mesh.material as THREE.Material;
+          material.dispose();
+        }
+      }
+    };
+  }, []);
+
+  // Optimize explosion effect by reducing particle count
+  const sparkCount = 6; // Reduced from 8
 
   return (
     <group ref={fireballRef} position={position}>
@@ -156,8 +187,8 @@ export default function MageFireball({ position, target, onHit, playerPosition }
                 ))}
 
                 {/* Particle sparks */}
-                {[...Array(8)].map((_, i) => {
-                  const angle = (i / 8) * Math.PI * 2;
+                {[...Array(sparkCount)].map((_, i) => {
+                  const angle = (i / sparkCount) * Math.PI * 2;
                   const radius = 0.5 * (1 + elapsed * 2);
                   return (
                     <mesh

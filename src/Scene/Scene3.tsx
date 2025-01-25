@@ -230,7 +230,7 @@ export default function Scene3({
 
         // Now spawn the boss
         setIsBossSpawned(true);
-      }, 2000); // 2-second delay
+      }, 2500); // 2-second delay
     }
     // Only call onLevelComplete when boss is defeated
     if (isBossSpawned && bossHealth <= 0) {
@@ -293,8 +293,8 @@ export default function Scene3({
           id: `mage-${totalSpawned}`,
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
-          health: 324,
-          maxHealth: 324,
+          health: 361,
+          maxHealth: 361,
           isDying: false,
           type: 'mage' as const,
           ref: React.createRef<Group>()
@@ -312,7 +312,7 @@ export default function Scene3({
         setTotalSpawned(prev => prev + 1);
         return [...prev, newEnemy];
       });
-    }, 2750); // Changed to 2000ms (2 seconds) between spawns
+    }, 2500); // Changed to 2000ms (2 seconds) between spawns
 
     return () => clearInterval(spawnTimer);
   }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount]);

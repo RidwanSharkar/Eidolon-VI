@@ -65,7 +65,7 @@ export default function BossUnit({
   const ATTACK_COOLDOWN_ENRAGED =2500;
   const MOVEMENT_SPEED = 0.2;
   const SMOOTHING_FACTOR = 0.2;
-  const ATTACK_DAMAGE = 24;
+  const ATTACK_DAMAGE = 0;
   const BOSS_HIT_HEIGHT = 2.0;       
   const BOSS_HIT_RADIUS = 4.0;
   const BOSS_HIT_HEIGHT_RANGE = 4.0;
@@ -298,7 +298,7 @@ export default function BossUnit({
         ref={bossRef}
         visible={!isSpawning && health > 0}
         position={currentPosition.current}
-        scale={[1.625, 1.625, 1.625]}
+        scale={[1.55, 1.55, 1.55]}
         onClick={(e) => e.stopPropagation()}
       >
         <BossModel
@@ -310,7 +310,7 @@ export default function BossUnit({
 
         {/* Health bar */}
         <Billboard
-          position={[0, 5, 0]}
+          position={[0, 4, 0]}
           follow={true}
           lockX={false}
           lockY={false}

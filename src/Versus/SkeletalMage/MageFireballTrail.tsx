@@ -15,7 +15,7 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
   meshRef,
   opacity = 1
 }) => {
-  const particlesCount = 28;
+  const particlesCount = 20;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -76,6 +76,18 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
       }
     }
   });
+
+  useEffect(() => {
+    const particles = particlesRef.current;
+    return () => {
+      if (particles) {
+        const geometry = particles.geometry;
+        geometry.dispose();
+        const material = particles.material as THREE.Material;
+        material.dispose();
+      }
+    };
+  }, []);
 
   return (
     <points ref={particlesRef}>

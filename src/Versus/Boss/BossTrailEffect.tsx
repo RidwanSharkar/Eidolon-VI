@@ -8,7 +8,7 @@ interface BossTrailEffectProps {
 }
 
 const BossTrailEffect: React.FC<BossTrailEffectProps> = ({ parentRef }) => {
-  const particlesCount = 28;
+  const particlesCount = 20;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
