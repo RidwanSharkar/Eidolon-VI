@@ -7,6 +7,8 @@
 
 ---
 
+**NOTE: For optimal experience, close unecessary browser tabs, keep the game tab in focus, and use a mouse.**
+
 ## Table of Contents
 
 1. [Introduction](#introduction)  
@@ -106,8 +108,8 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 
 | Weapon    | Range    | Cooldown | Damage | Swing Arc   |
 |-----------|----------|----------|--------|-------------|
-| Scythe    | 4.5 ft   | 0.8s     | 23     | Medium      |
-| Sword     | 6.0 ft   | 1.0s     | 31     | Wide        |
+| Scythe    | 4.75 ft   | 0.75s     | 23     | Medium      |
+| Sword     | 5.5 ft   | 1.0s     | 31     | Wide        |
 | Sabres    | 4.0 ft   | 0.6s     | 17x2   | Narrow      |
 
 ![SwordQE](https://github.com/user-attachments/assets/e1b5db46-bf82-43c3-b99a-e986e6fb95c1)

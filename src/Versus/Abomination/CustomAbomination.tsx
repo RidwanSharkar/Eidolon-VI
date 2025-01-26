@@ -615,7 +615,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
   
 
   return (
-    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[1.625, 1.625, 1.625]}>
+    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[1.525, 1.525, 1.525]}> 
       <group position={[0, 0.15, -0]}>
         <AbominationTrailEffect parentRef={groupRef} />
       </group>

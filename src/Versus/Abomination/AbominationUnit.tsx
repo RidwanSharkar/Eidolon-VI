@@ -51,15 +51,15 @@ export default function AbominationUnit({
   const currentHealth = useRef(health);
 
   const ATTACK_RANGE = 2.5;
-  const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.185;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.185;
+  const ATTACK_COOLDOWN = 3000;
+  const MOVEMENT_SPEED = 0.1835;                         // 0.15 BOTH IDEAL
+  const SMOOTHING_FACTOR = 0.1835;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 8;
   const SEPARATION_RADIUS = 4; // Minimum distance between enemies
   const SEPARATION_FORCE = 0.15; // Strength of the separation force
-  const ARM_DELAY = 200;    // 0.15 seconds between arm strikes
+  const ARM_DELAY = 300;    // 0.15 seconds between arm strikes
   const TOTAL_ARMS = 6;     // Total number of arms
 
   // Sync health changes

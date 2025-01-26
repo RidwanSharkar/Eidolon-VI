@@ -94,7 +94,7 @@ export function useUnitControls({
 
     const currentRotation = groupRef.current.rotation.y;
     const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-    const rotationSpeed = 0.125; // 0.1 defaulted 
+    const rotationSpeed = 0.11; // 0.1 defaulted 
     
     groupRef.current.rotation.y = currentRotation + (targetRotation - currentRotation) * rotationSpeed;
 
@@ -129,7 +129,7 @@ export function useUnitControls({
       
       // Adjust speed based on movement direction and charging state
       const baseSpeed = isCharging ? 0.01 : speed; // BOW CHARGING NO MOVEMENT SPEED
-      const backwardsSpeed = baseSpeed * 0.675; // 45% of normal speed when moving backwards
+      const backwardsSpeed = baseSpeed * 0.69; // 45% of normal speed when moving backwards
       const currentSpeed = dotProduct < 0 ? backwardsSpeed : baseSpeed;
       
       // Calculate new position before applying it
