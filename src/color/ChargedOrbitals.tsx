@@ -10,7 +10,7 @@ export interface ChargeStatus {
   cooldownStartTime: number | null;
 }
 
-export const ORBITAL_COOLDOWN = 7850; // ORB CHARGE COOLDOWN
+export const ORBITAL_COOLDOWN = 7500; // ORB CHARGE COOLDOWN
 
 interface ChargedOrbitalsProps {
   parentRef: React.RefObject<Group>;

@@ -52,7 +52,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SCYTHE]: {
     normal: 23,
-    range: 4.9,
+    range: 5,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
@@ -75,8 +75,8 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
-    q: { type: 'q', key: 'q', cooldown: 0.7, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.7, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 0.725, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 1.85, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
     active: { 

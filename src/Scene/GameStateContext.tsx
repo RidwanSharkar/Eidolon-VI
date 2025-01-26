@@ -42,6 +42,10 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       // Prevent new window/tab (Ctrl/Cmd + N)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
         e.preventDefault();
+      } 
+      
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
       }
     };
 
