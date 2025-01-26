@@ -262,9 +262,9 @@ export default function Scene3({
 
         // Define specific spawn points for abominations
         const shouldSpawnAbomination = 
-        (killCount >= 34 && abominationsSpawned === 0) ||
-        (killCount >= 41 && abominationsSpawned === 1) ||
-        (killCount >= 48 && abominationsSpawned === 2);
+          (killCount >= 34 && abominationsSpawned === 0) ||
+          (killCount >= 41 && abominationsSpawned === 1) ||
+          (killCount >= 48 && abominationsSpawned === 2);
 
         if (shouldSpawnAbomination && abominationsSpawned < 3) {
           const spawnPosition = generateRandomPosition();
@@ -286,8 +286,8 @@ export default function Scene3({
         // Spawn single enemy at a time instead of groups
         const spawnPosition = generateRandomPosition();
         
-        // Every third spawn is a mage (2:1 ratio maintained)
-        const isMage = (totalSpawned + 1) % 3 === 0;
+        // Changed to every fourth spawn is a mage (3:1 ratio instead of 2:1)
+        const isMage = (totalSpawned + 1) % 4 === 0;
         
         const newEnemy: Enemy = isMage ? {
           id: `mage-${totalSpawned}`,
@@ -312,7 +312,7 @@ export default function Scene3({
         setTotalSpawned(prev => prev + 1);
         return [...prev, newEnemy];
       });
-    }, 2500); // Changed to 2000ms (2 seconds) between spawns
+    }, 2650);
 
     return () => clearInterval(spawnTimer);
   }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount]);

@@ -5,9 +5,9 @@
 
 ![Eidolon Cover 1](https://github.com/user-attachments/assets/1535c3e9-b8fa-4581-aaae-669cecab789e)
 
----
-
 **NOTE: For optimal experience, close unecessary browser tabs, keep the game tab in focus, and use a mouse.**
+
+---
 
 ## Table of Contents
 
