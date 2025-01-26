@@ -16,6 +16,7 @@ import { Enemy } from '../Versus/enemy';
 import * as THREE from 'three';
 import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMage';
 import { MemoizedAbominationUnit } from '../Versus/Abomination/MemoizedAbomination';
+import { ObjectPool } from './ObjectPool';
 
 
 interface SceneProps extends SceneType {
@@ -26,6 +27,13 @@ interface SceneProps extends SceneType {
   spawnCount?: number;
   killCount: number;
 }
+
+// Add pool configuration
+const POOL_CONFIG = {
+  initialSize: 20,
+  expandSize: 5,
+  maxSize: 30
+};
 
 export default function Scene2({
   mountainData,
@@ -38,19 +46,27 @@ export default function Scene2({
   killCount,
   boneDoodadData,
 }: SceneProps) {
-  // State for enemies (with Scene1-specific health values)
+  // Add group pool
+  const [groupPool] = useState(() => new ObjectPool<Group>(() => {
+    const group = new Group();
+    group.visible = false;
+    return group;
+  }, POOL_CONFIG.initialSize, POOL_CONFIG.expandSize, POOL_CONFIG.maxSize));
+
+  // Modify enemy state initialization to use pool
   const [enemies, setEnemies] = useState<Enemy[]>(() => {
-    // Initialize with initial skeletons
     return Array.from({ length: initialSkeletons }, (_, index) => {
       const spawnPosition = generateRandomPosition();
       spawnPosition.y = 0;
+      const group = groupPool.acquire();
+      group.visible = true;
       return {
         id: `skeleton-${index}`,
         position: spawnPosition.clone(),
         initialPosition: spawnPosition.clone(),
         health: 324,
         maxHealth: 324,
-        ref: React.createRef<Group>()
+        ref: { current: group }
       };
     });
   });
@@ -59,6 +75,14 @@ export default function Scene2({
   const [playerHealth, setPlayerHealth] = useState<number>(unitProps.health);
   const playerRef = useRef<Group>(null);
   const [playerPosition, setPlayerPosition] = useState<Vector3>(new Vector3(0, 0, 0));
+
+  // Add cleanup function for enemy removal
+  const removeEnemy = useCallback((enemy: Enemy) => {
+    if (enemy.ref?.current) {
+      enemy.ref.current.visible = false;
+      groupPool.release(enemy.ref.current);
+    }
+  }, [groupPool]);
 
   // Callback to handle damage to enemies
   const handleTakeDamage = useCallback((targetId: string, damage: number) => {
@@ -163,7 +187,7 @@ export default function Scene2({
   // Add state for tracking waves and abomination spawn
   const [currentWave, setCurrentWave] = useState(0);
 
-  // Modify spawning logic
+  // Modify enemy spawning logic in useEffect
   useEffect(() => {
     if (totalSpawned >= maxSkeletons) return;
 
@@ -171,7 +195,7 @@ export default function Scene2({
       // Wave control based on kill count
       if ((killCount < 14 && currentWave === 0) || 
           (killCount < 20 && currentWave === 1) || 
-          (killCount < 28 && currentWave === 2)) {
+          (killCount < 27 && currentWave === 2)) {
         return;
       }
 
@@ -184,6 +208,8 @@ export default function Scene2({
           const spawnPosition = generateRandomPosition();
           setTotalSpawned(prev => prev + 1);
           setCurrentWave(prev => prev + 1);
+          const group = groupPool.acquire();
+          group.visible = true;
           return [...prev, {
             id: `abomination-${totalSpawned}`,
             position: spawnPosition.clone(),
@@ -192,7 +218,7 @@ export default function Scene2({
             maxHealth: 841,
             isDying: false,
             type: 'abomination' as const,
-            ref: React.createRef<Group>()
+            ref: { current: group }
           }];
         }
 
@@ -201,6 +227,9 @@ export default function Scene2({
         // Changed to every fourth spawn is a mage (3:1 ratio instead of 2:1)
         const isMage = (totalSpawned + 1) % 4 === 0;
 
+        const group = groupPool.acquire();
+        group.visible = true;
+        
         const newEnemy: Enemy = isMage ? {
           id: `mage-${totalSpawned}`,
           position: spawnPosition.clone(),
@@ -209,7 +238,7 @@ export default function Scene2({
           maxHealth: 289,
           isDying: false,
           type: 'mage' as const,
-          ref: React.createRef<Group>()
+          ref: { current: group }
         } : {
           id: `skeleton-${totalSpawned}`,
           position: spawnPosition.clone(),
@@ -218,7 +247,7 @@ export default function Scene2({
           maxHealth: 324,
           isDying: false,
           type: 'regular' as const,
-          ref: React.createRef<Group>()
+          ref: { current: group }
         };
 
         setTotalSpawned(prev => prev + 1);
@@ -227,7 +256,7 @@ export default function Scene2({
     }, 2750);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, killCount, currentWave]);
+  }, [totalSpawned, maxSkeletons, killCount, currentWave, groupPool]);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -238,21 +267,24 @@ export default function Scene2({
     }
   }, [controlsRef]);
 
-  // cleanup of dead enemies
+  // Modify cleanup effect
   useEffect(() => {
-    const DEATH_ANIMATION_DURATION = 1500; // match  animation length
+    const DEATH_ANIMATION_DURATION = 1500;
     
     setEnemies(prev => {
       const currentTime = Date.now();
       return prev.filter(enemy => {
         if (enemy.isDying && enemy.deathStartTime) {
-          // Keep dying enemies until animation completes
-          return currentTime - enemy.deathStartTime < DEATH_ANIMATION_DURATION;
+          if (currentTime - enemy.deathStartTime >= DEATH_ANIMATION_DURATION) {
+            removeEnemy(enemy);
+            return false;
+          }
+          return true;
         }
         return enemy.health > 0;
       });
     });
-  }, [enemies]);
+  }, [enemies, removeEnemy]);
 
   useEffect(() => {
     // Capture the ref value when the effect runs
@@ -282,34 +314,34 @@ export default function Scene2({
     };
   }, []);
 
-  const cleanup = () => {
+  // Modify main cleanup
+  const cleanup = useCallback(() => {
     setEnemies(prev => {
       prev.forEach(enemy => {
-        if (enemy.ref?.current?.parent) {
-          enemy.ref.current.parent.remove(enemy.ref.current);
-          //  dispose of any materials/geometries if they exist
-          enemy.ref.current.traverse((child) => {
-            if ('geometry' in child && child.geometry instanceof THREE.BufferGeometry) {
-              child.geometry.dispose();
+        removeEnemy(enemy);
+        //  dispose of any materials/geometries if they exist
+        enemy.ref?.current?.traverse((child) => {
+          if ('geometry' in child && child.geometry instanceof THREE.BufferGeometry) {
+            child.geometry.dispose();
+          }
+          if ('material' in child) {
+            const material = child.material as THREE.Material | THREE.Material[];
+            if (Array.isArray(material)) {
+              material.forEach(m => m.dispose());
+            } else {
+              material?.dispose();
             }
-            if ('material' in child) {
-              const material = child.material as THREE.Material | THREE.Material[];
-              if (Array.isArray(material)) {
-                material.forEach(m => m.dispose());
-              } else {
-                material?.dispose();
-              }
-            }
-          });
-        }
+          }
+        });
       });
       return [];
     });
-  };
+    groupPool.clear(); // Clear the pool when unmounting
+  }, [groupPool, removeEnemy]);
 
   useEffect(() => {
     return cleanup;
-  }, []);
+  }, [cleanup]);
 
   useEffect(() => {
     const allEnemiesDefeated = enemies.every(enemy => enemy.health <= 0);

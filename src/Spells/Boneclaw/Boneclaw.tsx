@@ -3,7 +3,6 @@ import { Group, Vector3, Shape, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { calculateBoneclawHits } from '@/Spells/Boneclaw/BoneclawDamage';
 import BoneclawScratch from '@/Spells/Boneclaw/BoneClawScratch';
-import * as THREE from 'three';
 
 interface BoneclawProps {
   position: Vector3;
@@ -15,135 +14,6 @@ interface BoneclawProps {
   onSwingComplete?: (position: Vector3, direction: Vector3) => void;
 }
 
-const CastingEffect = ({ position }: { position: Vector3 }) => {
-  const effectRef = useRef<Group>(null);
-  const progressRef = useRef(0);
-
-  useFrame((_, delta) => {
-    if (!effectRef.current) return;
-    
-    progressRef.current += delta * 1;
-    const progress = Math.min(progressRef.current, 1);
-    
-    // Slower fade out with easing
-    const opacity = Math.cos(progress * Math.PI / 2);
-    const scale = 0.775 + progress * 1.5;
-    
-    effectRef.current.scale.set(scale, scale, scale);
-    effectRef.current.position.y = 0.5 + progress * 0.8;
-    
-    // Rotate the entire effect
-    effectRef.current.rotation.y += delta * 5;
-    
-    // Update materials
-    effectRef.current.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
-        child.material.opacity = opacity;
-      }
-    });
-  });
-
-  return (
-    <group ref={effectRef} position={position}>
-      {/* Bone fragments with improved appearance */}
-      {[...Array(12)].map((_, i) => {
-        const angle = (i / 12) * Math.PI * 2;
-        const radius = 0.7;
-        const heightOffset = Math.sin(i * 1) * 0.4;
-        return (
-          <group 
-            key={i}
-            position={[
-              Math.cos(angle) * radius,
-              heightOffset,
-              Math.sin(angle) * radius
-            ]}
-            rotation={[
-              Math.random() * Math.PI,
-              angle,
-              Math.random() * Math.PI / 2
-            ]}
-          >
-            {/* Bone fragment */}
-            <mesh>
-              <cylinderGeometry args={[0.04, 0.03, 0.25, 4]} />
-              <meshStandardMaterial
-                color="#e8e8e8"
-                emissive="#39ff14"
-                emissiveIntensity={0.5}
-                transparent
-                opacity={0.9}
-              />
-            </mesh>
-            {/* Small decorative spikes */}
-            <mesh position={[0.03, 0.05, 0]}>
-              <coneGeometry args={[0.02, 0.06, 4]} />
-              <meshStandardMaterial
-                color="#d4d4d4"
-                emissive="#39ff14"
-                emissiveIntensity={0.3}
-                transparent
-                opacity={0.9}
-              />
-            </mesh>
-          </group>
-        );
-      })}
-
-      {/* Enhanced energy burst */}
-      {[...Array(3)].map((_, i) => (
-        <mesh key={i} rotation={[0, (i * Math.PI) / 3, i * 0.3]}>
-          <torusGeometry args={[0.625, 0.0625, 5, 24]} />
-          <meshStandardMaterial
-            color="#39ff14"
-            emissive="#39ff14"
-            emissiveIntensity={1}
-            transparent
-            opacity={0.6}
-          />
-        </mesh>
-      ))}
-
-      {/* Improved central glow */}
-      <pointLight color="#39ff14" intensity={6} distance={4} decay={2} />
-      <mesh>
-        <sphereGeometry args={[0.2, 16, 16]} />
-        <meshStandardMaterial
-          color="#39ff14"
-          emissive="#39ff14"
-          emissiveIntensity={1}
-          transparent
-          opacity={0.6}
-        />
-      </mesh>
-      
-      {/* Additional spectral wisps with varied sizes */}
-      {[...Array(16)].map((_, i) => {
-        const angle = (i / 16) * Math.PI * 2;
-        const radius = 0.3 + Math.random() * 0.4;
-        return (
-          <mesh
-            key={i}
-            position={[
-              Math.cos(angle) * radius,
-              Math.random() * 0.6,
-              Math.sin(angle) * radius
-            ]}
-          >
-            <sphereGeometry args={[0.03 + Math.random() * 0.04, 8, 8]} />
-            <meshStandardMaterial
-              color="#39ff14"
-              emissive="#39ff14"
-              emissiveIntensity={2}
-              transparent
-              opacity={0.7}
-            />
-          </mesh>
-        );
-      })}
-    </group>
-  );
-};
 
 export default function Boneclaw({ position, direction, onComplete, parentRef, onHitTarget, enemyData, onSwingComplete }: BoneclawProps) {
   const clawRef = useRef<Group>(null);
@@ -366,10 +236,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
         />
       )}
       
-      {parentRef.current && (
-        <CastingEffect position={parentRef.current.position.clone()} />
-      )}
-      
+
       <group 
         ref={clawRef} 
         position={position}

@@ -104,7 +104,11 @@ export default function GameWrapper({
           left: 0,
           touchAction: 'none'
         }}>
-          <Canvas>
+          <Canvas
+            frameloop="demand"
+            performance={{ min: 0.5 }}
+            dpr={[1, 2]} // Limit pixel ratio
+          >
             <ambientLight intensity={0.2} />
             {gameStarted && (
               <Suspense fallback={null}>

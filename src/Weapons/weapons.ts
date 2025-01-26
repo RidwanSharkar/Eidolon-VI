@@ -52,7 +52,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SCYTHE]: {
     normal: 23,
-    range: 5,
+    range: 5.15,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
