@@ -165,9 +165,9 @@ export default function Scene({
 
     const spawnTimer = setInterval(() => {
       // Check kill count requirements for each wave
-      if ((killCount < 1 && currentWave === 0) || 
-          (killCount < 3 && currentWave === 1) || 
-          (killCount < 7 && currentWave === 2)) {
+      if ((killCount < 2 && currentWave === 0) || 
+          (killCount < 5 && currentWave === 1) || 
+          (killCount < 8 && currentWave === 2)) {
         return;
       }
 

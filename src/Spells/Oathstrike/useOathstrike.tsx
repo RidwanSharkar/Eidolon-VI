@@ -119,7 +119,7 @@ export const useOathstrike = ({
 
     // Calculate arc for damage
     const forward = direction.clone();
-    const DAMAGE_RANGE = 5.5;
+    const DAMAGE_RANGE = 6;
     const ARC_ANGLE = Math.PI * 0.6; // 108-degree arc
 
     // Track if we hit any enemies
@@ -136,7 +136,7 @@ export const useOathstrike = ({
         const angle = Math.abs(forward.angleTo(toEnemy));
         if (angle <= ARC_ANGLE / 2) {
           hitEnemies = true;
-          const { damage, isCritical } = calculateDamage(43); // DAMAGE
+          const { damage, isCritical } = calculateDamage(47); // DAMAGE
           onHit(enemy.id, damage);
           
           setDamageNumbers(prev => [...prev, {

@@ -195,7 +195,7 @@ export default function Scene2({
       // Wave control based on kill count
       if ((killCount < 14 && currentWave === 0) || 
           (killCount < 20 && currentWave === 1) || 
-          (killCount < 27 && currentWave === 2)) {
+          (killCount < 26 && currentWave === 2)) {
         return;
       }
 

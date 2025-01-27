@@ -15,7 +15,7 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
   meshRef,
   opacity = 1
 }) => {
-  const particlesCount = 8;
+  const particlesCount = 5;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -123,7 +123,7 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
             vOpacity = opacity;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
             gl_Position = projectionMatrix * mvPosition;
-            gl_PointSize = scale * 25.0 * (300.0 / -mvPosition.z);
+            gl_PointSize = scale * 15.0 * (300.0 / -mvPosition.z);
           }
         `}
         fragmentShader={`
@@ -131,9 +131,9 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
           uniform vec3 uColor;
           void main() {
             float d = length(gl_PointCoord - vec2(0.5));
-            float strength = smoothstep(0.5, 0.1, d);
-            vec3 glowColor = mix(uColor, vec3(1.0), 0.5);
-            gl_FragColor = vec4(glowColor, vOpacity * strength);
+            float strength = smoothstep(0.4, 0.1, d);
+            vec3 glowColor = mix(uColor, vec3(1.0), 0.3);
+            gl_FragColor = vec4(glowColor, vOpacity * strength * 0.8);
           }
         `}
         uniforms={{
