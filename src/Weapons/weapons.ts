@@ -7,14 +7,13 @@ export enum WeaponType {
   SCYTHE = 'scythe',
   SWORD = 'sword',
   SABRES = 'sabres',
-  SABRES2 = 'sabres2',
-  STAFF = 'staff'
+  SPEAR = 'spear'
 }
 
 export interface AbilityInfo {
   type: AbilityType;
   key: AbilityHotkey;
-  cooldown: number;
+  cooldown: number; 
   currentCooldown: number;
   icon: string;
   maxCooldown: number;
@@ -52,7 +51,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SCYTHE]: {
     normal: 23,
-    range: 5.15,
+    range: 5.25,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
@@ -60,15 +59,9 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
     range: 4,
     maxHitsPerSwing: 2
   },
-  
-  [WeaponType.SABRES2]: {
-    normal: 11,
-    range: 4,
-    maxHitsPerSwing: 2
-  },
-  [WeaponType.STAFF]: {
-    normal: 15,
-    range: 4,
+  [WeaponType.SPEAR]: {
+    normal: 25,
+    range: 6,
     maxHitsPerSwing: 1
   }
 };
@@ -76,8 +69,8 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
     q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.725, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 1.85, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
+    e: { type: 'e', key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 2.05, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
     active: { 
       type: 'active', 
@@ -109,25 +102,18 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   },
   
   [WeaponType.SABRES]: {
-    q: { type: 'q', key: 'q', cooldown: 0.6, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.6125, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
   },
-  [WeaponType.SABRES2]: {
-    q: { type: 'q', key: 'q', cooldown: 0.70, currentCooldown: 0, icon: '/Eidolon/icons/q4.svg', maxCooldown: 1.5, name: 'Sabres2 Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 1.5, currentCooldown: 0, icon: '/Eidolon/icons/e4.svg', maxCooldown: 6, name: 'Firebeam', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 15, currentCooldown: 0, icon: '/Eidolon/icons/r4.svg', maxCooldown: 15, name: 'Blizzard', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/s4.svg', maxCooldown: 0, name: 'Sabres2 Active', isUnlocked: false }
-  },
-  [WeaponType.STAFF]: {
-    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q4.svg', maxCooldown: 1.0, name: 'Staff Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 2, currentCooldown: 0, icon: '/Eidolon/icons/e4.svg', maxCooldown: 0, name: 'Firebeam', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 15, currentCooldown: 0, icon: '/Eidolon/icons/r4.svg', maxCooldown: 15, name: 'Blizzard', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/s4.svg', maxCooldown: 0, name: 'Staff Active', isUnlocked: false }
+  [WeaponType.SPEAR]: {
+    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q4.svg', maxCooldown: 1.0, name: 'Spear Thrust', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 2, currentCooldown: 0, icon: '/Eidolon/icons/e4.svg', maxCooldown: 2.5, name: 'Lightning Strike', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 12, currentCooldown: 0, icon: '/Eidolon/icons/r4.svg', maxCooldown: 12, name: 'Thunder God', isUnlocked: false },
+    passive: { type: 'passive', key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p4.svg', maxCooldown: 0, name: 'Static Charge', isUnlocked: false },
+    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a4.svg', maxCooldown: 0, name: 'Lightning Form', isUnlocked: false }
   }
 }; 
 
@@ -247,19 +233,35 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       description: "Passive: Melee attacks passively consume orb charges to extra damage based on the number of charges available."
     }
   },
-  // Placeholder tooltips for test weapons
-  [WeaponType.SABRES2]: {
-    q: { title: "Test", description: "Test ability" },
-    e: { title: "Test", description: "Test ability" },
-    r: { title: "Test", description: "Test ability" },
-    passive: { title: "Test", description: "Test ability" },
-    active: { title: "Test", description: "Test ability" }
-  },
-  [WeaponType.STAFF]: {
-    q: { title: "Test", description: "Test ability" },
-    e: { title: "Test", description: "Test ability" },
-    r: { title: "Test", description: "Test ability" },
-    passive: { title: "Test", description: "Test ability" },
-    active: { title: "Test", description: "Test ability" }
+  [WeaponType.SPEAR]: {
+    q: {
+      title: "",
+      description: "",
+      cost: "",
+      range: "",
+      damage: ""
+    },
+    e: {
+      title: "",
+      description: "",
+      cost: "",
+      range: "",
+      damage: ""
+    },
+    r: {
+      title: "",
+      description: "",
+      cost: "",
+      range: "",
+      damage: ""
+    },
+    passive: {
+      title: "",
+      description: ""
+    },
+    active: {
+      title: "",
+      description: ""
+    }
   }
 }; 

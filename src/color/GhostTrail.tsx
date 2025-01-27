@@ -13,7 +13,7 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
   const trailsRef = useRef<Mesh[]>([]);
   const positions = useRef<Vector3[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const trailCount = 28;
+  const trailCount = 24;
   
   useEffect(() => {
     if (parentRef.current) {

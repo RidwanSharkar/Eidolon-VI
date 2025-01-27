@@ -17,7 +17,8 @@ const getVortexColor = (weaponType: WeaponType) => {
     case WeaponType.SWORD:
       return '#FF9748';
     case WeaponType.SABRES:
-    case WeaponType.SABRES2:
+      return '#00AAFF';
+    case WeaponType.SPEAR:
       return '#00AAFF';
     default:
       return '#00ff44';
@@ -109,7 +110,7 @@ export default function BoneVortex({ parentRef, weaponType }: BoneVortexProps) {
         />
       </mesh>
  */}
-      {/* outer  fade glow */}
+      {/* outer  fade glow
       <mesh position={[0, -0.05, 0]}>
         <sphereGeometry args={[0.55, 16, 16]} />
         <meshBasicMaterial
@@ -120,6 +121,7 @@ export default function BoneVortex({ parentRef, weaponType }: BoneVortexProps) {
           depthWrite={false}
         />
       </mesh>
+       */}
 
       {/* Enhanced point lights */}
       <pointLight 

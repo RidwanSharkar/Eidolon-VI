@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { Vector3 } from 'three';
 import { WeaponType, AbilityType } from '@/Weapons/weapons';
 import { trunkColors, leafColors } from '@/Environment/treeColors';  
-import { generateMountains, generateTrees, generateMushrooms, generateFlowers, generateBoneDoodads } from '@/Environment/terrainGenerators';
+import { generateMountains, generateTrees, generateMushrooms } from '@/Environment/terrainGenerators';
 import { SceneProps, SkeletonProps } from '@/Scene/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '@/Weapons/weapons';
@@ -15,7 +15,7 @@ import GameWrapper from '@/Scene/GameWrapper';
 // redistribute dis file throughout scene/unit  or move scene-> pages
 // SKELETON SPAWN POINTS DEPRECATED DUE TO TERRAIN GENERATION.ts
 const generateRandomPosition = () => {
-  const radius = 30;
+  const radius = 15;
   const angle = Math.random() * Math.PI * 2;
   const distance = Math.sqrt(Math.random()) * radius; // Using sqrt for more even distribution
   return new Vector3(
@@ -78,12 +78,6 @@ export default function HomePage() {
 
   // Memoize mushroom data
   const mushroomData = useMemo(() => generateMushrooms(), []);
-
-  // Memoize flower data
-  const flowerData = useMemo(() => generateFlowers(), []);
-
-  // Memoize bone doodad data
-  const boneDoodadData = useMemo(() => generateBoneDoodads(), []);
 
   // Assign consistent colors to the interactive tree using useMemo
   const [interactiveTrunkColor, setInteractiveTrunkColor] = useState<THREE.Color>();
@@ -314,8 +308,6 @@ export default function HomePage() {
     killCount,
     onFireballDamage: handleFireballDamage,
     onWeaponSelect: handleWeaponSelect,
-    flowerData: flowerData,
-    boneDoodadData,
   };
 
   useEffect(() => {

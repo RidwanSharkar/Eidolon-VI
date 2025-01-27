@@ -154,31 +154,6 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
         </group>
       )}
 
-      {/* Charge indicator line */}
-      {isCharging && (
-        <mesh 
-          rotation={[0, Math.PI - 2* Math.PI/2, Math.PI]}
-          position={[0, 0, 0.65]}
-        >
-          <tubeGeometry args={[
-            new THREE.LineCurve3(
-              new THREE.Vector3(0, 0, 0),
-              new THREE.Vector3(0, 0, 20)
-            ),
-            64,
-            0.025,
-            8,
-            false
-          ]} />
-          <meshStandardMaterial 
-            color="#00ffff"
-            emissive="#00ffff"
-            emissiveIntensity={1}
-            transparent
-            opacity={0.3 * chargeProgress}
-          />
-        </mesh>
-      )}
     </group>
   );
 } 

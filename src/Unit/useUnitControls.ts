@@ -17,13 +17,13 @@ interface UseUnitControlsProps {
   onMovementUpdate?: (direction: Vector3) => void;
 }
 
-const PLAY_AREA_RADIUS = 32.25 // MAP BOUNDARY
+const PLAY_AREA_RADIUS = 27.25 // MAP BOUNDARY
 
 export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.068,
+  speed = 0.05,
   onPositionUpdate,
   health,
   isCharging = false,
@@ -38,6 +38,11 @@ export function useUnitControls({
   });
 
   const isGameOver = useRef(false);
+
+  // Add velocity state with useRef for smooth acceleration/deceleration
+  const velocity = useRef(new Vector3());
+  const ACCELERATION = 8.0;  // How quickly to reach max speed
+  const DECELERATION = 12.0; // How quickly to stop
 
   useEffect(() => {
     if (health <= 0) {
@@ -79,9 +84,13 @@ export function useUnitControls({
     };
   }, []);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!groupRef.current || isGameOver.current) return;
 
+    // Convert speed from per-frame to per-second
+    const normalizedSpeed = speed * 60; // Base speed per second
+    const currentFrameSpeed = normalizedSpeed * delta; // Actual speed this frame
+    
     const cameraDirection = new Vector3();
     camera.getWorldDirection(cameraDirection);
     cameraDirection.y = 0;
@@ -94,7 +103,7 @@ export function useUnitControls({
 
     const currentRotation = groupRef.current.rotation.y;
     const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-    const rotationSpeed = 0.11; // 0.1 defaulted 
+    const rotationSpeed = 0.1; // 0.1 defaulted 
     
     groupRef.current.rotation.y = currentRotation + (targetRotation - currentRotation) * rotationSpeed;
 
@@ -119,23 +128,23 @@ export function useUnitControls({
     if (moveDirection.length() > 0) {
       moveDirection.normalize();
       
-      // Update movement direction
       if (onMovementUpdate) {
         onMovementUpdate(moveDirection);
       }
 
-      // Calculate dot product between movement and facing direction
       const dotProduct = moveDirection.dot(cameraDirection);
+      const baseSpeed = isCharging ? 0.005 * 60 * delta : currentFrameSpeed;
+      const backwardsSpeed = baseSpeed * 0.55;
+      const targetSpeed = dotProduct < 0 ? backwardsSpeed : baseSpeed;
       
-      // Adjust speed based on movement direction and charging state
-      const baseSpeed = isCharging ? 0.01 : speed; // BOW CHARGING NO MOVEMENT SPEED
-      const backwardsSpeed = baseSpeed * 0.69; // 45% of normal speed when moving backwards
-      const currentSpeed = dotProduct < 0 ? backwardsSpeed : baseSpeed;
+      // Calculate target velocity
+      const targetVelocity = moveDirection.clone().multiplyScalar(targetSpeed);
       
-      // Calculate new position before applying it
-      const newPosition = groupRef.current.position.clone().add(
-        moveDirection.multiplyScalar(currentSpeed)
-      );
+      // Smoothly interpolate current velocity towards target
+      velocity.current.lerp(targetVelocity, ACCELERATION * delta);
+      
+      // Calculate new position using smoothed velocity
+      const newPosition = groupRef.current.position.clone().add(velocity.current);
 
       // Check if new position is within bounds
       const distanceFromCenter = Math.sqrt(
@@ -143,7 +152,6 @@ export function useUnitControls({
         newPosition.z * newPosition.z
       );
 
-      // Only update position if within bounds
       if (distanceFromCenter < PLAY_AREA_RADIUS) {
         groupRef.current.position.copy(newPosition);
       } else {
@@ -151,10 +159,36 @@ export function useUnitControls({
         const angle = Math.atan2(newPosition.z, newPosition.x);
         groupRef.current.position.x = PLAY_AREA_RADIUS * Math.cos(angle);
         groupRef.current.position.z = PLAY_AREA_RADIUS * Math.sin(angle);
+        // Reset velocity when hitting boundary
+        velocity.current.multiplyScalar(0.5);
       }
-    } else if (onMovementUpdate) {
-      // Reset movement direction when not moving
-      onMovementUpdate(new Vector3());
+    } else {
+      // Decelerate smoothly when no input
+      velocity.current.multiplyScalar(1 - DECELERATION * delta);
+      
+      // Apply remaining velocity
+      if (velocity.current.length() > 0.001) {
+        const newPosition = groupRef.current.position.clone().add(velocity.current);
+        groupRef.current.position.copy(newPosition);
+      }
+
+      if (onMovementUpdate) {
+        onMovementUpdate(new Vector3());
+      }
+    }
+
+    // Smooth rotation interpolation
+    if (controlsRef.current && !keys.current.shift) {
+      const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
+      const currentRotation = groupRef.current.rotation.y;
+      
+      // Normalize angle difference
+      let rotationDiff = targetRotation - currentRotation;
+      while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+      while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+      
+      // Smooth rotation with increased interpolation
+      groupRef.current.rotation.y += rotationDiff * Math.min(1, 15 * delta);
     }
 
     if (controlsRef.current) {

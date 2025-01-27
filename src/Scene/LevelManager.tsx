@@ -30,41 +30,45 @@ export default function LevelManager({
 
   // Add the thorough cleanup function
   const thoroughCleanup = useCallback(() => {
-    // Clear THREE.js resources
-    const disposeNode = (node: THREE.Object3D) => {
-      if ('geometry' in node && node.geometry instanceof THREE.BufferGeometry) {
-        node.geometry.dispose();
-      }
-      
-      if ('material' in node) {
-        const material = node.material as THREE.Material | THREE.Material[];
-        if (Array.isArray(material)) {
-          material.forEach(m => m.dispose());
-        } else {
-          material?.dispose();
+    return new Promise<void>(resolve => {
+      // Clear THREE.js resources
+      const disposeNode = (node: THREE.Object3D) => {
+        if ('geometry' in node && node.geometry instanceof THREE.BufferGeometry) {
+          node.geometry.dispose();
         }
-      }
-      
-      if ('texture' in node && node.texture instanceof THREE.Texture) {
-        node.texture.dispose();
-      }
-      
-      node.children.forEach(child => disposeNode(child));
-    };
+        
+        if ('material' in node) {
+          const material = node.material as THREE.Material | THREE.Material[];
+          if (Array.isArray(material)) {
+            material.forEach(m => m.dispose());
+          } else {
+            material?.dispose();
+          }
+        }
+        
+        if ('texture' in node && node.texture instanceof THREE.Texture) {
+          node.texture.dispose();
+        }
+        
+        node.children.forEach(child => disposeNode(child));
+      };
 
-    // Get all scenes and dispose their resources
-    const scenes = document.querySelectorAll('canvas');
-    scenes.forEach(canvas => {
-      const scene = (canvas as { __r3f?: RootState }).__r3f?.scene;
-      if (scene) {
-        scene.traverse(disposeNode);
+      // Get all scenes and dispose their resources
+      const scenes = document.querySelectorAll('canvas');
+      scenes.forEach(canvas => {
+        const scene = (canvas as { __r3f?: RootState }).__r3f?.scene;
+        if (scene) {
+          scene.traverse(disposeNode);
+        }
+      });
+
+      // Force a garbage collection hint
+      if (window.gc) {
+        window.gc();
       }
+      
+      resolve();
     });
-
-    // Force a garbage collection hint
-    if (window.gc) {
-      window.gc();
-    }
   }, []);
 
   const handleLevelComplete = useCallback(() => {
@@ -101,27 +105,26 @@ export default function LevelManager({
 
   // Scene switching based on current level
   useEffect(() => {
-    if (currentLevel === 2) {
-      thoroughCleanup();
-      setShowScene2(true);
-      setShowScene3(false);
-    } else if (currentLevel === 3) {
-      thoroughCleanup();
-      const cleanupTimer = setTimeout(() => {
-        setShowScene2(false);
-        // Wait for cleanup before showing Scene3
-        setTimeout(() => {
-          setShowScene3(true);
-        }, 100);
-      }, 0);
+    const switchScene = async () => {
+      await thoroughCleanup();
       
-      return () => clearTimeout(cleanupTimer);
-    } else {
-      thoroughCleanup();
-      setShowScene2(false);
-      setShowScene3(false);
-    }
-    setLevelCompleted(false); // Reset flag for the new level
+      // Wait for 1.5 seconds to ensure thorough cleanup
+      await new Promise(resolve => setTimeout(resolve, 1100));
+      
+      if (currentLevel === 2) {
+        setShowScene2(true);
+        setShowScene3(false);
+      } else if (currentLevel === 3) {
+        setShowScene2(false);
+        setShowScene3(true);
+      } else {
+        setShowScene2(false);
+        setShowScene3(false);
+      }
+      setLevelCompleted(false);
+    };
+
+    switchScene();
   }, [currentLevel, thoroughCleanup]);
 
   // Keep existing kill count monitoring effect

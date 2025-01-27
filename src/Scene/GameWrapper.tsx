@@ -126,15 +126,16 @@ export default function GameWrapper({
             <OrbitControls
               ref={sceneProps.unitProps.controlsRef}
               enablePan={false}
+              minPolarAngle={Math.PI / 6}
               maxPolarAngle={Math.PI / 2.25}
-              maxDistance={12}
+              maxDistance={10}
               mouseButtons={{
                 LEFT: undefined,
                 MIDDLE: undefined,
                 RIGHT: THREE.MOUSE.ROTATE
               }} 
-              minDistance={12}
-              rotateSpeed={0.8}
+              minDistance={10}
+              rotateSpeed={0.675}
               enableDamping={true}
               dampingFactor={0.075}
               zoomSpeed={1.25}
@@ -149,7 +150,7 @@ export default function GameWrapper({
           onReset={handleReset}
           killCount={killCount}
           onEnemiesDefeated={() => {}}
-          maxSkeletons={12} // why dfq
+          maxSkeletons={12} // ydfq
         />
 
         <div style={{ 

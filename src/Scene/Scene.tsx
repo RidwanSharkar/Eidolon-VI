@@ -10,7 +10,6 @@ import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
-import DriftingSouls from '../Environment/DriftingSouls';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import * as THREE from 'three';
@@ -35,7 +34,6 @@ export default function Scene({
   maxSkeletons = 13,
   initialSkeletons = 4,
   killCount,
-  boneDoodadData,
 }: SceneProps) {
   // State for enemies (with Scene1-specific health values)
   const [enemies, setEnemies] = useState<Enemy[]>(() => {
@@ -297,16 +295,11 @@ export default function Scene({
 
 
         {/* Background Environment */}
-        <DriftingSouls />
         <CustomSky />
         <Planet />
 
         {/* Ground Environment */}
         <Terrain 
-          color="#FFAFC5"
-          roughness={0.5}
-          metalness={0.1}
-          doodadData={boneDoodadData}
         />
         {mountainData.map((data, index) => (
           <Mountain key={`mountain-${index}`} position={data.position} scale={data.scale} />

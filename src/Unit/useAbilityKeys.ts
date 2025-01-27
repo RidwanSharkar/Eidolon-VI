@@ -138,7 +138,7 @@ export function useAbilityKeys({
           if (currentWeapon === WeaponType.SWORD && !isSmiting) {
             // Check time since last Q usage for Sword
             const timeSinceLastQ = Date.now() - lastQUsageTime.current;
-            if (timeSinceLastQ < 625) { // SMITE BUG TEMP FIX 
+            if (timeSinceLastQ < 350) { // SMITE BUG TEMP FIX 
               console.log('Cannot use Smite so soon after a normal attack');
               return;
             }
@@ -152,8 +152,8 @@ export function useAbilityKeys({
               position: targetPos 
             }]);
             onAbilityUse(currentWeapon, 'e');
-          } else if ((currentWeapon === WeaponType.SABRES2 || currentWeapon === WeaponType.STAFF) && startFirebeam && stopFirebeam) {
-
+          } else if ((currentWeapon === WeaponType.SPEAR) && startFirebeam && stopFirebeam) {
+/// SWITCH DIS                                                            ^^^^                ^^^^^^^
             startFirebeam();
             onAbilityUse(currentWeapon, 'e');
           } else if (currentWeapon === WeaponType.SABRES && !isBowCharging) {
@@ -238,7 +238,6 @@ export function useAbilityKeys({
               }
               break;
             case WeaponType.SABRES:
-            case WeaponType.SABRES2:
               // Add blizzard effect
               setActiveEffects(prev => [...prev, {
                 id: Math.random(),

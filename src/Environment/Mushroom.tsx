@@ -18,7 +18,7 @@ const Mushroom: React.FC<MushroomProps> = ({ position, scale, variant = 'pink' }
       case 'green':
         return new THREE.Color("#00FFC3"); // teal
       case 'blue':
-        return new THREE.Color("#FFB574"); // ORANGE 
+        return new THREE.Color("#FF9BFC"); // ORANGE FFB574
       default:
         return new THREE.Color("#FF9BFC"); // PINK 
     }

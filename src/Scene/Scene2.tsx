@@ -10,7 +10,6 @@ import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
-import DriftingSouls from '../Environment/DriftingSouls';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import * as THREE from 'three';
@@ -44,7 +43,6 @@ export default function Scene2({
   maxSkeletons = 17,
   initialSkeletons = 6,
   killCount,
-  boneDoodadData,
 }: SceneProps) {
   // Add group pool
   const [groupPool] = useState(() => new ObjectPool<Group>(() => {
@@ -253,7 +251,7 @@ export default function Scene2({
         setTotalSpawned(prev => prev + 1);
         return [...prev, newEnemy];
       });
-    }, 2750);
+    }, 2500);
 
     return () => clearInterval(spawnTimer);
   }, [totalSpawned, maxSkeletons, killCount, currentWave, groupPool]);
@@ -366,16 +364,11 @@ export default function Scene2({
 
 
         {/* Background Environment */}
-        <DriftingSouls />
         <CustomSky />
         <Planet />
 
         {/* Ground Environment */}
         <Terrain 
-          color="#FFAFC5"
-          roughness={0.5}
-          metalness={0.1}
-          doodadData={boneDoodadData}
         />
         {mountainData.map((data, index) => (
           <Mountain key={`mountain-${index}`} position={data.position} scale={data.scale} />

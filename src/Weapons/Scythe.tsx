@@ -37,9 +37,9 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       }
       
       // SWING ANIMATION
-      const forwardPhase = swingPhase <= 0.25
+      const forwardPhase = swingPhase <= 0.3
         ? swingPhase * 2
-        : (0.75 - (swingPhase - 0.125) * 1.675);
+        : (0.75 - (swingPhase - 0.125) * 1.55);
       
       const pivotX = basePosition[0] + Math.sin(forwardPhase * Math.PI) * 2.5;
       const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -1.5;
@@ -53,13 +53,17 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       
       scytheRef.current.rotation.set(rotationX, rotationY, rotationZ);
     } else if (!isSwinging && scytheRef.current) {
-      scytheRef.current.rotation.x *= 0.85;
-      scytheRef.current.rotation.y *= 0.85;
-      scytheRef.current.rotation.z *= 0.85;
+      // Smoother easing for rotation return
+      const easeFactor = 0.92;
+      scytheRef.current.rotation.x *= easeFactor;
+      scytheRef.current.rotation.y *= easeFactor;
+      scytheRef.current.rotation.z *= easeFactor;
       
-      scytheRef.current.position.x += (basePosition[0] - scytheRef.current.position.x) * 0.20;
-      scytheRef.current.position.y += (basePosition[1] - scytheRef.current.position.y) * 0.20;
-      scytheRef.current.position.z += (basePosition[2] - scytheRef.current.position.z) * 0.20;
+      // Smoother position interpolation with easing
+      const positionEase = 0.15;
+      scytheRef.current.position.x += (basePosition[0] - scytheRef.current.position.x) * positionEase;
+      scytheRef.current.position.y += (basePosition[1] - scytheRef.current.position.y) * positionEase;
+      scytheRef.current.position.z += (basePosition[2] - scytheRef.current.position.z) * positionEase;
     }
   });
 

@@ -21,7 +21,7 @@ export function useBoneclaw({ onHit, enemyData }: UseBoneclawProps) {
   }>>([]);
 
   const triggerBoneclaw = useCallback((position: Vector3, direction: Vector3) => {
-    const hits = calculateBoneclawHits(position, direction, enemyData);
+    const hits = calculateBoneclawHits(position, direction, enemyData, new Set<string>());
     
     hits.forEach(hit => {
       onHit(

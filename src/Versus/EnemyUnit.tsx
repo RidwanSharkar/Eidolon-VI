@@ -30,6 +30,8 @@ interface DamageSource {
   hasActiveAbility?: boolean;
 }
 
+
+
 export default function EnemyUnit({
   id,
   initialPosition,
@@ -57,15 +59,21 @@ export default function EnemyUnit({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 2.35;
-  const ATTACK_COOLDOWN = 1650;
-  const MOVEMENT_SPEED = 0.19 ;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.19;                    // KEEP this the same as MOVEMENT_SPEED
+  // Add velocity state
+  const velocity = useRef(new Vector3());
+  const targetRotation = useRef(0);
+
+  const ATTACK_RANGE = 2.25;
+  const ATTACK_COOLDOWN = 1750;
+  const MOVEMENT_SPEED = 0.035;
   const POSITION_UPDATE_THRESHOLD = 0.1;
-  const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 6;
-  const SEPARATION_RADIUS = 1.25; // Minimum distance between enemies
-  const SEPARATION_FORCE = 0.155; // Strength of the separation force
+  const MINIMUM_UPDATE_INTERVAL = 35;
+  const ATTACK_DAMAGE = 10;
+  const SEPARATION_RADIUS = 1.25;
+  const SEPARATION_FORCE = 0.155;
+  const ACCELERATION = 6.0;
+const DECELERATION = 8.0;
+const ROTATION_SPEED = 8.0;
 
   // Sync health changes
   useEffect(() => {
@@ -113,12 +121,16 @@ export default function EnemyUnit({
       setIsAttacking(false);
       setIsMoving(true);
 
+      const normalizedSpeed = MOVEMENT_SPEED * 60;
+      const currentFrameSpeed = normalizedSpeed * delta;
+
       // Calculate direction to player
       const direction = new Vector3()
         .subVectors(playerPosition, currentPosition.current)
         .normalize();
 
-      // Get all other enemy positions from the scene
+      // Calculate separation force
+      const separationForce = new Vector3();
       const otherEnemies = enemyRef.current.parent?.children
         .filter(child => 
           child !== enemyRef.current && 
@@ -126,10 +138,7 @@ export default function EnemyUnit({
           child.position.distanceTo(currentPosition.current) < SEPARATION_RADIUS
         ) || [];
 
-      // Calculate separation force
-      const separationForce = new Vector3();
       otherEnemies.forEach(enemy => {
-        // Create a ground-plane version of positions for separation calculation
         const currentGroundPos = currentPosition.current.clone().setY(0);
         const enemyGroundPos = enemy.position.clone().setY(0);
         
@@ -140,40 +149,49 @@ export default function EnemyUnit({
         separationForce.add(diff);
       });
 
-      // Combine forces and ensure Y remains 0 - FIXES WALK ANIMATION
+      // Combine forces and normalize
       const finalDirection = direction.add(separationForce).normalize();
-      finalDirection.y = 0; // Force movement to stay on ground plane
+      finalDirection.y = 0;
 
-      // Update target position with combined forces
-      const movement = finalDirection.multiplyScalar(MOVEMENT_SPEED * delta * 60);
-      targetPosition.current.copy(currentPosition.current).add(movement);
-      targetPosition.current.y = 0; // Ensure target position stays on ground
-
-      // Smooth movement
-      currentPosition.current.lerp(targetPosition.current, SMOOTHING_FACTOR);
-      currentPosition.current.y = 0; // Force current position to stay on ground
+      // Calculate target velocity
+      const targetVelocity = finalDirection.multiplyScalar(currentFrameSpeed);
+      
+      // Smoothly interpolate current velocity towards target
+      velocity.current.lerp(targetVelocity, ACCELERATION * delta);
+      
+      // Update position with smoothed velocity
+      currentPosition.current.add(velocity.current);
+      currentPosition.current.y = 0;
 
       // Apply position to mesh
       enemyRef.current.position.copy(currentPosition.current);
 
-      // Handle rotation smoothly
+      // Smooth rotation
       const lookTarget = new Vector3()
         .copy(playerPosition)
         .setY(currentPosition.current.y);
-      enemyRef.current.lookAt(lookTarget);
+      targetRotation.current = Math.atan2(
+        lookTarget.x - currentPosition.current.x,
+        lookTarget.z - currentPosition.current.z
+      );
 
-      // Update position with rate limiting
-      const now = Date.now();
-      if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL) {
-        if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD) {
-          onPositionUpdate(id, currentPosition.current.clone());
-          lastUpdateTime.current = now;
-        }
-      }
+      // Interpolate rotation
+      const currentRotationY = enemyRef.current.rotation.y;
+      let rotationDiff = targetRotation.current - currentRotationY;
+      while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+      while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+      
+      enemyRef.current.rotation.y += rotationDiff * Math.min(1, ROTATION_SPEED * delta);
+
     } else {
       setIsMoving(false);
-      // Smoothly stop at current position
-      targetPosition.current.copy(currentPosition.current);
+      // Decelerate smoothly
+      velocity.current.multiplyScalar(1 - DECELERATION * delta);
+      
+      if (velocity.current.length() > 0.001) {
+        currentPosition.current.add(velocity.current);
+        enemyRef.current.position.copy(currentPosition.current);
+      }
     }
 
     // Attack logic
@@ -206,6 +224,15 @@ export default function EnemyUnit({
         setTimeout(() => {
           setIsAttacking(false);
         }, 500);
+      }
+    }
+
+    // Update position with rate limiting
+    const now = Date.now();
+    if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL) {
+      if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD) {
+        onPositionUpdate(id, currentPosition.current.clone());
+        lastUpdateTime.current = now;
       }
     }
   });

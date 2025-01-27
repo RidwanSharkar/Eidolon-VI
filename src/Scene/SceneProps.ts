@@ -1,4 +1,4 @@
-import { Vector3, Euler } from 'three';
+import { Vector3 } from 'three';
 import { WeaponType } from '../Weapons/weapons';
 import { GeneratedTree } from '../Environment/terrainGenerators';
 import { UnitProps } from '../Unit/UnitProps';
@@ -21,12 +21,6 @@ export interface SceneProps {
     scale: number;
     variant: 'pink' | 'green' | 'blue';
   }>;
-  boneDoodadData: Array<{
-    position: Vector3;
-    rotation: Euler;
-    type: string;
-    scale?: number;
-  }>;
   treePositions: { mainTree: Vector3; };
   interactiveTrunkColor: THREE.Color;
   interactiveLeafColor: THREE.Color;
@@ -42,7 +36,6 @@ export interface SceneProps {
   maxSkeletons?: number;
   initialSkeletons?: number;
   spawnCount?: number;
-  flowerData: Array<{ position: Vector3; scale: number }>;
   bossActive: boolean;
 }
 

@@ -10,7 +10,7 @@ interface MeteorTrailProps {
 }
 
 export default function MeteorTrail({ color, size, meshRef }: MeteorTrailProps) {
-  const particlesCount = 12;
+  const particlesCount = 14;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -54,7 +54,7 @@ export default function MeteorTrail({ color, size, meshRef }: MeteorTrailProps) 
     positionsRef.current[1] = position.y;
     positionsRef.current[2] = position.z;
     opacitiesRef.current[0] = 0.9; // Increased from 0.8
-    scalesRef.current[0] = size * 8; // Increased from 5
+    scalesRef.current[0] = size * 0.8; // Increased from 5
 
     // Update geometry
     if (particlesRef.current) {

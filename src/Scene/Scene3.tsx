@@ -9,11 +9,9 @@ import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
-import DriftingSouls from '../Environment/DriftingSouls';
 import { generateRandomPosition } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import BossUnit from '@/Versus/Boss/BossUnit';
-import Flower from '../Environment/Flower';
 
 import * as THREE from 'three';
 import { MemoizedEnemyUnit } from '../Versus/MemoizedEnemyUnit';
@@ -23,7 +21,6 @@ import { ObjectPool } from './ObjectPool';
 
 interface ScenePropsWithCallback extends SceneType {
   onLevelComplete: () => void;
-  flowerData: Array<{ position: Vector3; scale: number }>;
   spawnCount: number;
 }
 
@@ -36,6 +33,14 @@ const POOL_CONFIG = {
   maxSize: 30
 };
 
+interface R3FElement extends HTMLElement {
+  __r3f?: {
+    fiber: {
+      renderer: THREE.WebGLRenderer;
+    };
+  };
+}
+
 export default function Scene3({
   mountainData,
   treeData,
@@ -43,13 +48,10 @@ export default function Scene3({
   unitProps,
   skeletonProps,
   killCount,
-  boneDoodadData,
   onLevelComplete,
   spawnInterval = 5000,
   maxSkeletons = 23,
   initialSkeletons = 5,
-  //spawnCount = 4,
-  flowerData,
 }: ScenePropsWithCallback) {
 
   const [spawnStarted, setSpawnStarted] = useState(false);
@@ -228,45 +230,93 @@ export default function Scene3({
     const shouldSpawnBoss = allEnemiesDefeated && hasStartedSpawning && killCount >= 50 && !isBossSpawned;
     
     if (shouldSpawnBoss) {
-      // Add a delay before spawning the boss to allow for cleanup
-      setTimeout(() => {
-        // Clean up existing enemies first
+      const cleanupBeforeBoss = async () => {
+        // 1. Stop all spawns and clear intervals
+        setSpawnStarted(false);
+        
+        // 2. Clear all existing enemies and their resources
         setEnemies(prev => {
           prev.forEach(enemy => {
-            if (enemy.ref?.current?.parent) {
-              enemy.ref.current.parent.remove(enemy.ref.current);
-              enemy.ref.current.traverse((child) => {
-                if ('geometry' in child && child.geometry instanceof THREE.BufferGeometry) {
-                  child.geometry.dispose();
-                }
-                if ('material' in child) {
-                  const material = child.material as THREE.Material | THREE.Material[];
-                  if (Array.isArray(material)) {
-                    material.forEach(m => m.dispose());
-                  } else {
-                    material?.dispose();
+            if (enemy.ref?.current) {
+              // Dispose of geometries, materials, and textures
+              enemy.ref.current.traverse((child: THREE.Object3D) => {
+                if (child instanceof THREE.Mesh) {
+                  if (child.geometry) {
+                    child.geometry.dispose();
+                  }
+                  if (Array.isArray(child.material)) {
+                    child.material.forEach(mat => {
+                      if (mat.map) mat.map.dispose();
+                      if (mat.normalMap) mat.normalMap.dispose();
+                      if (mat.specularMap) mat.specularMap.dispose();
+                      if (mat.envMap) mat.envMap.dispose();
+                      mat.dispose();
+                    });
+                  } else if (child.material) {
+                    if (child.material.map) child.material.map.dispose();
+                    if (child.material.normalMap) child.material.normalMap.dispose();
+                    if (child.material.specularMap) child.material.specularMap.dispose();
+                    if (child.material.envMap) child.material.envMap.dispose();
+                    child.material.dispose();
                   }
                 }
               });
+              
+              // Remove from parent
+              if (enemy.ref.current.parent) {
+                enemy.ref.current.parent.remove(enemy.ref.current);
+              }
+              
+              // Release to pool and ensure it's hidden
+              enemy.ref.current.visible = false;
+              groupPool.release(enemy.ref.current);
             }
           });
           return [];
         });
 
-        // Force a garbage collection hint if available
+        // 3. Clear object pool and reset
+        groupPool.clear();
+        
+        // 4. Clear Three.js cache
+        THREE.Cache.clear();
+        
+        // 5. Clear any remaining references
+        if (playerRef.current) {
+          playerRef.current.updateMatrixWorld();
+        }
+        
+        // 6. Force a garbage collection hint (if available)
         if (window.gc) {
           window.gc();
         }
 
-        // Now spawn the boss
-        setIsBossSpawned(true);
-      }, 2500); // 2-second delay
+        // 7. Wait for cleanup to complete
+        await new Promise(resolve => setTimeout(resolve, 250));
+        
+        // 8. Run another cleanup pass
+        const renderer = unitProps.controlsRef.current?.domElement?.parentElement as R3FElement;
+        if (renderer?.__r3f?.fiber?.renderer) {
+          renderer.__r3f.fiber.renderer.renderLists.dispose();
+        }
+
+        // 9. Final wait before boss spawn
+        await new Promise(resolve => setTimeout(resolve, 250));
+        
+        // 10. Spawn the boss with dramatic delay
+        setTimeout(() => {
+          setIsBossSpawned(true);
+        }, 2500);
+      };
+
+      cleanupBeforeBoss();
     }
+    
     // Only call onLevelComplete when boss is defeated
     if (isBossSpawned && bossHealth <= 0) {
       onLevelComplete();
     }
-  }, [enemies, killCount, onLevelComplete, spawnStarted, totalSpawned, initialSkeletons, isBossSpawned, bossHealth]);
+  }, [unitProps.controlsRef, enemies, killCount, onLevelComplete, spawnStarted, totalSpawned, initialSkeletons, isBossSpawned, bossHealth, groupPool]);
 
   // Modify the spawn logic to include the delay
   useEffect(() => {
@@ -445,17 +495,10 @@ export default function Scene3({
     <>
 
       {/* Background Environment */}
-      <DriftingSouls />
       <CustomSky />
       <Planet />
 
-      {/* Ground Environment with desert-like terrain */}
-      <Terrain 
-        color="#FFAFC5" //handled elsewhere 
-        roughness={0.9} 
-        metalness={0.1}
-        doodadData={boneDoodadData}
-      />
+      <Terrain />
       
       {mountainData.map((data, index) => (
         <Mountain key={`mountain-${index}`} position={data.position} scale={data.scale} />
@@ -480,11 +523,6 @@ export default function Scene3({
           scale={mushroom.scale}
           variant={mushroom.variant}
         />
-      ))}
-
-      {/* Render all flowers */}
-      {flowerData.map((data, index) => (
-        <Flower key={`flower-${index}`} position={data.position} scale={data.scale} />
       ))}
 
       {/* Player Unit with ref */}

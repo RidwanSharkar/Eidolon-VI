@@ -1,10 +1,28 @@
-import { Group, Mesh, Shape } from 'three';
+import { ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, Shape, SphereGeometry } from 'three';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../../gear/BonePlate';
 import { useRef, useState, useEffect } from 'react';
 import AbominationTrailEffect from './AbominationTrailEffect';
 import DragonSkull from '@/gear/DragonSkull';
+
+// Add these at the top of the file to reuse materials
+const standardBoneMaterial = new MeshStandardMaterial({
+  color: "#e8e8e8",
+  roughness: 0.4, 
+  metalness: 0.3
+});
+
+const darkBoneMaterial = new MeshStandardMaterial({
+  color: "#d4d4d4",
+  roughness: 0.3,
+  metalness: 0.4
+});
+
+// Cache geometries that are reused frequently
+const jointGeometry = new SphereGeometry(0.06, 6, 6);
+const smallBoneGeometry = new CylinderGeometry(0.04, 0.032, 1, 4);
+const clawGeometry = new ConeGeometry(0.02, 0.15, 4);
 
 interface CustomAbominationProps {
   position: [number, number, number];
@@ -14,70 +32,51 @@ interface CustomAbominationProps {
 }
 
 function BoneLegModel() {
+  const createBoneSegment = (length: number, width: number) => (
+    <mesh geometry={smallBoneGeometry} material={standardBoneMaterial} scale={[width/0.04, length, width/0.04]} />
+  );
+
+  const createJoint = (size: number) => (
+    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.06, size/0.06, size/0.06]} />
+  );
+
   return (
     <group>
       {/* Hip joint connection */}
-      <mesh>
-        <sphereGeometry args={[0.08, 8, 8]} />
-        <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-      </mesh>
+      {createJoint(0.08)}
 
-      {/* Hip segment (new) */}
+      {/* Hip segment */}
       <group rotation={[0.3, 0, 0]}>
-        <mesh>
-          <cylinderGeometry args={[0.07, 0.06, 0.4, 8]} />
-          <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-        </mesh>
+        {createBoneSegment(0.4, 0.07)}
 
         {/* Hip-to-leg joint */}
         <group position={[0, -0.2, 0]}>
-          <mesh>
-            <sphereGeometry args={[0.09, 8, 8]} />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-          </mesh>
+          {createJoint(0.09)}
 
           {/* Original leg segments - adjusted positions */}
           <group position={[0, 0, -0.5]}>
-            {/* First segment (from body) */}
-            <mesh>
-              <cylinderGeometry args={[0.06, 0.04, 0.8, 8]} />
-              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-            </mesh>
+            {/* First segment */}
+            {createBoneSegment(0.8, 0.06)}
             
             {/* First joint */}
             <group position={[0, -0.4, 0]}>
-              <mesh>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-              </mesh>
+              {createJoint(0.05)}
               
-              {/* Second segment (middle) */}
+              {/* Second segment */}
               <group position={[0, 0, 0]}>
-                <mesh>
-                  <cylinderGeometry args={[0.04, 0.03, 0.9, 8]} />
-                  <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-                </mesh>
+                {createBoneSegment(0.9, 0.04)}
                 
                 {/* Second joint */}
                 <group position={[0, -0.45, 0]}>
-                  <mesh>
-                    <sphereGeometry args={[0.04, 8, 8]} />
-                    <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-                  </mesh>
+                  {createJoint(0.04)}
                   
-                  {/* Final segment (tip) */}
+                  {/* Final segment */}
                   <group position={[0, 0, 0]}>
-                    <mesh>
-                      <cylinderGeometry args={[0.03, 0.02, 0.7, 8]} />
-                      <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-                    </mesh>
+                    {createBoneSegment(0.7, 0.03)}
                     
                     {/* Tip claw */}
                     <group position={[0, -0.35, 0]}>
-                      <mesh>
-                        <coneGeometry args={[0.02, 0.1, 4]} />
-                        <meshStandardMaterial color="#d4d4d4" roughness={0.3} metalness={0.4} />
-                      </mesh>
+                      <mesh geometry={clawGeometry} material={darkBoneMaterial} />
                     </group>
                   </group>
                 </group>
@@ -92,25 +91,11 @@ function BoneLegModel() {
 
 function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
   const createBoneSegment = (length: number, width: number) => (
-    <mesh>
-      <cylinderGeometry args={[width, width * 0.8, length, 8]} />
-      <meshStandardMaterial 
-        color="#e8e8e8"
-        roughness={0.4}
-        metalness={0.3}
-      />
-    </mesh>
+    <mesh geometry={smallBoneGeometry} material={standardBoneMaterial} scale={[width/0.04, length, width/0.04]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh>
-      <sphereGeometry args={[size, 8, 8]} />
-      <meshStandardMaterial 
-        color="#e8e8e8"
-        roughness={0.4}
-        metalness={0.3}
-      />
-    </mesh>
+    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.06, size/0.06, size/0.06]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -257,7 +242,7 @@ function ShoulderPlate() {
     <group scale={[scale, scale, scale]} position={[0, -0.125, 0]}>
       {/* Base segment */}
       <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.06, 0.06, 0.115, 6]} />
+        <cylinderGeometry args={[0.06, 0.06, 0.115, 4]} />
         <meshStandardMaterial 
           color="#e8e8e8"
           roughness={0.4}
@@ -267,7 +252,7 @@ function ShoulderPlate() {
 
       {/* Middle segment with slight curve */}
       <mesh position={[0, 0.1, 0.0275]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[0.04, 0.03, 0.12, 6]} />
+        <cylinderGeometry args={[0.04, 0.03, 0.12, 4]} />
         <meshStandardMaterial 
           color="#e8e8e8"
           roughness={0.4}
@@ -277,7 +262,7 @@ function ShoulderPlate() {
 
       {/* Sharp tip */}
       <mesh position={[0, 0.2, 0.04]} rotation={[0.2, 0, 0]}>
-        <coneGeometry args={[0.04, 0.175, 6]} />
+        <coneGeometry args={[0.04, 0.175, 4]} />
         <meshStandardMaterial 
           color="#d4d4d4"
           roughness={0.3}
@@ -286,7 +271,7 @@ function ShoulderPlate() {
       </mesh>
 
       {/* Decorative ridges */}
-      {[0, Math.PI/3, Math.PI*2/3, Math.PI, Math.PI*4/3, Math.PI*5/3].map((angle, i) => (
+      {[0, Math.PI/2, Math.PI, Math.PI*3/2].map((angle, i) => (
         <group key={i} rotation={[0, angle, 0]}>
           <mesh position={[0.04, 0.05, 0]}>
             <boxGeometry args={[0.01, 0.12, 0.02]} />
@@ -305,7 +290,7 @@ function ShoulderPlate() {
     <group>
       {/* Main shoulder plate */}
       <mesh>
-        <cylinderGeometry args={[0.185, 0.2, 0.225, 6, 1, false, 0, Math.PI*2]} />
+        <cylinderGeometry args={[0.185, 0.2, 0.225, 4, 1]} />
         <meshStandardMaterial 
           color="#e8e8e8"
           roughness={0.4}
@@ -327,21 +312,13 @@ function ShoulderPlate() {
         <group position={[0, -0.05, -0.15]} rotation={[0.2, 0, 0]}>
           {createSpike(1.1)}
         </group>
-        
-        {/* Smaller corner spikes */}
-        <group position={[0, -0.1, 0.15]} rotation={[-0.4, 0, 0]}>
-          {createSpike(1.1)}
-        </group>
-        <group position={[0, -0.1, -0.15]} rotation={[0.4, 0, 0]}>
-          {createSpike(1.1)}
-        </group>
       </group>
     </group>
   );
 }
 
 function CustomHorn({ isLeft = false }: { isLeft?: boolean }) {
-  const segments = 14;
+  const segments = 10;
   const heightPerSegment = 0.12;
   const baseWidth = 0.15;
   const twistAmount = Math.PI * 1.2;
@@ -367,7 +344,7 @@ function CustomHorn({ isLeft = false }: { isLeft?: boolean }) {
           >
             <mesh>
               <cylinderGeometry 
-                args={[width, width * 0.92, heightPerSegment, 6]}
+                args={[width, width * 0.92, heightPerSegment, 4]}
               />
               <meshStandardMaterial 
                 color={`rgb(${139 - progress * 80}, ${0 + progress * 20}, ${0 + progress * 20})`}
@@ -376,11 +353,11 @@ function CustomHorn({ isLeft = false }: { isLeft?: boolean }) {
               />
             </mesh>
             
-            {/* Ridge details - now with 6 faces to match reference */}
-            {Array.from({ length: 6 }).map((_, j) => (
+            {/* Ridge details - now with 4 faces to match reference */}
+            {Array.from({ length: 4 }).map((_, j) => (
               <group 
                 key={j} 
-                rotation={[0, (j * Math.PI * 2) / 6, 0]}
+                rotation={[0, (j * Math.PI * 2) / 4, 0]}
               >
                 <mesh position={[width * 0.95, 0, 0]}>
                   <boxGeometry args={[width * 0.4, heightPerSegment * 1.1, width * 0.2]} />
@@ -615,7 +592,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
   
 
   return (
-    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[1.475, 1.475, 1.475]}> 
+    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[1.425, 1.425, 1.425]}> 
       <group position={[0, 0.15, -0]}>
         <AbominationTrailEffect parentRef={groupRef} />
       </group>

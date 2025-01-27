@@ -19,8 +19,9 @@ const getVortexColor = (weaponType: WeaponType) => {
     case WeaponType.SWORD:
       return '#FFD700'; // FF9843  FF8C2D
     case WeaponType.SABRES:
-    case WeaponType.SABRES2:
       return '#00BBFF'; //ice blue 98F5FC 
+    case WeaponType.SPEAR:
+      return '#00AAFF';
     default:
       return '#00ff44'; // 00FF37
   }
@@ -46,7 +47,7 @@ const createVortexSegment = (weaponType: WeaponType) => {
 
 export default function BoneVortex({ position, onComplete, isSpawning = false, weaponType }: BoneVortexProps) {
   const segmentsRef = useRef<Mesh[]>([]);
-  const layerCount = 16;
+  const layerCount = 12;
   const segmentsPerLayer = 10;
   const maxRadius = 1.15;
   const height = 2.75;

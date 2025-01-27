@@ -15,17 +15,23 @@ const FireballTrail: React.FC<FireballTrailProps> = ({
   meshRef,
   opacity = 1
 }) => {
-  const particlesCount = 30;
+  const particlesCount = 22;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const scalesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const isInitialized = useRef(false);
+  
+  // Add a ref to store the last known position for smoother updates
+  const lastKnownPosition = useRef(new THREE.Vector3());
 
-  // Initialize positions only when mesh is available
+  // Initialize positions only once when mesh is available
   useEffect(() => {
     if (meshRef.current && !isInitialized.current) {
       const { x, y, z } = meshRef.current.position;
+      lastKnownPosition.current.set(x, y, z);
+      
+      // Initialize all particles at the starting position
       for (let i = 0; i < particlesCount; i++) {
         positionsRef.current[i * 3] = x;
         positionsRef.current[i * 3 + 1] = y;
@@ -40,37 +46,41 @@ const FireballTrail: React.FC<FireballTrailProps> = ({
   useFrame(() => {
     if (!particlesRef.current?.parent || !meshRef.current || !isInitialized.current) return;
 
-    const { x, y, z } = meshRef.current.position;
+    const currentPos = meshRef.current.position;
+    
+    // Only update if position has changed significantly
+    if (currentPos.distanceToSquared(lastKnownPosition.current) > 0.0001) {
+      lastKnownPosition.current.copy(currentPos);
 
-    for (let i = particlesCount - 1; i > 0; i--) {
-      positionsRef.current[i * 3] = positionsRef.current[(i - 1) * 3];
-      positionsRef.current[i * 3 + 1] = positionsRef.current[(i - 1) * 3 + 1];
-      positionsRef.current[i * 3 + 2] = positionsRef.current[(i - 1) * 3 + 2];
+      // Update particle positions
+      for (let i = particlesCount - 1; i > 0; i--) {
+        positionsRef.current[i * 3] = positionsRef.current[(i - 1) * 3];
+        positionsRef.current[i * 3 + 1] = positionsRef.current[(i - 1) * 3 + 1];
+        positionsRef.current[i * 3 + 2] = positionsRef.current[(i - 1) * 3 + 2];
+      }
 
+      // Update lead particle
+      positionsRef.current[0] = currentPos.x;
+      positionsRef.current[1] = currentPos.y;
+      positionsRef.current[2] = currentPos.z;
+
+      // Update geometry attributes
+      if (particlesRef.current) {
+        const geometry = particlesRef.current.geometry;
+        geometry.attributes.position.needsUpdate = true;
+      }
+    }
+
+    // Update opacities and scales with parent opacity
+    for (let i = 0; i < particlesCount; i++) {
       opacitiesRef.current[i] = Math.pow((1 - i / particlesCount), 2) * 0.6 * opacity;
       scalesRef.current[i] = size * 0.5 * Math.pow((1 - i / particlesCount), 0.5);
     }
 
-    positionsRef.current[0] = x;
-    positionsRef.current[1] = y;
-    positionsRef.current[2] = z;
-    opacitiesRef.current[0] = 0.6 * opacity;
-    scalesRef.current[0] = size * 1.3;
-
     if (particlesRef.current) {
       const geometry = particlesRef.current.geometry;
-      (geometry.attributes.position as THREE.BufferAttribute).array = positionsRef.current;
-      geometry.attributes.position.needsUpdate = true;
-
-      if (geometry.attributes.opacity) {
-        (geometry.attributes.opacity as THREE.BufferAttribute).array = opacitiesRef.current;
-        geometry.attributes.opacity.needsUpdate = true;
-      }
-
-      if (geometry.attributes.scale) {
-        (geometry.attributes.scale as THREE.BufferAttribute).array = scalesRef.current;
-        geometry.attributes.scale.needsUpdate = true;
-      }
+      geometry.attributes.opacity.needsUpdate = true;
+      geometry.attributes.scale.needsUpdate = true;
     }
   });
 

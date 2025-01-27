@@ -47,20 +47,25 @@ export default function AbominationUnit({
   // Use refs for position tracking
   const currentPosition = useRef(initialPosition.clone());
   const targetPosition = useRef(initialPosition.clone());
-  const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
+  const velocity = useRef(new Vector3());
+  const lastUpdateTime = useRef(Date.now());
 
   const ATTACK_RANGE = 2.5;
   const ATTACK_COOLDOWN = 3000;
-  const MOVEMENT_SPEED = 0.1835;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.1835;
+  const MOVEMENT_SPEED = 0.040;
   const POSITION_UPDATE_THRESHOLD = 0.1;
-  const MINIMUM_UPDATE_INTERVAL = 50;
+  const MINIMUM_UPDATE_INTERVAL = 40;
   const ATTACK_DAMAGE = 8;
-  const SEPARATION_RADIUS = 4; // Minimum distance between enemies
-  const SEPARATION_FORCE = 0.15; // Strength of the separation force
-  const ARM_DELAY = 300;    // 0.15 seconds between arm strikes
-  const TOTAL_ARMS = 6;     // Total number of arms
+  const SEPARATION_RADIUS = 4;
+  const SEPARATION_FORCE = 0.15;
+  const ARM_DELAY = 300;
+  const TOTAL_ARMS = 8;
+
+  // Add near the top with other constants
+  const ACCELERATION = 5.0;
+  const DECELERATION = 7.0;
+  const ROTATION_SPEED = 7.0;
 
   // Sync health changes
   useEffect(() => {
@@ -103,6 +108,9 @@ export default function AbominationUnit({
       setIsAttacking(false);
       setIsMoving(true);
 
+      const normalizedSpeed = MOVEMENT_SPEED * 60;
+      const currentFrameSpeed = normalizedSpeed * delta;
+
       // Calculate direction to player
       const direction = new Vector3()
         .subVectors(playerPosition, currentPosition.current)
@@ -119,7 +127,6 @@ export default function AbominationUnit({
       // Calculate separation force
       const separationForce = new Vector3();
       otherEnemies.forEach(enemy => {
-        // Create a ground-plane version of positions for separation calculation
         const currentGroundPos = currentPosition.current.clone().setY(0);
         const enemyGroundPos = enemy.position.clone().setY(0);
         
@@ -130,27 +137,37 @@ export default function AbominationUnit({
         separationForce.add(diff);
       });
 
-      // Combine forces and ensure Y remains 0 - FIXES WALK ANIMATION
+      // Combine forces and normalize
       const finalDirection = direction.add(separationForce).normalize();
-      finalDirection.y = 0; // Force movement to stay on ground plane
+      finalDirection.y = 0;
 
-      // Update target position with combined forces
-      const movement = finalDirection.multiplyScalar(MOVEMENT_SPEED * delta * 60);
-      targetPosition.current.copy(currentPosition.current).add(movement);
-      targetPosition.current.y = 0; // Ensure target position stays on ground
-
-      // Smooth movement
-      currentPosition.current.lerp(targetPosition.current, SMOOTHING_FACTOR);
-      currentPosition.current.y = 0; // Force current position to stay on ground
+      // Calculate target velocity
+      const targetVelocity = finalDirection.multiplyScalar(currentFrameSpeed);
+      
+      // Smoothly interpolate current velocity towards target
+      velocity.current.lerp(targetVelocity, ACCELERATION * delta);
+      
+      // Update position with smoothed velocity
+      currentPosition.current.add(velocity.current);
+      currentPosition.current.y = 0;
 
       // Apply position to mesh
       enemyRef.current.position.copy(currentPosition.current);
 
-      // Handle rotation smoothly
+      // Smooth rotation
       const lookTarget = new Vector3()
         .copy(playerPosition)
         .setY(currentPosition.current.y);
-      enemyRef.current.lookAt(lookTarget);
+      const directionToPlayer = new Vector3()
+        .subVectors(lookTarget, currentPosition.current)
+        .normalize();
+      
+      const targetRotation = Math.atan2(directionToPlayer.x, directionToPlayer.z);
+      let rotationDiff = targetRotation - enemyRef.current.rotation.y;
+      while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+      while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+      
+      enemyRef.current.rotation.y += rotationDiff * Math.min(1, ROTATION_SPEED * delta);
 
       // Update position with rate limiting
       const now = Date.now();
@@ -162,8 +179,13 @@ export default function AbominationUnit({
       }
     } else {
       setIsMoving(false);
-      // Smoothly stop at current position
-      targetPosition.current.copy(currentPosition.current);
+      // Decelerate smoothly
+      velocity.current.multiplyScalar(1 - DECELERATION * delta);
+      
+      if (velocity.current.length() > 0.001) {
+        currentPosition.current.add(velocity.current);
+        enemyRef.current.position.copy(currentPosition.current);
+      }
     }
 
     // Attack logic
@@ -186,7 +208,7 @@ export default function AbominationUnit({
                 attackStartPosition.distanceTo(currentPosition.current) < 0.65) {
               onAttackPlayer(ATTACK_DAMAGE);
             }
-          }, 450 + (i * ARM_DELAY)); // 850ms initial telegraph + staggered delays
+          }, 450 + (i * ARM_DELAY));
         }
         
         lastAttackTime.current = currentTime;

@@ -1,6 +1,6 @@
 // src/versus/CustomSkeleton.tsx
 import React, { useRef, useState, useEffect } from 'react';
-import { Group, Mesh } from 'three';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../gear/BonePlate';
 
@@ -11,19 +11,32 @@ interface CustomSkeletonProps {
   onHit?: (damage: number) => void;
 }
 
+// Add these at the top of the file to reuse materials
+const standardBoneMaterial = new MeshStandardMaterial({
+  color: "#e8e8e8",
+  roughness: 0.4,
+  metalness: 0.3
+});
+
+const darkBoneMaterial = new MeshStandardMaterial({
+  color: "#d4d4d4",
+  roughness: 0.3,
+  metalness: 0.4
+});
+
+// Cache geometries that are reused frequently
+const jointGeometry = new SphereGeometry(0.06, 8, 8);
+const smallBoneGeometry = new CylinderGeometry(0.04, 0.032, 1, 6);
+const clawGeometry = new ConeGeometry(0.02, 0.15, 6);
+
 function BoneLegModel() {
+  // Simplified version that reuses geometries and materials
   const createBoneSegment = (length: number, width: number) => (
-    <mesh>
-      <cylinderGeometry args={[width, width * 0.8, length, 8]} />
-      <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-    </mesh>
+    <mesh geometry={smallBoneGeometry} material={standardBoneMaterial} scale={[width/0.04, length, width/0.04]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh>
-      <sphereGeometry args={[size, 8, 8]} />
-      <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-    </mesh>
+    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.06, size/0.06, size/0.06]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -103,26 +116,13 @@ function BoneLegModel() {
 }
 
 function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
+  // Reuse geometries and materials
   const createBoneSegment = (length: number, width: number) => (
-    <mesh>
-      <cylinderGeometry args={[width, width * 0.8, length, 8]} />
-      <meshStandardMaterial 
-        color="#e8e8e8"
-        roughness={0.4}
-        metalness={0.3}
-      />
-    </mesh>
+    <mesh geometry={smallBoneGeometry} material={standardBoneMaterial} scale={[width/0.04, length, width/0.04]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh>
-      <sphereGeometry args={[size, 8, 8]} />
-      <meshStandardMaterial 
-        color="#e8e8e8" 
-        roughness={0.4}
-        metalness={0.3}
-      />
-    </mesh>
+    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.06, size/0.06, size/0.06]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -168,22 +168,15 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
                   <boxGeometry args={[0.2, 0.15, 0.08]} />
                   <meshStandardMaterial color="#e8e8e8" roughness={0.4} />
                 </mesh>
-                {[-0.08, -0.04, 0, 0.04, 0.08].map((offset, i) => (
+                {[-0.08, 0, 0.08].map((offset, i) => ( // Reduced from 5 fingers to 3
                   <group 
                     key={i} 
                     position={[offset, -0.1, 0]}
-                    rotation={[0, 0, (i - 2) * Math.PI / 10]}
+                    rotation={[0, 0, (i - 1) * Math.PI / 8]}
                   >
                     {createBoneSegment(0.5, 0.02)}
                     <group position={[0.025, -0.3, 0]} rotation={[0, 0, Math.PI + Math.PI / 16]}>
-                      <mesh>
-                        <coneGeometry args={[0.03, 0.3, 6]} />
-                        <meshStandardMaterial 
-                          color="#d4d4d4"
-                          roughness={0.3}
-                          metalness={0.4}
-                        />
-                      </mesh>
+                      <mesh geometry={clawGeometry} material={darkBoneMaterial} />
                     </group>
                   </group>
                 ))}
@@ -264,6 +257,7 @@ function BoneSwordModel() {
 
 
 function ShoulderPlate() {
+  // Reduce the number of overlapping plates
   return (
     <group>
       {/* Main shoulder plate with layered armor design */}
@@ -279,8 +273,8 @@ function ShoulderPlate() {
         </mesh>
 
         {/* Overlapping armor plates */}
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <group key={i} rotation={[0, (i * Math.PI) / 3, 0]}>
+        {[0, 1, 2, 3].map((i) => ( // Reduced from 6 plates to 4
+          <group key={i} rotation={[0, (i * Math.PI) / 2, 0]}>
             <mesh position={[0.11, 0, 0]} rotation={[0, Math.PI / 6, 0]}>
               <boxGeometry args={[0.12, 0.19, 0.02]} />
               <meshStandardMaterial 

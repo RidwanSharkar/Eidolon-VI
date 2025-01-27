@@ -175,7 +175,7 @@ export default function Smite({ position, onComplete }: SmiteProps) {
       ))}
 
       {/* Enhanced impact point glow */}
-      <pointLight position={[0, -10, 0]} color="#ff8800" intensity={20} distance={12} />
+      <pointLight position={[0, -10, 0]} color="#ff8800" intensity={35} distance={25} />
 
       {/* Additional ambient glow */}
       <pointLight position={[0, 0, 0]} color="#ffaa00" intensity={10} distance={6} />

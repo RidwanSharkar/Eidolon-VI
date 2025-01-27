@@ -42,7 +42,7 @@ import { DragonHorns } from '@/gear/DragonHorns';
 
 
 
-// EIDOLON 1,0 ABILITIES NEED REFACTORING DISGUSTING FILE STILL!!!!!!!!!!!
+// EIDOLON 1,0 ABILITIES NEED REFACTORING DISGUSTING FILE
 
 //=====================================================================================================
 
@@ -184,8 +184,26 @@ export default function Unit({
   const lastFrostExplosionTime = useRef(0);
   const FROST_EXPLOSION_COOLDOWN = 1000; // 1 second cooldown between frost explosions
 
+  // Add new ref for frame-by-frame fireball updates
+  const activeFireballsRef = useRef<{
+    id: number;
+    position: Vector3;
+    direction: Vector3;
+    startPosition: Vector3;
+    maxDistance: number;
+  }[]>([]);
 
-
+  // Add near the top with other refs
+  const activeProjectilesRef = useRef<Array<{
+    id: number;
+    position: Vector3;
+    direction: Vector3;
+    power: number;
+    startTime: number;
+    maxDistance: number;
+    startPosition: Vector3;
+    hasCollided?: boolean;
+  }>>([]);
 
 
   //=====================================================================================================
@@ -209,13 +227,17 @@ export default function Unit({
         : charge
     ));
 
-    setFireballs(prev => [...prev, {
+    const newFireball = {
       id: nextFireballId.current++,
       position: unitPosition.clone(),
       startPosition: unitPosition.clone(),
       direction: direction.normalize(),
       maxDistance: 35
-    }]);
+    };
+
+    // Update both ref and state
+    activeFireballsRef.current.push(newFireball);
+    setFireballs(prev => [...prev, newFireball]);
   }, [groupRef, fireballCharges]);
 
   const handleFireballImpact = (id: number, impactPosition?: Vector3) => {
@@ -230,6 +252,9 @@ export default function Unit({
         startTime: currentTime
       }]);
     }
+    
+    // Update both ref and state
+    activeFireballsRef.current = activeFireballsRef.current.filter(fireball => fireball.id !== id);
     setFireballs(prev => prev.filter(fireball => fireball.id !== id));
   };
 
@@ -485,7 +510,7 @@ export default function Unit({
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 1.35, 1); // BOWCHARGE CHARGETIME - 1.5 no movemvent
+      const progress = Math.min(chargeTime / 1.7, 1); // BOWCHARGE CHARGETIME - 1.5 no movemvent
       setBowChargeProgress(progress);
       setBowGroundEffectProgress(progress); // Update ground effect progress
 
@@ -499,21 +524,20 @@ export default function Unit({
       }
     }
 
-    // Update projectiles with piercing behavior
-    setActiveProjectiles(prev => prev.map(projectile => {
-      // Calculate distance traveled
+    // Update projectiles with optimized frame-by-frame movement
+    activeProjectilesRef.current = activeProjectilesRef.current.filter(projectile => {
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       
-      if (distanceTraveled < projectile.maxDistance) {
-        const speed = projectile.power >= 1 ? 0.525 : 0.35;
+      if (distanceTraveled < projectile.maxDistance && !projectile.hasCollided) {
+        const speed = projectile.power >= 1 ? 0.525 : 0.375;
         projectile.position.add(
           projectile.direction
             .clone()
             .multiplyScalar(speed)
         );
 
-        // collision checks for piercing
-        enemyData.forEach(enemy => {
+        // Check collisions
+        for (const enemy of enemyData) {
           const projectilePos2D = new Vector3(
             projectile.position.x,
             0,
@@ -526,20 +550,32 @@ export default function Unit({
           );
           const distanceToEnemy = projectilePos2D.distanceTo(enemyPos2D);
           
-          if (distanceToEnemy < 1.3) { // Hit radius
+          if (distanceToEnemy < 1.3) {
             handleProjectileHit(projectile.id, enemy.id, projectile.power, projectile.position);
+            
+            // Only set hasCollided if it's not a fully charged shot
+            if (projectile.power < 1) {
+              projectile.hasCollided = true;
+              return false;
+            }
+            // Fully charged shots continue through enemies
           }
-        });
+        }
         
-        return projectile;
+        return true;
       }
-      return null; // Return null when max distance reached
-    }).filter(Boolean) as typeof prev); // Remove null projectiles
+      return false;
+    });
+
+    // Sync React state with ref only when projectiles are added/removed
+    if (activeProjectilesRef.current.length !== activeProjectiles.length) {
+      setActiveProjectiles([...activeProjectilesRef.current]);
+    }
 
     //=====================================================================================================
 
     // FIREBALLS 
-    setFireballs(prev => prev.filter(fireball => {
+    activeFireballsRef.current = activeFireballsRef.current.filter(fireball => {
       const distanceTraveled = fireball.position.distanceTo(fireball.startPosition);
       
       if (distanceTraveled < fireball.maxDistance) {
@@ -552,23 +588,26 @@ export default function Unit({
     
         // Check enemy collisions - only with living enemies
         for (const enemy of enemyData) {
-          if (enemy.health <= 0) continue; // Skip dead enemies
+          if (enemy.health <= 0) continue;
           
           const enemyPos = enemy.position.clone();
           enemyPos.y = 1.5;
           if (fireball.position.distanceTo(enemyPos) < 1.5) {
             handleFireballHit(fireball.id, enemy.id, fireball.position.clone());
             handleFireballImpact(fireball.id, fireball.position.clone());
-            return false; // Remove the fireball on hit
+            return false;
           }
         }
     
-        return true; // Keep the fireball if it hasn't hit anything
+        return true;
       }
       
-      handleFireballImpact(fireball.id); // Trigger impact effect when max distance reached
-      return false; // Remove the fireball if it exceeds maxDistance
-    }));
+      handleFireballImpact(fireball.id);
+      return false;
+    });
+
+    // Sync React state with ref for rendering
+    setFireballs([...activeFireballsRef.current]);
 
     // Update fireball charge cooldowns
     setFireballCharges(prev => prev.map(charge => {
@@ -608,8 +647,8 @@ export default function Unit({
     
     const now = Date.now();
     const timeSinceLastShot = now - lastBowShotTime;
-    if (timeSinceLastShot < 750) { // 250ms cooldown between shots
-        return;
+    if (timeSinceLastShot < 750) {
+      return;
     }
     setLastBowShotTime(now);
     
@@ -622,22 +661,26 @@ export default function Unit({
     const maxRange = 40;
     const rayStart = unitPosition.clone();
 
-    // Add projectile with max range limit
-    setActiveProjectiles(prev => [...prev, {
-        id: Date.now(),
-        position: rayStart.clone(),
-        direction: direction.clone(),
-        power,
-        startTime: Date.now(),
-        maxDistance: maxRange,
-        startPosition: rayStart.clone()
-    }]);
+    // Create new projectile
+    const newProjectile = {
+      id: Date.now(),
+      position: rayStart.clone(),
+      direction: direction.clone(),
+      power,
+      startTime: Date.now(),
+      maxDistance: maxRange,
+      startPosition: rayStart.clone()
+    };
+
+    // Update both ref and state
+    activeProjectilesRef.current.push(newProjectile);
+    setActiveProjectiles(prev => [...prev, newProjectile]);
 
     setIsBowCharging(false);
     setBowChargeProgress(0);
     bowChargeStartTime.current = null;
     onAbilityUse(currentWeapon, 'e');
-}, [currentWeapon, groupRef, setActiveProjectiles, onAbilityUse, lastBowShotTime]);
+  }, [currentWeapon, groupRef, onAbilityUse, lastBowShotTime]);
 
   //=====================================================================================================
 
@@ -779,10 +822,10 @@ export default function Unit({
         [hitKey]: 1
     }));
 
-    const baseDamage = 19;
-    const maxDamage = 51;
+    const baseDamage = 29;
+    const maxDamage = 71;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
-    const fullChargeDamage = power >= 0.99 ? 66 : 0;
+    const fullChargeDamage = power >= 0.99 ? 71 : 0;
     const finalDamage = scaledDamage + fullChargeDamage;
     
     onHit(targetId, finalDamage);
@@ -808,7 +851,7 @@ export default function Unit({
     const enemy = enemyData.find(e => e.id === targetId);
     if (!enemy) return;
 
-    const { damage, isCritical } = calculateDamage(53); // Fixed fireball damage
+    const { damage, isCritical } = calculateDamage(59); // Fixed fireball damage
     
     onHit(targetId, damage);
 
@@ -992,6 +1035,22 @@ export default function Unit({
     return () => clearInterval(cleanupInterval);
   }, [setActiveEffects]);
 
+  // Add cleanup effect for fireballs
+  useEffect(() => {
+    return () => {
+      activeFireballsRef.current = [];
+      setFireballs([]);
+    };
+  }, []);
+
+  // Add cleanup effect for projectiles
+  useEffect(() => {
+    return () => {
+      activeProjectilesRef.current = [];
+      setActiveProjectiles([]);
+    };
+  }, []);
+
   return (
     <>
       <group ref={groupRef} position={[0, 1, 0]}>
@@ -1171,8 +1230,9 @@ export default function Unit({
               0
             ]}
           >
+            {/* Base arrow */}
             <mesh rotation={[Math.PI/2, 0, 0]}>
-              <cylinderGeometry args={[0.03, 0.125, 2.1, 8]} />
+              <cylinderGeometry args={[0.03, 0.125, 2.1, 6]} /> {/* Reduced segments */}
               <meshStandardMaterial
                 color="#00ffff"
                 emissive="#00ffff"
@@ -1182,15 +1242,14 @@ export default function Unit({
               />
             </mesh>
 
-
-
-            {[...Array(5)].map((_, i) => (
+            {/* Reduced number of rings */}
+            {[...Array(3)].map((_, i) => ( // Reduced from 5 to 3 rings
               <mesh
                 key={`ring-${i}`}
-                position={[0, 0, -i * 0.45+0.5]}
-                rotation={[Math.PI , 0, Date.now() * 0.003 + i * Math.PI / 3]}
+                position={[0, 0, -i * 0.45 + 0.5]}
+                rotation={[Math.PI, 0, Date.now() * 0.003 + i * Math.PI / 3]}
               >
-                <torusGeometry args={[0.125 + i * 0.04, 0.05, 8, 16]} />
+                <torusGeometry args={[0.125 + i * 0.04, 0.05, 6, 12]} /> {/* Reduced segments */}
                 <meshStandardMaterial
                   color="#00ffff"
                   emissive="#00ffff"
@@ -1202,23 +1261,16 @@ export default function Unit({
               </mesh>
             ))}
 
+            {/* Single light instead of two */}
             <pointLight 
               color="#00ffff" 
               intensity={3} 
-              distance={4}
+              distance={5}
               decay={2}
-            />
-
-            <pointLight
-              color="#80ffff"
-              intensity={1.7}
-              distance={6}
-              decay={1}
             />
           </group>
 
-
-          {/* POWERSHOT========================================================== */}
+          {/* POWERSHOT - Optimized */}
           {projectile.power >= 1 && 
            projectile.position.distanceTo(projectile.startPosition) < projectile.maxDistance && 
            !projectile.hasCollided && (
@@ -1232,7 +1284,7 @@ export default function Unit({
             >
               {/* Core arrow shaft */}
               <mesh rotation={[Math.PI/2, 0, 0]}>
-                <cylinderGeometry args={[0.15, 0.35, 2, 6]} />
+                <cylinderGeometry args={[0.15, 0.35, 2, 4]} /> {/* Reduced segments */}
                 <meshStandardMaterial
                   color="#EAC4D5"
                   emissive="#EAC4D5"
@@ -1242,9 +1294,9 @@ export default function Unit({
                 />
               </mesh>
 
-              {/* Ethereal trails */}
-              {[...Array(8)].map((_, i) => {
-                const angle = (i / 8) * Math.PI * 2;
+              {/* Reduced ethereal trails */}
+              {[...Array(4)].map((_, i) => { // Reduced from 8 to 4
+                const angle = (i / 4) * Math.PI * 2;
                 const radius = 0.4;
                 return (
                   <group 
@@ -1256,7 +1308,7 @@ export default function Unit({
                     ]}
                   >
                     <mesh>
-                      <sphereGeometry args={[0.125, 4, 4]} />
+                      <sphereGeometry args={[0.125, 3, 3]} /> {/* Reduced segments */}
                       <meshStandardMaterial
                         color="#00ffff"
                         emissive="#00ffff"
@@ -1270,38 +1322,9 @@ export default function Unit({
                 );
               })}
 
-
-              {/* Ethereal trails */}
-              {[...Array(8)].map((_, i) => {
-                const angle = (i / 8) * Math.PI * 2;
-                const radius = 0.4;
-                return (
-                  <group 
-                    key={`ghost-trail-${i}`}
-                    position={[
-                      Math.sin(angle + Date.now() * 0.003) * radius,
-                      Math.cos(angle + Date.now() * 0.003) * radius,
-                      -2
-                    ]}
-                  >
-                    <mesh>
-                      <sphereGeometry args={[0.125, 4, 4]} />
-                      <meshStandardMaterial
-                        color="#00ffff"
-                        emissive="#00ffff"
-                        emissiveIntensity={1}
-                        transparent
-                        opacity={0.4}
-                        blending={THREE.AdditiveBlending}
-                      />
-                    </mesh>
-                  </group>
-                );
-              })}
-
-              {/* Ghostly wisps */}
-              {[...Array(12)].map((_, i) => {
-                const offset = -i * 0.3 -1.5;
+              {/* Reduced ghostly wisps */}
+              {[...Array(6)].map((_, i) => { // Reduced from 12 to 6
+                const offset = -i * 0.3 - 1.5;
                 const scale = 1 - (i * 0.015);
                 return (
                   <group 
@@ -1310,7 +1333,7 @@ export default function Unit({
                     rotation={[0, Date.now() * 0.001 + i, 0]}
                   >
                     <mesh scale={scale}>
-                      <torusGeometry args={[0.4, 0.1, 3, 8]} />
+                      <torusGeometry args={[0.4, 0.1, 3, 6]} /> {/* Reduced segments */}
                       <meshStandardMaterial
                         color="#00ffff"
                         emissive="#00ffff"
@@ -1324,18 +1347,12 @@ export default function Unit({
                 );
               })}
 
-              {/* Ambient lights */}
+              {/* Single light instead of two */}
               <pointLight
                 color="#EAC4D5"
                 intensity={3}
-                distance={4}
+                distance={5}
                 decay={2}
-              />
-              <pointLight
-                color="#ffffff"
-                intensity={1}
-                distance={6}
-                decay={1}
               />
             </group>
           )}

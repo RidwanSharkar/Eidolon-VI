@@ -52,7 +52,7 @@ export default function LevelCompletionPanel({
           p: '/Eidolon/icons/p3.svg',
           s: '/Eidolon/icons/a3.svg'
         };
-      case WeaponType.SABRES2:
+      case WeaponType.SPEAR:
         return { r: '/Eidolon/icons/r4.svg', p: '/Eidolon/icons/p4.svg' };
     }
   };

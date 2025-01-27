@@ -3,7 +3,7 @@ import { Group, Vector3, Shape, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { calculateBoneclawHits } from '@/Spells/Boneclaw/BoneclawDamage';
 import BoneclawScratch from '@/Spells/Boneclaw/BoneClawScratch';
-
+import * as THREE from 'three';
 interface BoneclawProps {
   position: Vector3;
   direction: Vector3;
@@ -19,7 +19,12 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
   const clawRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const hasDealtDamage = useRef(false);
-  const showScratch = useRef(false);
+  const showScratchRef = useRef(false);
+  const hitEnemiesRef = useRef(new Set<string>());
+
+  const rotationMatrixRef = useRef(new THREE.Matrix4());
+  const tempVector = useRef(new THREE.Vector3());
+  const tempPosition = useRef(new THREE.Vector3());
 
   const createBoneSegment = (length: number, width: number) => (
     <mesh>
@@ -171,67 +176,74 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
 
     if (swingPhase >= 1) {
       progressRef.current = 0;
+      hitEnemiesRef.current.clear();
       onSwingComplete?.(clawRef.current.position.clone(), direction);
       onComplete();
       return;
     }
 
-    const parentPosition = parentRef.current.position.clone();
+    const parentPosition = parentRef.current.position;
     const parentRotation = parentRef.current.rotation.y;
 
     const pivotX = -Math.sin(swingPhase * Math.PI) * 2.5 + 3;
-    const pivotY = Math.cos(swingPhase * Math.PI)  + 3.75;
+    const pivotY = Math.cos(swingPhase * Math.PI) + 3.75;
     const pivotZ = Math.sin(swingPhase * Math.PI) * 2 + 0.75;
 
-    const rotatedOffsetX = (pivotX * Math.cos(parentRotation) + pivotZ * Math.sin(parentRotation));
-    const rotatedOffsetZ = (-pivotX * Math.sin(parentRotation) + pivotZ * Math.cos(parentRotation));
+    rotationMatrixRef.current.makeRotationY(parentRotation);
+    tempVector.current.set(pivotX, 0, pivotZ);
+    tempVector.current.applyMatrix4(rotationMatrixRef.current);
 
-    clawRef.current.position.set(
-      parentPosition.x + rotatedOffsetX,
+    tempPosition.current.set(
+      parentPosition.x + tempVector.current.x,
       parentPosition.y + pivotY,
-      parentPosition.z + rotatedOffsetZ
+      parentPosition.z + tempVector.current.z
     );
-
-    const rotationX = Math.cos(swingPhase * Math.PI) / (Math.PI *1.5);
-    const rotationY = parentRotation + Math.PI / 2 - swingPhase * Math.PI/2;
-    const rotationZ = -Math.sin(swingPhase * Math.PI) * (Math.PI /3.5);
+    clawRef.current.position.copy(tempPosition.current);
 
     clawRef.current.rotation.set(
-      rotationX,
-      rotationY,
-      rotationZ
+      Math.cos(swingPhase * Math.PI) / (Math.PI * 1.5),
+      parentRotation + Math.PI / 2 - swingPhase * Math.PI/2,
+      -Math.sin(swingPhase * Math.PI) * (Math.PI /3.5)
     );
 
     if (Math.abs(swingPhase - 0.1) < 0.1 && !hasDealtDamage.current) {
       hasDealtDamage.current = true;
-      showScratch.current = true;
+      showScratchRef.current = true;
       
       const hits = calculateBoneclawHits(
         clawRef.current.position,
         direction,
-        enemyData
+        enemyData,
+        hitEnemiesRef.current
       );
 
-      hits.forEach(hit => {
-        onHitTarget?.(
-          hit.targetId, 
-          hit.damage, 
-          hit.isCritical, 
-          hit.position,
-          true
-        );
-      });
+      if (hits.length > 0) {
+        requestAnimationFrame(() => {
+          hits.forEach(hit => {
+            if (!hitEnemiesRef.current.has(hit.targetId)) {
+              hitEnemiesRef.current.add(hit.targetId);
+              onHitTarget?.(
+                hit.targetId, 
+                hit.damage, 
+                hit.isCritical, 
+                hit.position,
+                true
+              );
+            }
+          });
+        });
+      }
     }
   });
 
   return (
     <>
-      {showScratch.current && (
+      {showScratchRef.current && (
         <BoneclawScratch
           position={position}
           direction={direction}
           onComplete={() => {
-            showScratch.current = false;
+            showScratchRef.current = false;
           }}
         />
       )}

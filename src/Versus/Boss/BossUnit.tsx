@@ -14,7 +14,7 @@ import Meteor from '@/Versus/Boss/Meteor';
 import BossAttackIndicator from './BossAttackIndicator';
 
 interface BossUnitProps {
-  id: string;
+  id: string;  
   initialPosition: Vector3;
   position: Vector3;
   health: number;
@@ -62,19 +62,26 @@ export default function BossUnit({
   // Boss-specific constants
   const ATTACK_RANGE = 5;
   const ATTACK_COOLDOWN_NORMAL = 3500;
-  const ATTACK_COOLDOWN_ENRAGED =2500;
-  const MOVEMENT_SPEED = 0.2;
-  const SMOOTHING_FACTOR = 0.2;
+  const ATTACK_COOLDOWN_ENRAGED =2250;
+  const MOVEMENT_SPEED = 0.030;
   const ATTACK_DAMAGE = 24;
   const BOSS_HIT_HEIGHT = 2.0;       
   const BOSS_HIT_RADIUS = 4.0;
   const BOSS_HIT_HEIGHT_RANGE = 4.0;
-  const METEOR_COOLDOWN_NORMAL = 7500;
+  const METEOR_COOLDOWN_NORMAL = 7000;
   const METEOR_COOLDOWN_ENRAGED = 4750;
+  const POSITION_UPDATE_THRESHOLD = 0.1;
+  const MINIMUM_UPDATE_INTERVAL = 30
 
   // Current cooldown refs
   const currentAttackCooldown = useRef(ATTACK_COOLDOWN_NORMAL);
   const currentMeteorCooldown = useRef(METEOR_COOLDOWN_NORMAL);
+
+  // Add velocity state
+  const velocity = useRef(new Vector3());
+
+  // Add lastUpdateTime ref
+  const lastUpdateTime = useRef(Date.now());
 
   // Keep the player's position ref updated
   useEffect(() => {
@@ -234,7 +241,7 @@ export default function BossUnit({
   }, [isCastingMeteor]);
 
   // Main AI loop: move towards player or attack if in range
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!bossRef.current || health <= 0) return;
 
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosRef.current);
@@ -249,45 +256,61 @@ export default function BossUnit({
     if (distanceToPlayer > ATTACK_RANGE -0.375 && health > 0) {
       setIsAttacking(false);
 
+      const normalizedSpeed = MOVEMENT_SPEED * 60;
+      const currentFrameSpeed = normalizedSpeed * delta;
+
       const direction = new Vector3()
         .subVectors(playerPosRef.current, currentPosition.current)
         .normalize();
 
-      // Move boss
-      const nextPos = currentPosition.current.clone().add(
-        direction.multiplyScalar(MOVEMENT_SPEED)
-      );
-      // Lerp for smoother movement
-      currentPosition.current.lerp(nextPos, SMOOTHING_FACTOR);
+      // Calculate target velocity
+      const targetVelocity = direction.multiplyScalar(currentFrameSpeed);
+      
+      // Smoothly interpolate current velocity towards target
+      velocity.current.lerp(targetVelocity, 4.0 * delta);
+      
+      // Update position with smoothed velocity
+      currentPosition.current.add(velocity.current);
+      currentPosition.current.y = 0; // Keep on ground
 
-      // Update boss mesh & let parent know
+      // Update boss mesh
       bossRef.current.position.copy(currentPosition.current);
       
-      // UPDATED ROTATION LOGIC
-      const lookAtPos = playerPosRef.current.clone();
-      lookAtPos.y = currentPosition.current.y; // Keep same Y to avoid tilting
-      
-      // Calculate direction to player
+      // Smooth rotation
+      const lookTarget = playerPosRef.current.clone().setY(currentPosition.current.y);
       const directionToPlayer = new Vector3()
-        .subVectors(lookAtPos, currentPosition.current)
+        .subVectors(lookTarget, currentPosition.current)
         .normalize();
       
-      // Calculate the angle to rotate
       const targetRotation = Math.atan2(directionToPlayer.x, directionToPlayer.z);
+      let rotationDiff = targetRotation - bossRef.current.rotation.y;
+      while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+      while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
       
-      // Smoothly interpolate the rotation
-      bossRef.current.rotation.y = targetRotation;
+      bossRef.current.rotation.y += rotationDiff * Math.min(1, 6.0 * delta);
 
-      // If position changed enough, notify parent
-      if (currentPosition.current.distanceTo(position) > 0.01) {
-        onPositionUpdate(id, currentPosition.current.clone());
+      // Update position if changed enough AND enough time has passed
+      const now = Date.now();
+      if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL) {
+        if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD) {
+          onPositionUpdate(id, currentPosition.current.clone());
+          lastUpdateTime.current = now;
+        }
       }
     } else {
-      // Within range => attempt attack if cooldown is up
-      if (Date.now() - lastAttackTime.current >= currentAttackCooldown.current) {
-        startAttack();
-        lastAttackTime.current = Date.now();
+      // Decelerate smoothly when stopping
+      velocity.current.multiplyScalar(1 - 6.0 * delta);
+      
+      if (velocity.current.length() > 0.001) {
+        currentPosition.current.add(velocity.current);
+        bossRef.current.position.copy(currentPosition.current);
       }
+    }
+
+    // Within range => attempt attack if cooldown is up
+    if (Date.now() - lastAttackTime.current >= currentAttackCooldown.current) {
+      startAttack();
+      lastAttackTime.current = Date.now();
     }
   });
 
@@ -298,7 +321,7 @@ export default function BossUnit({
         ref={bossRef}
         visible={!isSpawning && health > 0}
         position={currentPosition.current}
-        scale={[1.55, 1.55, 1.55]}
+        scale={[1.595, 1.595, 1.595]}
         onClick={(e) => e.stopPropagation()}
       >
         <BossModel

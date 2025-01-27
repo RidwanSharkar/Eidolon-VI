@@ -1,6 +1,6 @@
 // src/versus/SkeletalMage/CustomSkeletonMage.tsx
 import React, { useRef, useState, useEffect } from 'react';
-import { Group, Mesh } from 'three';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '@/gear/BonePlate';
 
@@ -11,19 +11,26 @@ interface CustomSkeletonMageProps {
   onHit?: (damage: number) => void;
 }
 
+// Add these at the top of the file to reuse materials
+const standardBoneMaterial = new MeshStandardMaterial({
+  color: "#e8e8e8",
+  roughness: 0.4,
+  metalness: 0.3
+});
+
+
+
+// Cache geometries that are reused frequently
+const jointGeometry = new SphereGeometry(0.06, 6, 6);
+const smallBoneGeometry = new CylinderGeometry(0.04, 0.032, 1, 4);
+
 function BoneLegModel() {
   const createBoneSegment = (length: number, width: number) => (
-    <mesh>
-      <cylinderGeometry args={[width, width * 0.8, length, 8]} />
-      <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-    </mesh>
+    <mesh geometry={smallBoneGeometry} material={standardBoneMaterial} scale={[width/0.04, length, width/0.04]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh>
-      <sphereGeometry args={[size, 8, 8]} />
-      <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-    </mesh>
+    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.06, size/0.06, size/0.06]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -49,10 +56,10 @@ function BoneLegModel() {
       <group>
         {createParallelBones(0.65, 0.05)}
         
-        {/* Knee joint */}
+        {/* Knee joint - reduced segments */}
         <group position={[0, -0.35, 0]}>
           <mesh>
-            <sphereGeometry args={[0.08, 12, 12]} />
+            <sphereGeometry args={[0.08, 8, 8]} />
             <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
           </mesh>
           
@@ -104,25 +111,11 @@ function BoneLegModel() {
 
 function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
   const createBoneSegment = (length: number, width: number) => (
-    <mesh>
-      <cylinderGeometry args={[width, width * 0.8, length, 8]} />
-      <meshStandardMaterial 
-        color="#e8e8e8"
-        roughness={0.4}
-        metalness={0.3}
-      />
-    </mesh>
+    <mesh geometry={smallBoneGeometry} material={standardBoneMaterial} scale={[width/0.04, length, width/0.04]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh>
-      <sphereGeometry args={[size, 8, 8]} />
-      <meshStandardMaterial 
-        color="#e8e8e8" 
-        roughness={0.4}
-        metalness={0.3}
-      />
-    </mesh>
+    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.06, size/0.06, size/0.06]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -374,9 +367,9 @@ function StaffModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
 function MageRobe() {
   return (
     <group>
-      {/* Main robe body */}
+      {/* Main robe body - reduced segments */}
       <mesh position={[0, -0.15, 0]}>
-        <cylinderGeometry args={[0.17, 0.45, 1.65, 8]} />
+        <cylinderGeometry args={[0.17, 0.45, 1.65, 6]} />
         <meshStandardMaterial 
           color="#896BFF"
           roughness={0.7}
@@ -559,16 +552,16 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
 
 
 
-      {/* Add magical floating runes around the character */}
+      {/* Reduced magical runes from 3 to 2 */}
       <group>
-        {[0, 1, 2].map((i) => (
+        {[0, 1].map((i) => (
           <group 
             key={i} 
-            rotation={[0, (Math.PI * 2 * i) / 3, 0]}
+            rotation={[0, (Math.PI * i), 0]}
             position={[0, 1.3, 0]}
           >
             <mesh>
-              <ringGeometry args={[0.575, 0.7, 32]} />
+              <ringGeometry args={[0.575, 0.7, 24]} />
               <meshStandardMaterial 
                 color="#4169E1"
                 emissive="#4169E1"
@@ -581,18 +574,18 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
         ))}
       </group>
 
-      {/* Add ambient magical particles */}
-      {Array.from({ length: 8 }).map((_, i) => (
+      {/* Reduced ambient particles from 8 to 4 */}
+      {Array.from({ length: 4 }).map((_, i) => (
         <group 
           key={i} 
           position={[
-            Math.sin(i * Math.PI / 4) * 0.2,
-            1.25 + Math.cos(i * Math.PI / 2) * 0.3,
-            Math.cos(i * Math.PI / 4) * 0.5
+            Math.sin(i * Math.PI / 2) * 0.2,
+            1.25 + Math.cos(i * Math.PI) * 0.3,
+            Math.cos(i * Math.PI / 2) * 0.5
           ]}
         >
           <mesh>
-            <sphereGeometry args={[0.01, 8, 8]} />
+            <sphereGeometry args={[0.01, 6, 6]} />
             <meshStandardMaterial 
               color="#4169E1"
               emissive="#4169E1"

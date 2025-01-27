@@ -20,7 +20,7 @@ const varyColor = (baseColor: Color, range: number = 0.1) => {
 
 const TreeComponent: React.FC<TreeProps> = ({ 
   position = new Vector3(0, 2, -5),
-  scale = 0.8,
+  scale = 0.65,
   leafColor,
 }: TreeProps) => {
   const variedLeafColor = useMemo(() => varyColor(leafColor), [leafColor]);
@@ -90,7 +90,7 @@ const TreeComponent: React.FC<TreeProps> = ({
             roughness={0.4}
             metalness={0.1}
             emissive={variedLeafColor}
-            emissiveIntensity={0.585}
+            emissiveIntensity={0.545}
           />
         </mesh>
       </mesh>
