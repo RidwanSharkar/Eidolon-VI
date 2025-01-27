@@ -33,7 +33,7 @@ export default function Terrain() {
           roughness={0.7}
           metalness={0.1}
           emissive="#304050"  // Subtle blue-ish glow
-          emissiveIntensity={1.5}
+          emissiveIntensity={1.4}
         />
       </mesh>
 

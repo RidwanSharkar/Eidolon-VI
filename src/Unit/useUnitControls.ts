@@ -134,7 +134,7 @@ export function useUnitControls({
 
       const dotProduct = moveDirection.dot(cameraDirection);
       const baseSpeed = isCharging ? 0.005 * 60 * delta : currentFrameSpeed;
-      const backwardsSpeed = baseSpeed * 0.55;
+      const backwardsSpeed = baseSpeed * 0.6;
       const targetSpeed = dotProduct < 0 ? backwardsSpeed : baseSpeed;
       
       // Calculate target velocity

@@ -128,13 +128,13 @@ export default function GameWrapper({
               enablePan={false}
               minPolarAngle={Math.PI / 6}
               maxPolarAngle={Math.PI / 2.25}
-              maxDistance={10}
+              maxDistance={11.5}
               mouseButtons={{
                 LEFT: undefined,
                 MIDDLE: undefined,
                 RIGHT: THREE.MOUSE.ROTATE
               }} 
-              minDistance={10}
+              minDistance={11.5}
               rotateSpeed={0.675}
               enableDamping={true}
               dampingFactor={0.075}
