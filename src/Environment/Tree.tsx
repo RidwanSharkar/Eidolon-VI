@@ -20,7 +20,7 @@ const varyColor = (baseColor: Color, range: number = 0.1) => {
 
 const TreeComponent: React.FC<TreeProps> = ({ 
   position = new Vector3(0, 2, -5),
-  scale = 0.65,
+  scale = 0.60,
   leafColor,
 }: TreeProps) => {
   const variedLeafColor = useMemo(() => varyColor(leafColor), [leafColor]);

@@ -53,7 +53,7 @@ export default function BossBoneVortex({ parentRef }: BossBoneVortexProps) {
       
       const time = clock.getElapsedTime();
       const heightOffset = ((i / pieceCount) * 0.65);
-      const radiusMultiplier = 1.1 - (heightOffset *1.575);    // WOAH 1.5
+      const radiusMultiplier = 1.1 - (heightOffset *1.5);    // WOAH 1.5
       
       const angle = (i / pieceCount) * Math.PI * 4 + time * 2;
       const radius = baseRadius * radiusMultiplier;
@@ -91,8 +91,8 @@ export default function BossBoneVortex({ parentRef }: BossBoneVortexProps) {
       
       <pointLight 
         color="#ff0000"
-        intensity={1.5}
-        distance={8}
+        intensity={10}
+        distance={15}
         decay={2}
         position={[0, 0.5, 0]}
       />

@@ -23,7 +23,7 @@ export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.05,
+  speed = 0.0625,
   onPositionUpdate,
   health,
   isCharging = false,
@@ -41,8 +41,8 @@ export function useUnitControls({
 
   // Add velocity state with useRef for smooth acceleration/deceleration
   const velocity = useRef(new Vector3());
-  const ACCELERATION = 8.0;  // How quickly to reach max speed
-  const DECELERATION = 12.0; // How quickly to stop
+  const ACCELERATION = 4.0;  // How quickly to reach max speed
+  const DECELERATION = 6.0; // How quickly to stop
 
   useEffect(() => {
     if (health <= 0) {
@@ -133,8 +133,8 @@ export function useUnitControls({
       }
 
       const dotProduct = moveDirection.dot(cameraDirection);
-      const baseSpeed = isCharging ? 0.005 * 60 * delta : currentFrameSpeed;
-      const backwardsSpeed = baseSpeed * 0.6;
+      const baseSpeed = isCharging ? 0.0025 * 60 * delta : currentFrameSpeed;
+      const backwardsSpeed = baseSpeed * 0.5;
       const targetSpeed = dotProduct < 0 ? backwardsSpeed : baseSpeed;
       
       // Calculate target velocity

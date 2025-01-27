@@ -47,7 +47,7 @@ export default function BossModel({ isAttacking }: BossModelProps) {
       </group>
 
       {/* Scaled Bone Plate */}
-      <group scale={[1.45 , 1.1, 1.3]} position={[0, 1.5, 0]} rotation={[0.35, 0, 0]}>
+      <group scale={[1.3 , 1.1, 1.3]} position={[0, 1.5, 0]} rotation={[0.3, 0, 0]}>
         <BonePlate />
       </group>
 
@@ -164,7 +164,7 @@ export default function BossModel({ isAttacking }: BossModelProps) {
       </group>
 
       {/* Add the bone aura at the bottom of the boss */}
-      <group position={[0, 0, 0]}>
+      <group position={[0, 0.15, 0]} scale={[0.9, 0.9, 0.9]}>
         <BossBoneAura parentRef={groupRef} />
       </group>
 
@@ -309,7 +309,7 @@ function BossClawModel() {
                 {[-0.08, -0.04, 0, 0.04, 0.08].map((offset, i) => (
                   <group 
                     key={i} 
-                    position={[offset, -0.1, 0]}
+                    position={[offset, -0.1, 0]}  
                     rotation={[0, 0, (i - 2) * Math.PI / 10]}
                   >
                     {createBoneSegment(0.5, 0.02)}

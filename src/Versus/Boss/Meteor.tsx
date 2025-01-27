@@ -57,8 +57,8 @@ const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, on
       {/* Multiple expanding rings */}
       {[2.0, 2.15, 2.3, 2.5, 2.7].map((size, i) => (
         <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-          <torusGeometry args={[size * (1.325 + elapsed * 2), 0.225, 4, 32]} />
-          <meshStandardMaterial
+          <torusGeometry args={[size * (1.125 + elapsed * 2), 0.225, 4, 32]} />
+          <meshStandardMaterial  
             color="#ff2200"
             emissive="#ff4400"
             emissiveIntensity={0.7 * fade}

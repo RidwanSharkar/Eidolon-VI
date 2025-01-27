@@ -33,7 +33,7 @@ export default function Terrain() {
           roughness={0.7}
           metalness={0.1}
           emissive="#304050"  // Subtle blue-ish glow
-          emissiveIntensity={1.4}
+          emissiveIntensity={1.1}
         />
       </mesh>
 
@@ -43,7 +43,7 @@ export default function Terrain() {
         <meshStandardMaterial
           transparent
           opacity={0.1}
-          color="#5EFF00"
+          color="#304050"
           fog={true}
           depthWrite={false}
           blending={THREE.AdditiveBlending}

@@ -49,7 +49,7 @@ export default function Scene3({
   skeletonProps,
   killCount,
   onLevelComplete,
-  spawnInterval = 5000,
+  spawnInterval = 5500,
   maxSkeletons = 23,
   initialSkeletons = 5,
 }: ScenePropsWithCallback) {
@@ -306,7 +306,7 @@ export default function Scene3({
         // 10. Spawn the boss with dramatic delay
         setTimeout(() => {
           setIsBossSpawned(true);
-        }, 2500);
+        }, 2750);
       };
 
       cleanupBeforeBoss();
