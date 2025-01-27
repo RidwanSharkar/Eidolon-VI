@@ -120,7 +120,7 @@ export const generateMushrooms = (): Array<{ position: Vector3; scale: number; v
 
 export const generateRandomPosition = (): Vector3 => {
   const angle = Math.random() * Math.PI * 2;
-  const distance = Math.random() * 15.5; // REAL SPAWN RADIUS!?
+  const distance = Math.random() * 15.5; // REAL SPAWN RADIUS
 
   const x = Math.cos(angle) * distance;
   const z = Math.sin(angle) * distance;

@@ -248,7 +248,7 @@ export default function Unit({
         type: 'unitFireballExplosion',
         position: impactPosition,
         direction: new Vector3(),
-        duration: 0.2,
+        duration: 0.25,
         startTime: currentTime
       }]);
     }
@@ -874,7 +874,7 @@ export default function Unit({
         type: 'fireballExplosion',
         position: hitPosition,
         direction: new Vector3(),
-        duration: 0.20, // Duration in seconds
+        duration: 0.25, // Duration in seconds
         startTime: Date.now() // Add start time
       }]);
     }
@@ -1007,7 +1007,7 @@ export default function Unit({
         prev.filter(effect => {
           if (effect.type !== 'fireballExplosion') return true;
           const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
-          const duration = effect.duration || 0.2;
+          const duration = effect.duration || 0.25;
           return elapsed < duration;
         })
       );
@@ -1025,7 +1025,7 @@ export default function Unit({
         prev.filter(effect => {
           if (effect.type !== 'frostExplosion') return true;
           const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
-          const duration = effect.duration || 0.2;
+          const duration = effect.duration || 0.25;
           return elapsed < duration;
         })
       );
@@ -1075,18 +1075,6 @@ export default function Unit({
           />
         </mesh>
 
-        {/* SOUL SPHERE 
-        <mesh position={[0, 0.2, 0.25]} scale={0.35}>
-          <sphereGeometry args={[0.25, 32, 32]} />
-          <meshPhongMaterial
-            color="#EAC4D5"
-            transparent
-            opacity={0.3}
-            emissive="#EAC4D5"
-            emissiveIntensity={0.1}
-          />
-        </mesh>
-        */}
         
         {/* WINGS */}
         <group position={[0, 0.2, -0.2]}>
@@ -1167,7 +1155,7 @@ export default function Unit({
         )}
       </group>
 
-      {/* Add ghost trail effect */}
+      {/* Ghost Trail*/}
       <GhostTrail parentRef={groupRef} weaponType={currentWeapon} />
 
       {/* Fireballs  */}
@@ -1583,9 +1571,9 @@ export default function Unit({
                     <meshStandardMaterial
                       color="#66ff88"
                       emissive="#ffffff"
-                      emissiveIntensity={2 * fade}
+                      emissiveIntensity={1.85 * fade}
                       transparent
-                      opacity={0.8 * fade}
+                      opacity={0.85 * fade}
                       depthWrite={false}
                       blending={THREE.AdditiveBlending}
                     />

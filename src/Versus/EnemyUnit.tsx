@@ -64,16 +64,16 @@ export default function EnemyUnit({
   const targetRotation = useRef(0);
 
   const ATTACK_RANGE = 2.25;
-  const ATTACK_COOLDOWN = 1750;
-  const MOVEMENT_SPEED = 0.04;
+  const ATTACK_COOLDOWN = 1650;
+  const MOVEMENT_SPEED = 0.035;
   const POSITION_UPDATE_THRESHOLD = 0.1;
-  const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 10;
+  const MINIMUM_UPDATE_INTERVAL = 35;
+  const ATTACK_DAMAGE = 0;
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.155;
   const ACCELERATION = 6.0;
-const DECELERATION = 8.0;
-const ROTATION_SPEED = 8.0;
+  const DECELERATION = 8.0;
+  const ROTATION_SPEED = 8.0;
 
   // Sync health changes
   useEffect(() => {

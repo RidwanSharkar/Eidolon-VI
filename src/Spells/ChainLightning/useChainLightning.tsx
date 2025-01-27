@@ -24,9 +24,9 @@ export const useChainLightning = ({
   setDamageNumbers,
   nextDamageNumberId
 }: ChainLightningProps) => {
-  const CHAIN_CHANCE = 1;
+  const CHAIN_CHANCE = 0.5;
   const INITIAL_DAMAGE = 17;
-  const MAX_JUMPS = 4;
+  const MAX_JUMPS = 5; 
   
   const [lightningTargets, setLightningTargets] = useState<Vector3[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -51,7 +51,7 @@ export const useChainLightning = ({
         if (enemy.isDying || !enemy.position || enemy.health <= 0 || hitTargets.has(enemy.id)) return;
 
         const distance = currentPos.distanceTo(enemy.position);
-        if (distance < shortestDistance && distance < 10.5) {
+        if (distance < shortestDistance && distance < 11.25) {
           shortestDistance = distance;
           nearestEnemy = enemy.position;
           enemyId = enemy.id;
@@ -62,7 +62,7 @@ export const useChainLightning = ({
     };
 
     const chainDamage = (jumpIndex: number) => {
-      const damages = [17, 13, 11, 7]; // CUSTOM DAMAGE PRIMES
+      const damages = [19, 17, 13, 11, 7]; // CUSTOM DAMAGE PRIMES
       return damages[jumpIndex];
     };
 

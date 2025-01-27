@@ -19,16 +19,16 @@ export default function SummonedHandler({
   const groupRef = useRef<Group>(null);
   const [currentTarget, setCurrentTarget] = useState<Enemy | null>(null);
   const lastAttackTime = useRef(0);
-  const ATTACK_COOLDOWN = 800;
-  const RANGE = 40;
-  const DURATION = 12800;
-  const DAMAGE = 37;
+  const ATTACK_COOLDOWN = 1000;
+  const RANGE = 35;
+  const DURATION = 13000;
+  const DAMAGE = 53;
   const startTime = useRef(Date.now());
   const EFFECT_DURATION = 250;
   const hasTriggeredCleanup = useRef(false);
   const mountId = useRef(Date.now());
   const lastTargetSwitchTime = useRef(Date.now());
-  const TARGET_SWITCH_INTERVAL = 3200;
+  const TARGET_SWITCH_INTERVAL = 4000;
 
   // Modify the findNewTarget function to exclude the current target
   const findNewTarget = useCallback((excludeCurrentTarget: boolean = false): Enemy | null => {

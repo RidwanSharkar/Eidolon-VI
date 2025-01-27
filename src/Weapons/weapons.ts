@@ -86,8 +86,8 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
 
   [WeaponType.SWORD]: {
     q: { type: 'q', key: 'q', cooldown: 0.925, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 3.9, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 1.375, currentCooldown: 0, icon: '/Eidolon/icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
+    e: { type: 'e', key: 'e', cooldown: 3.85, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: '/Eidolon/icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
     passive: { 
       type: 'passive', 
       key: '1', 
@@ -102,7 +102,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   },
   
   [WeaponType.SABRES]: {
-    q: { type: 'q', key: 'q', cooldown: 0.6125, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.605, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
@@ -124,7 +124,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   if (weapon === WeaponType.SWORD && 
       ability === 'q' && 
       abilities[WeaponType.SWORD].passive.isUnlocked) {
-    return 0.69;
+    return 0.70;
   }
   
   return baseAbility.cooldown;

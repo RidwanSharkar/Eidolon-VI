@@ -200,7 +200,7 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
       </mesh>
 
       {/*Spiral effectSky */}
-      {[...Array(16)].map((_, i) => (
+      {[...Array(8)].map((_, i) => (
         <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]} position={[0, +7.45, 0]}>
           <torusGeometry args={[0.5, 0.08, 32, 32]} />
           <meshStandardMaterial

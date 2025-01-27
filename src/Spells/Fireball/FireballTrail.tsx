@@ -15,7 +15,7 @@ const FireballTrail: React.FC<FireballTrailProps> = ({
   meshRef,
   opacity = 1
 }) => {
-  const particlesCount = 22;
+  const particlesCount = 24;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));

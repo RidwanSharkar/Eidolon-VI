@@ -449,7 +449,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
   return (
     <group ref={groupRef} position={[position[0], position[1] + 1, position[2]]}>
       
-      <group name="Body" position={[0, 1.15, 0]} scale={[0.95, 0.8, 0.8]} rotation={[-0.2, 0, 0]}>
+      <group name="Body" position={[0, 1.05, 0]} scale={[0.95, 0.8, 0.8]} rotation={[-0.2, 0, 0]}>
         <BonePlate />
       </group>
 
@@ -626,7 +626,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
         <BossClawModel isLeftHand={false} />
       </group>
       {/* Pelvis structure */}
-      <group position={[0, 0.7, 0]} scale={[1.4, 1, 0.8]}>
+      <group position={[0, 0.6, 0]} scale={[1.4, 1, 0.8]}>
         {/* Main pelvic bowl */}
         <mesh>
           <cylinderGeometry args={[0.21, 0.20, 0.2, 8]} />
@@ -635,15 +635,6 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
 
    
 
-        {/* Sacral vertebrae */}
-        <group position={[0, 0.15, -0.16]} rotation={[0.1, 0, 0]}>
-          {[0.15, 0.27, 0.39, 0.51, 0.63].map((y, i) => (
-            <mesh key={i} position={[0, y, 0]}>
-              <cylinderGeometry args={[0.0225, 0.0225, 0.03, 6]} />
-              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-            </mesh>
-          ))}
-        </group>
 
         {/* Pelvic joints */}
         {[-1, 1].map((side) => (
@@ -657,10 +648,10 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
       </group>
 
       {/* Legs - keep same ground position but connect to higher pelvis */}
-      <group name="LeftLeg" position={[0.2, 0.3, 0]}>
+      <group name="LeftLeg" position={[0.2, 0.2725, 0]}>
         <BoneLegModel />
       </group>
-      <group name="RightLeg" position={[-0.2, 0.3, 0]}>
+      <group name="RightLeg" position={[-0.2, 0.2725, 0]}>
         <BoneLegModel />
       </group>
 

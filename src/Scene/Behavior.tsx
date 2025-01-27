@@ -32,7 +32,6 @@ interface BehaviorProps {
 
 export default function Behavior({
   playerHealth,
-  onReset,
   killCount,
 }: BehaviorProps) {
   const [isGameOver, setIsGameOver] = useState(false);
@@ -49,10 +48,8 @@ export default function Behavior({
 
   const handleReset = () => {
     console.log("Behavior: Reset triggered");
-    setIsGameOver(false);
-    setGameOverMessage(null);
-    window.dispatchEvent(new CustomEvent('gameReset'));
-    onReset();
+    // Perform a full page refresh
+    window.location.reload();
   };
 
   return (

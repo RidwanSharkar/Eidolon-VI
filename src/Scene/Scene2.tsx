@@ -1,9 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Vector3, Group } from 'three';
 import Terrain from '../Environment/Terrain';
-import Mountain from '../Environment/Mountain';
-import Tree from '../Environment/Tree';
-import Mushroom from '../Environment/Mushroom';
 import Unit from '../Unit/Unit';
 import { MemoizedEnemyUnit } from '../Versus/MemoizedEnemyUnit';
 import { SceneProps as SceneType } from '@/Scene/SceneProps';
@@ -16,6 +13,9 @@ import * as THREE from 'three';
 import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMage';
 import { MemoizedAbominationUnit } from '../Versus/Abomination/MemoizedAbomination';
 import { ObjectPool } from './ObjectPool';
+import InstancedTrees from '../Environment/InstancedTrees';
+import InstancedMountains from '../Environment/InstancedMountains';
+import InstancedMushrooms from '../Environment/InstancedMushrooms';
 
 
 interface SceneProps extends SceneType {
@@ -361,41 +361,21 @@ export default function Scene2({
   return (
     <>
       <group>
-
-
         {/* Background Environment */}
         <CustomSky />
         <Planet />
 
         {/* Ground Environment */}
-        <Terrain 
-        />
-        {mountainData.map((data, index) => (
-          <Mountain key={`mountain-${index}`} position={data.position} scale={data.scale} />
-        ))}
+        <Terrain />
+        
+        {/* Replace individual mountains with instanced mountains */}
+        <InstancedMountains mountains={mountainData} />
 
-        {/* Render all trees */}
-        {treeData.map((data, index) => (
-          <Tree
-            key={`tree-${index}`}
-            position={data.position}
-            scale={data.scale}
-            trunkColor={data.trunkColor}
-            leafColor={data.leafColor}
-          />
-        ))}
+        {/* Replace individual trees with instanced trees */}
+        <InstancedTrees trees={treeData} />
 
-  
-      {/* Render all mushrooms */}
-      {mushroomData.map((mushroom, index) => (
-        <Mushroom
-          key={`mushroom-${index}`}
-          position={mushroom.position}
-          scale={mushroom.scale}
-          variant={mushroom.variant}
-        />
-      ))}
-
+        {/* Replace individual mushrooms with InstancedMushrooms */}
+        <InstancedMushrooms mushrooms={mushroomData} />
 
         {/* Player Unit with ref */}
         <group ref={playerRef}>
@@ -453,9 +433,6 @@ export default function Scene2({
             />
           );
         })}
-
-      
-
       </group>
     </>
   );

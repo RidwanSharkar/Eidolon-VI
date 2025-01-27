@@ -111,7 +111,7 @@ export default function BossModel({ isAttacking }: BossModelProps) {
       </group>
 
       {/* Add Glowing Core Effect */}
-      <group position={[0,1.4, 0]} scale={[1.25, 1.25, 1.25]}>
+      <group position={[0,1.4, 0]} scale={[1.05, 1.05, 1.05]}>
       <BossTrailEffect parentRef={groupRef} />
       </group>
 
@@ -172,7 +172,7 @@ export default function BossModel({ isAttacking }: BossModelProps) {
       <pointLight
         position={[0, 0.1, 0]}
         color="#ff0000"
-        intensity={4.5}
+        intensity={4}
         distance={12}
         decay={2}
       />

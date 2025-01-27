@@ -109,7 +109,7 @@ export default function GameWrapper({
             performance={{ min: 0.5 }}
             dpr={[1, 2]} // Limit pixel ratio
           >
-            <ambientLight intensity={0.2} />
+            <ambientLight intensity={0.215} />
             {gameStarted && (
               <Suspense fallback={null}>
                 <LevelManager 

@@ -146,7 +146,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
   });
 
   return (
-    <>
+     <>
       {/* Warning Ring */}
       <group position={[initialTargetPosition.current.x, 0.1, initialTargetPosition.current.z]}>
         {/* Main warning ring */}
