@@ -119,7 +119,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
 
           <MageFireballTrail
             color={new Color("#ff3333")}
-            size={0.225}
+            size={0.235}
             meshRef={meshRef}
             opacity={0.8}
           />

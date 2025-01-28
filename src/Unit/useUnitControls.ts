@@ -19,16 +19,19 @@ interface UseUnitControlsProps {
 
 const PLAY_AREA_RADIUS = 27 // MAP BOUNDARY
 
-// Update these constants to match enemy values
-const ACCELERATION = 6.0;  // Match enemy 
-const DECELERATION = 8.0; // Match enemy 
-const BASE_SPEED = 0.06; // MOVEMENT_SPEED
+// Base movement speed - this is our reference point
+const BASE_SPEED = 3.5; // MOVEMENT_SPEED
+
+// Direction multipliers
+const BACKWARD_SPEED_MULTIPLIER = 0.6; // 60% speed moving backward
+const STRAFE_SPEED_MULTIPLIER = 0.8;   // 80% speed moving sideways
+const CHARGING_MULTIPLIER = 0.04;      // 4% speed while charging
 
 export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = BASE_SPEED, // Update default speed
+  speed = BASE_SPEED,
   onPositionUpdate,
   health,
   isCharging = false,
@@ -43,9 +46,7 @@ export function useUnitControls({
   });
 
   const isGameOver = useRef(false);
-
-  // Add velocity state with useRef for smooth acceleration/deceleration
-  const velocity = useRef(new Vector3());
+  const movementDirection = useRef(new Vector3());
 
   useEffect(() => {
     if (health <= 0) {
@@ -89,26 +90,11 @@ export function useUnitControls({
 
   useFrame((_, delta) => {
     if (!groupRef.current || isGameOver.current) return;
-
-    // Convert speed from per-frame to per-second (match enemy calculation)
-    const normalizedSpeed = speed * 60; // Base speed per second
-    const currentFrameSpeed = normalizedSpeed * delta; // Actual speed this frame
     
     const cameraDirection = new Vector3();
     camera.getWorldDirection(cameraDirection);
     cameraDirection.y = 0;
     cameraDirection.normalize();
-
-    if (controlsRef.current && !keys.current.shift) {
-      const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-      groupRef.current.rotation.y = targetRotation;
-    }
-
-    const currentRotation = groupRef.current.rotation.y;
-    const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-    const rotationSpeed = 0.1; // 0.1 defaulted 
-    
-    groupRef.current.rotation.y = currentRotation + (targetRotation - currentRotation) * rotationSpeed;
 
     const cameraRight = new Vector3(
       -cameraDirection.z,
@@ -123,74 +109,51 @@ export function useUnitControls({
     if (keys.current.a) moveDirection.sub(cameraRight);
     if (keys.current.d) moveDirection.add(cameraRight);
 
-    if (controlsRef.current) {
-      const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-      groupRef.current.rotation.y = targetRotation;
-    }
-
     if (moveDirection.length() > 0) {
       moveDirection.normalize();
+      movementDirection.current.copy(moveDirection);
       
       if (onMovementUpdate) {
         onMovementUpdate(moveDirection);
       }
 
+      // Calculate base movement speed for this frame
+      let frameSpeed = speed * delta;
+
+      // Apply directional multiplier
       const dotProduct = moveDirection.dot(cameraDirection);
-      const baseSpeed = isCharging ? 0.0025 * 60 * delta : currentFrameSpeed;
-      const backwardsSpeed = baseSpeed * 0.6;
-      const targetSpeed = dotProduct < 0 ? backwardsSpeed : baseSpeed;
-      
-      // Calculate target velocity
-      const targetVelocity = moveDirection.clone().multiplyScalar(targetSpeed);
-      
-      // Smoothly interpolate current velocity towards target (match enemy lerp)
-      velocity.current.lerp(targetVelocity, ACCELERATION * delta);
-      
-      // Calculate new position using smoothed velocity
-      const newPosition = groupRef.current.position.clone().add(velocity.current);
-
-      // Check if new position is within bounds
-      const distanceFromCenter = Math.sqrt(
-        newPosition.x * newPosition.x + 
-        newPosition.z * newPosition.z
-      );
-
-      if (distanceFromCenter < PLAY_AREA_RADIUS) {
-        groupRef.current.position.copy(newPosition);
-      } else {
-        // Slide along the boundary
-        const angle = Math.atan2(newPosition.z, newPosition.x);
-        groupRef.current.position.x = PLAY_AREA_RADIUS * Math.cos(angle);
-        groupRef.current.position.z = PLAY_AREA_RADIUS * Math.sin(angle);
-        // Reset velocity when hitting boundary
-        velocity.current.multiplyScalar(0.5);
-      }
-    } else {
-      // Decelerate smoothly when no input (match enemy deceleration)
-      velocity.current.multiplyScalar(1 - DECELERATION * delta);
-      
-      // Apply remaining velocity
-      if (velocity.current.length() > 0.001) {
-        const newPosition = groupRef.current.position.clone().add(velocity.current);
-        groupRef.current.position.copy(newPosition);
+      if (dotProduct < -0.1) {
+        frameSpeed *= BACKWARD_SPEED_MULTIPLIER;
+      } else if (Math.abs(dotProduct) <= 0.1) {
+        frameSpeed *= STRAFE_SPEED_MULTIPLIER;
       }
 
-      if (onMovementUpdate) {
-        onMovementUpdate(new Vector3());
+      // Apply charging multiplier if charging
+      if (isCharging) {
+        frameSpeed *= CHARGING_MULTIPLIER;
+      }
+
+      // Calculate new position
+      const movement = moveDirection.multiplyScalar(frameSpeed);
+      const potentialPosition = groupRef.current.position.clone().add(movement);
+      
+      // Apply movement if within bounds
+      if (potentialPosition.length() < PLAY_AREA_RADIUS) {
+        groupRef.current.position.copy(potentialPosition);
+        onPositionUpdate(groupRef.current.position);
       }
     }
 
-    // Smooth rotation interpolation
+    // Handle rotation
     if (controlsRef.current && !keys.current.shift) {
       const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
       const currentRotation = groupRef.current.rotation.y;
       
-      // Normalize angle difference
+      // Simple rotation interpolation
       let rotationDiff = targetRotation - currentRotation;
       while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
       while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
       
-      // Smooth rotation with increased interpolation
       groupRef.current.rotation.y += rotationDiff * Math.min(1, 15 * delta);
     }
 
@@ -198,8 +161,6 @@ export function useUnitControls({
       const unitPosition = groupRef.current.position;
       controlsRef.current.target.set(unitPosition.x, unitPosition.y, unitPosition.z);
     }
-
-    onPositionUpdate(groupRef.current.position.clone());
   });
 
   useEffect(() => {

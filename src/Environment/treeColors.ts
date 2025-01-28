@@ -1,43 +1,22 @@
 export const trunkColors = [
-  "#E8D5C4", // Very light beige
-  "#DEC8B5", // Light taupe
-  "#F1E4D6", // Pale sand
-  "#E6D5C5", // Light fawn
-  "#F2E6D8", // Cream beige
+  "#AC8F75", // Very light beige
+  "#B89F89", // Light taupe
+  "#C69155", // Pale sand
+  "#D1945B", // Light fawn
+  "#D58F44", // Cream beige
 ];
 
 export const leafColors = [ 
-  "#47CEFF", // main blue
-  "#5E9F49", // green 729F5F
-  "#E780CC", // orange
+  "#FFA1E0", // Brighter blue
+  "#B9FFAF", // Vibrant greensaew
+  "#A8E2FF", // Bright pink/orange
 
+  "#FFC3D8", // Brighter pinkwd
+  "#98FF57", // Bright lime green
 
-  "#FF98B7", // Light pink
-  "#74893A", // Light green
+  "#CEFF85", // Bright yellow-green
+  "#CEFF85", // Bright yellow-green
+  "#EFFFB3", // Bright yellow-green
 
-
-  "#ACBF85", // Light green
-  "#ACBF85", // Light green
-  "#DFFF9F", // Light green
-
-
-
-  "#90C956",
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  "#B8FF56", // Bright lime
 ]; 

@@ -127,7 +127,7 @@ export default function Panel({
     } else if (level === 2) {
       return ((kills - 13) / 17) * 100;  // 17 kills for level 2
     }
-    return ((kills - 30) / 23) * 100;  // 23 kills for level 3
+    return ((kills - 30) / 20) * 100;  // 20 kills for level 3 (changed from 23)
   };
 
 

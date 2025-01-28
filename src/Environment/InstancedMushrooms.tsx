@@ -18,16 +18,16 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
 
   const variantColors = useMemo(() => ({
     pink: {
-      main: new THREE.Color("#FF9BFC"),
-      spots: new THREE.Color("#9b4f96")
+      main: new THREE.Color("#FAA9C5").multiplyScalar(4.5),
+      spots: new THREE.Color("#FAA9C5").multiplyScalar(4.5)
     },
     green: {
-      main: new THREE.Color("#00FFC3"),
-      spots: new THREE.Color("#2eb82e")
+      main: new THREE.Color("#FF8DC6").multiplyScalar(2.5),
+      spots: new THREE.Color("#92E2FF").multiplyScalar(2.5)
     },
     blue: {
-      main: new THREE.Color("#FF9BFC"),
-      spots: new THREE.Color("#0000FF")
+      main: new THREE.Color("#92E2FF").multiplyScalar(2.5),
+      spots: new THREE.Color("#92E2FF").multiplyScalar(2.5)
     }
   }), []);
 
@@ -36,7 +36,7 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
 
     const matrix = new THREE.Matrix4();
 
-    // Handle stems
+    // Handle stems with brighter colors
     mushrooms.forEach((mushroom, i) => {
       matrix.makeTranslation(
         mushroom.position.x,
@@ -52,7 +52,7 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
       stemRef.current?.setColorAt(i, variantColors[mushroom.variant].main.clone().multiplyScalar(0.9));
     });
 
-    // Handle caps
+    // Handle caps with enhanced glow
     mushrooms.forEach((mushroom, i) => {
       matrix.makeTranslation(
         mushroom.position.x,
@@ -68,7 +68,7 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
       capRef.current?.setColorAt(i, variantColors[mushroom.variant].main);
     });
 
-    // Handle spots (6 spots per mushroom)
+    // Handle spots with enhanced glow
     mushrooms.forEach((mushroom, i) => {
       for (let j = 0; j < 6; j++) {
         const angle = (j * Math.PI / 3);
@@ -96,12 +96,11 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
       }
     });
 
-    // Update matrices
+    // Update matrices and colors
     stemRef.current.instanceMatrix.needsUpdate = true;
     capRef.current.instanceMatrix.needsUpdate = true;
     spotsRef.current.instanceMatrix.needsUpdate = true;
 
-    // Update colors
     if (stemRef.current.instanceColor) stemRef.current.instanceColor.needsUpdate = true;
     if (capRef.current.instanceColor) capRef.current.instanceColor.needsUpdate = true;
     if (spotsRef.current.instanceColor) spotsRef.current.instanceColor.needsUpdate = true;
@@ -116,9 +115,9 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
       >
         <cylinderGeometry args={[0.1, 0.12, 0.7, 16]} />
         <meshStandardMaterial
-          roughness={0.4}
-          metalness={0.1}
-          emissiveIntensity={0.25}
+          roughness={0.3}
+          metalness={0.2}
+          emissiveIntensity={0.5}
         />
       </instancedMesh>
 
@@ -128,9 +127,11 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
       >
         <sphereGeometry args={[0.3, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial
-          roughness={0.4}
-          metalness={0.1}
-          emissiveIntensity={0.475}
+          roughness={0.3}
+          metalness={0.2}
+          emissiveIntensity={0.8}
+          transparent
+          opacity={0.95}
         />
       </instancedMesh>
 
@@ -140,7 +141,11 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
       >
         <circleGeometry args={[0.04, 16]} />
         <meshStandardMaterial
-          emissiveIntensity={1.25}
+          roughness={0.2}
+          metalness={0.3}
+          emissiveIntensity={1.5}
+          transparent
+          opacity={0.95}
         />
       </instancedMesh>
     </group>

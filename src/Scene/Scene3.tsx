@@ -228,7 +228,7 @@ export default function Scene3({
   useEffect(() => {
     const allEnemiesDefeated = enemies.every(enemy => enemy.health <= 0);
     const hasStartedSpawning = spawnStarted && totalSpawned > initialSkeletons;
-    const shouldSpawnBoss = allEnemiesDefeated && hasStartedSpawning && killCount >= 50 && !isBossSpawned;
+    const shouldSpawnBoss = allEnemiesDefeated && hasStartedSpawning && killCount >= 47 && !isBossSpawned;
     
     if (shouldSpawnBoss) {
       const cleanupBeforeBoss = async () => {
@@ -343,11 +343,10 @@ export default function Scene3({
 
         // Define specific spawn points for abominations
         const shouldSpawnAbomination = 
-          (killCount >= 34 && abominationsSpawned === 0) ||
-          (killCount >= 41 && abominationsSpawned === 1) ||
-          (killCount >= 48 && abominationsSpawned === 2);
+          (killCount >= 36 && abominationsSpawned === 0) ||
+          (killCount >= 45 && abominationsSpawned === 1);
 
-        if (shouldSpawnAbomination && abominationsSpawned < 3) {
+        if (shouldSpawnAbomination && abominationsSpawned < 2) {
           const spawnPosition = generateRandomPosition();
           setTotalSpawned(prev => prev + 1);
           setAbominationsSpawned(prev => prev + 1);
@@ -399,7 +398,7 @@ export default function Scene3({
         setTotalSpawned(prev => prev + 1);
         return [...prev, newEnemy];
       });
-    }, 2650);
+    }, 2500);
 
     return () => clearInterval(spawnTimer);
   }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount, groupPool]);

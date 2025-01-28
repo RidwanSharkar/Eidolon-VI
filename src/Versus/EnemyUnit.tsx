@@ -68,7 +68,7 @@ export default function EnemyUnit({
   const MOVEMENT_SPEED = 0.035;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 35;
-  const ATTACK_DAMAGE = 0;
+  const ATTACK_DAMAGE = 10;
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.155;
   const ACCELERATION = 6.0;

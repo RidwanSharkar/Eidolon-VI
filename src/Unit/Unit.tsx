@@ -232,7 +232,7 @@ export default function Unit({
       position: unitPosition.clone(),
       startPosition: unitPosition.clone(),
       direction: direction.normalize(),
-      maxDistance: 35
+      maxDistance: 45
     };
 
     // Update both ref and state
@@ -529,7 +529,7 @@ export default function Unit({
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       
       if (distanceTraveled < projectile.maxDistance && !projectile.hasCollided) {
-        const speed = projectile.power >= 1 ? 0.525 : 0.375;
+        const speed = projectile.power >= 1 ? 0.5 : 0.375;
         projectile.position.add(
           projectile.direction
             .clone()

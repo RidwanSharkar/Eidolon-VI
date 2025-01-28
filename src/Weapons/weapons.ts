@@ -133,9 +133,9 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
 interface AbilityTooltip {
   title: string;
   description: string;
-  cost?: number | string;  // Optional since passives might not have cost
-  range?: number | string; // Optional since some abilities might not have range
-  damage?: number | string; // Optional for non-damaging abilities
+  cost?: number | string;  
+  range?: number | string;
+  damage?: number | string; 
 }
 
 export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbilities, AbilityTooltip>> = {

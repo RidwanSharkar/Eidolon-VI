@@ -80,7 +80,7 @@ export default function LevelManager({
     console.log('Checking level completion conditions:');
     console.log(`Level 1 condition: killCount >= 13 && currentLevel === 1: ${killCount >= 13 && currentLevel === 1}`);
     console.log(`Level 2 condition: killCount >= 30 && currentLevel === 2: ${killCount >= 30 && currentLevel === 2}`);
-    console.log(`Level 3 condition: killCount >= 53 && currentLevel === 3: ${killCount >= 53 && currentLevel === 3}`);
+    console.log(`Level 3 condition: killCount >= 50 && currentLevel === 3: ${killCount >= 50 && currentLevel === 3}`);
     
     // Level completion conditions
     if (killCount >= 13 && currentLevel === 1) {
@@ -91,7 +91,7 @@ export default function LevelManager({
       console.log('Level 2 completion triggered');
       onLevelTransition(2, true);
       setLevelCompleted(true);
-    } else if (currentLevel === 3 && killCount >= 53) {
+    } else if (currentLevel === 3 && killCount >= 50) {
       console.log('Level 3 completion triggered');
       onLevelTransition(3, false);
       setLevelCompleted(true);
@@ -168,8 +168,8 @@ export default function LevelManager({
           {...sceneProps} 
           onLevelComplete={handleLevelComplete}
           onAbilityUnlock={onAbilityUnlock}
-          spawnInterval={5500}
-          maxSkeletons={23}
+          spawnInterval={4500}
+          maxSkeletons={20}
           initialSkeletons={5}
           spawnCount={4}
         />
