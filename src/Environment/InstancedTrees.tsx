@@ -76,15 +76,16 @@ const InstancedTrees: React.FC<InstancedTreesProps> = ({ trees }) => {
 
       {/* Foliage instances */}
       {[
-        { posY: 0.56, size: 1.35, height: 1.7, emissiveIntensity: 0.375 },
-        { posY: 0.69, size: 1.08, height: 1.36, emissiveIntensity: 0.475 },
-        { posY: 0.85, size: 0.756, height: 1.36, emissiveIntensity: 0.575 },
-        { posY: 0.905, size: 0.709, height: 0.765, emissiveIntensity: 0.675 }
+        { posY: 0.56, size: 1.35, height: 1.7, emissiveIntensity: 0.675 },
+        { posY: 0.69, size: 1.08, height: 1.36, emissiveIntensity: 0.775 },
+        { posY: 0.85, size: 0.756, height: 1.36, emissiveIntensity: 0.875 },
+        { posY: 0.905, size: 0.709, height: 0.765, emissiveIntensity: 0.975 }
       ].map((layer, index) => (
         <instancedMesh
           key={`foliage-${index}`}
           args={[undefined, undefined, trees.length]}
           ref={(el) => { foliageRefs.current[index] = el; }}
+          frustumCulled={false}
         >
           <coneGeometry args={[layer.size, layer.height, 8]} />
           <meshStandardMaterial

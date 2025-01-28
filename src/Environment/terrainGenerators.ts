@@ -10,7 +10,7 @@ export interface GeneratedTree {
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 20;
+  const numberOfMountains = 22;
   const radius = 51;
   
   // Create evenly spaced mountains around the perimeter
@@ -30,7 +30,7 @@ export const generateMountains = (): Array<{ position: Vector3; scale: number }>
     });
 
     // Second row of mountains slightly offset
-    const innerRadius = radius - 15;
+    const innerRadius = radius - 12;
     const offsetAngle = angle + (Math.PI / numberOfMountains);
     const innerX = Math.cos(offsetAngle) * innerRadius;
     const innerZ = Math.sin(offsetAngle) * innerRadius;

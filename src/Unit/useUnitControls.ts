@@ -17,13 +17,18 @@ interface UseUnitControlsProps {
   onMovementUpdate?: (direction: Vector3) => void;
 }
 
-const PLAY_AREA_RADIUS = 27.25 // MAP BOUNDARY
+const PLAY_AREA_RADIUS = 27 // MAP BOUNDARY
+
+// Update these constants to match enemy values
+const ACCELERATION = 6.0;  // Match enemy 
+const DECELERATION = 8.0; // Match enemy 
+const BASE_SPEED = 0.06; // MOVEMENT_SPEED
 
 export function useUnitControls({
   groupRef,
   controlsRef,
   camera,
-  speed = 0.0625,
+  speed = BASE_SPEED, // Update default speed
   onPositionUpdate,
   health,
   isCharging = false,
@@ -41,8 +46,6 @@ export function useUnitControls({
 
   // Add velocity state with useRef for smooth acceleration/deceleration
   const velocity = useRef(new Vector3());
-  const ACCELERATION = 4.0;  // How quickly to reach max speed
-  const DECELERATION = 6.0; // How quickly to stop
 
   useEffect(() => {
     if (health <= 0) {
@@ -87,7 +90,7 @@ export function useUnitControls({
   useFrame((_, delta) => {
     if (!groupRef.current || isGameOver.current) return;
 
-    // Convert speed from per-frame to per-second
+    // Convert speed from per-frame to per-second (match enemy calculation)
     const normalizedSpeed = speed * 60; // Base speed per second
     const currentFrameSpeed = normalizedSpeed * delta; // Actual speed this frame
     
@@ -134,13 +137,13 @@ export function useUnitControls({
 
       const dotProduct = moveDirection.dot(cameraDirection);
       const baseSpeed = isCharging ? 0.0025 * 60 * delta : currentFrameSpeed;
-      const backwardsSpeed = baseSpeed * 0.5;
+      const backwardsSpeed = baseSpeed * 0.6;
       const targetSpeed = dotProduct < 0 ? backwardsSpeed : baseSpeed;
       
       // Calculate target velocity
       const targetVelocity = moveDirection.clone().multiplyScalar(targetSpeed);
       
-      // Smoothly interpolate current velocity towards target
+      // Smoothly interpolate current velocity towards target (match enemy lerp)
       velocity.current.lerp(targetVelocity, ACCELERATION * delta);
       
       // Calculate new position using smoothed velocity
@@ -163,7 +166,7 @@ export function useUnitControls({
         velocity.current.multiplyScalar(0.5);
       }
     } else {
-      // Decelerate smoothly when no input
+      // Decelerate smoothly when no input (match enemy deceleration)
       velocity.current.multiplyScalar(1 - DECELERATION * delta);
       
       // Apply remaining velocity
