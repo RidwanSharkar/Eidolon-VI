@@ -10,7 +10,7 @@ export default function Terrain() {
   useEffect(() => {
     if (!octagonRef.current) {
       const shape = new Shape();
-      const radius = 40;
+      const radius = 50;
       for (let i = 0; i < 8; i++) {
         const angle = (i / 8) * Math.PI * 2;
         const x = radius * Math.cos(angle);
@@ -33,7 +33,7 @@ export default function Terrain() {
           roughness={0.7}
           metalness={0.1}
           emissive="#3B4867"  // Subtle blue-ish glow
-          emissiveIntensity={0.5}
+          emissiveIntensity={0.4}
         />
       </mesh>
 

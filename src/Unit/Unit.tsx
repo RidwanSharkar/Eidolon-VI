@@ -10,6 +10,7 @@ import Scythe from '@/Weapons/Scythe';
 import Sword from '@/Weapons/Sword';
 import Sabres from '@/Weapons/Sabres';
 import EtherealBow from '@/Weapons/EtherBow';
+import Spear from '@/Weapons/Spear';
 
 import Smite from '@/Spells/Smite/Smite';
 import DamageNumber from '@/Interface/DamageNumber';
@@ -1123,6 +1124,15 @@ export default function Unit({
             parentRef={groupRef}
             isSwinging={isSwinging} 
             onSwingComplete={handleSwingComplete} 
+          />
+        ) : currentWeapon === WeaponType.SPEAR ? (
+          <Spear
+            isSwinging={isSwinging}
+            isSmiting={isSmiting}
+            isOathstriking={isOathstriking}
+            onSwingComplete={() => setIsSwinging(false)}
+            onSmiteComplete={() => setIsSmiting(false)}
+            onOathstrikeComplete={() => setIsOathstriking(false)}
           />
         ) : (
           <Sword

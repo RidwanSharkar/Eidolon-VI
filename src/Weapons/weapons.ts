@@ -82,7 +82,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
       name: 'Summon Skeleton', 
       isUnlocked: false 
     }
-  },
+  }, // TWIN SCYTHE
 
   [WeaponType.SWORD]: {
     q: { type: 'q', key: 'q', cooldown: 0.925, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
@@ -99,7 +99,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
       isUnlocked: false 
     },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a2.svg', maxCooldown: 0, name: 'Sword Active', isUnlocked: false }
-  },
+  }, // BLADESTORM
   
   [WeaponType.SABRES]: {
     q: { type: 'q', key: 'q', cooldown: 0.605, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
@@ -107,11 +107,13 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
     r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
-  },
+  }, // INVISIBLE + movespeed + guaranteed crit 
+
+
   [WeaponType.SPEAR]: {
-    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q4.svg', maxCooldown: 1.0, name: 'Spear Thrust', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 2, currentCooldown: 0, icon: '/Eidolon/icons/e4.svg', maxCooldown: 2.5, name: 'Lightning Strike', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 12, currentCooldown: 0, icon: '/Eidolon/icons/r4.svg', maxCooldown: 12, name: 'Thunder God', isUnlocked: false },
+    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q4.svg', maxCooldown: 1.0, name: 'Spear Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 2, currentCooldown: 0, icon: '/Eidolon/icons/e4.svg', maxCooldown: 2.5, name: 'Spear E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 12, currentCooldown: 0, icon: '/Eidolon/icons/r4.svg', maxCooldown: 12, name: 'Bone Shards', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p4.svg', maxCooldown: 0, name: 'Static Charge', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a4.svg', maxCooldown: 0, name: 'Lightning Form', isUnlocked: false }
   }

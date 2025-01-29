@@ -1,5 +1,7 @@
 // src/weapons/Spear.tsx
 
+import { handleSpearHit } from './SpearDamage';
+
 interface SpearProps {
   isSwinging: boolean;
   isSmiting: boolean;
@@ -8,12 +10,21 @@ interface SpearProps {
   onSmiteComplete?: () => void;
   onOathstrikeComplete?: () => void;
   hasChainLightning?: boolean;
+  enemyData?: Array<{
+    id: string;
+    position: Vector3;
+    health: number;
+  }>;
+  onHit?: (targetId: string, damage: number) => void;
+  setDamageNumbers?: (callback: (prev: DamageNumber[]) => DamageNumber[]) => void;
+  nextDamageNumberId?: { current: number };
 }
 
 import { useRef } from 'react';
 import { Group, Shape, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { DamageNumber } from '@/Unit/useDamageNumbers';
 
 export default function Spear({ 
   isSwinging, 
@@ -22,7 +33,11 @@ export default function Spear({
   onSwingComplete, 
   onSmiteComplete,
   onOathstrikeComplete,
-  hasChainLightning = false
+  hasChainLightning = false,
+  enemyData,
+  onHit,
+  setDamageNumbers,
+  nextDamageNumberId
 }: SpearProps) {
   const spearRef = useRef<Group>(null);
   const swingProgress = useRef(0);
@@ -36,6 +51,9 @@ export default function Spear({
     life: number;
     scale: number;
   }>>([]);
+
+  const hitCountThisSwing = useRef<Record<string, number>>({});
+  const lastHitDetectionTime = useRef<Record<string, number>>({});
 
   useFrame((_, delta) => {
     if (!spearRef.current) return;
@@ -110,6 +128,11 @@ export default function Spear({
     }
 
     if (isSwinging) {
+      // Reset hit counts at the start of each swing
+      if (swingProgress.current === 0) {
+        hitCountThisSwing.current = {};
+      }
+      
       swingProgress.current += delta * 5.5;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
@@ -150,6 +173,31 @@ export default function Spear({
       }
       
       spearRef.current.rotation.set(rotationX, rotationY, rotationZ);
+
+      if (swingPhase > 0.3 && swingPhase < 0.7 && onHit && setDamageNumbers && nextDamageNumberId) {
+        enemyData?.forEach(enemy => {
+          handleSpearHit(
+            {
+              targetId: enemy.id,
+              position: enemy.position,
+              health: enemy.health,
+              isEnemy: true
+            },
+            {
+              groupRef: spearRef,
+              isSwinging,
+              hitCountThisSwing: hitCountThisSwing.current,
+              setHitCountThisSwing: (callback) => {
+                hitCountThisSwing.current = callback(hitCountThisSwing.current);
+              },
+              onHit,
+              setDamageNumbers,
+              nextDamageNumberId,
+              lastHitDetectionTime
+            }
+          );
+        });
+      }
     } else if (!isSwinging && !isSmiting) {
       // Return to vertical rest position
       const targetRotation = [0, 0, 0];
