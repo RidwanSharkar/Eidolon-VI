@@ -138,7 +138,7 @@ export function useAbilityKeys({
           if (currentWeapon === WeaponType.SWORD && !isSmiting) {
             // Check time since last Q usage for Sword
             const timeSinceLastQ = Date.now() - lastQUsageTime.current;
-            if (timeSinceLastQ < 350) { // SMITE BUG TEMP FIX 
+            if (timeSinceLastQ < 400) { // SMITE BUG TEMP FIX 
               console.log('Cannot use Smite so soon after a normal attack');
               return;
             }
@@ -151,10 +151,6 @@ export function useAbilityKeys({
               id: nextSmiteId.current++, 
               position: targetPos 
             }]);
-            onAbilityUse(currentWeapon, 'e');
-          } else if ((currentWeapon === WeaponType.SPEAR) && startFirebeam && stopFirebeam) {
-/// SWITCH DIS                                                            ^^^^                ^^^^^^^
-            startFirebeam();
             onAbilityUse(currentWeapon, 'e');
           } else if (currentWeapon === WeaponType.SABRES && !isBowCharging) {
             setIsBowCharging(true);
@@ -172,7 +168,6 @@ export function useAbilityKeys({
           if (currentWeapon === WeaponType.SCYTHE) {
             castReanimate();
           } else if (currentWeapon === WeaponType.SABRES && startFirebeam && stopFirebeam) {
-            // Start firebeam and store the interval
             startFirebeam();
             onAbilityUse(currentWeapon, 'passive');
           }
@@ -198,7 +193,7 @@ export function useAbilityKeys({
               ...prev,
               {
                 id: summonId,
-                type: 'summon',  // This is the main effect that controls the totem
+                type: 'summon',  // main effect that controls the totem
                 position: groupRef.current!.position.clone(),
                 direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
                 onComplete: () => {
@@ -219,7 +214,7 @@ export function useAbilityKeys({
         }
       }
 
-      // Add R ability handling
+      // R ability handling
       if (key === 'r') {
         const rAbility = abilities[currentWeapon].r;
         if (rAbility.isUnlocked && rAbility.currentCooldown <= 0) {
@@ -238,7 +233,7 @@ export function useAbilityKeys({
               }
               break;
             case WeaponType.SABRES:
-              // Add blizzard effect
+              // Blizzard effect
               setActiveEffects(prev => [...prev, {
                 id: Math.random(),
                 type: 'blizzard',
@@ -248,7 +243,7 @@ export function useAbilityKeys({
               onAbilityUse(currentWeapon, 'r');
               break;
             case WeaponType.SCYTHE:
-              // Add boneclaw effect
+              // Dragon Claw effect
               setActiveEffects(prev => [...prev, {
                 id: Math.random(),
                 type: 'boneclaw',
@@ -314,7 +309,7 @@ export function useAbilityKeys({
     orbShieldRef
   ]);
 
-  // Modify the mouse event handlers to check game over state
+  // Mouse event handlers to check game over state
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
       if (isGameOver.current) return; // Ignore mouse events if game is over
@@ -339,7 +334,7 @@ export function useAbilityKeys({
     };
   }, [keys]);
 
-  // Modify the attack interval to properly respect game over state
+  // Attack interval respect game over state
   useEffect(() => {
     const attackInterval = setInterval(() => {
       if (isGameOver.current || !keys.current) return;
@@ -356,7 +351,7 @@ export function useAbilityKeys({
   useEffect(() => {
     const handleGameOver = () => {
       isGameOver.current = true;
-      // Clear any ongoing abilities or effects
+      // Clear effects or leave them running while game is over
 
     };
 

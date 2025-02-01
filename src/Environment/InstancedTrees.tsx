@@ -98,7 +98,7 @@ const InstancedTrees: React.FC<InstancedTreesProps> = ({ trees }) => {
             metalness={0.2}  // Slightly increased metalness
             emissiveIntensity={layer.emissiveIntensity}  // Increased emissive intensity
             transparent
-            opacity={0.95}  // Slight transparency
+            opacity={0.95}  // 0.9 try Slight transparency
           />
         </instancedMesh>
       ))}

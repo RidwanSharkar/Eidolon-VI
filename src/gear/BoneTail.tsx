@@ -84,9 +84,11 @@ const BoneTail: React.FC<BoneTailProps> = ({ movementDirection = new Vector3() }
         <mesh rotation={[Math.PI/-4, 0, 0]}>
           <cylinderGeometry args={[0.04, 0.055, 0.125, 6]} />
           <meshStandardMaterial 
-            color="#e8e8e8"
-            roughness={0.4}
-            metalness={0.3}
+            color="#ffffff"
+            emissive="#304040"
+            emissiveIntensity={0.6}
+            roughness={0.3}
+            metalness={0.4}
           />
         </mesh>
 
@@ -96,9 +98,11 @@ const BoneTail: React.FC<BoneTailProps> = ({ movementDirection = new Vector3() }
           <mesh position={[0, 0.08, 0]}>
             <coneGeometry args={[0.02, 0.06, 4]} />
             <meshStandardMaterial 
-              color="#d8d8d8"
-              roughness={0.5}
-              metalness={0.2}
+              color="#ffffff"
+              emissive="#304040"
+              emissiveIntensity={0.6}
+              roughness={0.3}
+              metalness={0.4}
             />
           </mesh>
           
@@ -106,21 +110,24 @@ const BoneTail: React.FC<BoneTailProps> = ({ movementDirection = new Vector3() }
           <mesh position={[0.08, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
             <coneGeometry args={[0.015, 0.25,  4]} />
             <meshStandardMaterial 
-              color="#d8d8d8"
-              roughness={0.5}
-              metalness={0.2}
+              color="#ffffff"
+              emissive="#304040"
+              emissiveIntensity={0.6}
+              roughness={0.3}
+              metalness={0.4}
             />
           </mesh>
           <mesh position={[-0.085, 0, 0]} rotation={[0, 0, Math.PI / -2]}>
             <coneGeometry args={[0.015, 0.2, 4]} />
             <meshStandardMaterial 
-              color="#d8d8d8"
-              roughness={0.5}
-              metalness={0.2}
+              color="#ffffff"
+              emissive="#304040"
+              emissiveIntensity={0.6}
+              roughness={0.3}
+              metalness={0.4}
             />
           </mesh>
         </group>
-
 
         {/* Vertebra spikes */}
         <group rotation={[Math.PI / 24, 0, -Math.PI / 2]}>
@@ -128,9 +135,11 @@ const BoneTail: React.FC<BoneTailProps> = ({ movementDirection = new Vector3() }
           <mesh position={[0, 0.08, 0]}>
             <coneGeometry args={[0.02, 0.06, 4]} />
             <meshStandardMaterial 
-              color="#d8d8d8"
-              roughness={0.5}
-              metalness={0.2}
+              color="#ffffff"
+              emissive="#304040"
+              emissiveIntensity={0.6}
+              roughness={0.3}
+              metalness={0.4}
             />
           </mesh>
           
@@ -138,29 +147,34 @@ const BoneTail: React.FC<BoneTailProps> = ({ movementDirection = new Vector3() }
           <mesh position={[0.05, 0, 0]} rotation={[0, 0, Math.PI*2]}>
             <coneGeometry args={[0.0125, 0.04, 4]} />
             <meshStandardMaterial 
-              color="#d8d8d8"
-              roughness={0.5}
-              metalness={0.2}
+              color="#ffffff"
+              emissive="#304040"
+              emissiveIntensity={0.6}
+              roughness={0.3}
+              metalness={0.4}
             />
           </mesh>
           <mesh position={[-0.085, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
             <coneGeometry args={[0.015, 0.04, 4]} />
             <meshStandardMaterial 
-              color="#d8d8d8"
-              roughness={0.5}
-              metalness={0.2}
+              color="#ffffff"
+              emissive="#304040"
+              emissiveIntensity={0.6}
+              roughness={0.3}
+              metalness={0.4}
             />
           </mesh>
         </group>
-
 
         {/* Connecting joint */}
         <mesh position={[0, 0.025, +0.06]} rotation={[Math.PI / 2, 0, 0]}>
           <sphereGeometry args={[0.025, 6, 6]} />
           <meshStandardMaterial 
-            color="#d8d8d8"
-            roughness={0.5}
-            metalness={0.2}
+            color="#ffffff"
+            emissive="#304040"
+            emissiveIntensity={0.6}
+            roughness={0.3}
+            metalness={0.4}
           />
         </mesh>
       </group>

@@ -19,7 +19,7 @@ export default function BossAttackIndicator({ position, duration, range }: BossA
     const elapsed = (Date.now() - startTime.current) / 1000;
     const progress = Math.min(elapsed / duration, 1);
 
-    // Faster pulse for attack warning
+    // Pulse for attack warning
     const scale = 1 + Math.sin(elapsed * 8) * 0.15;
     ringRef.current.scale.setScalar(scale);
 

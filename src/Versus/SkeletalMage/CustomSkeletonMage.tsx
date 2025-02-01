@@ -11,14 +11,12 @@ interface CustomSkeletonMageProps {
   onHit?: (damage: number) => void;
 }
 
-// Add these at the top of the file to reuse materials
+// Reuse Materials
 const standardBoneMaterial = new MeshStandardMaterial({
   color: "#e8e8e8",
   roughness: 0.4,
   metalness: 0.3
 });
-
-
 
 // Cache geometries that are reused frequently
 const jointGeometry = new SphereGeometry(0.06, 6, 6);

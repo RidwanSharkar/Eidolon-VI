@@ -17,15 +17,15 @@ interface UseUnitControlsProps {
   onMovementUpdate?: (direction: Vector3) => void;
 }
 
-const PLAY_AREA_RADIUS = 27 // MAP BOUNDARY
+const PLAY_AREA_RADIUS = 27.5 // MAP BOUNDARY
 
 // Base movement speed - this is our reference point
-const BASE_SPEED = 3.5; // MOVEMENT_SPEED
+const BASE_SPEED = 3.6; // MOVEMENT_SPEED
 
 // Direction multipliers
 const BACKWARD_SPEED_MULTIPLIER = 0.6; // 60% speed moving backward
 const STRAFE_SPEED_MULTIPLIER = 0.8;   // 80% speed moving sideways
-const CHARGING_MULTIPLIER = 0.04;      // 4% speed while charging
+const CHARGING_MULTIPLIER = 0.05;      // 4% speed while charging bow
 
 export function useUnitControls({
   groupRef,

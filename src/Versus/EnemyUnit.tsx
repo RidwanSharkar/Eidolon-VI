@@ -58,8 +58,7 @@ export default function EnemyUnit({
   const targetPosition = useRef(initialPosition.clone().setY(0));
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
-
-  // Add velocity state
+  
   const velocity = useRef(new Vector3());
   const targetRotation = useRef(0);
 

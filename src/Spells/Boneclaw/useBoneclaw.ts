@@ -29,7 +29,7 @@ export function useBoneclaw({ onHit, enemyData }: UseBoneclawProps) {
         hit.damage, 
         hit.isCritical, 
         hit.position,
-        true // Add isBoneclaw flag
+        true 
       );
     });
 

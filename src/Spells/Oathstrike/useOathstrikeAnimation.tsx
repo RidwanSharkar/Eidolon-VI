@@ -36,7 +36,7 @@ export const useOathstrikeAnimation = ({
     const progress = progressRef.current / animationDuration;
 
     if (progress <= 1) {
-      // Use quaternion to get parent's forward direction
+      // Quaternion gets the parent's forward direction
       const parentQuaternion = parentRef.current.quaternion;
       
       // Create the forward vector and apply parent's rotation
@@ -48,7 +48,7 @@ export const useOathstrikeAnimation = ({
         .add(forward)
         .setY(0.1);
       
-      // Create a quaternion for laying flat (-90 degrees around X axis)
+      // Quaternion for laying flat (-90 degrees around X axis)
       const flatRotation = new THREE.Quaternion().setFromAxisAngle(
         new THREE.Vector3(-1, 0, 0),
         -Math.PI/2

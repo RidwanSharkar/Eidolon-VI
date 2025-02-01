@@ -26,7 +26,7 @@ export default function EtherealBow({ position, direction, chargeProgress, isCha
     }
   }, [direction]);
 
-  // Check for charge release with improved timing logic
+  // Charge Release Logic
   useFrame(() => {
     // Start charging
     if (!prevIsCharging.current && isCharging) {

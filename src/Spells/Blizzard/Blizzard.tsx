@@ -4,6 +4,29 @@ import { useFrame } from '@react-three/fiber';
 import BlizzardShard from '@/Spells/Blizzard/BlizzardShard';
 import { calculateBlizzardDamage } from '@/Spells/Blizzard/BlizzardDamage';
 import BlizzardAura from '@/Spells/Blizzard/BlizzardAura';
+import * as THREE from 'three';
+
+export const sharedGeometries = {
+  torus: new THREE.TorusGeometry(0.8, 0.075, 8, 32),
+  tetrahedron: new THREE.TetrahedronGeometry(0.0725)
+};
+
+export const sharedMaterials = {
+  blizzard: new THREE.MeshStandardMaterial({
+    color: "#80ffff",
+    emissive: "#40a0ff",
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 0.3
+  }),
+  shard: new THREE.MeshStandardMaterial({
+    color: "#80ffff",
+    emissive: "#40a0ff",
+    emissiveIntensity: 1,
+    transparent: true,
+    opacity: 0.7
+  })
+};
 
 interface BlizzardProps {
   position: Vector3;
@@ -22,7 +45,7 @@ export default function Blizzard({
   const stormRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const lastDamageTime = useRef<number>(0);
-  const duration = 6.5;
+  const duration = 6;
   const shardsRef = useRef<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
   const aurasRef = useRef<Array<{ id: number }>>([]);
 

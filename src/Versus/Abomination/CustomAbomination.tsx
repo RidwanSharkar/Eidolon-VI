@@ -6,7 +6,7 @@ import { useRef, useState, useEffect } from 'react';
 import AbominationTrailEffect from './AbominationTrailEffect';
 import DragonSkull from '@/gear/DragonSkull';
 
-// Add these at the top of the file to reuse materials
+// Reuse materials
 const standardBoneMaterial = new MeshStandardMaterial({
   color: "#e8e8e8",
   roughness: 0.4, 

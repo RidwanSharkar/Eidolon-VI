@@ -2,14 +2,17 @@ import { Vector3 } from 'three';
 import { calculateDamage } from '@/Weapons/damage';
 
 // Cache commonly used values
-const BONECLAW_BASE_DAMAGE = 79;
+const BONECLAW_BASE_DAMAGE = 73;
 const BONECLAW_RANGE = 8.625;
 const BONECLAW_ARC = Math.PI;
 const BONECLAW_ARC_HALF = BONECLAW_ARC / 2;
 
-// Reusable vectors to avoid garbage collection
-const toEnemyVector = new Vector3();
-const normalizedToEnemy = new Vector3();
+// Static vectors for reuse
+const STATIC_VECTORS = {
+  temp1: new Vector3(),
+  temp2: new Vector3(),
+  temp3: new Vector3()
+};
 
 interface BoneclawHitResult {
   targetId: string;
@@ -30,14 +33,13 @@ export function calculateBoneclawHits(
     const enemy = enemies[i];
     if (enemy.health <= 0 || hitEnemies.has(enemy.id)) continue;
 
-    // Reuse vectors for calculations
-    toEnemyVector.subVectors(enemy.position, position);
-    const distance = toEnemyVector.length();
+    STATIC_VECTORS.temp1.subVectors(enemy.position, position);
+    const distance = STATIC_VECTORS.temp1.length();
 
     if (distance > BONECLAW_RANGE) continue;
 
-    normalizedToEnemy.copy(toEnemyVector).normalize();
-    const angle = Math.acos(normalizedToEnemy.dot(direction));
+    STATIC_VECTORS.temp2.copy(STATIC_VECTORS.temp1).normalize();
+    const angle = Math.acos(STATIC_VECTORS.temp2.dot(direction));
 
     if (angle > BONECLAW_ARC_HALF) continue;
 

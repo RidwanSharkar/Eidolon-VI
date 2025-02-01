@@ -1,6 +1,7 @@
-import React, { useState} from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 
 interface ChainLightningEffectProps {
   startPosition: Vector3;
@@ -11,35 +12,57 @@ const ChainLightningEffect: React.FC<ChainLightningEffectProps> = ({
   startPosition,
   targetPositions
 }) => {
-  const [time, setTime] = useState(0);
+  const timeRef = useRef(0);
+  const flickerRef = useRef(1);
   const duration = 0.5;
-  
-  // Add randomized flicker timing
-  const [flicker, setFlicker] = useState(1);
-  
+
+  // Cache geometries
+  const geometries = useMemo(() => ({
+    segment: new THREE.SphereGeometry(1, 8, 8), // Will be scaled per instance
+    impact: new THREE.SphereGeometry(0.4, 16, 16)
+  }), []);
+
+  // Cache materials
+  const materials = useMemo(() => ({
+    core: new THREE.MeshStandardMaterial({
+      color: new Color('#FFD700'),
+      emissive: new Color('#FFD700'),
+      emissiveIntensity: 5,
+      transparent: true
+    }),
+    branch: new THREE.MeshStandardMaterial({
+      color: new Color('#FFA500'),
+      emissive: new Color('#FFA500'),
+      emissiveIntensity: 4,
+      transparent: true
+    }),
+    impact: new THREE.MeshStandardMaterial({
+      color: new Color('#FFD700'),
+      emissive: new Color('#FFD700'),
+      emissiveIntensity: 3,
+      transparent: true
+    })
+  }), []);
+
+  // Pre-calculate base offsets
+  const baseOffsets = useMemo(() => {
+    return Array(32).fill(0).map(() => new THREE.Vector3(
+      (Math.random() - 0.5) * 0.15,
+      (Math.random() - 0.5) * 0.15 + 2,
+      (Math.random() - 0.5) * 0.15
+    ));
+  }, []);
+
   useFrame((_, delta) => {
-    setTime(prev => Math.min(prev + delta, duration));
-    // Create random flickering effect
-    setFlicker(Math.random() * 0.5 + 0.5);
+    timeRef.current = Math.min(timeRef.current + delta, duration);
+    flickerRef.current = Math.random() * 0.5 + 0.5;
+
+    // Update material opacities
+    const progress = timeRef.current / duration;
+    materials.core.opacity = (0.7 * (1 - progress)) * flickerRef.current;
+    materials.branch.opacity = (0.75 * (1 - progress)) * flickerRef.current;
+    materials.impact.opacity = (0.6 * (1 - progress)) * flickerRef.current;
   });
-
-  const progress = time / duration;
-
-  // Helper function to generate lightning offset with increased height
-  const getLightningOffset = (segmentProgress: number, magnitude: number) => {
-    return new Vector3(
-      (Math.random() - 0.5) * magnitude +
-        Math.sin(segmentProgress * Math.PI * 8 + time * 30) * magnitude,
-      (Math.random() - 0.5) * magnitude +
-        Math.cos(segmentProgress * Math.PI * 8 + time * 30) * magnitude + 2, // HEIGHT
-      (Math.random() - 0.5) * magnitude +
-        Math.sin(segmentProgress * Math.PI * 8 + time * 30) * magnitude
-    );
-  };
-
-  // Define lightning colors
-  const coreColor = new Color('#FFD700');  // Golden yellow
-  const glowColor = new Color('#FFA500');  // Slightly orange glow
 
   return (
     <group>
@@ -47,71 +70,51 @@ const ChainLightningEffect: React.FC<ChainLightningEffectProps> = ({
         const startPos = index === 0 ? startPosition : targetPositions[index - 1];
         const direction = targetPos.clone().sub(startPos);
         const distance = direction.length();
-        const segments = Math.ceil(distance * 8); // Increased from 4 to 8 for more density
+        const segments = Math.ceil(distance * 8);
 
         return (
           <group key={index}>
-            {/* Main lightning beam */}
-            {[...Array(segments)].map((_, i) => {
+            {Array(segments).fill(0).map((_, i) => {
               const segmentProgress = i / segments;
-              const offset = getLightningOffset(segmentProgress, 0.15); // Reduced from 0.3 to 0.15
+              const baseOffset = baseOffsets[i % baseOffsets.length];
               const pos = startPos.clone()
                 .lerp(targetPos, segmentProgress)
-                .add(offset)
-                .add(new Vector3(0, Math.sin(segmentProgress * Math.PI) * 0.5, 0)); // Reduced arc height from 0.75 to 0.5
+                .add(baseOffset)
+                .add(new Vector3(0, Math.sin(segmentProgress * Math.PI) * 0.5, 0));
               
-              // Slightly reduced thickness
-              const thickness = Math.random() * 0.025 + 0.04; // Adjusted from 0.035 + 0.05
+              const thickness = Math.random() * 0.025 + 0.04;
 
               return (
                 <group key={i}>
-                  <mesh position={pos.toArray()}>
-                    <sphereGeometry args={[thickness, 8, 8]} />
-                    <meshStandardMaterial
-                      color={coreColor}
-                      emissive={coreColor}
-                      emissiveIntensity={5 * flicker}
-                      transparent
-                      opacity={(0.7 * (1 - progress)) * flicker}
-                    />
-                  </mesh>
+                  <mesh 
+                    position={pos.toArray()}
+                    geometry={geometries.segment}
+                    material={materials.core}
+                    scale={[thickness, thickness, thickness]}
+                  />
                   
-                  {/* Branching effect */}
                   {Math.random() < 0.2 && (
                     <mesh
-                      position={pos.clone().add(getLightningOffset(segmentProgress, 0.25))} // Reduced from 0.5 to 0.25
-                    >
-                      <sphereGeometry args={[thickness * 0.35, 8, 8]} />
-                      <meshStandardMaterial
-                        color={glowColor}
-                        emissive={glowColor}
-                        emissiveIntensity={4 * flicker}
-                        transparent
-                        opacity={(0.75 * (1 - progress)) * flicker}
-                      />
-                    </mesh>
+                      position={pos.clone().add(baseOffsets[(i + 1) % baseOffsets.length])}
+                      geometry={geometries.segment}
+                      material={materials.branch}
+                      scale={[thickness * 0.35, thickness * 0.35, thickness * 0.35]}
+                    />
                   )}
                 </group>
               );
             })}
 
-            {/* Impact point */}
-            <mesh position={targetPos.toArray()}>
-              <sphereGeometry args={[0.4, 16, 16]} />
-              <meshStandardMaterial
-                color={coreColor}
-                emissive={coreColor}
-                emissiveIntensity={3 * flicker}
-                transparent
-                opacity={(0.6 * (1 - progress)) * flicker}
-              />
-            </mesh>
+            <mesh 
+              position={targetPos.toArray()}
+              geometry={geometries.impact}
+              material={materials.impact}
+            />
 
-            {/* Impact light */}
             <pointLight
               position={targetPos.toArray()}
-              color={glowColor}
-              intensity={15 * (1 - progress) * flicker}
+              color="#FFA500"
+              intensity={15 * (1 - timeRef.current / duration) * flickerRef.current}
               distance={4}
               decay={2}
             />

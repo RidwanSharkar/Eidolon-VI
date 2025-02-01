@@ -7,7 +7,7 @@ interface AbominationTrailEffectProps {
 }
 
 const AbominationTrailEffect: React.FC<AbominationTrailEffectProps> = ({ parentRef }) => {
-  const particlesCount = 16;
+  const particlesCount = 12;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -32,7 +32,7 @@ const AbominationTrailEffect: React.FC<AbominationTrailEffectProps> = ({ parentR
       positionsRef.current[i * 3 + 1] = position.y + radius * Math.sin(theta) * Math.sin(phi);
       positionsRef.current[i * 3 + 2] = position.z + radius * Math.cos(phi);
 
-      // Adjusted opacity and scale for larger effect
+      // Opacity and Scale
       opacitiesRef.current[i] = Math.pow((1 - i / particlesCount), 1.2) * 0.3;
       scalesRef.current[i] = 0.4 * Math.pow((1 - i / particlesCount), 0.5);
     }

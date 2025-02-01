@@ -1,5 +1,5 @@
 // src/versus/Boss/Meteor.tsx
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import MeteorTrail from './MeteorTrail';
@@ -11,19 +11,34 @@ interface MeteorProps {
   playerPosition: THREE.Vector3;
 }
 
-const DAMAGE_RADIUS = 2.95;  // Define damage and visual radius
+const DAMAGE_RADIUS = 2.95;
+const IMPACT_DURATION = 2;
+const METEOR_SPEED = 27.75;
+const METEOR_DAMAGE = 72;
+const WARNING_RING_SEGMENTS = 32; // Reduced from 64
+const FIRE_PARTICLES_COUNT = 12;  // Reduced from 15
+
+// Reusable geometries and materials
+const meteorGeometry = new THREE.SphereGeometry(0.75, 16, 16);
+const meteorMaterial = new THREE.MeshBasicMaterial({ color: "#ff4400" });
+const warningRingGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
+const pulsingRingGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.8, DAMAGE_RADIUS - 0.6, WARNING_RING_SEGMENTS);
+const outerGlowGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.25, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
+const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+
+// Reusable vectors to avoid allocations
+const tempPlayerGroundPos = new THREE.Vector3();
+const tempTargetGroundPos = new THREE.Vector3();
 
 const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, onComplete: () => void) => {
   const elapsed = (Date.now() - startTime) / 1000;
-  const duration = 2; // Duration of impact effect
-  const fade = Math.max(0, 1 - (elapsed / duration));
+  const fade = Math.max(0, 1 - (elapsed / IMPACT_DURATION));
   
-  // If effect is done, call onComplete
   if (fade <= 0) {
     onComplete();
     return null;
   }
-  
+
   return (
     <group position={position}>
       {/* Core explosion sphere */}
@@ -91,84 +106,77 @@ const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, on
 export default function Meteor({ targetPosition, onImpact, onComplete, playerPosition }: MeteorProps) {
   const meteorGroupRef = useRef<THREE.Group>(null);
   const meteorMeshRef = useRef<THREE.Mesh>(null);
-  const initialTargetPosition = useRef(new THREE.Vector3(targetPosition.x, -5, targetPosition.z));
-  const startPosition = useRef(new THREE.Vector3(targetPosition.x, 60, targetPosition.z));
-  const [impactOccurred, setImpactOccurred] = useState(false);
-  const [showMeteor, setShowMeteor] = useState(false);
-  const warningRingRef = useRef<THREE.Mesh>(null);
-  const [impactStartTime, setImpactStartTime] = useState<number | null>(null);
-  
-  const trajectory = useRef(new THREE.Vector3()
-    .subVectors(initialTargetPosition.current, startPosition.current)
-    .normalize()
-  );
+
+  // useMemo for initial calculations
+  const [initialTargetPos, startPos, trajectory] = React.useMemo(() => {
+    const initTarget = new THREE.Vector3(targetPosition.x, -5, targetPosition.z);
+    const start = new THREE.Vector3(targetPosition.x, 60, targetPosition.z);
+    const traj = new THREE.Vector3().subVectors(initTarget, start).normalize();
+    return [initTarget, start, traj];
+  }, [targetPosition]);
+
+  // state management
+  const [state, setState] = useState({
+    impactOccurred: false,
+    showMeteor: false,
+    impactStartTime: null as number | null
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setShowMeteor(true);
+      setState(prev => ({ ...prev, showMeteor: true }));
     }, 1090);
 
     return () => clearTimeout(timer);
   }, []);
 
   useFrame((_, delta) => {
-    if (!meteorGroupRef.current || !showMeteor || impactOccurred) {
-      if (impactOccurred && !impactStartTime) {
-        setImpactStartTime(Date.now());
+    if (!meteorGroupRef.current || !state.showMeteor || state.impactOccurred) {
+      if (state.impactOccurred && !state.impactStartTime) {
+        setState(prev => ({ ...prev, impactStartTime: Date.now() }));
       }
       return;
     }
 
     const currentPos = meteorGroupRef.current.position;
-    const distanceToTarget = currentPos.distanceTo(initialTargetPosition.current);
+    const distanceToTarget = currentPos.distanceTo(initialTargetPos);
 
     if (distanceToTarget < DAMAGE_RADIUS || currentPos.y <= 0.1) {
-      setImpactOccurred(true);
-      setImpactStartTime(Date.now());
+      setState(prev => ({ ...prev, impactOccurred: true, impactStartTime: Date.now() }));
       
-      const playerDistance = new THREE.Vector3(
-        playerPosition.x,
-        0,
-        playerPosition.z
-      ).distanceTo(new THREE.Vector3(
-        initialTargetPosition.current.x,
-        0,
-        initialTargetPosition.current.z
-      ));
-
-      if (playerDistance <= DAMAGE_RADIUS) {
-        onImpact(72);
+      // distance calculation
+      tempPlayerGroundPos.set(playerPosition.x, 0, playerPosition.z);
+      tempTargetGroundPos.set(initialTargetPos.x, 0, initialTargetPos.z);
+      
+      if (tempPlayerGroundPos.distanceTo(tempTargetGroundPos) <= DAMAGE_RADIUS) {
+        onImpact(METEOR_DAMAGE);
       }
     }
 
-    const speed = 27.75 * delta;
-    currentPos.addScaledVector(trajectory.current, speed);
+    const speed = METEOR_SPEED * delta;
+    currentPos.addScaledVector(trajectory, speed);
   });
+
+  const getPulsingScale = useCallback((): [number, number, number] => {
+    const scale = 1 + Math.sin(Date.now() * 0.005) * 0.2;
+    return [scale, scale, 1] as [number, number, number];
+  }, []);
 
   return (
      <>
-      {/* Warning Ring */}
-      <group position={[initialTargetPosition.current.x, 0.1, initialTargetPosition.current.z]}>
-        {/* Main warning ring */}
-        <mesh
-          ref={warningRingRef}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <ringGeometry args={[DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS, 64]} />
-          <meshBasicMaterial 
-            color="#ff2200"
-            transparent 
-            opacity={0.4}
-            side={THREE.DoubleSide}
-          />
+      <group position={[initialTargetPos.x, 0.1, initialTargetPos.z]}>
+        {/* Warning rings using shared geometries */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <primitive object={warningRingGeometry} />
+          <meshBasicMaterial color="#ff2200" transparent opacity={0.4} side={THREE.DoubleSide} />
         </mesh>
-
+        
         {/* Pulsing inner ring */}
         <mesh
           rotation={[-Math.PI / 2, 0, 0]}
-          scale={[1 + Math.sin(Date.now() * 0.005) * 0.2, 1 + Math.sin(Date.now() * 0.005) * 0.2, 1]}
+          scale={getPulsingScale()}
         >
-          <ringGeometry args={[DAMAGE_RADIUS - 0.8, DAMAGE_RADIUS - 0.6, 64]} />
+          <primitive object={pulsingRingGeometry} />
           <meshBasicMaterial 
             color="#ff4400"
             transparent 
@@ -182,7 +190,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
         <mesh
           rotation={[-Math.PI / 2, Date.now() * 0.0035, 0]}
         >
-          <ringGeometry args={[DAMAGE_RADIUS - 0.25, DAMAGE_RADIUS, 64]} />
+          <primitive object={outerGlowGeometry} />
           <meshBasicMaterial 
             color="#ff3300"
             transparent
@@ -193,7 +201,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
 
 
         {/* Rising fire particles */}
-        {[...Array(15)].map((_, i) => (
+        {[...Array(FIRE_PARTICLES_COUNT)].map((_, i) => (
           <mesh
             key={i}
             position={[
@@ -202,7 +210,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
               Math.cos(Date.now() * 0.001 + i) * (DAMAGE_RADIUS - 0.5)
             ]}
           >
-            <sphereGeometry args={[0.1, 8, 8]} />
+            <primitive object={particleGeometry} />
             <meshBasicMaterial
               color="#ff3300"
               transparent
@@ -214,11 +222,11 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
 
 
       {/* Meteor with trail */}
-      {showMeteor && (
-        <group ref={meteorGroupRef} position={startPosition.current}>
+      {state.showMeteor && (
+        <group ref={meteorGroupRef} position={startPos}>
           <mesh ref={meteorMeshRef}>
-            <sphereGeometry args={[0.75, 16, 16]} />
-            <meshBasicMaterial color="#ff4400" />
+            <primitive object={meteorGeometry} />
+            <primitive object={meteorMaterial} />
             <pointLight color="#ff4400" intensity={5} distance={8} />
             <MeteorTrail 
               meshRef={meteorMeshRef} 
@@ -230,9 +238,9 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
       )}
 
       {/* Add impact effect */}
-      {impactStartTime && createMeteorImpactEffect(
-        meteorGroupRef.current?.position || initialTargetPosition.current,
-        impactStartTime,
+      {state.impactStartTime && createMeteorImpactEffect(
+        meteorGroupRef.current?.position || initialTargetPos,
+        state.impactStartTime,
         onComplete
       )}
     </>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Vector3, Group } from 'three';
 import Terrain from '../Environment/Terrain';
 import Unit from '../Unit/Unit';
@@ -7,12 +7,13 @@ import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
-import { generateRandomPosition } from '../Environment/terrainGenerators';
+import { generateRandomPosition, generateMountains, generateTrees, generateMushrooms } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import * as THREE from 'three';
 import InstancedTrees from '../Environment/InstancedTrees';
 import InstancedMountains from '../Environment/InstancedMountains';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
+import Pillar from '../Environment/Pillar';
 
 
 interface SceneProps extends SceneType {
@@ -25,9 +26,6 @@ interface SceneProps extends SceneType {
 }
 
 export default function Scene({
-  mountainData,
-  treeData,
-  mushroomData,
   unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
   spawnInterval = 2000,
@@ -35,6 +33,11 @@ export default function Scene({
   initialSkeletons = 4,
   killCount,
 }: SceneProps) {
+  // TERRAIN
+  const mountainData = useMemo(() => generateMountains(), []);
+  const treeData = useMemo(() => generateTrees(), []);
+  const mushroomData = useMemo(() => generateMushrooms(), []);
+
   // State for enemies (with Scene1-specific health values)
   const [enemies, setEnemies] = useState<Enemy[]>(() => {
     // Initialize with initial skeletons
@@ -97,7 +100,7 @@ export default function Scene({
     setPlayerPosition(position);
   }, []);
 
-  // Add this callback before unitComponentProps
+  // Enemy Position Update
   const handleEnemyPositionUpdate = useCallback((id: string, newPosition: Vector3) => {
     setEnemies(prevEnemies =>
       prevEnemies.map(enemy =>
@@ -154,10 +157,10 @@ export default function Scene({
     onSmiteDamage: unitProps.onSmiteDamage
   };
 
-  // Add state to track spawn waves
+  // State to track spawn waves
   const [currentWave, setCurrentWave] = useState(0);
   
-  // Modify spawning logic
+  // SPAWNING LOGIC
   useEffect(() => {
     if (totalSpawned >= maxSkeletons) return;
 
@@ -299,13 +302,16 @@ export default function Scene({
         {/* Ground Environment */}
         <Terrain />
         
+        {/* Add Pillar in center */}
+        <Pillar />
+        
         {/* Render instanced mountains */}
         <InstancedMountains mountains={mountainData} />
 
         {/* Render instanced trees */}
         <InstancedTrees trees={treeData} />
 
-        {/* Replace individual mushrooms with InstancedMushrooms */}
+        {/* Replaced individual mushrooms with InstancedMushrooms */}
         <InstancedMushrooms mushrooms={mushroomData} />
 
         {/* Player Unit with ref */}

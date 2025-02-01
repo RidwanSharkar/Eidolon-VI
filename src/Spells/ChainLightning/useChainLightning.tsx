@@ -24,8 +24,8 @@ export const useChainLightning = ({
   setDamageNumbers,
   nextDamageNumberId
 }: ChainLightningProps) => {
-  const CHAIN_CHANCE = 0.5;
-  const INITIAL_DAMAGE = 17;
+  const CHAIN_CHANCE = 0.375;
+  const INITIAL_DAMAGE = 19;
   const MAX_JUMPS = 5; 
   
   const [lightningTargets, setLightningTargets] = useState<Vector3[]>([]);

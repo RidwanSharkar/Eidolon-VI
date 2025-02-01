@@ -2,6 +2,7 @@
 import { useRef } from 'react';
 import { Mesh, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
+import { sharedGeometries, sharedMaterials } from './Blizzard';
 
 interface BlizzardShardProps {
   initialPosition: Vector3;
@@ -10,7 +11,6 @@ interface BlizzardShardProps {
 }
 
 export default function BlizzardShard({ initialPosition, onComplete, type }: BlizzardShardProps) {
-  const SHARD_SIZE = 0.0725;
   const meshRef = useRef<Mesh>(null);
   const fallSpeed = useRef(Math.random() * 1.5 + 3.65);
   const rotationSpeed = useRef({
@@ -18,7 +18,7 @@ export default function BlizzardShard({ initialPosition, onComplete, type }: Bli
     y: Math.random() * 0.25,
     z: Math.random() * 1
   });
-  const orbitRadius = useRef(Math.min(initialPosition.length(), 2.7));  // Cap the orbital radius
+  const orbitRadius = useRef(Math.min(initialPosition.length(), 2.7));
   const orbitAngle = useRef(Math.atan2(initialPosition.z, initialPosition.x));
 
   useFrame((_, delta) => {
@@ -49,15 +49,11 @@ export default function BlizzardShard({ initialPosition, onComplete, type }: Bli
   });
 
   return (
-    <mesh ref={meshRef} position={initialPosition}>
-      <tetrahedronGeometry args={[SHARD_SIZE]} />
-      <meshStandardMaterial
-        color="#80ffff"
-        emissive="#40a0ff"
-        emissiveIntensity={1}
-        transparent
-        opacity={0.7}
-      />
-    </mesh>
+    <mesh 
+      ref={meshRef} 
+      position={initialPosition}
+      geometry={sharedGeometries.tetrahedron}
+      material={sharedMaterials.shard}
+    />
   );
 }

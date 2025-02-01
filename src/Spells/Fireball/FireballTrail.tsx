@@ -15,14 +15,14 @@ const FireballTrail: React.FC<FireballTrailProps> = ({
   meshRef,
   opacity = 1
 }) => {
-  const particlesCount = 26;
+  const particlesCount = 24;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const scalesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const isInitialized = useRef(false);
   
-  // Add a ref to store the last known position for smoother updates
+  // ref to store the last known position for smoother updates
   const lastKnownPosition = useRef(new THREE.Vector3());
 
   // Initialize positions only once when mesh is available

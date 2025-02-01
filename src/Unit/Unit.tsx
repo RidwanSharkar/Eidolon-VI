@@ -10,7 +10,6 @@ import Scythe from '@/Weapons/Scythe';
 import Sword from '@/Weapons/Sword';
 import Sabres from '@/Weapons/Sabres';
 import EtherealBow from '@/Weapons/EtherBow';
-import Spear from '@/Weapons/Spear';
 
 import Smite from '@/Spells/Smite/Smite';
 import DamageNumber from '@/Interface/DamageNumber';
@@ -164,28 +163,17 @@ export default function Unit({
     startTime?: number;
   }>>([]);
 
-  // Add to existing state declarations
+
   const [isOathstriking, setIsOathstriking] = useState(false);
   const [hasHealedThisSwing, setHasHealedThisSwing] = useState(false);
-
-  // Add near other refs at top of component
   const crusaderAuraRef = useRef<{ processHealingChance: () => void }>(null);
-
-  // Add near other state declarations
   const [bowGroundEffectProgress, setBowGroundEffectProgress] = useState(0);
-
-  // Add this near other state declarations
   const [movementDirection] = useState(() => new Vector3());
-
-
-  // Add with other refs
   const chainLightningRef = useRef<{ processChainLightning: () => void }>(null);
-
-  // Add near other refs at top of component
   const lastFrostExplosionTime = useRef(0);
   const FROST_EXPLOSION_COOLDOWN = 1000; // 1 second cooldown between frost explosions
 
-  // Add new ref for frame-by-frame fireball updates
+  // ref for frame-by-frame fireball updates
   const activeFireballsRef = useRef<{
     id: number;
     position: Vector3;
@@ -194,7 +182,7 @@ export default function Unit({
     maxDistance: number;
   }[]>([]);
 
-  // Add near the top with other refs
+  // ref for projectiles
   const activeProjectilesRef = useRef<Array<{
     id: number;
     position: Vector3;
@@ -249,7 +237,7 @@ export default function Unit({
         type: 'unitFireballExplosion',
         position: impactPosition,
         direction: new Vector3(),
-        duration: 0.25,
+        duration: 0.225,
         startTime: currentTime
       }]);
     }
@@ -263,7 +251,7 @@ export default function Unit({
 
   // ATTACK LOGIC
   const lastHitDetectionTime = useRef<Record<string, number>>({});
-  const HIT_DETECTION_DEBOUNCE = currentWeapon === WeaponType.SCYTHE ? 100 : 200; // ms
+  const HIT_DETECTION_DEBOUNCE = currentWeapon === WeaponType.SCYTHE ? 120 : 200; // ms
 
   const handleWeaponHit = (targetId: string) => {
     if (!groupRef.current || !isSwinging) return;
@@ -594,7 +582,7 @@ export default function Unit({
           const enemyPos = enemy.position.clone();
           enemyPos.y = 1.5;
           if (fireball.position.distanceTo(enemyPos) < 1.5) {
-            handleFireballHit(fireball.id, enemy.id, fireball.position.clone());
+            handleFireballHit(fireball.id, enemy.id, );
             handleFireballImpact(fireball.id, fireball.position.clone());
             return false;
           }
@@ -621,7 +609,7 @@ export default function Unit({
       return charge;
     }));
 
-    // Modified cleanup logic
+    // Fireball Cleanup
     setActiveEffects(prev => prev.filter(effect => {
       // Special handling for boneclaw and blizzard
       if (effect.type === 'boneclaw' || effect.type === 'blizzard') {
@@ -685,7 +673,7 @@ export default function Unit({
 
   //=====================================================================================================
 
-  // FIREBEAM 
+  // FROST LANCE
   const {  startFirebeam, stopFirebeam } = useFirebeamManager({
     parentRef: groupRef,
     onHit,
@@ -825,7 +813,7 @@ export default function Unit({
 
     const baseDamage = 29;
     const maxDamage = 71;
-    const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * (power * power));
+    const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * power); // LINEAR SCALING NOW
     const fullChargeDamage = power >= 0.99 ? 71 : 0;
     const finalDamage = scaledDamage + fullChargeDamage;
     
@@ -845,7 +833,7 @@ export default function Unit({
   //=====================================================================================================
 
   // FIREBALL HIT 
-  const handleFireballHit = (fireballId: number, targetId: string, hitPosition?: Vector3) => {
+  const handleFireballHit = (fireballId: number, targetId: string) => {
     const isEnemy = targetId.startsWith('enemy');
     if (!isEnemy) return;
 
@@ -868,17 +856,7 @@ export default function Unit({
       }]);
     }
 
-    // Add explosion effect at hit position
-    if (hitPosition) {
-      setActiveEffects(prev => [...prev, {
-        id: Date.now(),
-        type: 'fireballExplosion',
-        position: hitPosition,
-        direction: new Vector3(),
-        duration: 0.25, // Duration in seconds
-        startTime: Date.now() // Add start time
-      }]);
-    }
+
 
     // Remove the fireball
     handleFireballImpact(fireballId);
@@ -1008,18 +986,18 @@ export default function Unit({
         prev.filter(effect => {
           if (effect.type !== 'fireballExplosion') return true;
           const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
-          const duration = effect.duration || 0.25;
+          const duration = effect.duration || 0.225;
           return elapsed < duration;
         })
       );
     };
-      // ============================== FIREBALL EXTRA CLEANER TEST
+
 
     const cleanupInterval = setInterval(cleanupEffects, 100);
     return () => clearInterval(cleanupInterval);
   }, [setActiveEffects]);
 
-  // Add this cleanup effect specifically for frost explosions
+      // ============================== AVALANCHE CLEANER TEST
   useEffect(() => {
     const cleanupFrostEffects = () => {
       setActiveEffects(prev => 
@@ -1036,7 +1014,7 @@ export default function Unit({
     return () => clearInterval(cleanupInterval);
   }, [setActiveEffects]);
 
-  // Add cleanup effect for fireballs
+  // Cleanup effect for fireballs
   useEffect(() => {
     return () => {
       activeFireballsRef.current = [];
@@ -1044,7 +1022,7 @@ export default function Unit({
     };
   }, []);
 
-  // Add cleanup effect for projectiles
+  // Cleanup effect for projectiles
   useEffect(() => {
     return () => {
       activeProjectilesRef.current = [];
@@ -1124,15 +1102,6 @@ export default function Unit({
             parentRef={groupRef}
             isSwinging={isSwinging} 
             onSwingComplete={handleSwingComplete} 
-          />
-        ) : currentWeapon === WeaponType.SPEAR ? (
-          <Spear
-            isSwinging={isSwinging}
-            isSmiting={isSmiting}
-            isOathstriking={isOathstriking}
-            onSwingComplete={() => setIsSwinging(false)}
-            onSmiteComplete={() => setIsSmiting(false)}
-            onOathstrikeComplete={() => setIsOathstriking(false)}
           />
         ) : (
           <Sword
@@ -1515,7 +1484,7 @@ export default function Unit({
       {activeEffects.map(effect => {
         if (effect.type === 'unitFireballExplosion') {
           const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
-          const duration = effect.duration || 0.2;
+          const duration = effect.duration || 0.225;
           const fade = Math.max(0, 1 - (elapsed / duration));
           
           return (
@@ -1549,7 +1518,7 @@ export default function Unit({
               </mesh>
 
               {/* Multiple expanding rings */}
-              {[0.4, 0.6, 0.8, 1.0].map((size, i) => (
+              {[0.4, 0.6, 0.8].map((size, i) => (
                 <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
                   <torusGeometry args={[size * (1 + elapsed * 3), 0.045, 16, 32]} />
                   <meshStandardMaterial

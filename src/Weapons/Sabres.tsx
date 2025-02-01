@@ -38,13 +38,13 @@
     // Ref for tracking right swing delay
     const rightSwingDelay = useRef(0);
   
-    // Add a new ref to track swing completion
+    // Ref to track swing completion
     const isSwingComplete = useRef(false);
   
-    // Add a ref for left swing delay
+    // Ref for left swing delay
     const leftSwingDelay = useRef(0);
   
-    // Add refs inside the Sabre component
+    // Refs for Orbs (Avalanche)
     const leftOrbRef = useRef<THREE.Mesh>(null);
     const rightOrbRef = useRef<THREE.Mesh>(null);
   
@@ -57,7 +57,7 @@
     useFrame((_, delta) => {
       if (leftSabreRef.current && rightSabreRef.current) {
         if (isBowCharging) {
-          // Move to sheathed positions at the hips
+          // SHEATHING POSITIONS
           const leftSheathPosition = [-0.8, -0.2, 0.5];
           const rightSheathPosition = [0.8, -0.2, 0.5];
           
@@ -192,7 +192,7 @@
       }
     });
   
-    // Create custom sabre blade shape (curved ornate style)
+    // Create custom sabre blade shape (scimitar)
     const createBladeShape = () => {
       const shape = new Shape();
   
@@ -353,10 +353,6 @@
                 />
               </mesh>
               
-
-              
-
-              
               {/* Outer ethereal glow */}
               <mesh position={[0, 0, -0.02]}>  {/* Offset to center */}
                 <extrudeGeometry args={[createInnerBladeShape(), {
@@ -373,8 +369,6 @@
                   transparent
                 />
               </mesh>
-              
-
               
               {/* Point light for local illumination */}
               <pointLight

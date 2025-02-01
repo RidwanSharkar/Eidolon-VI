@@ -19,7 +19,7 @@ interface BossModelProps {
   isWalking: boolean;
 }
 
-// Add reusable materials at the top
+// Reusable Materials
 const standardBoneMaterial = new THREE.MeshStandardMaterial({
   color: "#e8e8e8",
   roughness: 0.4,
@@ -41,7 +41,7 @@ export default function BossModel({ isAttacking }: BossModelProps) {
 
   return (
     <group ref={groupRef}>
-      {/* Boss Skull - positioned above the body */}
+      {/* Boss Skull */}
       <group scale={[0.7, 0.65, 0.7]} position={[0, 2.05, 0.35]} rotation={[0.5, 0, 0]}>
         <DragonSkull />
       </group>
@@ -125,7 +125,7 @@ export default function BossModel({ isAttacking }: BossModelProps) {
       </group>
      */}
 
-      {/* Add Bone Vortex Effects */}
+      {/* Bone Vortex Effects */}
       <group scale={[2.1, 2.25, 2.1]} position={[0, -0.325, 0]}>
         {/* Front and Back Vortexes only */}
         <group position={[0, 0, 0.11]} rotation={[0, 0, 0]}>
@@ -163,12 +163,11 @@ export default function BossModel({ isAttacking }: BossModelProps) {
         />
       </group>
 
-      {/* Add the bone aura at the bottom of the boss */}
+      {/* Bone Aura */}
       <group position={[0, 0.15, 0]} scale={[0.9, 0.9, 0.9]}>
         <BossBoneAura parentRef={groupRef} />
       </group>
 
-      {/* Add red ground light effect */}
       <pointLight
         position={[0, 0.1, 0]}
         color="#ff0000"

@@ -1,7 +1,8 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { WeaponType } from '../../Weapons/weapons';
+import * as THREE from 'three';
 
 interface SmiteProps {
   weaponType: WeaponType;
@@ -15,7 +16,113 @@ export default function Smite({ position, onComplete }: SmiteProps) {
   const progressRef = useRef(0);
   const animationDuration = 0.9; // Fixed animation duration (in seconds)
   const delayTimer = useRef(0);
-  const startDelay = 0.05; // Same initial delay
+  const startDelay = 0.05; // Initial delay
+
+  // useMemo for static geometries
+  const cylinderGeometries = useMemo(() => ({
+    core: new THREE.CylinderGeometry(0.105, 0.105, 20, 16),
+    inner: new THREE.CylinderGeometry(0.25, 0.25, 20, 16),
+    outer: new THREE.CylinderGeometry(0.42, 0.42, 20, 16),
+    glow1: new THREE.CylinderGeometry(0.6, 0.6, 20, 16),
+    glow2: new THREE.CylinderGeometry(0.75, 0.6, 20, 16),
+    outerGlow: new THREE.CylinderGeometry(0.8, 0.9, 20, 16),
+    torus: new THREE.TorusGeometry(1.175, 0.1, 8, 32),
+    skyTorus: new THREE.TorusGeometry(1, 0.1, 32, 32),
+    sphere: new THREE.SphereGeometry(0.15, 8, 8)
+  }), []);
+
+  // Use useMemo for static materials
+  const materials = useMemo(() => ({
+    core: new THREE.MeshStandardMaterial({
+      color: "#FF7300",
+      emissive: "#FFD500",
+      emissiveIntensity: 50,
+      transparent: true,
+      opacity: 0.995
+    }),
+    inner: new THREE.MeshStandardMaterial({
+      color: "#FF7300",
+      emissive: "#FFD500",
+      emissiveIntensity: 25,
+      transparent: true,
+      opacity: 0.675
+    }),
+    outer: new THREE.MeshStandardMaterial({
+      color: "#FF7300",
+      emissive: "#FFD500",
+      emissiveIntensity: 5,
+      transparent: true,
+      opacity: 0.625
+    }),
+    glow1: new THREE.MeshStandardMaterial({
+      color: "#FF7300",
+      emissive: "#FFD500",
+      emissiveIntensity: 2.5,
+      transparent: true,
+      opacity: 0.55
+    }),
+    glow2: new THREE.MeshStandardMaterial({
+      color: "#FF7300",
+      emissive: "#FF8812",
+      emissiveIntensity: 2.5,
+      transparent: true,
+      opacity: 0.425
+    }),
+    outerGlow: new THREE.MeshStandardMaterial({
+      color: "#FF7300",
+      emissive: "#FF8812",
+      emissiveIntensity: 1,
+      transparent: true,
+      opacity: 0.2
+    }),
+    spiral: new THREE.MeshStandardMaterial({
+      color: "#FF0000",
+      emissive: "#FF8812",
+      emissiveIntensity: 10,
+      transparent: true,
+      opacity: 0.5
+    }),
+    skySpiral: new THREE.MeshStandardMaterial({
+      color: "#FF0000",
+      emissive: "#FF8812",
+      emissiveIntensity: 10,
+      transparent: true,
+      opacity: 0.4
+    }),
+    particle: new THREE.MeshStandardMaterial({
+      color: "#FF0000",
+      emissive: "#FF8812",
+      emissiveIntensity: 10,
+      transparent: true,
+      opacity: 0.665
+    })
+  }), []);
+
+  // Pre-calculate spiral positions
+  const spiralPositions = useMemo(() => (
+    Array(3).fill(0).map((_, i) => ({
+      rotation: new THREE.Euler(Math.PI / 4, (i * Math.PI) / 1.5, Math.PI)
+    }))
+  ), []);
+
+  // Pre-calculate sky spiral positions
+  const skySpiralPositions = useMemo(() => (
+    Array(16).fill(0).map((_, i) => ({
+      rotation: new THREE.Euler(0, (i * Math.PI) / 1.5, 0),
+      position: new THREE.Vector3(0, 7.45, 0)
+    }))
+  ), []);
+
+  // Pre-calculate particle positions
+  const particlePositions = useMemo(() => (
+    Array(8).fill(0).map((_, i) => ({
+      position: new THREE.Vector3(
+        Math.cos((i * Math.PI) / 4) * 1.0,
+        (i - 4) * 2,
+        Math.sin((i * Math.PI) / 4) * 1.0
+      )
+    }))
+  ), []);
 
   useFrame((_, delta) => {
     if (!lightningRef.current) return;
@@ -50,134 +157,31 @@ export default function Smite({ position, onComplete }: SmiteProps) {
       position={[position.x, 25, position.z]}
       visible={delayTimer.current >= startDelay}
     >
-            {/* Core lightning bolt */}
-            <mesh>
-        <cylinderGeometry args={[0.105, 0.105, 20, 16]} />
-        <meshStandardMaterial
-          color="#FF7300"
-          emissive="#FFD500"
-          emissiveIntensity={50}
-          transparent
-          opacity={0.995}
-        />
-      </mesh>
+      {/* Core lightning bolts using shared geometries and materials */}
+      <mesh geometry={cylinderGeometries.core} material={materials.core} />
+      <mesh geometry={cylinderGeometries.inner} material={materials.inner} />
+      <mesh geometry={cylinderGeometries.outer} material={materials.outer} />
+      <mesh geometry={cylinderGeometries.glow1} material={materials.glow1} />
+      <mesh geometry={cylinderGeometries.glow2} material={materials.glow2} />
+      <mesh geometry={cylinderGeometries.outerGlow} material={materials.outerGlow} />
 
-            {/* Core lightning bolt */}
-            <mesh>
-        <cylinderGeometry args={[0.25, 0.25, 20, 16]} />
-        <meshStandardMaterial
-          color="#FF7300"
-          emissive="#FFD500"
-          emissiveIntensity={25}
-          transparent
-          opacity={0.675}
-        />
-      </mesh>
-
-
-      {/* Core lightning bolt */}
-      <mesh>
-        <cylinderGeometry args={[0.42, 0.42, 20, 16]} />
-        <meshStandardMaterial
-          color="#FF7300"
-          emissive="#FFD500"
-          emissiveIntensity={5}
-          transparent
-          opacity={0.625}
-        />
-      </mesh>
-
-      {/* Inner glow */}
-      <mesh>
-        <cylinderGeometry args={[0.6, 0.6, 20, 16]} />
-        <meshStandardMaterial
-          color="#FF7300"
-          emissive="#FFD500"
-          emissiveIntensity={2.5}
-          transparent
-          opacity={0.55}
-        />
-      </mesh>
-
-      {/* Inner glow 2*/}
-      <mesh>
-        <cylinderGeometry args={[0.75, 0.6, 20, 16]} />
-        <meshStandardMaterial
-          color="#FF7300"
-          emissive="#FF8812"
-          emissiveIntensity={2.5}
-          transparent
-          opacity={0.425}
-        />
-      </mesh>
-
-      {/* Outer glow */}
-      <mesh>
-        <cylinderGeometry args={[0.8, 0.9, 20, 16]} />
-        <meshStandardMaterial
-          color="#FF7300"
-          emissive="#FF8812"
-          emissiveIntensity={1}
-          transparent
-          opacity={0.2}
-        />
-      </mesh>
-
-      {/* Spiral effect */}
-      {[...Array(3)].map((_, i) => (
-        <mesh key={i} rotation={[Math.PI / 4, (i * Math.PI) / 1.5, Math.PI]}>
-          <torusGeometry args={[1.175, 0.1, 8, 32]} />
-          <meshStandardMaterial
-            color="#FF0000"
-            emissive="#FF8812"
-            emissiveIntensity={10}
-            transparent
-            opacity={0.5}
-          />
-        </mesh>
+      {/* Spiral effect using pre-calculated positions */}
+      {spiralPositions.map((props, i) => (
+        <mesh key={i} rotation={props.rotation} geometry={cylinderGeometries.torus} material={materials.spiral} />
       ))}
 
-
-      {/*  Spiral effect Sky */}
-      {[...Array(16)].map((_, i) => (
-        <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]} position={[0, +7.45, 0]}>
-          <torusGeometry args={[1, 0.1, 32, 32]} />
-          <meshStandardMaterial
-            color="#FF0000"
-            emissive="#FF8812"
-            emissiveIntensity={10}
-            transparent
-            opacity={0.4}
-          />
-        </mesh>
+      {/* Sky spiral effect using pre-calculated positions */}
+      {skySpiralPositions.map((props, i) => (
+        <mesh key={i} rotation={props.rotation} position={props.position} geometry={cylinderGeometries.skyTorus} material={materials.skySpiral} />
       ))}
 
-
-      {/* Floating particles */}
-      {[...Array(8)].map((_, i) => (
-        <mesh
-          key={i}
-          position={[
-            Math.cos((i * Math.PI) / 4) * 1.0,
-            (i - 4) * 2,
-            Math.sin((i * Math.PI) / 4) * 1.0,
-          ]}
-        >
-          <sphereGeometry args={[0.15, 8, 8]} />
-          <meshStandardMaterial
-            color="#FF0000"
-            emissive="#FF8812"
-            emissiveIntensity={10}
-            transparent
-            opacity={0.665}
-          />
-        </mesh>
+      {/* Floating particles using pre-calculated positions */}
+      {particlePositions.map((props, i) => (
+        <mesh key={i} position={props.position} geometry={cylinderGeometries.sphere} material={materials.particle} />
       ))}
 
-      {/* Enhanced impact point glow */}
+      {/* Lights */}
       <pointLight position={[0, -10, 0]} color="#ff8800" intensity={35} distance={25} />
-
-      {/* Additional ambient glow */}
       <pointLight position={[0, 0, 0]} color="#ffaa00" intensity={10} distance={6} />
     </group>
   );

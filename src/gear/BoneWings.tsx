@@ -70,9 +70,11 @@ export default function BoneWings({ collectedBones, isLeftWing }: BoneWingsProps
       <mesh>
         <cylinderGeometry args={[0.023, 0.0175, 0.32, 3]} />
         <meshStandardMaterial 
-          color="#e8e8e8"
-          roughness={0.4}
-          metalness={0.3}
+          color="#ffffff"
+          emissive="#304040"
+          emissiveIntensity={0.6}
+          roughness={0.3}
+          metalness={0.4}
         />
       </mesh>
       
@@ -80,27 +82,13 @@ export default function BoneWings({ collectedBones, isLeftWing }: BoneWingsProps
       <mesh position={new Vector3(0, 0.2, 0)}>
         <sphereGeometry args={[0.035, 4, 4]} />
         <meshStandardMaterial 
-          color="#d8d8d8"
-          roughness={0.5}
-          metalness={0.2}
+          color="#ffffff"
+          emissive="#304040"
+          emissiveIntensity={0.6}
+          roughness={0.4}
+          metalness={0.3}
         />
       </mesh>
-
-      {/* Side bone piece -
-      <mesh 
-        position={new Vector3(isLeftWing ? -0.13 : 0.13, -0.1285, 0)} 
-        rotation={new Euler(0, 0, isLeftWing ? Math.PI / 2.5 : -Math.PI / 2.5)}
-      >
-        <cylinderGeometry args={[0.023, 0.0175, 0.25, 4]} />
-        <meshStandardMaterial 
-          color="#d8d8d8"
-          roughness={0.5}
-          metalness={0.2}
-        />
-      </mesh>
-
-       angled outward */}
-
 
     </group>
   );

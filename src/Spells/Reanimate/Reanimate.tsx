@@ -1,7 +1,7 @@
-import React, { useImperativeHandle, forwardRef, useState, useCallback } from 'react';
+import React, { useImperativeHandle, forwardRef, useState, useCallback, useMemo } from 'react';
 import { Group, Vector3 } from 'three';
 import { useReanimateManager } from '@/Spells/Reanimate/useReanimateManager';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, RootState } from '@react-three/fiber';
 
 interface ReanimateProps {
   parentRef: React.RefObject<Group>;
@@ -32,11 +32,12 @@ export interface ReanimateRef {
   castReanimate: () => boolean;
 }
 
-const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = ({ position, onComplete }) => {
+const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = React.memo(({ position, onComplete }) => {
   const [time, setTime] = useState(0);
-  const duration = 1.5; // Duration in seconds
-
-  useFrame((_, delta) => {
+  const duration = 1.5;
+  
+  // Use useCallback for frame updates
+  const onFrame = useCallback((_: RootState, delta: number) => {
     setTime(prev => {
       const newTime = prev + delta;
       if (newTime >= duration) {
@@ -44,16 +45,38 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
       }
       return newTime;
     });
-  });
+  }, [duration, onComplete]);
 
+  useFrame(onFrame);
+
+  // Memoize these calculations
   const progress = time / duration;
   const opacity = Math.sin(progress * Math.PI);
   const scale = 1 + progress * 2;
 
+  // Pre-calculate shared material properties
+  const ringMaterial = useMemo(() => ({
+    color: "#60FF38",
+    emissive: "#60FF38",
+    emissiveIntensity: 1.5,
+    transparent: true
+  }), []);
+
+  const particleMaterial = useMemo(() => ({
+    color: "#60FF38",
+    emissive: "#60FF38",
+    emissiveIntensity: 2.5,
+    transparent: true
+  }), []);
+
+  // Pre-generate arrays for iterations
+  const rings = useMemo(() => [...Array(3)], []);
+  const particles = useMemo(() => [...Array(12)], []);
+
   return (
     <group position={position.toArray()}>
       {/* Rising healing rings */}
-      {[...Array(3)].map((_, i) => (
+      {rings.map((_, i) => (
         <mesh
           key={`ring-${i}`}
           position={[0, progress * 2 + i * 0.5, 0]}
@@ -61,10 +84,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
         >
           <torusGeometry args={[0.8 - i * 0.2, 0.05, 16, 32]} />
           <meshStandardMaterial
-            color="#00ff88"
-            emissive="#00ff88"
-            emissiveIntensity={1.5}
-            transparent
+            {...ringMaterial}
             opacity={opacity * (1 - i * 0.2)}
           />
         </mesh>
@@ -74,8 +94,8 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
       <mesh scale={[scale, scale, scale]}>
         <sphereGeometry args={[0.5, 32, 32]} />
         <meshStandardMaterial
-          color="#5EFF00"
-          emissive="#5EFF00"
+          color="#60FF38"
+          emissive="#60FF38"
           emissiveIntensity={2}
           transparent
           opacity={opacity * 0.3}
@@ -83,7 +103,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
       </mesh>
 
       {/* Healing particles */}
-      {[...Array(12)].map((_, i) => {
+      {particles.map((_, i) => {
         const angle = (i / 12) * Math.PI * 2;
         const radius = 0.75 + progress;
         const yOffset = progress * 2;
@@ -99,10 +119,7 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
           >
             <sphereGeometry args={[0.095, 8, 8]} />
             <meshStandardMaterial
-              color="#5EFF00"
-              emissive="#5EFF00"
-              emissiveIntensity={2.5}
-              transparent
+              {...particleMaterial}
               opacity={opacity * 0.8}
             />
           </mesh>
@@ -111,14 +128,16 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = (
 
       {/* Light source */}
       <pointLight
-        color="#00ff88"
+        color="#60FF38"
         intensity={2 * opacity}
         distance={5}
         decay={2}
       />
     </group>
   );
-};
+});
+
+HealingEffect.displayName = 'HealingEffect';
 
 const Reanimate = forwardRef<ReanimateRef, ReanimateProps>(({ 
   parentRef,
@@ -129,15 +148,18 @@ const Reanimate = forwardRef<ReanimateRef, ReanimateProps>(({
   nextDamageNumberId,
 }, ref) => {
   const [showHealingEffect, setShowHealingEffect] = useState(false);
-
-  const { castReanimate } = useReanimateManager({
+  
+  // Memoize manager props
+  const managerProps = useMemo(() => ({
     parentRef,
     charges,
     setCharges,
     onHealthChange,
     setDamageNumbers,
     nextDamageNumberId,
-  });
+  }), [parentRef, charges, setCharges, onHealthChange, setDamageNumbers, nextDamageNumberId]);
+
+  const { castReanimate } = useReanimateManager(managerProps);
 
   // Wrap the castReanimate function to handle the animation
   const handleCastRestore = useCallback(() => {

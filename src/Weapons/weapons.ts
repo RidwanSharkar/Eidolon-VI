@@ -7,7 +7,6 @@ export enum WeaponType {
   SCYTHE = 'scythe',
   SWORD = 'sword',
   SABRES = 'sabres',
-  SPEAR = 'spear'
 }
 
 export interface AbilityInfo {
@@ -51,7 +50,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SCYTHE]: {
     normal: 23,
-    range: 5.25,
+    range: 5,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
@@ -59,17 +58,12 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
     range: 4,
     maxHitsPerSwing: 2
   },
-  [WeaponType.SPEAR]: {
-    normal: 25,
-    range: 6,
-    maxHitsPerSwing: 1
-  }
 };
 
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
     q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 0.725, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 2.05, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
     active: { 
@@ -82,7 +76,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
       name: 'Summon Skeleton', 
       isUnlocked: false 
     }
-  }, // TWIN SCYTHE
+  }, 
 
   [WeaponType.SWORD]: {
     q: { type: 'q', key: 'q', cooldown: 0.925, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
@@ -99,7 +93,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
       isUnlocked: false 
     },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a2.svg', maxCooldown: 0, name: 'Sword Active', isUnlocked: false }
-  }, // BLADESTORM
+  },
   
   [WeaponType.SABRES]: {
     q: { type: 'q', key: 'q', cooldown: 0.605, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
@@ -107,16 +101,8 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
     r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
-  }, // INVISIBLE + movespeed + guaranteed crit 
+  },
 
-
-  [WeaponType.SPEAR]: {
-    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q4.svg', maxCooldown: 1.0, name: 'Spear Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 2, currentCooldown: 0, icon: '/Eidolon/icons/e4.svg', maxCooldown: 2.5, name: 'Spear E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 12, currentCooldown: 0, icon: '/Eidolon/icons/r4.svg', maxCooldown: 12, name: 'Bone Shards', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0.5, currentCooldown: 0, icon: '/Eidolon/icons/p4.svg', maxCooldown: 0, name: 'Static Charge', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a4.svg', maxCooldown: 0, name: 'Lightning Form', isUnlocked: false }
-  }
 }; 
 
 export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbilities, abilities: WeaponInfo): number => {
@@ -126,7 +112,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   if (weapon === WeaponType.SWORD && 
       ability === 'q' && 
       abilities[WeaponType.SWORD].passive.isUnlocked) {
-    return 0.70;
+    return 0.725; // OP w/ chain lightning
   }
   
   return baseAbility.cooldown;
@@ -157,7 +143,7 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       damage: "Damage: 53"
     },
     r: {
-      title: "Bone Claw",
+      title: "Dragon Claw",
       description: "Summon skeletal lazer claws to damage enemies within mid-range - 2 second cooldown.",
       cost: "Cooldown: 2.5 seconds",
       range: "Range: 8.0 feet",
@@ -235,35 +221,4 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       description: "Passive: Melee attacks passively consume orb charges to extra damage based on the number of charges available."
     }
   },
-  [WeaponType.SPEAR]: {
-    q: {
-      title: "",
-      description: "",
-      cost: "",
-      range: "",
-      damage: ""
-    },
-    e: {
-      title: "",
-      description: "",
-      cost: "",
-      range: "",
-      damage: ""
-    },
-    r: {
-      title: "",
-      description: "",
-      cost: "",
-      range: "",
-      damage: ""
-    },
-    passive: {
-      title: "",
-      description: ""
-    },
-    active: {
-      title: "",
-      description: ""
-    }
-  }
 }; 

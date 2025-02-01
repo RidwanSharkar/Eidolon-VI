@@ -36,7 +36,7 @@ export const useHealing = ({
       // Pass the delta amount
       onHealthChange(actualHealAmount);
 
-      // Add healing number if we have the necessary props
+      // Healing number if we have the necessary props
       if (setDamageNumbers && nextDamageNumberId) {
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,

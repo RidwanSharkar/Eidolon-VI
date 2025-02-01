@@ -41,8 +41,6 @@ export default function ChargedOrbitals({
         return '#FF831D'; //  FF9C50
       case WeaponType.SABRES:
         return '#0091FF'; // 78F6FF
-      case WeaponType.SPEAR:
-        return '#00AAFF';
       default:
         return '#00ff44';  // Default to scythe 78F6FF
     }

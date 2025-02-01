@@ -23,7 +23,6 @@
   -ms-user-select: none;
 }
 
-/* Remove the float animation */
 .iconContent {
   display: flex;
   flex-direction: column;
@@ -32,7 +31,7 @@
   pointer-events: auto;
 }
 
-/* Add protection against right-click and other interactions */
+/* protection against right-click and other interactions */
 .panel * {
   pointer-events: none;
 }

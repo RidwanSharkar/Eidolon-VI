@@ -29,8 +29,8 @@ export default function MageFireball({ position, target, onHit, playerPosition }
   const fireballRef = useRef<Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const initialDirection = target.clone().sub(position).normalize();
-  const speed = 0.29
-  const hitRadius = 0.75;
+  const speed = 0.25
+  const hitRadius = 1.0;
   const [showExplosion, setShowExplosion] = useState(false);
   const [explosionStartTime, setExplosionStartTime] = useState<number | null>(null);
   const [, forceUpdate] = useState({});
@@ -57,7 +57,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
     fireballRef.current.position.add(initialDirection.clone().multiplyScalar(speed));
     
     const distanceToPlayer = fireballRef.current.position.distanceTo(playerPosition);
-    const directHitRadius = 0.75;
+    const directHitRadius = 1.0;
     
     if (distanceToPlayer < directHitRadius) {
       setShowExplosion(true);
@@ -79,7 +79,7 @@ export default function MageFireball({ position, target, onHit, playerPosition }
     }
 
     const distanceFromStart = fireballRef.current.position.distanceTo(position);
-    if (distanceFromStart > 60) {
+    if (distanceFromStart > 200) {
       onHit(false);
     }
   });

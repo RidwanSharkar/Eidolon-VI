@@ -188,7 +188,7 @@ export default function Firebeam({ position, direction, onComplete }: FirebeamPr
         {/* Adjusted point light for the sparks */}
         <pointLight position={[0, 0, 18.5]} color="#00E5FF" intensity={12} distance={4} />
 
-        {/* Enhanced beam glow */}
+        {/* Enhanced beam glow NAH */}
         {/* <pointLight position={[0, 0.5, 7.5]} color="#58FCEC" intensity={15} distance={2} /> */}
         {/* <pointLight position={[0, 0, 10]} color="#58FCEC" intensity={15} distance={2} /> */}
         {/* <pointLight position={[0, 0, 5]} color="#58FCEC" intensity={15} distance={2} /> */}

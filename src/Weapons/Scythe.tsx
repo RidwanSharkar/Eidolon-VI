@@ -24,14 +24,12 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
   
   useFrame((_, delta) => {
     if (isSwinging && scytheRef.current) {
-      swingProgress.current += delta * 6.5;
+      swingProgress.current += delta * 8;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
       // Complete swing earlier to prevent extra rotation
       if (swingProgress.current >= Math.PI * 0.85) {
         swingProgress.current = 0;
-        scytheRef.current.rotation.set(0, 0, 0);
-        scytheRef.current.position.set(...basePosition);
         onSwingComplete();
         return;
       }
@@ -174,8 +172,8 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
           </mesh>
         </group>
 
-                        {/* HANDLE RING 1 */}
-                        <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+        {/* HANDLE RING 1 */}
+        <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
           <mesh position-y={-0.35} rotation={[Math.PI/2, 0, 0]}>
           <torusGeometry args={[0.075, 0.02, 16, 32]} />
             <meshStandardMaterial
@@ -188,8 +186,8 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
           </mesh>
         </group>
 
-                                    {/* HANDLE RING 2 */}
-                                <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+        {/* HANDLE RING 2 */}
+        <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
           <mesh position-y={-0.54} rotation={[Math.PI/2, 0, 0]}>
           <torusGeometry args={[0.075, 0.02, 16, 32]} />
             <meshStandardMaterial
@@ -202,8 +200,8 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
           </mesh>
         </group>
 
-                                            {/* HANDLE RING 2 */}
-                                            <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
+        {/* HANDLE RING 2 */}
+        <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
           <mesh position-y={-0.74} rotation={[Math.PI/2, 0, 0]}>
           <torusGeometry args={[0.075, 0.02, 16, 32]} />
             <meshStandardMaterial
@@ -215,10 +213,6 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
             />
           </mesh>
         </group>
-
-
-
-
 
 
         {/* Static outer glow */}
@@ -234,7 +228,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
         </mesh>
       </group>
       
-      {/* BLADE with glowing effect - adjusted position */}
+      {/* BLADE POSITION */}
       <group position={[0.37, 0.8, 0.775]} rotation={[0.2, -Math.PI / 3.6, Math.PI -0.175]} scale={[1.0, 0.55, 1.0]}>
         {/* Base blade */}
         <mesh>

@@ -9,7 +9,7 @@ interface BoneAuraTotemProps {
 
 const createBonePiece = () => (
   <group rotation={[Math.PI / 4, 0, 0]}>
-    {/* Main bone shaft - enlarged */}
+    {/* Main bone shaft */}
     <mesh>
       <cylinderGeometry args={[0.12, 0.12, 1.8, 8]} />
       <meshStandardMaterial 
@@ -19,7 +19,7 @@ const createBonePiece = () => (
       />
     </mesh>
     
-    {/* Bone joints - enlarged */}
+    {/* Bone joints */}
     <mesh position={new THREE.Vector3(0, 0.5, 0)} rotation={new THREE.Euler(0, 0, Math.PI / 6)}>
       <sphereGeometry args={[0.12, 8, 8]} />
       <meshStandardMaterial 

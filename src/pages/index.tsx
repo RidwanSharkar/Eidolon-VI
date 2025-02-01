@@ -1,8 +1,6 @@
-import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Vector3 } from 'three';
 import { WeaponType, AbilityType } from '@/Weapons/weapons';
-import { trunkColors, leafColors } from '@/Environment/treeColors';  
-import { generateMountains, generateTrees, generateMushrooms } from '@/Environment/terrainGenerators';
 import { SceneProps, SkeletonProps } from '@/Scene/SceneProps';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { DEFAULT_WEAPON_ABILITIES, getModifiedCooldown } from '@/Weapons/weapons';
@@ -10,9 +8,10 @@ import * as THREE from 'three';
 import { WeaponInfo } from '@/Unit/UnitProps';
 
 import GameWrapper from '@/Scene/GameWrapper';
-
+// SUPER ANCIENT FILE 
+// WHY FIREBALL HERE 
 //might want to specialize this file for kill counter, everything else scattered from 1.0 
-// redistribute dis file throughout scene/unit  or move scene-> pages
+// redistribute dis file throughout scene/unit   r move scene-> pages
 // SKELETON SPAWN POINTS DEPRECATED DUE TO TERRAIN GENERATION.ts
 const generateRandomPosition = () => {
   const radius = 15;
@@ -65,29 +64,6 @@ export default function HomePage() {
     });
   };
 
-  // Define the main tree position
-  const treePositions = useMemo(() => ({
-    mainTree: new Vector3(0, 2, -5),
-  }), []);
-
-  // Memoize mountain data
-  const mountainData = useMemo(() => generateMountains(), []);
-
-  // Memoize tree data
-  const treeData = useMemo(() => generateTrees(), []);
-
-  // Memoize mushroom data
-  const mushroomData = useMemo(() => generateMushrooms(), []);
-
-  // Assign consistent colors to the interactive tree using useMemo
-  const [interactiveTrunkColor, setInteractiveTrunkColor] = useState<THREE.Color>();
-  const [interactiveLeafColor, setInteractiveLeafColor] = useState<THREE.Color>();
-
-  useEffect(() => {
-    setInteractiveTrunkColor(new THREE.Color(trunkColors[Math.floor(Math.random() * trunkColors.length)]));
-    setInteractiveLeafColor(new THREE.Color(leafColors[Math.floor(Math.random() * leafColors.length)]));
-  }, []);
-
   const handleWeaponSelect = (weapon: WeaponType) => {
     setCurrentWeapon(weapon);
   };
@@ -136,10 +112,10 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Add unit position state
+  // unit position state
   const [unitPosition] = useState(new THREE.Vector3(0, 0, 0));
 
-  // Disposed to be here? wat it do 
+  // Dis sposed to be here? wagwan mon
   const [, setSkeletonHealths] = useState(() => 
     Array(NUM_SKELETONS).fill(175) // Create an array of skeletons with 200 health each
   );
@@ -190,10 +166,8 @@ export default function HomePage() {
         ? { ...skeleton, health: Math.max(0, skeleton.health - damage) } 
         : skeleton
     ));
-    
-    // Handle critical hit effects
+
     if (isCritical) {
-      // Add visual or sound effects for critical hits
       console.log(`Critical hit on ${targetId} for ${damage} damage!`);
     }
   }, []);
@@ -213,7 +187,7 @@ export default function HomePage() {
     cleanup: () => void;
   } | null>(null);
 
-  // Move handleReset up, before sceneProps
+  // RESET
   const handleReset = () => {
     console.log("HomePage: Reset triggered");
     setMaxHealth(200);
@@ -238,7 +212,7 @@ export default function HomePage() {
     });
   };
 
-  // Change this handler to properly handle delta values
+  // HEALTH CHANGE
   const handleHealthChange = useCallback((deltaHealth: number) => {
     setPlayerHealth(prevHealth => {
       const newHealth = Math.min(maxHealth, prevHealth + deltaHealth);
@@ -249,13 +223,7 @@ export default function HomePage() {
   // sceneProps after handleReset
   const sceneProps: SceneProps = {
     bossActive: false,
-    mountainData,
     onAbilityUnlock: handleAbilityUnlock,
-    treeData,
-    mushroomData,
-    treePositions,
-    interactiveTrunkColor: interactiveTrunkColor as THREE.Color,
-    interactiveLeafColor: interactiveLeafColor as THREE.Color,
     onReset: handleReset,
     unitProps: {
       onFireballDamage: handleFireballDamage,

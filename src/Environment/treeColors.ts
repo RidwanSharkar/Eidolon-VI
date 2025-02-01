@@ -14,9 +14,9 @@ export const leafColors = [
   "#FFC3D8", // Brighter pinkwd
   "#98FF57", // Bright lime green
 
-  "#CEFF85", // Bright yellow-green
-  "#CEFF85", // Bright yellow-green
-  "#EFFFB3", // Bright yellow-green
+  "#CEFF85",
+  "#CEFF85", 
+  "#EFFFB3", 
 
-  "#B8FF56", // Bright lime
+  "#B8FF56", 
 ]; 

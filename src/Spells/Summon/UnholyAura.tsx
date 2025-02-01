@@ -22,7 +22,7 @@ export default function UnholyAura({ parentRef }: UnholyAuraProps) {
     <group ref={auraRef} scale={1.45}>
       {/* Outer corrupted circle */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <ringGeometry args={[2.4, 2.8, 128, 1]} />
+        <ringGeometry args={[2.4, 2.8, 128]} />
         <meshStandardMaterial
           color="#00ff88"
           emissive="#00ff88"

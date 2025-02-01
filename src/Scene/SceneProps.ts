@@ -1,8 +1,7 @@
 import { Vector3 } from 'three';
 import { WeaponType } from '../Weapons/weapons';
-import { GeneratedTree } from '../Environment/terrainGenerators';
 import { UnitProps } from '../Unit/UnitProps';
-import * as THREE from 'three';
+
 
 export interface SkeletonProps {
   id: string;
@@ -14,16 +13,6 @@ export interface SkeletonProps {
 }
 
 export interface SceneProps {
-  mountainData: { position: Vector3; scale: number; }[];
-  treeData: GeneratedTree[];
-  mushroomData: Array<{
-    position: Vector3;
-    scale: number;
-    variant: 'pink' | 'green' | 'blue';
-  }>;
-  treePositions: { mainTree: Vector3; };
-  interactiveTrunkColor: THREE.Color;
-  interactiveLeafColor: THREE.Color;
   unitProps: UnitProps;
   onWeaponSelect: (weapon: WeaponType) => void;
   onLevelComplete?: () => void;

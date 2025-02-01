@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { calculateBoneclawHits } from '@/Spells/Boneclaw/BoneclawDamage';
 import BoneclawScratch from '@/Spells/Boneclaw/BoneClawScratch';
 import * as THREE from 'three';
+
 interface BoneclawProps {
   position: Vector3;
   direction: Vector3;
@@ -14,6 +15,30 @@ interface BoneclawProps {
   onSwingComplete?: (position: Vector3, direction: Vector3) => void;
 }
 
+const sharedGeometries = {
+  cylinder: new THREE.CylinderGeometry(0.06, 0.02, 0.12, 6),
+  sphere: new THREE.SphereGeometry(0.12, 12, 12),
+  box: new THREE.BoxGeometry(0.2, 0.15, 0.08),
+  cone: new THREE.ConeGeometry(0.03, 0.3, 6)
+};
+
+const sharedMaterials = {
+  bone: new THREE.MeshStandardMaterial({
+    color: "#d6cfc7",
+    roughness: 0.9,
+    metalness: 0.1
+  }),
+  spectral: new THREE.MeshStandardMaterial({
+    color: "#39ff14",
+    emissive: "#39ff14",
+    emissiveIntensity: 1.3,
+    metalness: 0.8,
+    roughness: 0.1,
+    opacity: 0.85,
+    transparent: true,
+    side: DoubleSide
+  })
+};
 
 export default function Boneclaw({ position, direction, onComplete, parentRef, onHitTarget, enemyData, onSwingComplete }: BoneclawProps) {
   const clawRef = useRef<Group>(null);
@@ -27,14 +52,11 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
   const tempPosition = useRef(new THREE.Vector3());
 
   const createBoneSegment = (length: number, width: number) => (
-    <mesh>
-      <cylinderGeometry args={[width, width * 0.9, length, 8]} />
-      <meshStandardMaterial 
-        color="#d6cfc7"
-        roughness={0.9}
-        metalness={0.1}
-      />
-    </mesh>
+    <mesh
+      scale={[width/0.06, length/0.12, width/0.06]}
+      geometry={sharedGeometries.cylinder}
+      material={sharedMaterials.bone}
+    />
   );
 
   const createJoint = (size: number) => (

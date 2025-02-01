@@ -34,6 +34,49 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
   const leftPosition = centerPosition.clone().add(perpVector.clone().multiplyScalar(-spacing));
   const rightPosition = centerPosition.clone().add(perpVector.clone().multiplyScalar(spacing));
 
+  // Cache shader materials
+  const createSharedShaderMaterial = (opacity: number) => new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      varying vec2 vUv;
+      void main() {
+        float strength = 1.0 - length(vUv - vec2(0.5));
+        vec3 glowColor = mix(uColor, vec3(1.0), 0.3);
+        gl_FragColor = vec4(glowColor, strength * ${opacity});
+      }
+    `,
+    uniforms: {
+      uColor: { value: color }
+    }
+  });
+
+  const sharedShaderMaterials = {
+    core: createSharedShaderMaterial(0.95),
+    inner: createSharedShaderMaterial(0.8),
+    middle: createSharedShaderMaterial(0.6),
+    outer: createSharedShaderMaterial(0.4)
+  };
+
+  // Cache geometries
+  const sharedGeometries = {
+    beam: new THREE.CylinderGeometry(0.1, 0.1, 15, 16),
+    innerBeam: new THREE.CylinderGeometry(0.175, 0.175, 15, 16),
+    middleBeam: new THREE.CylinderGeometry(0.25, 0.25, 15, 16),
+    outerBeam: new THREE.CylinderGeometry(0.375, 0.375, 15, 16),
+    torus: new THREE.TorusGeometry(0.5, 0.08, 32, 32),
+    particle: new THREE.SphereGeometry(0.04, 8, 8)
+  };
+
   useFrame((_, delta) => {
     if (!effectRef.current) return;
 
@@ -84,120 +127,16 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
       ]}
     >
       {/* Core beam */}
-      <mesh>
-        <cylinderGeometry args={[0.1, 0.1, 15, 16]} />
-        <shaderMaterial
-          transparent
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          vertexShader={`
-            varying vec2 vUv;
-            void main() {
-              vUv = uv;
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-          `}
-          fragmentShader={`
-            uniform vec3 uColor;
-            varying vec2 vUv;
-            void main() {
-              float strength = 1.0 - length(vUv - vec2(0.5));
-              vec3 glowColor = mix(uColor, vec3(1.0), 0.3);
-              gl_FragColor = vec4(glowColor, strength * 0.95);
-            }
-          `}
-          uniforms={{
-            uColor: { value: color }
-          }}
-        />
-      </mesh>
+      <mesh geometry={sharedGeometries.beam} material={sharedShaderMaterials.core} />
 
-            {/* inner core beam */}
-            <mesh>
-        <cylinderGeometry args={[0.175, 0.175, 15, 16]} />
-        <shaderMaterial
-          transparent
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          vertexShader={`
-            varying vec2 vUv;
-            void main() {
-              vUv = uv;
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-          `}
-          fragmentShader={`
-            uniform vec3 uColor;
-            varying vec2 vUv;
-            void main() {
-              float strength = 1.0 - length(vUv - vec2(0.5));
-              vec3 glowColor = mix(uColor, vec3(1.0), 0.4);
-              gl_FragColor = vec4(glowColor, strength * 0.8);
-            }
-          `}
-          uniforms={{
-            uColor: { value: color }
-          }}
-        />
-      </mesh>
+      {/* inner core beam */}
+      <mesh geometry={sharedGeometries.innerBeam} material={sharedShaderMaterials.inner} />
 
       {/* Inner glow */}
-      <mesh>
-        <cylinderGeometry args={[0.25, 0.25, 15, 16]} />
-        <shaderMaterial
-          transparent
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          vertexShader={`
-            varying vec2 vUv;
-            void main() {
-              vUv = uv;
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-          `}
-          fragmentShader={`
-            uniform vec3 uColor;
-            varying vec2 vUv;
-            void main() {
-              float strength = 1.0 - length(vUv - vec2(0.5));
-              vec3 glowColor = mix(uColor, vec3(1.0), 0.5);
-              gl_FragColor = vec4(glowColor, strength * 0.6);
-            }
-          `}
-          uniforms={{
-            uColor: { value: color }
-          }}
-        />
-      </mesh>
+      <mesh geometry={sharedGeometries.middleBeam} material={sharedShaderMaterials.middle} />
 
       {/* Outer glow */}
-      <mesh>
-        <cylinderGeometry args={[0.375, 0.375, 15, 16]} />
-        <shaderMaterial
-          transparent
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          vertexShader={`
-            varying vec2 vUv;
-            void main() {
-              vUv = uv;
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-          `}
-          fragmentShader={`
-            uniform vec3 uColor;
-            varying vec2 vUv;
-            void main() {
-              float strength = 1.0 - length(vUv - vec2(0.5));
-              vec3 glowColor = mix(uColor, vec3(1.0), 0.6);
-              gl_FragColor = vec4(glowColor, strength * 0.4);
-            }
-          `}
-          uniforms={{
-            uColor: { value: color }
-          }}
-        />
-      </mesh>
+      <mesh geometry={sharedGeometries.outerBeam} material={sharedShaderMaterials.outer} />
 
       {/*Spiral effectSky */}
       {[...Array(8)].map((_, i) => (
@@ -214,7 +153,7 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
       ))}
 
 
-      {/* Adding Floating particles from Smite */}
+      {/* Floating particles from Smite base */}
       {[...Array(20)].map((_, i) => (
         <mesh
           key={i}

@@ -55,15 +55,20 @@ export default function SkeletalMage({
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
 
-  const ATTACK_RANGE = 15;
-  const MOVEMENT_SPEED = 0.15;                         // 0.15 BOTH IDEAL
-  const SMOOTHING_FACTOR = 0.15;
+  // Add this near your other refs
+  const velocity = useRef(new Vector3());
+
+  const ATTACK_RANGE = 20;
+  const MOVEMENT_SPEED = 0.030;
   const POSITION_UPDATE_THRESHOLD = 0.1;
-  const MINIMUM_UPDATE_INTERVAL = 50;
-  const SEPARATION_RADIUS = 0.95; // Minimum distance between enemies
-  const SEPARATION_FORCE = 0.125; // Strength of the separation force
+  const MINIMUM_UPDATE_INTERVAL = 35;
+  const SEPARATION_RADIUS = 1.25;
+  const SEPARATION_FORCE = 0.155;
   const FIREBALL_COOLDOWN = 4250;
   const FIREBALL_DAMAGE = 18;
+  const ACCELERATION = 6.0;
+  const DECELERATION = 8.0;
+  const ROTATION_SPEED = 8.0;
 
   // Sync health changes
   useEffect(() => {
@@ -121,59 +126,27 @@ export default function SkeletalMage({
   }, [isCastingFireball, isDead, playerPosition]);
 
   // Update frame logic
-  useFrame((state, delta) => {
-    if (!enemyRef.current || currentHealth.current <= 0) return;
-    
-    const currentTime = Date.now();
+  useFrame((_, delta) => {
+    if (!enemyRef.current || currentHealth.current <= 0 || !playerPosition) {
+      setIsMoving(false);
+      return;
+    }
+
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
 
-    // Check if we should cast fireball
-    if (currentTime - lastFireballTime.current >= FIREBALL_COOLDOWN) {
-      if (distanceToPlayer <= ATTACK_RANGE) {
-        // Add rotation to face player while casting
-        const lookTarget = new Vector3()
-          .copy(playerPosition)
-          .setY(currentPosition.current.y);
-        enemyRef.current.lookAt(lookTarget);
-        
-        castFireball();
-        lastFireballTime.current = currentTime;
-      }
-    }
-
-    // Move AWAY if player gets too close (since we're a ranged caster)
-    const MINIMUM_RANGE = 0.5; // Keep at least this far from player
-    if (distanceToPlayer < MINIMUM_RANGE && currentHealth.current > 0) {
+    if (distanceToPlayer > ATTACK_RANGE && currentHealth.current > 0) {
       setIsMoving(true);
-      
-      // Calculate direction AWAY from player
-      const direction = new Vector3()
-        .subVectors(currentPosition.current, playerPosition)
-        .normalize();
 
-      // Move away from player
-      const nextPos = currentPosition.current.clone().add(
-        direction.multiplyScalar(MOVEMENT_SPEED)
-      );
-      currentPosition.current.lerp(nextPos, SMOOTHING_FACTOR);
-      
-      // Update position and rotation
-      enemyRef.current.position.copy(currentPosition.current);
-      const lookTarget = new Vector3()
-        .copy(playerPosition)
-        .setY(currentPosition.current.y);
-      enemyRef.current.lookAt(lookTarget);
-    }
-    // Move closer if too far to cast
-    else if (distanceToPlayer > ATTACK_RANGE && currentHealth.current > 0) {
-      setIsMoving(true);
-      
+      const normalizedSpeed = MOVEMENT_SPEED * 60;
+      const currentFrameSpeed = normalizedSpeed * delta;
+
       // Calculate direction to player
       const direction = new Vector3()
         .subVectors(playerPosition, currentPosition.current)
         .normalize();
 
-      // Get all other enemy positions from the scene
+      // Calculate separation force
+      const separationForce = new Vector3();
       const otherEnemies = enemyRef.current.parent?.children
         .filter(child => 
           child !== enemyRef.current && 
@@ -181,10 +154,7 @@ export default function SkeletalMage({
           child.position.distanceTo(currentPosition.current) < SEPARATION_RADIUS
         ) || [];
 
-      // Calculate separation force
-      const separationForce = new Vector3();
       otherEnemies.forEach(enemy => {
-        // Create a ground-plane version of positions for separation calculation
         const currentGroundPos = currentPosition.current.clone().setY(0);
         const enemyGroundPos = enemy.position.clone().setY(0);
         
@@ -195,38 +165,66 @@ export default function SkeletalMage({
         separationForce.add(diff);
       });
 
-      // Combine forces and ensure Y remains 0
+      // Combine forces and normalize
       const finalDirection = direction.add(separationForce).normalize();
-      finalDirection.y = 0; // Force movement to stay on ground plane
+      finalDirection.y = 0;
 
-      // Update target position with combined forces
-      const movement = finalDirection.multiplyScalar(MOVEMENT_SPEED * delta * 60);
-      targetPosition.current.copy(currentPosition.current).add(movement);
-      targetPosition.current.y = 0; // Ensure target position stays on ground
-
-      // Smooth movement
-      currentPosition.current.lerp(targetPosition.current, SMOOTHING_FACTOR);
-      currentPosition.current.y = 0; // Force current position to stay on ground
+      // Calculate target velocity
+      const targetVelocity = finalDirection.multiplyScalar(currentFrameSpeed);
+      
+      // Smoothly interpolate current velocity towards target
+      velocity.current.lerp(targetVelocity, ACCELERATION * delta);
+      
+      // Update position with smoothed velocity
+      currentPosition.current.add(velocity.current);
+      currentPosition.current.y = 0;
 
       // Apply position to mesh
       enemyRef.current.position.copy(currentPosition.current);
 
-      // Handle rotation smoothly
+      // Smooth rotation
       const lookTarget = new Vector3()
         .copy(playerPosition)
         .setY(currentPosition.current.y);
-      enemyRef.current.lookAt(lookTarget);
+      const targetRotation = Math.atan2(
+        lookTarget.x - currentPosition.current.x,
+        lookTarget.z - currentPosition.current.z
+      );
 
-      // Update position with rate limiting
-      const now = Date.now();
-      if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL) {
-        if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD) {
-          onPositionUpdate(id, currentPosition.current.clone());
-          lastUpdateTime.current = now;
-        }
-      }
+      // Interpolate rotation
+      const currentRotationY = enemyRef.current.rotation.y;
+      let rotationDiff = targetRotation - currentRotationY;
+      while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+      while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+      
+      enemyRef.current.rotation.y += rotationDiff * Math.min(1, ROTATION_SPEED * delta);
+
     } else {
       setIsMoving(false);
+      // Decelerate smoothly
+      velocity.current.multiplyScalar(1 - DECELERATION * delta);
+      
+      if (velocity.current.length() > 0.001) {
+        currentPosition.current.add(velocity.current);
+        enemyRef.current.position.copy(currentPosition.current);
+      }
+    }
+
+    // Check if we should cast fireball
+    if (Date.now() - lastFireballTime.current >= FIREBALL_COOLDOWN) {
+      if (distanceToPlayer <= ATTACK_RANGE) {
+        castFireball();
+        lastFireballTime.current = Date.now();
+      }
+    }
+
+    // Update position with rate limiting
+    const now = Date.now();
+    if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL) {
+      if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD) {
+        onPositionUpdate(id, currentPosition.current.clone());
+        lastUpdateTime.current = now;
+      }
     }
   });
 

@@ -21,8 +21,6 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
   const color = new Color('#00ff44');
   const impactGroup = useRef<Group>(null);
   const explosionStartTime = useRef<number | null>(null);
-  const EXPLOSION_DURATION = 0.3;
-  const EXPLOSION_SIZE = 0.8;
   const explosionRef = useRef<Group>(null);
 
   const checkCollision = (nextPosition: Vector3): boolean => {
@@ -89,24 +87,7 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
       fireballRef.current.position.copy(currentPosition.current);
     }
 
-    if (explosionStartTime.current !== null && explosionRef.current) {
-      const elapsed = clock.current.getElapsedTime() - explosionStartTime.current;
-      const progress = elapsed / EXPLOSION_DURATION;
-      
-      if (progress >= 1) {
-        explosionRef.current.visible = false;
-        explosionStartTime.current = null;
-      } else {
-        const scale = EXPLOSION_SIZE * (1 + progress);
-        explosionRef.current.scale.set(scale, scale, scale);
-        const opacity = 1 - progress;
-        explosionRef.current.children.forEach(child => {
-          if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
-            child.material.opacity = opacity;
-          }
-        });
-      }
-    }
+
   });
 
   return (
@@ -121,18 +102,7 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
         <pointLight color={color} intensity={5} distance={12} />
       </mesh>
       <group ref={impactGroup} visible={false}>
-        <mesh>
-          <sphereGeometry args={[size * 1.25, 16, 16]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={2}
-            transparent={true}
-            opacity={1}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </mesh>
+
       </group>
       <FireballTrail
         color={color}
@@ -140,35 +110,13 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
         meshRef={fireballRef}
         opacity={1}
       />
-      <group ref={explosionRef} visible={false}>
-        <mesh>
-          <sphereGeometry args={[0.5, 16, 16]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={3}
-            transparent
-            opacity={1}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </mesh>
+
+
         
-        <mesh>
-          <sphereGeometry args={[0.8, 16, 16]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={2}
-            transparent
-            opacity={0.5}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </mesh>
+
 
         <pointLight color={color} intensity={8} distance={4} decay={2} />
       </group>
-    </group>
+
   );
 }

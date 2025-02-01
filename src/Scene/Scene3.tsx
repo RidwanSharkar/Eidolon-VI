@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Vector3, Group } from 'three';
 import Terrain from '../Environment/Terrain';
 import InstancedTrees from '../Environment/InstancedTrees';
@@ -8,7 +8,7 @@ import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
-import { generateRandomPosition } from '../Environment/terrainGenerators';
+import { generateRandomPosition, generateMountains, generateTrees, generateMushrooms } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import BossUnit from '@/Versus/Boss/BossUnit';
 
@@ -18,6 +18,7 @@ import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMag
 import { MemoizedAbominationUnit } from '../Versus/Abomination/MemoizedAbomination';
 import { ObjectPool } from './ObjectPool';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
+import Pillar from '../Environment/Pillar';
 
 
 interface ScenePropsWithCallback extends SceneType {
@@ -43,9 +44,6 @@ interface R3FElement extends HTMLElement {
 }
 
 export default function Scene3({
-  mountainData,
-  treeData,
-  mushroomData,
   unitProps,
   skeletonProps,
   killCount,
@@ -54,16 +52,21 @@ export default function Scene3({
   maxSkeletons = 23,
   initialSkeletons = 5,
 }: ScenePropsWithCallback) {
+  // TERRAIN
+  const mountainData = useMemo(() => generateMountains(), []);
+  const treeData = useMemo(() => generateTrees(), []);
+  const mushroomData = useMemo(() => generateMushrooms(), []);
 
   const [spawnStarted, setSpawnStarted] = useState(false);
   const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 5);
 
-  // Add group pool
+  // Group Pool
   const [groupPool] = useState(() => new ObjectPool<Group>(() => {
     const group = new Group();
     group.visible = false;
     return group;
   }, POOL_CONFIG.initialSize, POOL_CONFIG.expandSize, POOL_CONFIG.maxSize));
+
 
   // Modify enemy state initialization to use pool
   const [enemies, setEnemies] = useState<Enemy[]>(() => 
@@ -91,23 +94,24 @@ export default function Scene3({
   // State to store player position
   const [playerPosition, setPlayerPosition] = useState<Vector3>(new Vector3(0, 0, 0));
 
-  // Add boss state
+  // Boss states
   const [isBossSpawned, setIsBossSpawned] = useState(false);
   const [bossHealth, setBossHealth] = useState(6084);
 
   // Add state to track boss position
   const [bossPosition, setBossPosition] = useState<Vector3>(BOSS_SPAWN_POSITION.clone());
 
-  // Add state for tracking waves and abomination spawns
+  // State for tracking waves and abomination spawns
   const [abominationsSpawned, setAbominationsSpawned] = useState(0);
 
-  // Add cleanup function for enemy removal
+  // Cleanup function for enemy removal
   const removeEnemy = useCallback((enemy: Enemy) => {
     if (enemy.ref?.current) {
       enemy.ref.current.visible = false;
       groupPool.release(enemy.ref.current);
     }
   }, [groupPool]);
+
 
   // Callback to handle damage to enemies
   const handleTakeDamage = useCallback((targetId: string, damage: number) => {
@@ -304,7 +308,7 @@ export default function Scene3({
         // 9. Final wait before boss spawn
         await new Promise(resolve => setTimeout(resolve, 250));
         
-        // 10. Spawn the boss with dramatic delay
+        // 10. Spawn the boss with delay 
         setTimeout(() => {
           setIsBossSpawned(true);
         }, 2750);
@@ -313,15 +317,13 @@ export default function Scene3({
       cleanupBeforeBoss();
     }
     
-    // Only call onLevelComplete when boss is defeated
     if (isBossSpawned && bossHealth <= 0) {
       onLevelComplete();
     }
   }, [unitProps.controlsRef, enemies, killCount, onLevelComplete, spawnStarted, totalSpawned, initialSkeletons, isBossSpawned, bossHealth, groupPool]);
 
-  // Modify the spawn logic to include the delay
+  // Delay before allowing spawns
   useEffect(() => {
-    // 5-second delay before allowing spawns
     const initialDelay = setTimeout(() => {
       setSpawnStarted(true);
     }, 1000);
@@ -329,7 +331,7 @@ export default function Scene3({
     return () => clearTimeout(initialDelay);
   }, []);
 
-  // Modify the spawn effect
+  // SPAWNING LOGIC
   useEffect(() => {
     if (totalSpawned >= maxSkeletons) return;
 
@@ -411,7 +413,7 @@ export default function Scene3({
     }
   }, [unitProps.controlsRef]);
 
-  // Modify the cleanup effect
+  // cleanup effect
   useEffect(() => {
     const DEATH_ANIMATION_DURATION = 1500;
     
@@ -430,7 +432,7 @@ export default function Scene3({
     });
   }, [enemies, removeEnemy]);
 
-  // Modify main cleanup
+  // main cleanup
   const cleanup = useCallback(() => {
     setEnemies(prev => {
       prev.forEach(enemy => {
@@ -499,13 +501,16 @@ export default function Scene3({
 
       <Terrain />
       
-      {/* Replace individual mountains with instanced mountains */}
+      {/* Add Pillar in center */}
+      <Pillar />
+      
+      {/* Replaced individual mountains with instanced mountains */}
       <InstancedMountains mountains={mountainData} />
 
-      {/* Replace individual trees with instanced trees */}
+      {/* Replaced individual trees with instanced trees */}
       <InstancedTrees trees={treeData} />
 
-      {/* Replace individual mushrooms with InstancedMushrooms */}
+      {/* Replaced individual mushrooms with InstancedMushrooms */}
       <InstancedMushrooms mushrooms={mushroomData} />
 
       {/* Player Unit with ref */}

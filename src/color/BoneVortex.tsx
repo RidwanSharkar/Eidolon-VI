@@ -18,8 +18,6 @@ const getVortexColor = (weaponType: WeaponType) => {
       return '#FF9748';
     case WeaponType.SABRES:
       return '#00AAFF';
-    case WeaponType.SPEAR:
-      return '#00AAFF';
     default:
       return '#00ff44';
   }
@@ -123,7 +121,7 @@ export default function BoneVortex({ parentRef, weaponType }: BoneVortexProps) {
       </mesh>
        */}
 
-      {/* Enhanced point lights */}
+      {/* Point lights */}
       <pointLight 
         color={getVortexColor(weaponType)}
         intensity={2}
@@ -131,7 +129,6 @@ export default function BoneVortex({ parentRef, weaponType }: BoneVortexProps) {
         position={[0, 0.15, 0]}
       />
       
-      {/* Add a softer, wider-range light */}
       <pointLight 
         color={getVortexColor(weaponType)}
         intensity={1}

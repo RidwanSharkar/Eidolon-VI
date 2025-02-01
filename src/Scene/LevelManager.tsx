@@ -28,7 +28,7 @@ export default function LevelManager({
   const [showScene3, setShowScene3] = useState(false);
   const [levelCompleted, setLevelCompleted] = useState(false);
 
-  // Add the thorough cleanup function
+  // CLEANER
   const thoroughCleanup = useCallback(() => {
     return new Promise<void>(resolve => {
       // Clear THREE.js resources

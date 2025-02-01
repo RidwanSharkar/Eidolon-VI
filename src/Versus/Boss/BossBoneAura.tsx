@@ -9,7 +9,7 @@ interface BossBoneAuraProps {
 
 const createBonePiece = () => (
   <group rotation={[Math.PI / 3.75, 0, 0]}>
-    {/* Main bone shaft - larger and more menacing */}
+    {/* Main bone shaft*/}
     <mesh>
       <cylinderGeometry args={[0.04, 0.04, 0.7, 8]} />
       <meshStandardMaterial 

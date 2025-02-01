@@ -14,7 +14,6 @@ interface DamageNumberProps {
   isSmite?: boolean;
   isSword?: boolean;
   isSabres?: boolean;
-  isSpear?: boolean;
   isOathstrike?: boolean;
   isFirebeam?: boolean;
   isOrbShield?: boolean;
@@ -24,7 +23,6 @@ interface DamageNumberProps {
   onComplete: () => void;
 }
 
-// Define a more specific type for the text ref
 interface TextMesh extends Mesh {
   material: Material & {
     opacity: number;
@@ -53,7 +51,7 @@ export default function DamageNumber({
   const startY = position.y + 3.5;
   const { camera } = useThree();
   
-  // Adjust offsets for better spacing
+  // Spacing Offset
   const timeOffset = (Date.now() % 1000) / 1000;
   const horizontalOffset = Math.sin(timeOffset * Math.PI * 2) * 0.3;
   const verticalOffset = Math.cos(timeOffset * Math.PI * 2) * 0.2;
@@ -89,7 +87,7 @@ export default function DamageNumber({
     textRef.current.material.opacity = Math.min(1, 3 * (1 - progress));
   });
 
-  // ***ORDER IS CRUCIAL ***
+  // *** HEIRARCHY - orderIS CRUCIAL ***
   const getTextColor = () => {
     if (isHealing) return "#338C66";
     if (isChainLightning) return "#ffff00";

@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useMemo } from 'react';
 import { Vector3 } from 'three';
 import { useFirebeam } from '@/Spells/Firebeam/useFirebeam';
 import { Enemy } from '@/Versus/enemy';
@@ -45,6 +45,13 @@ export const useFirebeamManager = ({
   const lastFireTime = useRef(0);
   const { isActive, activateFirebeam, deactivateFirebeam } = useFirebeam({ onHit, parentRef });
 
+  // Cache vector instances to prevent garbage collection
+  const beamPos2D = useMemo(() => new Vector3(), []);
+  const enemyPos2D = useMemo(() => new Vector3(), []);
+  const beamDirection2D = useMemo(() => new Vector3(), []);
+  const enemyDirection = useMemo(() => new Vector3(), []);
+  const projectedPoint = useMemo(() => new Vector3(), []);
+
   const stopFirebeam = useCallback(() => {
     if (currentEffectId.current !== null) {
       setActiveEffects(prev => prev.filter(effect => effect.id !== currentEffectId.current));
@@ -79,16 +86,11 @@ export const useFirebeamManager = ({
 
   const startFirebeam = useCallback(() => {
     const currentTime = Date.now();
-    if (currentTime - lastFireTime.current < 600) { 
-      return; // Enforce 1-second cooldown between shots
-    }
-
-    if (!consumeCharge()) {
-      return;
-    }
+    if (currentTime - lastFireTime.current < 725) return undefined;
+    if (!consumeCharge()) return undefined;
 
     const firebeamData = activateFirebeam();
-    if (!firebeamData) return;
+    if (!firebeamData) return undefined;
 
     const { position, direction, damage } = firebeamData;
     const effectId = nextEffectId.current++;
@@ -96,7 +98,6 @@ export const useFirebeamManager = ({
     currentEffectId.current = effectId;
     lastFireTime.current = currentTime;
 
-    // Add visual effect
     setActiveEffects(prev => [...prev, {
       id: effectId,
       type: 'firebeam',
@@ -104,30 +105,24 @@ export const useFirebeamManager = ({
       direction
     }]);
 
-    // Do instant damage to enemies in the beam's path
+    // Optimize enemy hit detection
     enemyData.forEach(enemy => {
       if (enemy.health <= 0) return;
       
-      // Create 2D positions by ignoring Y axis (similar to projectile hit detection)
-      const beamPos2D = new Vector3(position.x, 0, position.z);
-      const enemyPos2D = new Vector3(enemy.position.x, 0, enemy.position.z);
+      // Reuse vector instances
+      beamPos2D.set(position.x, 0, position.z);
+      enemyPos2D.set(enemy.position.x, 0, enemy.position.z);
+      beamDirection2D.copy(direction).setY(0).normalize();
+      enemyDirection.copy(enemyPos2D).sub(beamPos2D);
       
-      // Project enemy position onto beam line
-      const beamDirection2D = direction.clone().setY(0).normalize();
-      const enemyDirection = enemyPos2D.clone().sub(beamPos2D);
       const projectedDistance = enemyDirection.dot(beamDirection2D);
-      
-      // Only hit enemies in front of beam origin and within max range
       if (projectedDistance <= 0 || projectedDistance > 20) return;
       
-      // Calculate perpendicular distance from enemy to beam line
-      const projectedPoint = beamPos2D.clone().add(beamDirection2D.multiplyScalar(projectedDistance));
+      projectedPoint.copy(beamPos2D).add(beamDirection2D.multiplyScalar(projectedDistance));
       const perpendicularDistance = enemyPos2D.distanceTo(projectedPoint);
       
-      // Check if enemy is within beam width (using similar width as projectiles)
       if (perpendicularDistance < 1.375) {
         onHit(enemy.id, damage);
-        
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
           damage,
@@ -138,13 +133,8 @@ export const useFirebeamManager = ({
       }
     });
 
-    // Automatically stop the beam effect after a short duration
-    setTimeout(() => {
-      stopFirebeam();
-    }, 6000);
-
-    return undefined; // No longer returning an interval
-  }, [ nextDamageNumberId, setDamageNumbers, activateFirebeam, enemyData, onHit, setActiveEffects, consumeCharge, stopFirebeam]);
+    return setTimeout(stopFirebeam, 6000);
+  }, [ nextDamageNumberId, beamPos2D, enemyPos2D, beamDirection2D, enemyDirection, projectedPoint, setDamageNumbers, activateFirebeam, enemyData, onHit, setActiveEffects, consumeCharge, stopFirebeam]);
 
   useEffect(() => {
     return () => {

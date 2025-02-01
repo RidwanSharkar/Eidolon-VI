@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Vector3, Group } from 'three';
 import Terrain from '../Environment/Terrain';
 import Unit from '../Unit/Unit';
@@ -7,7 +7,7 @@ import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
-import { generateRandomPosition } from '../Environment/terrainGenerators';
+import { generateRandomPosition, generateMountains, generateTrees, generateMushrooms } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import * as THREE from 'three';
 import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMage';
@@ -16,6 +16,7 @@ import { ObjectPool } from './ObjectPool';
 import InstancedTrees from '../Environment/InstancedTrees';
 import InstancedMountains from '../Environment/InstancedMountains';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
+import Pillar from '../Environment/Pillar';
 
 
 interface SceneProps extends SceneType {
@@ -27,7 +28,6 @@ interface SceneProps extends SceneType {
   killCount: number;
 }
 
-// Add pool configuration
 const POOL_CONFIG = {
   initialSize: 20,
   expandSize: 5,
@@ -35,25 +35,28 @@ const POOL_CONFIG = {
 };
 
 export default function Scene2({
-  mountainData,
-  treeData,
-  mushroomData,
   unitProps: { controlsRef, ...unitProps },
   onLevelComplete,
   maxSkeletons = 17,
   initialSkeletons = 6,
   killCount,
 }: SceneProps) {
-  // Add group pool
+  // TERRAIN
+  const mountainData = useMemo(() => generateMountains(), []);
+  const treeData = useMemo(() => generateTrees(), []);
+  const mushroomData = useMemo(() => generateMushrooms(), []);
+
+  // GROUP POOL
   const [groupPool] = useState(() => new ObjectPool<Group>(() => {
     const group = new Group();
     group.visible = false;
     return group;
   }, POOL_CONFIG.initialSize, POOL_CONFIG.expandSize, POOL_CONFIG.maxSize));
 
-  // Modify enemy state initialization to use pool
+  // ENEMIES
   const [enemies, setEnemies] = useState<Enemy[]>(() => {
     return Array.from({ length: initialSkeletons }, (_, index) => {
+
       const spawnPosition = generateRandomPosition();
       spawnPosition.y = 0;
       const group = groupPool.acquire();
@@ -74,13 +77,14 @@ export default function Scene2({
   const playerRef = useRef<Group>(null);
   const [playerPosition, setPlayerPosition] = useState<Vector3>(new Vector3(0, 0, 0));
 
-  // Add cleanup function for enemy removal
+  // CLEANUP
   const removeEnemy = useCallback((enemy: Enemy) => {
     if (enemy.ref?.current) {
       enemy.ref.current.visible = false;
       groupPool.release(enemy.ref.current);
     }
   }, [groupPool]);
+
 
   // Callback to handle damage to enemies
   const handleTakeDamage = useCallback((targetId: string, damage: number) => {
@@ -122,7 +126,7 @@ export default function Scene2({
     setPlayerPosition(position);
   }, []);
 
-  // Add this callback before unitComponentProps
+  // Enemy Position Update
   const handleEnemyPositionUpdate = useCallback((id: string, newPosition: Vector3) => {
     setEnemies(prevEnemies =>
       prevEnemies.map(enemy =>
@@ -135,7 +139,6 @@ export default function Scene2({
       )
     );
   }, []);
-
 
   // Update unitComponentProps to use playerHealth
   const unitComponentProps: UnitProps = {
@@ -182,10 +185,10 @@ export default function Scene2({
     onSmiteDamage: unitProps.onSmiteDamage
   };
 
-  // Add state for tracking waves and abomination spawn
+  // State for tracking waves and abomination spawn
   const [currentWave, setCurrentWave] = useState(0);
 
-  // Modify enemy spawning logic in useEffect
+  // SPAWNING LOGIC
   useEffect(() => {
     if (totalSpawned >= maxSkeletons) return;
 
@@ -265,7 +268,7 @@ export default function Scene2({
     }
   }, [controlsRef]);
 
-  // Modify cleanup effect
+  // cleanup effect
   useEffect(() => {
     const DEATH_ANIMATION_DURATION = 1500;
     
@@ -312,7 +315,7 @@ export default function Scene2({
     };
   }, []);
 
-  // Modify main cleanup
+  // main cleanup
   const cleanup = useCallback(() => {
     setEnemies(prev => {
       prev.forEach(enemy => {
@@ -368,13 +371,16 @@ export default function Scene2({
         {/* Ground Environment */}
         <Terrain />
         
-        {/* Replace individual mountains with instanced mountains */}
+        {/* Add Pillar in center */}
+        <Pillar />
+        
+        {/* Replaced individual mountains with instanced mountains */}
         <InstancedMountains mountains={mountainData} />
 
-        {/* Replace individual trees with instanced trees */}
+        {/* Replaced individual trees with instanced trees */}
         <InstancedTrees trees={treeData} />
 
-        {/* Replace individual mushrooms with InstancedMushrooms */}
+        {/* Replaced individual mushrooms with InstancedMushrooms */}
         <InstancedMushrooms mushrooms={mushroomData} />
 
         {/* Player Unit with ref */}

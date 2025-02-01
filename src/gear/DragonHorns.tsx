@@ -35,7 +35,7 @@ export function DragonHorns({ isLeft = false }: { isLeft?: boolean }) {
               />
             </mesh>
             
-            {/* Ridge details - now with 6 faces to match reference */}
+            {/* Ridge details */}
             {Array.from({ length: 6 }).map((_, j) => (
               <group 
                 key={j} 

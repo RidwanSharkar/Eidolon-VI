@@ -19,7 +19,7 @@ const createBonePiece = () => (
       />
     </mesh>
     
-    {/* Bone joints - more pronounced */}
+    {/* Bone joints */}
     <mesh position={new THREE.Vector3(0, 0.1, 0)} rotation={new THREE.Euler(0, 0, Math.PI / 6)}>
       <sphereGeometry args={[0.03, 4, 4]} />
       <meshStandardMaterial 

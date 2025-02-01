@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-//DISABLED FOR NOW
+//DISABLED FOR NOW - Planet
 
 export class FrustumCuller {
   private frustum: THREE.Frustum;

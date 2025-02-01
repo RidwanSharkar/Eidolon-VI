@@ -86,7 +86,6 @@ Eidolon IV is a sci-fi fantasy & cosmic horror-themed 3D action combat game buil
 | **Movement**       | `W`-`A`-`S`-`D`        |
 | **Camera**         | `Right-click` (hold)   |
 | **Auto-Attack**    | `Right-click` (hold)   |
-| **Zoom**           | `Scroll Wheel`         |
 
 - **A mouse is highly recommended for optimal gameplay.**
 

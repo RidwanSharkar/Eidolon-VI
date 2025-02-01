@@ -11,7 +11,7 @@ interface CustomSkeletonProps {
   onHit?: (damage: number) => void;
 }
 
-// Add these at the top of the file to reuse materials
+// Reuse Materials
 const standardBoneMaterial = new MeshStandardMaterial({
   color: "#e8e8e8",
   roughness: 0.4,
@@ -244,7 +244,7 @@ function BoneSwordModel() {
         />
       </mesh>
 
-      {/* Add a subtle glow effect */}
+      {/* Subtle glow effect */}
       <pointLight 
         color="#FF4D00"
         intensity={0.5}
@@ -257,7 +257,6 @@ function BoneSwordModel() {
 
 
 function ShoulderPlate() {
-  // Reduce the number of overlapping plates
   return (
     <group>
       {/* Main shoulder plate with layered armor design */}

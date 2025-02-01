@@ -29,7 +29,7 @@ export default function Sword({
   const smiteProgress = useRef(0);
   const basePosition = [-1.18, 0.225, 0.3] as const; // POSITIONING
   
-  // Add electrical particle system with enhanced parameters
+  // Chain Lightning Sparks
   const sparkParticles = useRef<Array<{
     position: Vector3;
     velocity: Vector3;
@@ -76,7 +76,7 @@ export default function Sword({
         rotationX = -Math.PI/3 - (windupPhase * Math.PI/3);
         rotationY = windupPhase * Math.PI/4;
         
-        // Move even more towards center during windup
+        // Move towards center during windup
         positionX = basePosition[0] + (windupPhase * 1.5);
         positionY = basePosition[1] + windupPhase * 1.5;
         positionZ = basePosition[2] - windupPhase * 1.5;
@@ -85,8 +85,8 @@ export default function Sword({
         const strikePhase = (smitePhase - 0.5) * 2;
         rotationX = -2*Math.PI/3 + (strikePhase * 3*Math.PI/2);
         rotationY = (Math.PI/4) * (1 - strikePhase);
-        
-        // Strike further towards center
+      
+        // Strike  towards center
         positionX = basePosition[0] + (1.5 * (1 - strikePhase));
         positionY = basePosition[1] + (1.5 - strikePhase * 2.0);
         positionZ = basePosition[2] - (1.5 - strikePhase * 3.0);
@@ -176,12 +176,12 @@ export default function Sword({
               (Math.random() - 0.5) * 4
             ).multiplyScalar(0.8),
             life: 1.0,
-            scale: Math.random() * 0.015 + 0.005  // Much smaller scale range
+            scale: Math.random() * 0.02 + 0.005  // Much smaller scale range
           });
         }
       }
 
-      // Update existing sparks with more dynamic movement
+      // Update existing sparks with dynamic movement
       sparkParticles.current.forEach(spark => {
         spark.velocity.x += Math.sin(Date.now() * 0.01) * delta * 0.5;
         spark.velocity.z += Math.cos(Date.now() * 0.01) * delta * 0.5;
@@ -190,9 +190,9 @@ export default function Sword({
         spark.velocity.y += delta * 0.5;
       });
 
-      // Limit total particles for performance (optional)
-      if (sparkParticles.current.length > 150) { // Increased maximum particles
-        sparkParticles.current = sparkParticles.current.slice(-150);
+      // Limit total particles
+      if (sparkParticles.current.length > 120) { // Increased maximum particles
+        sparkParticles.current = sparkParticles.current.slice(-120);
       }
 
       // Remove dead sparks
@@ -217,7 +217,7 @@ export default function Sword({
     shape.lineTo(0.15, -0.15);
     shape.lineTo(0, 0);
     
-    // Blade shape with improved symmetry - reduced width values
+    // Blade shape with symmetry
     shape.lineTo(0, 0.08);    // Reduced from 0.12
     shape.lineTo(0.2, 0.2);   // Reduced from 0.25
     shape.quadraticCurveTo(0.8, 0.15, 1.5, 0.18); // Reduced y values
@@ -236,7 +236,6 @@ export default function Sword({
     const shape = new Shape();
     shape.moveTo(0, 0);
     
-    // Blade shape with  symmetry
     shape.lineTo(0, 0.06);   
     shape.lineTo(0.15, 0.15); 
     shape.quadraticCurveTo(1.2, 0.12, 1.5, 0.15); 
@@ -308,30 +307,7 @@ export default function Sword({
               </mesh>
             ))}
 
-            {/* Lightning trail during swing 
-            {isSwinging && (
-              <mesh>
-                <tubeGeometry args={[
-                  new THREE.CatmullRomCurve3([
-                    new Vector3(0, 0, 0),
-                    new Vector3(0.5, 0.5, 0),
-                    new Vector3(1, 0, 0)
-                  ]),
-                  20,
-                  0.05,
-                  8,
-                  false
-                ]} />
-                <meshStandardMaterial
-                  color="#FFD700"
-                  emissive="#FFA500"
-                  emissiveIntensity={2}
-                  transparent
-                  opacity={0.6}
-                  blending={THREE.AdditiveBlending}
-                />
-              </mesh>
-            )}*/}
+
           </>
         )}
       </group>
@@ -400,7 +376,7 @@ export default function Sword({
             <meshStandardMaterial
               color={new THREE.Color(0xFFFF00)}         // Pure yellow
               emissive={new THREE.Color(0xFF6F00)}      // Yellow emission
-              emissiveIntensity={2}                    // for orange 
+              emissiveIntensity={2}                    // Orange 
               transparent
               opacity={1}
             />
@@ -455,7 +431,7 @@ export default function Sword({
           <mesh>
             <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xFF6F00)}  // Brighter purple
+              color={new THREE.Color(0xFF6F00)}  
               emissive={new THREE.Color(0xFF6F00)}
               emissiveIntensity={2.5}
               metalness={0.3}
@@ -467,7 +443,7 @@ export default function Sword({
           <mesh>
             <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xFFB700)}  // Deep purple
+              color={new THREE.Color(0xFFB700)}  
               emissive={new THREE.Color(0xFF6F00)}
               emissiveIntensity={5}
               metalness={0.2}

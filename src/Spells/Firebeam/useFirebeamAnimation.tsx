@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3 } from 'three';
 
@@ -16,6 +16,7 @@ export const useFirebeamAnimation = ({
   const fadeOutDuration = 2500;
   const isActive = useRef(true);
   const isFadingOut = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     const currentBeam = beamRef.current;
@@ -24,11 +25,11 @@ export const useFirebeamAnimation = ({
       isActive.current = false;
       if (currentBeam) {
         isFadingOut.current = true;
-        setTimeout(() => {
+        timeoutRef.current = setTimeout(() => {
           if (currentBeam) {
             currentBeam.scale.z = 0;
           }
-        }, fadeOutDuration * 3000);
+        }, fadeOutDuration);
       }
     };
   }, [beamRef]);
@@ -37,28 +38,33 @@ export const useFirebeamAnimation = ({
     if (!beamRef.current) return;
 
     if (isFadingOut.current) {
+      if (Math.random() > 0.25) return;
       progressRef.current -= delta / fadeOutDuration;
       if (progressRef.current > 0) {
         beamRef.current.scale.z = progressRef.current;
       }
     } else if (progressRef.current < 1) {
       progressRef.current += delta / startupDuration;
-      const progress = Math.min(progressRef.current, 1);
-      beamRef.current.scale.z = progress;
+      beamRef.current.scale.z = Math.min(progressRef.current, 1);
     }
   });
 
   return {
-    reset: () => {
+    reset: useCallback(() => {
       progressRef.current = 0;
       isActive.current = false;
       isFadingOut.current = true;
-      setTimeout(() => {
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
+      timeoutRef.current = setTimeout(() => {
         if (beamRef.current) {
           beamRef.current.scale.z = 0;
         }
         isFadingOut.current = false;
-      }, fadeOutDuration * 2000);
-    }
+      }, fadeOutDuration);
+    }, [beamRef])
   };
 }; 
