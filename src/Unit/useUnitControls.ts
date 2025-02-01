@@ -24,7 +24,7 @@ const BASE_SPEED = 3.6; // MOVEMENT_SPEED
 
 // Direction multipliers
 const BACKWARD_SPEED_MULTIPLIER = 0.6; // 60% speed moving backward
-const STRAFE_SPEED_MULTIPLIER = 0.8;   // 80% speed moving sideways
+const STRAFE_SPEED_MULTIPLIER = 0.85;   // 80% speed moving sideways
 const CHARGING_MULTIPLIER = 0.05;      // 4% speed while charging bow
 
 export function useUnitControls({
