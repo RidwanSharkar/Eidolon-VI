@@ -25,12 +25,12 @@ export default function SummonedHandler({
     hasTriggeredCleanup: false,
     mountId: Date.now(),
     lastTargetSwitchTime: Date.now(),
-    ATTACK_COOLDOWN: 1000,
+    ATTACK_COOLDOWN: 750,
     RANGE: 35,
-    DURATION: 13000,
+    DURATION: 12000,
     DAMAGE: 53,
     EFFECT_DURATION: 225,
-    TARGET_SWITCH_INTERVAL: 4000
+    TARGET_SWITCH_INTERVAL: 3000
   }).current;
 
   const calculateDistance = useCallback((pos1: { x: number, z: number }, pos2: { x: number, z: number }) => {
@@ -80,7 +80,7 @@ export default function SummonedHandler({
     }
 
     const isBossTarget = target.id.startsWith('boss-') || target.id.startsWith('enemy-boss-');
-    const damage = isBossTarget ? 13 : constants.DAMAGE;
+    const damage = isBossTarget ? 17 : constants.DAMAGE;
     
     const impactPosition = target.position.clone().setY(1.5);
     

@@ -4,12 +4,13 @@ import { Vector3, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import Fireball from '../Spells/Fireball/Fireball';
 import * as THREE from 'three';
-import { WeaponType, WEAPON_DAMAGES } from '../Weapons/weapons';
+import { WeaponType, WEAPON_DAMAGES, WEAPON_ORB_COUNTS } from '../Weapons/weapons';
 
 import Scythe from '@/Weapons/Scythe';
 import Sword from '@/Weapons/Sword';
 import Sabres from '@/Weapons/Sabres';
 import EtherealBow from '@/Weapons/EtherBow';
+import Spear from '@/Weapons/Spear';
 
 import Smite from '@/Spells/Smite/Smite';
 import DamageNumber from '@/Interface/DamageNumber';
@@ -39,6 +40,14 @@ import ChainLightning from '@/Spells/ChainLightning/ChainLightning';
 import OrbShield from '@/Spells/Avalanche/OrbShield';
 import { FrostExplosion } from '@/Spells/Avalanche/FrostExplosion';
 import { DragonHorns } from '@/gear/DragonHorns';
+import Whirlwind from '@/Spells/Whirlwind/Whirlwind';
+import { useStealthEffect } from '../Spells/Stealth/useStealthEffect';
+import { stealthManager } from '../Spells/Stealth/StealthManager';
+import { useStealthHealing } from '@/Spells/Stealth/useStealthHealing';
+import StealthMistEffect from '../Spells/Stealth/StealthMistEffect';
+import StealthStrikeEffect from '@/Spells/Stealth/StealthStrikeEffect';
+import { useQuickShot } from '../Spells/QuickShot/QuickShot';
+import BoneArrow from '@/Spells/QuickShot/BoneArrow';
 
 
 
@@ -112,6 +121,7 @@ export default function Unit({
     isChainLightning?: boolean;
     isFireball?: boolean;
     isSummon?: boolean;
+    isStealthStrike?: boolean;
   }[]>([]);
   const nextDamageNumberId = useRef(0);
   const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
@@ -139,16 +149,14 @@ export default function Unit({
     id: number;
     available: boolean;
     cooldownStartTime: number | null;
-  }>>([
-    { id: 1, available: true, cooldownStartTime: null },
-    { id: 2, available: true, cooldownStartTime: null },
-    { id: 3, available: true, cooldownStartTime: null },
-    { id: 4, available: true, cooldownStartTime: null },
-    { id: 5, available: true, cooldownStartTime: null },
-    { id: 6, available: true, cooldownStartTime: null },
-    { id: 7, available: true, cooldownStartTime: null },
-    { id: 8, available: true, cooldownStartTime: null }
-  ]);
+  }>>(() => {
+    const count = WEAPON_ORB_COUNTS[currentWeapon];
+    return Array.from({ length: count }, (_, i) => ({
+      id: i + 1,
+      available: true,
+      cooldownStartTime: null
+    }));
+  });
   const [collectedBones, ] = useState<number>(15); // LATER
 
 
@@ -193,6 +201,139 @@ export default function Unit({
     startPosition: Vector3;
     hasCollided?: boolean;
   }>>([]);
+
+  const {
+    activateStealth,
+    isStealthed,
+    setIsStealthed,
+    setHasShadowStrikeBuff
+  } = useStealthEffect({
+    onStealthStart: () => {
+      setActiveEffects(prev => [...prev, {
+        id: Date.now(),
+        type: 'stealth',
+        position: groupRef.current?.position.clone() || new Vector3(),
+        direction: new Vector3(),
+        duration: 5,
+        startTime: Date.now()
+      }]);
+    },
+    onStealthEnd: () => {
+      setActiveEffects(prev => 
+        prev.filter(effect => effect.type !== 'stealth')
+      );
+    }
+  });
+
+  const { handleStealthKillHeal } = useStealthHealing({
+    currentHealth: health,
+    maxHealth: maxHealth,
+    onHealthChange: (health: number) => onHealthChange?.(health),
+    setDamageNumbers,
+    nextDamageNumberId
+  });
+
+  // Modify handleAttack to use the new stealth system
+  const handleAttack = useCallback(
+    (targetId: string, baseDamage: number) => {
+      let finalDamage = baseDamage;
+      let isStealthStrike = false;
+      let isCritical = false;
+      let stealthBonusAmount = 0;
+
+      // Cache stealth status at the start of the attack
+      const wasStealthed = stealthManager.hasShadowStrikeBuff();
+      
+      if (wasStealthed) {
+        const target = enemyData.find(e => e.id === targetId);
+        
+        if (target && groupRef.current) {
+          const playerPos = groupRef.current.position;
+          const enemyPos = target.position;
+          
+          const enemyForward = new Vector3(0, 0, 1).applyEuler(new THREE.Euler(0, target.rotation, 0));
+          const toPlayer = new Vector3()
+            .subVectors(playerPos, enemyPos)
+            .normalize();
+          
+          const dotProduct = toPlayer.dot(enemyForward);
+          
+          // Break stealth immediately to prevent race conditions
+          isStealthStrike = true;
+          stealthManager.breakStealth();
+          
+          // Use requestAnimationFrame to ensure UI updates happen on the next frame
+          requestAnimationFrame(() => {
+            setIsStealthed(false);
+            setHasShadowStrikeBuff(false);
+          });
+
+          // Calculate and apply damage
+          if (dotProduct > 0.5) {
+            stealthBonusAmount = 221;
+            finalDamage += stealthBonusAmount;
+            isCritical = true;
+            
+            if (target.health <= finalDamage) {
+              handleStealthKillHeal(target.position, true);
+            }
+          } else {
+            stealthBonusAmount = 110;
+            finalDamage += stealthBonusAmount;
+            
+            if (target.health <= finalDamage) {
+              handleStealthKillHeal(target.position, false);
+            }
+          }
+        }
+      }
+
+      // Dispatch hit event immediately
+      onHit(targetId, finalDamage);
+
+      // Handle damage numbers after hit is confirmed
+      const target = enemyData.find(e => e.id === targetId);
+      if (target) {
+        setDamageNumbers(prev => [...prev, {
+          id: nextDamageNumberId.current++,
+          damage: finalDamage,
+          position: target.position.clone(),
+          isCritical,
+          isStealthStrike
+        }]);
+      }
+
+      if (wasStealthed && target && groupRef.current) {
+        const effectDirection = new Vector3().subVectors(target.position, groupRef.current.position).normalize();
+        setActiveEffects(prev => [...prev, {
+          id: Date.now(),
+          type: 'stealthStrike',
+          position: target.position.clone(),
+          direction: effectDirection,
+          duration: 0.2,
+          startTime: Date.now()
+        }]);
+      }
+    },
+    [onHit, setIsStealthed, setHasShadowStrikeBuff, enemyData, handleStealthKillHeal]
+  );
+
+  // Add new state for whirlwind
+  const [isWhirlwinding, setIsWhirlwinding] = useState(false);
+
+  // Add ref to track whirlwind duration
+  const whirlwindStartTime = useRef<number | null>(null);
+  const WHIRLWIND_MAX_DURATION = 15000; // 1.5 seconds max duration
+
+  const { shootQuickShot, activeProjectilesRef: quickShotProjectilesRef } = useQuickShot({
+    parentRef: groupRef,
+    onHit,
+    enemyData,
+    setDamageNumbers,
+    nextDamageNumberId,
+    charges: fireballCharges,
+    setCharges: setFireballCharges
+  });
 
 
   //=====================================================================================================
@@ -265,7 +406,7 @@ export default function Unit({
     lastHitDetectionTime.current[targetId] = now;
     
     const target = enemyData.find(e => e.id === targetId);
-    if (!target) return;
+    if (!target || target.health <= 0 || target.isDying) return;
 
     // store the hit time
     setHitCountThisSwing(prev => ({
@@ -288,6 +429,52 @@ export default function Unit({
     const weaponRange = WEAPON_DAMAGES[currentWeapon].range;
 
     if (distance <= weaponRange) {
+      // Spear-specific hit detection
+      if (currentWeapon === WeaponType.SPEAR) {
+        const toTarget = new Vector3()
+          .subVectors(target.position, groupRef.current.position)
+          .normalize();
+        const forward = new Vector3(0, 0, 1)
+          .applyQuaternion(groupRef.current.quaternion);
+        
+        const angle = toTarget.angleTo(forward);
+        
+        // Spear has a narrower hit arc (30 degrees)
+        if (Math.abs(angle) > Math.PI / 6) {
+          return;
+        }
+
+        // Check for max range critical strike
+        // Consider hits between 85-100% of max range as "sweet spot" hits
+        const maxRange = WEAPON_DAMAGES[WeaponType.SPEAR].range;
+        const isMaxRangeHit = distance >= maxRange * 0.8;
+
+        const baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
+        let damage, isCritical;
+
+        if (isMaxRangeHit) {
+          // Guaranteed critical at max range with bonus damage
+          damage = baseDamage * 2; // Critical multiplier
+          isCritical = true;
+        } else {
+          // Normal damage calculation for non-max range hits
+          const damageResult = calculateDamage(baseDamage);
+          damage = damageResult.damage;
+          isCritical = damageResult.isCritical;
+        }
+
+        handleAttack(target.id, damage);
+        
+        setDamageNumbers(prev => [...prev, {
+          id: nextDamageNumberId.current++,
+          damage,
+          position: target.position.clone(),
+          isCritical
+        }]);
+
+        return;
+      }
+
       // SABRES HIT ARC CHECK
       if (currentWeapon === WeaponType.SABRES ) {
         const toTarget = new Vector3()
@@ -321,7 +508,7 @@ export default function Unit({
         
         // Initial hit
         const { damage, isCritical } = calculateDamage(13); // Smite Swing Bonus Damage 
-        onHit(target.id, damage);
+        handleAttack(target.id, damage);
         
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
@@ -340,7 +527,7 @@ export default function Unit({
           }
 
           const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(41);
-          onHit(target.id, lightningDamage);
+          handleAttack(target.id, lightningDamage);
           
           setDamageNumbers(prev => [...prev, {
             id: nextDamageNumberId.current++,
@@ -422,7 +609,7 @@ export default function Unit({
       }
 
       // Use totalDamage instead of just damage
-      onHit(target.id, totalDamage);
+      handleAttack(target.id, totalDamage);
 
       // Calculate target's health after damage
       const targetAfterDamage = target.health - totalDamage;
@@ -499,7 +686,7 @@ export default function Unit({
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
-      const progress = Math.min(chargeTime / 1.7, 1); // BOWCHARGE CHARGETIME - 1.5 no movemvent
+      const progress = Math.min(chargeTime / 1.675, 1); // BOWCHARGE CHARGETIME - 1.5 no movemvent
       setBowChargeProgress(progress);
       setBowGroundEffectProgress(progress); // Update ground effect progress
 
@@ -624,6 +811,16 @@ export default function Unit({
 
       return true;
     }));
+
+    // Check whirlwind duration
+    if (isWhirlwinding && whirlwindStartTime.current) {
+      const now = Date.now();
+      if (now - whirlwindStartTime.current >= WHIRLWIND_MAX_DURATION) {
+        setIsWhirlwinding(false);
+        whirlwindStartTime.current = null;
+        onAbilityUse(currentWeapon, 'e');
+      }
+    }
   });
 
   //=====================================================================================================
@@ -742,6 +939,12 @@ export default function Unit({
     activateOathstrike,
     setIsOathstriking,
     orbShieldRef,
+    isWhirlwinding,
+    setIsWhirlwinding,
+    whirlwindStartTime,
+    fireballCharges,
+    activateStealth,
+    shootQuickShot
   });
 
   //=====================================================================================================
@@ -781,7 +984,7 @@ export default function Unit({
     if (!isEnemy) return;
 
     const enemy = enemyData.find(e => e.id === targetId);
-    if (!enemy) return;
+    if (!enemy || enemy.health <= 0 || enemy.isDying) return;
 
     // Skip if projectile has already hit this target
     const hitKey = `${projectileId}_${targetId}`;
@@ -811,7 +1014,7 @@ export default function Unit({
         [hitKey]: 1
     }));
 
-    const baseDamage = 29;
+    const baseDamage = 41;
     const maxDamage = 71;
     const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * power); // LINEAR SCALING NOW
     const fullChargeDamage = power >= 0.99 ? 71 : 0;
@@ -868,7 +1071,7 @@ export default function Unit({
   useFrame(() => {
     if (groupRef.current) {
       const position = groupRef.current.position.clone();
-      onPositionUpdate(position);
+      onPositionUpdate(position, isStealthed); // Pass stealth state to parent
     }
   });
 
@@ -1030,6 +1233,13 @@ export default function Unit({
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      setIsWhirlwinding(false);
+      whirlwindStartTime.current = null;
+    };
+  }, []);
+
   return (
     <>
       <group ref={groupRef} position={[0, 1, 0]}>
@@ -1047,13 +1257,30 @@ export default function Unit({
         <mesh scale={1.085}>
           <sphereGeometry args={[0.415, 32, 32]} />
           <meshBasicMaterial
-            color="#ffffff"
+            color="#a8e6cf"
             transparent
-            opacity={0.125}
+            opacity={isStealthed ? 0.15 : 0.125}
             depthWrite={false}
+            blending={THREE.AdditiveBlending}
           />
         </mesh>
 
+        {/* Stealth fade effect */}
+        {isStealthed && (
+          <mesh scale={1.1}>
+            <sphereGeometry args={[0.42, 32, 32]} />
+            <meshBasicMaterial
+              color="#a8e6cf"
+              transparent
+              opacity={0.08}
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        )}
+
+        {/* Stealth mist effect */}
+        {isStealthed && <StealthMistEffect parentRef={groupRef} />}
         
         {/* WINGS */}
         <group position={[0, 0.2, -0.2]}>
@@ -1103,6 +1330,25 @@ export default function Unit({
             isSwinging={isSwinging} 
             onSwingComplete={handleSwingComplete} 
           />
+        ) : currentWeapon === WeaponType.SPEAR ? (
+          <Spear
+            isSwinging={isSwinging}
+            onSwingComplete={handleSwingComplete}
+            enemyData={enemyData}
+            onHit={onHit}
+            setDamageNumbers={setDamageNumbers}
+            nextDamageNumberId={nextDamageNumberId}
+          />
+        ) : currentWeapon === WeaponType.BOW ? (
+          <group position={[0, 0.1, 0.3]}>
+            <EtherealBow
+              position={new Vector3()}
+              direction={new Vector3(0, 0, 1).applyQuaternion(groupRef.current?.quaternion || new THREE.Quaternion())}
+              chargeProgress={bowChargeProgress}
+              isCharging={isBowCharging}
+              onRelease={releaseBowShot}
+            />
+          </group>
         ) : (
           <Sword
             isSwinging={isSwinging}
@@ -1173,20 +1419,12 @@ export default function Unit({
           isChainLightning={dn.isChainLightning}
           isFireball={dn.isFireball}
           isSummon={dn.isSummon}
+          isStealthStrike={dn.isStealthStrike}
           onComplete={() => handleDamageNumberComplete(dn.id)}
         />
       ))}
 
-      {(currentWeapon === WeaponType.SABRES) && isBowCharging && (
-        <EtherealBow
-          position={groupRef.current?.position.clone().add(new Vector3(0, 0.8  , 0)) || new Vector3()}
-          direction={new Vector3(0, 0, 1).applyQuaternion(groupRef.current?.quaternion || new THREE.Quaternion())}
-          chargeProgress={bowChargeProgress}
-          isCharging={isBowCharging}
-          onRelease={releaseBowShot}
-        />
-      )}
-
+      {/* Bow Projectiles */}
       {activeProjectiles.map(projectile => (
         <group key={projectile.id}>
           <group
@@ -1452,6 +1690,18 @@ export default function Unit({
               }}
             />
           );
+        } else if (effect.type === 'stealthStrike') {
+          return (
+            <StealthStrikeEffect
+              key={effect.id}
+              position={effect.position}
+              direction={effect.direction}
+              onComplete={() => {
+                setActiveEffects(prev => prev.filter(e => e.id !== effect.id));
+              }}
+              parentRef={groupRef}
+            />
+          );
         }
         return null;
       })}
@@ -1682,6 +1932,28 @@ export default function Unit({
           setCharges={setFireballCharges}
         />
       )}
+
+      {/* Add Whirlwind component */}
+      {currentWeapon === WeaponType.SPEAR && (
+        <Whirlwind
+          parentRef={groupRef}
+          isActive={isWhirlwinding}
+          onHit={onHit}
+          enemyData={enemyData}
+          setDamageNumbers={setDamageNumbers}
+          nextDamageNumberId={nextDamageNumberId}
+          charges={fireballCharges}
+          setCharges={setFireballCharges}
+        />
+      )}
+
+      {quickShotProjectilesRef.current.map(projectile => (
+        <BoneArrow 
+          key={projectile.id}
+          position={projectile.position}
+          direction={projectile.direction}
+        />
+      ))}
     </>
   );
 }

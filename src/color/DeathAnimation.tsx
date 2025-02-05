@@ -20,6 +20,8 @@ const getVortexColor = (weaponType: WeaponType) => {
       return '#FFD700'; // FF9843  FF8C2D
     case WeaponType.SABRES:
       return '#00BBFF'; //ice blue 98F5FC 
+    case WeaponType.SPEAR:
+      return '#F33FAE'; //RED
     default:
       return '#00ff44'; // 00FF37
   }

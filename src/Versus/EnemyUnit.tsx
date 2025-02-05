@@ -9,6 +9,7 @@ import { Enemy } from '@/Versus/enemy';
 import BoneVortex from '@/color/DeathAnimation';
 import { WeaponType } from '@/Weapons/weapons';
 import { FrostExplosion } from '@/Spells/Avalanche/FrostExplosion';
+import { stealthManager } from '../Spells/Stealth/StealthManager';
 
 
 interface EnemyUnitProps {
@@ -18,7 +19,7 @@ interface EnemyUnitProps {
   health: number;
   maxHealth: number;
   onTakeDamage: (id: string, damage: number) => void;
-  onPositionUpdate: (id: string, position: Vector3) => void;
+  onPositionUpdate: (id: string, position: Vector3, rotation: number) => void;
   playerPosition: Vector3;
   onAttackPlayer: (damage: number) => void;
   weaponType: WeaponType;
@@ -63,16 +64,41 @@ export default function EnemyUnit({
   const targetRotation = useRef(0);
 
   const ATTACK_RANGE = 2.25;
-  const ATTACK_COOLDOWN = 1650;
+  const ATTACK_COOLDOWN = 2500;
   const MOVEMENT_SPEED = 0.035;
   const POSITION_UPDATE_THRESHOLD = 0.1;
-  const MINIMUM_UPDATE_INTERVAL = 35;
-  const ATTACK_DAMAGE = 10;
+  const MINIMUM_UPDATE_INTERVAL = 50;
+  const ATTACK_DAMAGE = 0;
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.155;
   const ACCELERATION = 6.0;
   const DECELERATION = 8.0;
   const ROTATION_SPEED = 8.0;
+
+  // Add new refs for wandering behavior
+  const wanderTarget = useRef<Vector3 | null>(null);
+  const wanderStartTime = useRef<number>(Date.now());
+  const WANDER_DURATION = 4500; // Increased from 3000 to make changes less frequent
+  const WANDER_RADIUS = 5;
+  const WANDER_ROTATION_SPEED = 4.0; // Slower than normal rotation for smoother turns
+  const WANDER_MOVEMENT_SPEED = 0.018; // Half of normal speed for more controlled movement
+  
+  const getNewWanderTarget = useCallback(() => {
+    if (!enemyRef.current) return null;
+    
+    // Get random angle and distance within WANDER_RADIUS
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * WANDER_RADIUS;
+    
+    // Calculate new position
+    const newTarget = new Vector3(
+      currentPosition.current.x + Math.cos(angle) * distance,
+      0,
+      currentPosition.current.z + Math.sin(angle) * distance
+    );
+    
+    return newTarget;
+  }, []);
 
   // Sync health changes
   useEffect(() => {
@@ -108,6 +134,12 @@ export default function EnemyUnit({
     }
   }, [position]);
 
+  const handleEnemyPositionUpdate = useCallback((id: string, newPosition: Vector3) => {
+    if (enemyRef.current) {
+      onPositionUpdate(id, newPosition.clone(), enemyRef.current.rotation.y);
+    }
+  }, [onPositionUpdate]);
+
   useFrame((_, delta) => {
     if (!enemyRef.current || currentHealth.current <= 0 || !playerPosition) {
       setIsMoving(false);
@@ -115,6 +147,74 @@ export default function EnemyUnit({
     }
 
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
+
+    // Check if player is stealthed
+    if (stealthManager.isUnitStealthed()) {
+      setIsAttacking(false);
+      
+      // Update wander target periodically with smooth transitions
+      const now = Date.now();
+      if (!wanderTarget.current || now - wanderStartTime.current > WANDER_DURATION) {
+        // Keep the current target if it exists, just update the time
+        if (!wanderTarget.current) {
+          wanderTarget.current = getNewWanderTarget();
+        } else {
+          // Smoothly transition to new target by keeping current direction for a while
+          const currentDir = new Vector3()
+            .subVectors(wanderTarget.current, currentPosition.current)
+            .normalize();
+          
+          const newTarget = new Vector3()
+            .copy(currentPosition.current)
+            .add(currentDir.multiplyScalar(WANDER_RADIUS));
+          
+          wanderTarget.current = newTarget;
+        }
+        wanderStartTime.current = now;
+      }
+      
+      if (wanderTarget.current) {
+        setIsMoving(true);
+        
+        const normalizedSpeed = WANDER_MOVEMENT_SPEED * 60; // Slower wandering speed
+        const currentFrameSpeed = normalizedSpeed * delta;
+        
+        // Calculate direction to wander target with smooth interpolation
+        const direction = new Vector3()
+          .subVectors(wanderTarget.current, currentPosition.current)
+          .normalize();
+        
+        // Apply movement with gentler acceleration
+        const targetVelocity = direction.multiplyScalar(currentFrameSpeed);
+        velocity.current.lerp(targetVelocity, (ACCELERATION * 0.5) * delta);
+        
+        // Update position
+        currentPosition.current.add(velocity.current);
+        currentPosition.current.y = 0;
+        enemyRef.current.position.copy(currentPosition.current);
+        
+        // Smoother rotation with reduced speed
+        const targetRotation = Math.atan2(direction.x, direction.z);
+        const currentRotationY = enemyRef.current.rotation.y;
+        let rotationDiff = targetRotation - currentRotationY;
+        
+        // Normalize rotation difference
+        while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+        while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+        
+        // Apply smoother rotation
+        enemyRef.current.rotation.y += rotationDiff * Math.min(1, WANDER_ROTATION_SPEED * delta);
+      }
+      
+      return; // Skip normal chase/attack behavior while player is stealthed
+    }
+
+    // Add stealth check
+    if (stealthManager.isUnitStealthed()) {
+      setIsMoving(false);
+      setIsAttacking(false);
+      return;
+    }
 
     if (distanceToPlayer > ATTACK_RANGE && currentHealth.current > 0) {
       setIsAttacking(false);
@@ -230,7 +330,7 @@ export default function EnemyUnit({
     const now = Date.now();
     if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL) {
       if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD) {
-        onPositionUpdate(id, currentPosition.current.clone());
+        handleEnemyPositionUpdate(id, currentPosition.current.clone());
         lastUpdateTime.current = now;
       }
     }
@@ -257,6 +357,18 @@ export default function EnemyUnit({
       return () => clearTimeout(cleanup);
     }
   }, [isDead]);
+
+  useEffect(() => {
+    const handleStealthBreak = () => {
+      // Immediately re-enable targeting when stealth breaks
+      setIsMoving(true);
+    };
+
+    window.addEventListener('stealthBreak', handleStealthBreak);
+    return () => {
+      window.removeEventListener('stealthBreak', handleStealthBreak);
+    };
+  }, []);
 
   return (
     <>

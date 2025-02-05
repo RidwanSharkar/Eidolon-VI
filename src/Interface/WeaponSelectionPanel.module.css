@@ -82,7 +82,7 @@ menu on the entire panel */
 .iconSelection {
   display: flex;
   justify-content: center;
-  gap: 5.5rem;
+  gap: 2.5rem;
   margin: 2rem 0;
   width: 100%;
   padding: 0 2rem;

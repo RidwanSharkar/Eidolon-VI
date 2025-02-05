@@ -15,10 +15,10 @@ const createVortexSegment = () => (
     <mesh>
       <cylinderGeometry args={[0.03, 0.025, 0.3, 8]} />
       <meshStandardMaterial 
-        color="#E13F3F" // FF6AAA 91FF5E FF3B6C FF4271
+        color="#F33FAE" // FF6AAA 91FF5E FF3B6C FF4271
         transparent
         opacity={0.55}
-        emissive="#F33FAE"
+        emissive="#FF0000"
         emissiveIntensity={0.75}
       />
     </mesh>

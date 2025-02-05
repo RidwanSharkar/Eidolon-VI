@@ -62,20 +62,18 @@ export const useOathstrike = ({
   });
 
   const consumeCharges = useCallback(() => {
-    // Find four available charges
+    // Find two available charges
     const availableCharges = charges.filter(charge => charge.available);
-    if (availableCharges.length < 4) {
+    if (availableCharges.length < 2) {
       console.log('Not enough charges available for Oathstrike');
       return false;
     }
 
-    // Consume four charges
+    // Consume two charges
     setCharges(prev => prev.map((charge, index) => {
       if (
         index === availableCharges[0].id - 1 || 
-        index === availableCharges[1].id - 1 ||
-        index === availableCharges[2].id - 1 ||
-        index === availableCharges[3].id - 1
+        index === availableCharges[1].id - 1
       ) {
         return {
           ...charge,
@@ -87,7 +85,7 @@ export const useOathstrike = ({
     }));
 
     // Start cooldown recovery for each charge individually
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 2; i++) {
       if (availableCharges[i].id) {
         setTimeout(() => {
           setCharges(prev => prev.map((c, index) => 

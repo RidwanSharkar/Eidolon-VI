@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
 import { Vector3, Group } from 'three';
 import Terrain from '../Environment/Terrain';
 import InstancedTrees from '../Environment/InstancedTrees';
@@ -19,6 +19,7 @@ import { MemoizedAbominationUnit } from '../Versus/Abomination/MemoizedAbominati
 import { ObjectPool } from './ObjectPool';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
 import Pillar from '../Environment/Pillar';
+import { initializeSharedResources, sharedGeometries, sharedMaterials, disposeSharedResources } from './SharedResources';
 
 
 interface ScenePropsWithCallback extends SceneType {
@@ -59,6 +60,7 @@ export default function Scene3({
 
   const [spawnStarted, setSpawnStarted] = useState(false);
   const [totalSpawned, setTotalSpawned] = useState(initialSkeletons || 5);
+  const [activeEnemyCount, setActiveEnemyCount] = useState(initialSkeletons);
 
   // Group Pool
   const [groupPool] = useState(() => new ObjectPool<Group>(() => {
@@ -80,7 +82,8 @@ export default function Scene3({
         currentPosition: skeleton.initialPosition.clone(),
         health: 361,
         maxHealth: 361,
-        ref: { current: group }
+        ref: { current: group },
+        rotation: 0
       };
     })
   );
@@ -132,13 +135,14 @@ export default function Scene3({
       if (enemyIndex !== -1) {
         const newHealth = Math.max(0, newEnemies[enemyIndex].health - damage);
         if (newHealth === 0 && newEnemies[enemyIndex].health > 0) {
-          // Mark enemy as dying instead of removing immediately
+          // Mark enemy as dying and decrease active count
           newEnemies[enemyIndex] = {
             ...newEnemies[enemyIndex],
             health: newHealth,
             isDying: true,
             deathStartTime: Date.now()
           };
+          setActiveEnemyCount(prev => Math.max(0, prev - 1));
           unitProps.onEnemyDeath?.();
         } else {
           newEnemies[enemyIndex] = {
@@ -208,13 +212,15 @@ export default function Scene3({
         id: `enemy-${enemy.id}`,
         position: enemy.position,
         initialPosition: enemy.initialPosition,
+        rotation: enemy.rotation,
         health: enemy.health,
         maxHealth: enemy.maxHealth
       })),
       ...(isBossSpawned && bossHealth > 0 ? [{
         id: `enemy-boss-1`,
-        position: bossPosition, // tracked boss position instead of BOSS_SPAWN_POSITION
+        position: bossPosition,
         initialPosition: BOSS_SPAWN_POSITION,
+        rotation: 0,
         health: bossHealth,
         maxHealth: 6084
       }] : [])
@@ -336,12 +342,18 @@ export default function Scene3({
     if (totalSpawned >= maxSkeletons) return;
 
     const spawnTimer = setInterval(() => {
+      // Add check for active enemy count
+      if (activeEnemyCount >= 6) return;
+
       // WAVE CONTROL
-      if (killCount < 31) return; // Only basic requirement to start spawning
+      if (killCount < 31) return;
 
       setEnemies(prev => {
         const remainingSpawns = maxSkeletons - totalSpawned;
         if (remainingSpawns <= 0) return prev;
+
+        // Only spawn if we're under the limit
+        if (activeEnemyCount >= 6) return prev;
 
         // Define specific spawn points for abominations
         const shouldSpawnAbomination = 
@@ -352,6 +364,7 @@ export default function Scene3({
           const spawnPosition = generateRandomPosition();
           setTotalSpawned(prev => prev + 1);
           setAbominationsSpawned(prev => prev + 1);
+          setActiveEnemyCount(prev => prev + 1);
           
           const group = groupPool.acquire();
           group.visible = true;
@@ -360,6 +373,7 @@ export default function Scene3({
             id: `abomination-${totalSpawned}`,
             position: spawnPosition.clone(),
             initialPosition: spawnPosition.clone(),
+            rotation: 0,
             health: 961,
             maxHealth: 961,
             isDying: false,
@@ -381,6 +395,7 @@ export default function Scene3({
           id: `mage-${totalSpawned}`,
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
+          rotation: 0,
           health: 361,
           maxHealth: 361,
           isDying: false,
@@ -390,6 +405,7 @@ export default function Scene3({
           id: `skeleton-${totalSpawned}`,
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
+          rotation: 0,
           health: 361,
           maxHealth: 361,
           isDying: false,
@@ -398,12 +414,13 @@ export default function Scene3({
         };
 
         setTotalSpawned(prev => prev + 1);
+        setActiveEnemyCount(prev => prev + 1);
         return [...prev, newEnemy];
       });
     }, 2500);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount, groupPool]);
+  }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount, groupPool, activeEnemyCount]);
 
   useEffect(() => {
     if (unitProps.controlsRef.current) {
@@ -492,37 +509,104 @@ export default function Scene3({
     return cleanup;
   }, [cleanup]);
   
+  // Initialize shared resources
+  useEffect(() => {
+    initializeSharedResources();
+    
+    // Initialize specific geometries and materials
+    sharedGeometries.mountain = new THREE.ConeGeometry(23, 35, 12);
+    sharedGeometries.mushroom = new THREE.CylinderGeometry(0.25, 0.25 * 1.225, 4, 8);
+    sharedGeometries.tree = new THREE.CylinderGeometry(0.25, 0.25 * 1.225, 4, 8);
+    sharedGeometries.skeleton = new THREE.BufferGeometry(); // Your skeleton geometry
+    sharedGeometries.mage = new THREE.BufferGeometry(); // Your mage geometry
+    sharedGeometries.boss = new THREE.BufferGeometry(); // Your boss geometry
+
+    sharedMaterials.mountain = new THREE.MeshPhysicalMaterial({
+      color: "#2a2a2a",
+      metalness: 0.1,
+      roughness: 1,
+      emissive: "#222222",
+      flatShading: true,
+      clearcoat: 0.1,
+      clearcoatRoughness: 0.8,
+    });
+
+    sharedMaterials.mushroom = new THREE.MeshStandardMaterial({
+      color: "#FFBD83",
+      roughness: 0.6,
+      metalness: 0.2,
+      emissive: "#FFBD83",
+      emissiveIntensity: 0.0,
+    });
+
+    return () => {
+      disposeSharedResources();
+    };
+  }, []);
   
   return (
-    <>
-      {/* Background Environment */}
-      <CustomSky />
-      <Planet />
+    <Suspense fallback={null}>
+      <group>
+        {/* Background Environment */}
+        <CustomSky />
+        <Planet />
 
-      <Terrain />
-      
-      {/* Add Pillar in center */}
-      <Pillar />
-      
-      {/* Replaced individual mountains with instanced mountains */}
-      <InstancedMountains mountains={mountainData} />
+        <Terrain />
+        
+        {/* Add Pillar in center */}
+        <Pillar />
+        
+        {/* Replaced individual mountains with instanced mountains */}
+        <InstancedMountains mountains={mountainData} />
 
-      {/* Replaced individual trees with instanced trees */}
-      <InstancedTrees trees={treeData} />
+        {/* Replaced individual trees with instanced trees */}
+        <InstancedTrees trees={treeData} />
 
-      {/* Replaced individual mushrooms with InstancedMushrooms */}
-      <InstancedMushrooms mushrooms={mushroomData} />
+        {/* Replaced individual mushrooms with InstancedMushrooms */}
+        <InstancedMushrooms mushrooms={mushroomData} />
 
-      {/* Player Unit with ref */}
-      <group ref={playerRef}>
-        <Unit {...unitComponentProps} />
-      </group>
+        {/* Player Unit with ref */}
+        <group ref={playerRef}>
+          <Unit {...unitComponentProps} />
+        </group>
 
-      {/* Enemy Units (Skeletons and Mages) */}
-      {enemies.map((enemy) => {
-        if (enemy.type === 'abomination') {
+        {/* Enemy Units (Skeletons and Mages) */}
+        {enemies.map((enemy) => {
+          if (enemy.type === 'abomination') {
+            return (
+              <MemoizedAbominationUnit
+                key={enemy.id}
+                id={enemy.id}
+                initialPosition={enemy.initialPosition}
+                position={enemy.position}
+                health={enemy.health}
+                maxHealth={enemy.maxHealth}
+                onTakeDamage={handleTakeDamage}
+                onPositionUpdate={handleEnemyPositionUpdate}
+                playerPosition={playerPosition}
+                onAttackPlayer={handlePlayerDamage}
+                weaponType={unitProps.currentWeapon}
+              />
+            );
+          } else if (enemy.type === 'mage') {
+            return (
+              <MemoizedSkeletalMage
+                key={enemy.id}
+                id={enemy.id}
+                initialPosition={enemy.initialPosition}
+                position={enemy.position}
+                health={enemy.health}
+                maxHealth={enemy.maxHealth}
+                onTakeDamage={handleTakeDamage}
+                onPositionUpdate={handleEnemyPositionUpdate}
+                playerPosition={playerPosition}
+                onAttackPlayer={handlePlayerDamage}
+                weaponType={unitProps.currentWeapon}
+              />
+            );
+          }
           return (
-            <MemoizedAbominationUnit
+            <MemoizedEnemyUnit
               key={enemy.id}
               id={enemy.id}
               initialPosition={enemy.initialPosition}
@@ -536,73 +620,45 @@ export default function Scene3({
               weaponType={unitProps.currentWeapon}
             />
           );
-        } else if (enemy.type === 'mage') {
-          return (
-            <MemoizedSkeletalMage
-              key={enemy.id}
-              id={enemy.id}
-              initialPosition={enemy.initialPosition}
-              position={enemy.position}
-              health={enemy.health}
-              maxHealth={enemy.maxHealth}
-              onTakeDamage={handleTakeDamage}
-              onPositionUpdate={handleEnemyPositionUpdate}
-              playerPosition={playerPosition}
-              onAttackPlayer={handlePlayerDamage}
-              weaponType={unitProps.currentWeapon}
-            />
-          );
-        }
-        return (
-          <MemoizedEnemyUnit
-            key={enemy.id}
-            id={enemy.id}
-            initialPosition={enemy.initialPosition}
-            position={enemy.position}
-            health={enemy.health}
-            maxHealth={enemy.maxHealth}
-            onTakeDamage={handleTakeDamage}
+        })}
+
+
+        {isBossSpawned && (
+          <BossUnit
+            key="boss-1"
+            id="boss-1"
+            initialPosition={BOSS_SPAWN_POSITION}
+            position={BOSS_SPAWN_POSITION}
+            health={bossHealth}
+            maxHealth={6084}
+            onTakeDamage={(id, damage) => {
+              setBossHealth(prev => Math.max(0, prev - damage));
+            }}
             onPositionUpdate={handleEnemyPositionUpdate}
             playerPosition={playerPosition}
             onAttackPlayer={handlePlayerDamage}
-            weaponType={unitProps.currentWeapon}
+            onEnrageSpawn={() => {
+              // Only spawn if we're under the limit
+              if (activeEnemyCount >= 6) return;
+              
+              // Spawn one abomination at a random position
+              const spawnPosition = generateRandomPosition();
+              setActiveEnemyCount(prev => prev + 1);
+              setEnemies(prev => [...prev, {
+                id: `abomination-enraged-${Date.now()}`,
+                position: spawnPosition.clone(),
+                initialPosition: spawnPosition.clone(),
+                rotation: 0,
+                health: 1024,
+                maxHealth: 1024,
+                isDying: false,
+                type: 'abomination' as const,
+                ref: { current: groupPool.acquire() }
+              }]);
+            }}
           />
-        );
-      })}
-
-
-      {isBossSpawned && (
-        <BossUnit
-          key="boss-1"
-          id="boss-1"
-          initialPosition={BOSS_SPAWN_POSITION}
-          position={BOSS_SPAWN_POSITION}
-          health={bossHealth}
-          maxHealth={6084}
-          onTakeDamage={(id, damage) => {
-            setBossHealth(prev => Math.max(0, prev - damage));
-          }}
-          onPositionUpdate={handleEnemyPositionUpdate}
-          playerPosition={playerPosition}
-          onAttackPlayer={handlePlayerDamage}
-          onEnrageSpawn={() => {
-            // Spawn one abomination at a random position
-            const spawnPosition = generateRandomPosition();
-            setEnemies(prev => [...prev, {
-              id: `abomination-enraged-${Date.now()}`,
-              position: spawnPosition.clone(),
-              initialPosition: spawnPosition.clone(),
-              health: 1024,
-              maxHealth: 1024,
-              isDying: false,
-              type: 'abomination' as const,
-              ref: { current: groupPool.acquire() }
-            }]);
-          }}
-        />
-      )}
-
-      
-    </>
+        )}
+      </group>
+    </Suspense>
   );
 } 

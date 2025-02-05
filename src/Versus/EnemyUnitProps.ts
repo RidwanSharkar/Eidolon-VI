@@ -11,7 +11,7 @@ import { WeaponType } from '@/Weapons/weapons';
      onTakeDamage: (targetId: TargetId, damage: number) => void;
      playerPosition: Vector3;
      onAttackPlayer: (damage: number) => void;
-     onPositionUpdate: (id: string, position: Vector3) => void;
+     onPositionUpdate: (id: string, position: Vector3, rotation: number) => void;
      position: Vector3;
      weaponType: WeaponType;
      isAttacking?: boolean;

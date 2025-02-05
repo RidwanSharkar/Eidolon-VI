@@ -2,6 +2,7 @@
 import React from 'react';
 import SkeletalMage from '@/Versus/SkeletalMage/SkeletalMage';
 import { SkeletalMageProps } from '@/Versus/SkeletalMage/SkeletalMageProps';
+import { sharedGeometries, sharedMaterials } from '../../Scene/SharedResources';
 
 export const MemoizedSkeletalMage = React.memo(
   SkeletalMage,
@@ -12,4 +13,11 @@ export const MemoizedSkeletalMage = React.memo(
       prevProps.playerPosition.equals(nextProps.playerPosition)
     );
   }
-); 
+);
+
+// Use shared resources
+const geometry = sharedGeometries.mage;
+const material = sharedMaterials.mage;
+
+// Export these for use in the mesh
+export { geometry, material }; 

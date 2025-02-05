@@ -9,6 +9,8 @@ import { Enemy } from '@/Versus/enemy';
 import BoneVortex from '@/color/DeathAnimation';
 import { WeaponType } from '@/Weapons/weapons';
 import MageFireball from '@/Versus/SkeletalMage/MageFireball';
+import { stealthManager } from '@/Spells/Stealth/StealthManager';
+import StealthStrikeEffect from '@/Spells/Stealth/StealthStrikeEffect';
 
 interface SkeletalMageProps {
   id: string;
@@ -22,6 +24,12 @@ interface SkeletalMageProps {
   onAttackPlayer: (damage: number) => void;
   weaponType: WeaponType;
   isDying?: boolean;
+}
+
+// Add DamageSource interface at the top
+interface DamageSource {
+  type: WeaponType;
+  hasActiveAbility?: boolean;
 }
 
 export default function SkeletalMage({
@@ -49,6 +57,16 @@ export default function SkeletalMage({
     target: Vector3;
   }>>([]);
   
+  // Add to existing state declarations
+  const [activeEffects, setActiveEffects] = useState<Array<{
+    id: number;
+    type: string;
+    position: Vector3;
+    direction: Vector3;
+    duration: number;
+    startTime: number;
+  }>>([]);
+  
   // Use refs for position tracking
   const currentPosition = useRef(initialPosition.clone());
   const targetPosition = useRef(initialPosition.clone());
@@ -70,23 +88,50 @@ export default function SkeletalMage({
   const DECELERATION = 8.0;
   const ROTATION_SPEED = 8.0;
 
+  // Add these constants near the other ones (after line 89)
+  const WANDER_DURATION = 4500;
+  const WANDER_RADIUS = 5; // Slightly smaller for the mage
+  const WANDER_ROTATION_SPEED = 4.0;
+  const WANDER_MOVEMENT_SPEED = 0.025;
+
+  // Add these refs near the other refs
+  const wanderTarget = useRef<Vector3 | null>(null);
+  const wanderStartTime = useRef<number>(Date.now());
+
   // Sync health changes
   useEffect(() => {
     currentHealth.current = health;
   }, [health]);
 
   // Handle damage with proper synchronization
-  const handleDamage = useCallback((damage: number) => {
+  const handleDamage = useCallback((damage: number, source: DamageSource) => {
     if (currentHealth.current <= 0) return;
     
     const newHealth = Math.max(0, currentHealth.current - damage);
     onTakeDamage(`enemy-${id}`, damage);
     
+    // Add stealth strike effect
+    if (source.type && stealthManager.hasShadowStrikeBuff()) {
+      const effectDirection = new Vector3().subVectors(
+        currentPosition.current,
+        playerPosition
+      ).normalize();
+      
+      setActiveEffects(prev => [...prev, {
+        id: Date.now(),
+        type: 'stealthStrike',
+        position: currentPosition.current.clone(),
+        direction: effectDirection,
+        duration: 0.2,
+        startTime: Date.now()
+      }]);
+    }
+    
     if (newHealth === 0 && currentHealth.current > 0) {
       setIsDead(true);
       setShowDeathEffect(true);
     }
-  }, [id, onTakeDamage]);
+  }, [id, onTakeDamage, playerPosition]);
 
   // Immediately sync with provided position
   useEffect(() => {
@@ -125,10 +170,78 @@ export default function SkeletalMage({
     }
   }, [isCastingFireball, isDead, playerPosition]);
 
+  // Add the getNewWanderTarget function after the constants
+  const getNewWanderTarget = useCallback(() => {
+    if (!enemyRef.current) return null;
+    
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * WANDER_RADIUS;
+    
+    return new Vector3(
+      currentPosition.current.x + Math.cos(angle) * distance,
+      0,
+      currentPosition.current.z + Math.sin(angle) * distance
+    );
+  }, []);
+
   // Update frame logic
   useFrame((_, delta) => {
     if (!enemyRef.current || currentHealth.current <= 0 || !playerPosition) {
       setIsMoving(false);
+      return;
+    }
+
+    // Add stealth check
+    if (stealthManager.isUnitStealthed()) {
+      setIsMoving(false);
+      setIsCastingFireball(false);
+      
+      const now = Date.now();
+      if (!wanderTarget.current || now - wanderStartTime.current > WANDER_DURATION) {
+        if (!wanderTarget.current) {
+          wanderTarget.current = getNewWanderTarget();
+        } else {
+          // Smoothly transition to new target
+          const currentDir = new Vector3()
+            .subVectors(wanderTarget.current, currentPosition.current)
+            .normalize();
+          
+          const newTarget = new Vector3()
+            .copy(currentPosition.current)
+            .add(currentDir.multiplyScalar(WANDER_RADIUS));
+          
+          wanderTarget.current = newTarget;
+        }
+        wanderStartTime.current = now;
+      }
+      
+      if (wanderTarget.current) {
+        setIsMoving(true);
+        
+        const normalizedSpeed = WANDER_MOVEMENT_SPEED * 60;
+        const currentFrameSpeed = normalizedSpeed * delta;
+        
+        const direction = new Vector3()
+          .subVectors(wanderTarget.current, currentPosition.current)
+          .normalize();
+        
+        const targetVelocity = direction.multiplyScalar(currentFrameSpeed);
+        velocity.current.lerp(targetVelocity, (ACCELERATION * 0.5) * delta);
+        
+        currentPosition.current.add(velocity.current);
+        currentPosition.current.y = 0;
+        enemyRef.current.position.copy(currentPosition.current);
+        
+        const targetRotation = Math.atan2(direction.x, direction.z);
+        const currentRotationY = enemyRef.current.rotation.y;
+        let rotationDiff = targetRotation - currentRotationY;
+        
+        while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+        while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+        
+        enemyRef.current.rotation.y += rotationDiff * Math.min(1, WANDER_ROTATION_SPEED * delta);
+      }
+      
       return;
     }
 
@@ -264,7 +377,7 @@ export default function SkeletalMage({
           position={[0, 0.76, 0]}
           isAttacking={isCastingFireball}
           isWalking={isMoving && currentHealth.current > 0}
-          onHit={handleDamage}
+          onHit={(damage) => handleDamage(damage, { type: weaponType })}
         />
 
         {/* Visual telegraph when casting */}
@@ -373,6 +486,24 @@ export default function SkeletalMage({
           }}
         />
       ))}
+
+      {/* Add stealth strike effect */}
+      {activeEffects.map(effect => {
+        if (effect.type === 'stealthStrike') {
+          return (
+            <StealthStrikeEffect
+              key={effect.id}
+              position={effect.position}
+              direction={effect.direction}
+              onComplete={() => {
+                setActiveEffects(prev => prev.filter(e => e.id !== effect.id));
+              }}
+              parentRef={enemyRef}
+            />
+          );
+        }
+        return null;
+      })}
     </>
   );
 } 

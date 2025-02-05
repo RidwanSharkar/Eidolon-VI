@@ -1,28 +1,125 @@
-import { ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, Shape, SphereGeometry } from 'three';
+import { BoxGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, Shape, SphereGeometry, InstancedMesh, Matrix4, Vector3, Euler, Quaternion } from 'three';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../../gear/BonePlate';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import AbominationTrailEffect from './AbominationTrailEffect';
 import DragonSkull from '@/gear/DragonSkull';
 
-// Reuse materials
-const standardBoneMaterial = new MeshStandardMaterial({
-  color: "#e8e8e8",
-  roughness: 0.4, 
-  metalness: 0.3
-});
+// Add at top of file after imports
+const tempMatrix = new Matrix4();
+const tempPosition = new Vector3();
+const tempRotation = new Euler();
+const tempScale = new Vector3();
+const tempQuaternion = new Quaternion();
 
-const darkBoneMaterial = new MeshStandardMaterial({
-  color: "#d4d4d4",
-  roughness: 0.3,
-  metalness: 0.4
-});
+function setMatrixAt(
+  instancedMesh: InstancedMesh,
+  index: number,
+  position: Vector3,
+  rotation: Euler,
+  scale: Vector3
+) {
+  tempQuaternion.setFromEuler(rotation);
+  tempMatrix.compose(position, tempQuaternion, scale);
+  instancedMesh.setMatrixAt(index, tempMatrix);
+}
 
-// Cache geometries that are reused frequently
-const jointGeometry = new SphereGeometry(0.06, 6, 6);
-const smallBoneGeometry = new CylinderGeometry(0.04, 0.032, 1, 4);
-const clawGeometry = new ConeGeometry(0.02, 0.15, 4);
+// Create shared geometries
+const SHARED_GEOMETRIES = {
+  sphere: new SphereGeometry(0.02, 8, 8),
+  cylinder: new CylinderGeometry(0.04, 0.032, 1, 4),
+  cone: new ConeGeometry(0.02, 0.15, 4),
+  box: new BoxGeometry(0.2, 0.15, 0.08),
+  vertebrae: new CylinderGeometry(0.0225, 0.0225, 0.03, 6),
+  eye: new SphereGeometry(0.02, 8, 8),
+  eyeGlow: new SphereGeometry(0.035, 8, 8),
+  eyeOuterGlow: new SphereGeometry(0.05, 6.5, 2)
+};
+
+// Create shared materials
+const SHARED_MATERIALS = {
+  standardBone: new MeshStandardMaterial({
+    color: "#e8e8e8",
+    roughness: 0.4,
+    metalness: 0.3
+  }),
+  darkBone: new MeshStandardMaterial({
+    color: "#d4d4d4",
+    roughness: 0.3,
+    metalness: 0.4
+  }),
+  eyeCore: new MeshStandardMaterial({
+    color: "#2FFF00",
+    emissive: "#2FFF00",
+    emissiveIntensity: 3
+  }),
+  eyeGlow: new MeshStandardMaterial({
+    color: "#2FFF00",
+    emissive: "#2FFF00",
+    emissiveIntensity: 1,
+    transparent: true,
+    opacity: 0.75
+  }),
+  eyeOuterGlow: new MeshStandardMaterial({
+    color: "#2FFF00",
+    emissive: "#2FFF00",
+    emissiveIntensity: 1,
+    transparent: true,
+    opacity: 0.7
+  })
+};
+
+// Create instanced components
+function VertebraeInstances() {
+  const instances = useMemo(() => {
+    const mesh = new InstancedMesh(SHARED_GEOMETRIES.vertebrae, SHARED_MATERIALS.standardBone, 5);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    return mesh;
+  }, []);
+
+  useEffect(() => {
+    [0.15, 0.27, 0.39, 0.51, 0.63].forEach((y, i) => {
+      tempPosition.set(0, y, 0);
+      tempRotation.set(0.1, 0, 0);
+      tempScale.set(1, 1, 1);
+      setMatrixAt(instances, i, tempPosition, tempRotation, tempScale);
+    });
+    instances.instanceMatrix.needsUpdate = true;
+  }, [instances]);
+
+  return <primitive object={instances} />;
+}
+
+function EyeSet({ position }: { position: [number, number, number] }) {
+  const eyeParts = useMemo(() => ({
+    core: new InstancedMesh(SHARED_GEOMETRIES.eye, SHARED_MATERIALS.eyeCore, 1),
+    innerGlow: new InstancedMesh(SHARED_GEOMETRIES.eyeGlow, SHARED_MATERIALS.eyeGlow, 1),
+    outerGlow: new InstancedMesh(SHARED_GEOMETRIES.eyeOuterGlow, SHARED_MATERIALS.eyeOuterGlow, 1)
+  }), []);
+
+  useEffect(() => {
+    tempPosition.set(...position);
+    tempRotation.set(0, 0, 0);
+    
+    setMatrixAt(eyeParts.core, 0, tempPosition, tempRotation, tempScale.set(1, 1, 1));
+    setMatrixAt(eyeParts.innerGlow, 0, tempPosition, tempRotation, tempScale.set(1.2, 1.2, 1.2));
+    setMatrixAt(eyeParts.outerGlow, 0, tempPosition, tempRotation, tempScale.set(1.4, 1.4, 1.4));
+
+    Object.values(eyeParts).forEach(mesh => {
+      mesh.instanceMatrix.needsUpdate = true;
+    });
+  }, [eyeParts, position]);
+
+  return (
+    <group>
+      <primitive object={eyeParts.core} />
+      <primitive object={eyeParts.innerGlow} />
+      <primitive object={eyeParts.outerGlow} />
+      <pointLight color="#FF4C4C" intensity={0.5} distance={1} decay={2} position={position} />
+    </group>
+  );
+}
 
 interface CustomAbominationProps {
   position: [number, number, number];
@@ -33,11 +130,11 @@ interface CustomAbominationProps {
 
 function BoneLegModel() {
   const createBoneSegment = (length: number, width: number) => (
-    <mesh geometry={smallBoneGeometry} material={standardBoneMaterial} scale={[width/0.04, length, width/0.04]} />
+    <mesh geometry={SHARED_GEOMETRIES.cylinder} material={SHARED_MATERIALS.standardBone} scale={[width/0.04, length, width/0.04]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.06, size/0.06, size/0.06]} />
+    <mesh geometry={SHARED_GEOMETRIES.sphere} material={SHARED_MATERIALS.standardBone} scale={[size/0.06, size/0.06, size/0.06]} />
   );
 
   return (
@@ -76,7 +173,7 @@ function BoneLegModel() {
                     
                     {/* Tip claw */}
                     <group position={[0, -0.35, 0]}>
-                      <mesh geometry={clawGeometry} material={darkBoneMaterial} />
+                      <mesh geometry={SHARED_GEOMETRIES.cone} material={SHARED_MATERIALS.darkBone} />
                     </group>
                   </group>
                 </group>
@@ -91,11 +188,11 @@ function BoneLegModel() {
 
 function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
   const createBoneSegment = (length: number, width: number) => (
-    <mesh geometry={smallBoneGeometry} material={standardBoneMaterial} scale={[width/0.04, length, width/0.04]} />
+    <mesh geometry={SHARED_GEOMETRIES.cylinder} material={SHARED_MATERIALS.standardBone} scale={[width/0.04, length, width/0.04]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.06, size/0.06, size/0.06]} />
+    <mesh geometry={SHARED_GEOMETRIES.sphere} material={SHARED_MATERIALS.standardBone} scale={[size/0.06, size/0.06, size/0.06]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -115,19 +212,15 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
     </group>
   );
 
-  const createBladeShape = () => {
+  const BLADE_SHAPE = (() => {
     const shape = new Shape();
     shape.moveTo(0, 0);
-    
-    // Create thick back edge first
     shape.lineTo(0.4, -0.130);
     shape.bezierCurveTo(
-      0.8, 0.22,    // control point 1
-      1.33, 0.5,    // control point 2
-      1.6, 0.515    // end point (tip)
+      0.8, 0.22,
+      1.33, 0.5,
+      1.6, 0.515
     );
-    
-    // Create sharp edge
     shape.lineTo(1.125, 0.75);
     shape.bezierCurveTo(
       0.5, 0.2,
@@ -136,9 +229,9 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
     );
     shape.lineTo(0, 0);
     return shape;
-  };
+  })();
 
-  const bladeExtradeSettings = {
+  const BLADE_EXTRUDE_SETTINGS = {
     steps: 1,
     depth: 0.00010,
     bevelEnabled: true,
@@ -177,7 +270,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
                   scale={[1.4, 0.55, 1.4]}
                 >
                   <mesh>
-                    <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.03 }]} />
+                    <extrudeGeometry args={[BLADE_SHAPE, BLADE_EXTRUDE_SETTINGS]} />
                     <meshStandardMaterial 
                       color="#9c27b0"
                       emissive="#9c27b0"
@@ -421,8 +514,12 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
+    // Cache frequently accessed objects
+    const group = groupRef.current;
+    
     if (isWalking) {
-      setWalkCycle((prev) => (prev + delta * walkSpeed) % (Math.PI * 2));
+      const newWalkCycle = (walkCycle + delta * walkSpeed) % (Math.PI * 2);
+      setWalkCycle(newWalkCycle);
       
       // Spider-like walking animation
       [
@@ -431,12 +528,12 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
         'LeftMiddleBackLeg', 'RightMiddleBackLeg',
         'LeftBackLeg', 'RightBackLeg'
       ].forEach((part, index) => {
-        const limb = groupRef.current?.getObjectByName(part) as Mesh;
+        const limb = group.getObjectByName(part) as Mesh;
         if (limb) {
           const isRight = part.includes('Right');
           // Spider legs move in alternating groups of 4
           const phaseOffset = index % 2 === 0 ? 0 : Math.PI;
-          const phase = isRight ? walkCycle + phaseOffset : walkCycle + phaseOffset;
+          const phase = isRight ? newWalkCycle + phaseOffset : newWalkCycle + phaseOffset;
           
           // Lift-and-step motion
           const liftAmount = Math.max(0, Math.sin(phase)) * 0.3;
@@ -492,8 +589,8 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
       ];
 
       armPairs.forEach(({ left, right, startTime, rotationRange }) => {
-        const leftArm = groupRef.current?.getObjectByName(left) as Mesh;
-        const rightArm = groupRef.current?.getObjectByName(right) as Mesh;
+        const leftArm = group.getObjectByName(left) as Mesh;
+        const rightArm = group.getObjectByName(right) as Mesh;
         
         if (leftArm && rightArm) {
           const armProgress = Math.max(0, Math.min(1, (attackCycle - startTime) * 1));
@@ -518,8 +615,8 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
         
         // Reset forward pivot when attack ends
         armPairs.forEach(({ left, right }) => {
-          const leftArm = groupRef.current?.getObjectByName(left) as Mesh;
-          const rightArm = groupRef.current?.getObjectByName(right) as Mesh;
+          const leftArm = group.getObjectByName(left) as Mesh;
+          const rightArm = group.getObjectByName(right) as Mesh;
           if (leftArm && rightArm) {
             leftArm.rotation.z = 0;
             rightArm.rotation.z = 0;
@@ -536,8 +633,8 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
       ];
 
       defaultRotations.forEach(({ left, right, y }) => {
-        const leftArm = groupRef.current?.getObjectByName(left) as Mesh;
-        const rightArm = groupRef.current?.getObjectByName(right) as Mesh;
+        const leftArm = group.getObjectByName(left) as Mesh;
+        const rightArm = group.getObjectByName(right) as Mesh;
         
         if (leftArm && rightArm) {
           leftArm.rotation.y = y;
@@ -552,8 +649,8 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
       const walkAmplitude = 0.15; // Adjust for larger/smaller steps
       
       LEG_PAIRS.forEach(({ left, right, baseRotation, rightBaseRotation, phase }) => {
-        const leftLeg = groupRef.current?.getObjectByName(left) as Mesh;
-        const rightLeg = groupRef.current?.getObjectByName(right) as Mesh;
+        const leftLeg = group.getObjectByName(left) as Mesh;
+        const rightLeg = group.getObjectByName(right) as Mesh;
         
         if (leftLeg && rightLeg) {
           const time = state.clock.getElapsedTime() * walkSpeed;
@@ -701,82 +798,10 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
         {/* Eye sockets with glow effect */}
         <group position={[0, 0.05, 0.14]}>
           {/* Left eye */}
-          <group position={[-0.07, 0, 0]}>
-            {/* Core eye */}
-            <mesh>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="#2FFF00" emissive="#2FFF00" emissiveIntensity={3} />
-            </mesh>
-            {/* Inner glow */}
-            <mesh scale={1.2}>
-              <sphereGeometry args={[0.035, 8, 8]} />
-              <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
-                emissiveIntensity={1}
-                transparent
-                opacity={0.75}
-              />
-            </mesh>
-            {/* Outer glow */}
-            <mesh scale={1.4}>
-              <sphereGeometry args={[0.05, 6.5, 2]} />
-              <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
-                emissiveIntensity={1}
-                transparent
-                opacity={0.7}
-              />
-            </mesh>
-            {/* Point light for dynamic glow */}
-            <pointLight 
-              color="#FF4C4C"
-              intensity={0.5}
-              distance={1}
-              decay={2}
-            />
-          </group>
-
-
+          <EyeSet position={[-0.07, 0, 0]} />
 
           {/* Right eye */}
-          <group position={[0.07, 0, 0]}>
-            {/* Core eye */}
-            <mesh>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="#2FFF00" emissive="#2FFF00" emissiveIntensity={3} />
-            </mesh>
-            {/* Inner glow */}
-            <mesh scale={1.2}>
-              <sphereGeometry args={[0.035, 8, 8]} />
-              <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
-                emissiveIntensity={1}
-                transparent
-                opacity={0.75}
-              />
-            </mesh>
-            {/* Outer glow */}
-            <mesh scale={1.4}>
-              <sphereGeometry args={[0.05, 6.5, 2]} />
-              <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
-                emissiveIntensity={1}
-                transparent
-                opacity={.7}
-              />
-            </mesh>
-            {/* Point light for dynamic glow */}
-            <pointLight 
-              color="#FF4C4C"
-              intensity={0.5}
-              distance={1}
-              decay={1}
-            />
-          </group>
+          <EyeSet position={[0.07, 0, 0]} />
         </group>
       </group>
 
@@ -870,12 +895,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
 
         {/* Sacral vertebrae */}
         <group position={[0, 0.15, -0.16]} rotation={[0.1, 0, 0]}>
-          {[0.15, 0.27, 0.39, 0.51, 0.63].map((y, i) => (
-            <mesh key={i} position={[0, y, 0]}>
-              <cylinderGeometry args={[0.0225, 0.0225, 0.03, 6]} />
-              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-            </mesh>
-          ))}
+          <VertebraeInstances />
         </group>
 
         {/* Pelvic joints */}

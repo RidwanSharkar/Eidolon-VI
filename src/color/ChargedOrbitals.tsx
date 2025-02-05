@@ -18,7 +18,6 @@ interface ChargedOrbitalsProps {
   orbitRadius?: number;
   orbitSpeed?: number;
   particleSize?: number;
-  particleCount?: number;
   weaponType: WeaponType;
 }
 
@@ -28,9 +27,9 @@ export default function ChargedOrbitals({
   orbitRadius = 0.55,
   orbitSpeed = 0.8,
   particleSize = 0.08,
-  particleCount = 8,
   weaponType
 }: ChargedOrbitalsProps) {
+  const particleCount = charges.length;
   const particlesRef = useRef<Group[]>([]);
 
   const getOrbitalColor = () => {
@@ -41,6 +40,10 @@ export default function ChargedOrbitals({
         return '#FF831D'; //  FF9C50
       case WeaponType.SABRES:
         return '#0091FF'; // 78F6FF
+      case WeaponType.SPEAR:
+        return '#FF544E'; // FF544E
+      case WeaponType.BOW:
+        return '#C18C4B'; // 
       default:
         return '#00ff44';  // Default to scythe 78F6FF
     }

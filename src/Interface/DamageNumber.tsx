@@ -20,6 +20,7 @@ interface DamageNumberProps {
   isChainLightning?: boolean;
   isFireball?: boolean;
   isSummon?: boolean;
+  isStealthStrike?: boolean;
   onComplete: () => void;
 }
 
@@ -43,6 +44,7 @@ export default function DamageNumber({
   isChainLightning = false,
   isFireball = false,
   isSummon = false,
+  isStealthStrike = false,
   onComplete 
 }: DamageNumberProps) {
   console.log('DamageNumber props:', { damage, isCritical, isBlizzard, isLightning, isHealing, isBoneclaw, isOrbShield, isChainLightning });
@@ -100,6 +102,7 @@ export default function DamageNumber({
     if (isFirebeam) return "#00FFE5";
     if (isBlizzard) return "#00B7FF"; // 61EDFF
     if (isFireball) return "#00C946"; // 00C946
+    if (isStealthStrike) return "#FF00FF"; // bright magenta for stealth strikes
     return "#EBEBEB";
   };
 

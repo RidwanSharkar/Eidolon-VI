@@ -14,6 +14,7 @@ import InstancedTrees from '../Environment/InstancedTrees';
 import InstancedMountains from '../Environment/InstancedMountains';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
 import Pillar from '../Environment/Pillar';
+import { initializeSharedResources, sharedGeometries, sharedMaterials, disposeSharedResources } from './SharedResources';
 
 
 interface SceneProps extends SceneType {
@@ -23,6 +24,44 @@ interface SceneProps extends SceneType {
   initialSkeletons?: number;
   spawnCount?: number;
   killCount: number;
+}
+
+// Add ObjectPool class
+class ObjectPool<T> {
+  private pool: T[] = [];
+  private create: () => T;
+  private maxSize: number;
+
+  constructor(createFn: () => T, initialSize: number, maxSize: number) {
+    this.create = createFn;
+    this.maxSize = maxSize;
+    
+    // Initialize pool
+    for (let i = 0; i < initialSize; i++) {
+      this.pool.push(this.create());
+    }
+  }
+
+  acquire(): T {
+    if (this.pool.length > 0) {
+      return this.pool.pop()!;
+    }
+    if (this.maxSize > 0 && this.pool.length >= this.maxSize) {
+      throw new Error('Pool exhausted');
+    }
+    return this.create();
+  }
+
+  release(object: T) {
+    if (this.maxSize > 0 && this.pool.length >= this.maxSize) {
+      return;
+    }
+    this.pool.push(object);
+  }
+
+  clear() {
+    this.pool = [];
+  }
 }
 
 export default function Scene({
@@ -38,22 +77,43 @@ export default function Scene({
   const treeData = useMemo(() => generateTrees(), []);
   const mushroomData = useMemo(() => generateMushrooms(), []);
 
-  // State for enemies (with Scene1-specific health values)
-  const [enemies, setEnemies] = useState<Enemy[]>(() => {
-    // Initialize with initial skeletons
-    return Array.from({ length: initialSkeletons }, (_, index) => {
-      const spawnPosition = generateRandomPosition();
-      spawnPosition.y = 0;
-      return {
-        id: `skeleton-${index}`,
-        position: spawnPosition.clone(),
-        initialPosition: spawnPosition.clone(),
-        health: 196,
-        maxHealth: 196,
-        ref: React.createRef<Group>()
-      };
-    });
-  });
+  // Add group pool
+  const [groupPool] = useState(() => new ObjectPool<Group>(
+    () => new Group(),
+    maxSkeletons,
+    maxSkeletons + 5
+  ));
+
+  // Modify enemy creation to use pool
+  const createEnemy = useCallback((id: string) => {
+    const group = groupPool.acquire();
+    const spawnPosition = generateRandomPosition();
+    spawnPosition.y = 0;
+    
+    return {
+      id,
+      position: spawnPosition.clone(),
+      initialPosition: spawnPosition.clone(),
+      rotation: 0,
+      health: 196,
+      maxHealth: 196,
+      ref: { current: group }
+    };
+  }, [groupPool]);
+
+  // Modify enemy cleanup
+  const removeEnemy = useCallback((enemy: Enemy) => {
+    if (enemy.ref?.current) {
+      groupPool.release(enemy.ref.current);
+    }
+  }, [groupPool]);
+
+  // Update initial enemies state
+  const [enemies, setEnemies] = useState<Enemy[]>(() => 
+    Array.from({ length: initialSkeletons }, (_, index) => 
+      createEnemy(`skeleton-${index}`)
+    )
+  );
 
   const [totalSpawned, setTotalSpawned] = useState(initialSkeletons);
   const [playerHealth, setPlayerHealth] = useState<number>(unitProps.health);
@@ -145,6 +205,7 @@ export default function Scene({
       id: `enemy-${enemy.id}`,
       position: enemy.position,
       initialPosition: enemy.initialPosition,
+      rotation: enemy.rotation,
       health: enemy.health,
       maxHealth: enemy.maxHealth
     })),
@@ -160,12 +221,11 @@ export default function Scene({
   // State to track spawn waves
   const [currentWave, setCurrentWave] = useState(0);
   
-  // SPAWNING LOGIC
+  // Update spawning logic
   useEffect(() => {
     if (totalSpawned >= maxSkeletons) return;
 
     const spawnTimer = setInterval(() => {
-      // Check kill count requirements for each wave
       if ((killCount < 2 && currentWave === 0) || 
           (killCount < 5 && currentWave === 1) || 
           (killCount < 8 && currentWave === 2)) {
@@ -173,23 +233,13 @@ export default function Scene({
       }
 
       setEnemies(prev => {
-        // Calculate remaining spawns
         const remainingSpawns = maxSkeletons - totalSpawned;
         if (remainingSpawns <= 0) return prev;
 
-        // Spawn 3 enemies at once (or remaining amount if less)
         const spawnAmount = Math.min(3, remainingSpawns);
-        const newEnemies = Array.from({ length: spawnAmount }, (_, index) => {
-          const spawnPosition = generateRandomPosition();
-          return {
-            id: `skeleton-${totalSpawned + index}`,
-            position: spawnPosition.clone(),
-            initialPosition: spawnPosition.clone(),
-            health: 225,
-            maxHealth: 225,
-            isDying: false
-          };
-        });
+        const newEnemies = Array.from({ length: spawnAmount }, (_, index) => 
+          createEnemy(`skeleton-${totalSpawned + index}`)
+        );
 
         setTotalSpawned(prev => prev + spawnAmount);
         setCurrentWave(prev => prev + 1);
@@ -198,7 +248,7 @@ export default function Scene({
     }, spawnInterval);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval, currentWave, killCount]);
+  }, [totalSpawned, maxSkeletons, spawnInterval, currentWave, killCount, createEnemy]);
 
   // Check for level completion
   useEffect(() => {
@@ -263,34 +313,48 @@ export default function Scene({
     };
   }, []);
 
-  const cleanup = () => {
+  // Update cleanup
+  const cleanup = useCallback(() => {
     setEnemies(prev => {
-      prev.forEach(enemy => {
-        if (enemy.ref?.current?.parent) {
-          enemy.ref.current.parent.remove(enemy.ref.current);
-          // Also dispose of any materials/geometries if they exist
-          enemy.ref.current.traverse((child) => {
-            if ('geometry' in child && child.geometry instanceof THREE.BufferGeometry) {
-              child.geometry.dispose();
-            }
-            if ('material' in child) {
-              const material = child.material as THREE.Material | THREE.Material[];
-              if (Array.isArray(material)) {
-                material.forEach(m => m.dispose());
-              } else {
-                material?.dispose();
-              }
-            }
-          });
-        }
-      });
+      prev.forEach(removeEnemy);
       return [];
     });
-  };
+    groupPool.clear();
+  }, [removeEnemy, groupPool]);
 
   useEffect(() => {
     return cleanup;
+  }, [cleanup]);
+
+  useEffect(() => {
+    initializeSharedResources();
+    
+    // Initialize specific geometries and materials
+    sharedGeometries.mountain = new THREE.ConeGeometry(23, 35, 12);
+    sharedMaterials.mountain = new THREE.MeshPhysicalMaterial({
+      color: "#2a2a2a",
+      metalness: 0.1,
+      roughness: 1,
+      emissive: "#222222",
+      flatShading: true,
+      clearcoat: 0.1,
+      clearcoatRoughness: 0.8,
+    });
+
+    return () => {
+      disposeSharedResources();
+    };
   }, []);
+
+  useEffect(() => {
+    const cleanup = () => {
+      disposeSharedResources();
+      // Clean up any other resources
+      groupPool.clear();
+    };
+
+    return cleanup;
+  }, [groupPool]);
 
   return (
     <>

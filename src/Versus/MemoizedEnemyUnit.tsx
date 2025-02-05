@@ -2,6 +2,7 @@
 import React from 'react';
 import EnemyUnit from '@/Versus/EnemyUnit';
 import { EnemyUnitProps } from '@/Versus/EnemyUnitProps';
+import { sharedGeometries, sharedMaterials } from '../Scene/SharedResources';
 
 export const MemoizedEnemyUnit = React.memo(
   EnemyUnit,
@@ -12,4 +13,11 @@ export const MemoizedEnemyUnit = React.memo(
       prevProps.playerPosition.equals(nextProps.playerPosition)
     );
   }
-); 
+);
+
+// Use shared resources
+const geometry = sharedGeometries.skeleton;
+const material = sharedMaterials.skeleton;
+
+// Export these for use in the mesh
+export { geometry, material }; 

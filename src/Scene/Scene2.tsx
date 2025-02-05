@@ -17,6 +17,7 @@ import InstancedTrees from '../Environment/InstancedTrees';
 import InstancedMountains from '../Environment/InstancedMountains';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
 import Pillar from '../Environment/Pillar';
+import { sharedGeometries, sharedMaterials, initializeSharedResources, disposeSharedResources } from './SharedResources';
 
 
 interface SceneProps extends SceneType {
@@ -56,7 +57,6 @@ export default function Scene2({
   // ENEMIES
   const [enemies, setEnemies] = useState<Enemy[]>(() => {
     return Array.from({ length: initialSkeletons }, (_, index) => {
-
       const spawnPosition = generateRandomPosition();
       spawnPosition.y = 0;
       const group = groupPool.acquire();
@@ -65,6 +65,7 @@ export default function Scene2({
         id: `skeleton-${index}`,
         position: spawnPosition.clone(),
         initialPosition: spawnPosition.clone(),
+        rotation: 0,
         health: 324,
         maxHealth: 324,
         ref: { current: group }
@@ -76,6 +77,7 @@ export default function Scene2({
   const [playerHealth, setPlayerHealth] = useState<number>(unitProps.health);
   const playerRef = useRef<Group>(null);
   const [playerPosition, setPlayerPosition] = useState<Vector3>(new Vector3(0, 0, 0));
+  const [activeEnemyCount, setActiveEnemyCount] = useState(initialSkeletons);
 
   // CLEANUP
   const removeEnemy = useCallback((enemy: Enemy) => {
@@ -97,13 +99,14 @@ export default function Scene2({
       if (enemyIndex !== -1) {
         const newHealth = Math.max(0, newEnemies[enemyIndex].health - damage);
         if (newHealth === 0 && newEnemies[enemyIndex].health > 0) {
-          // Mark enemy as dying instead of removing immediately
+          // Mark enemy as dying and decrease active count
           newEnemies[enemyIndex] = {
             ...newEnemies[enemyIndex],
             health: newHealth,
             isDying: true,
             deathStartTime: Date.now()
           };
+          setActiveEnemyCount(prev => Math.max(0, prev - 1));
           unitProps.onEnemyDeath?.();
         } else {
           newEnemies[enemyIndex] = {
@@ -167,14 +170,15 @@ export default function Scene2({
       }
     },
     enemyData: enemies
-      .filter(enemy => !enemy.isDying && enemy.health > 0)  // Only include living enemies
+      .filter(enemy => !enemy.isDying && enemy.health > 0)
       .map((enemy) => ({
         id: `enemy-${enemy.id}`,
-        position: enemy.position.clone(),  // Ensure we clone the position
+        position: enemy.position.clone(),
         initialPosition: enemy.initialPosition.clone(),
+        rotation: enemy.rotation,
         health: enemy.health,
         maxHealth: enemy.maxHealth,
-        type: enemy.type  // Include the enemy type if needed
+        type: enemy.type
       })),
     onDamage: unitProps.onDamage,
     onEnemyDeath: () => {
@@ -193,6 +197,9 @@ export default function Scene2({
     if (totalSpawned >= maxSkeletons) return;
 
     const spawnTimer = setInterval(() => {
+      // Add check for active enemy count
+      if (activeEnemyCount >= 6) return;
+
       // Wave control based on kill count
       if ((killCount < 14 && currentWave === 0) || 
           (killCount < 20 && currentWave === 1) || 
@@ -204,6 +211,9 @@ export default function Scene2({
         const remainingSpawns = maxSkeletons - totalSpawned;
         if (remainingSpawns <= 0) return prev;
 
+        // Only spawn if we're under the limit
+        if (activeEnemyCount >= 6) return prev;
+
         // Only spawn abomination if it's the very last spawn of the scene
         if (remainingSpawns === 1) {
           const spawnPosition = generateRandomPosition();
@@ -211,10 +221,12 @@ export default function Scene2({
           setCurrentWave(prev => prev + 1);
           const group = groupPool.acquire();
           group.visible = true;
+          setActiveEnemyCount(prev => prev + 1);
           return [...prev, {
             id: `abomination-${totalSpawned}`,
             position: spawnPosition.clone(),
             initialPosition: spawnPosition.clone(),
+            rotation: 0,
             health: 841,
             maxHealth: 841,
             isDying: false,
@@ -235,6 +247,7 @@ export default function Scene2({
           id: `mage-${totalSpawned}`,
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
+          rotation: 0,
           health: 289,
           maxHealth: 289,
           isDying: false,
@@ -244,6 +257,7 @@ export default function Scene2({
           id: `skeleton-${totalSpawned}`,
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
+          rotation: 0,
           health: 324,
           maxHealth: 324,
           isDying: false,
@@ -252,12 +266,13 @@ export default function Scene2({
         };
 
         setTotalSpawned(prev => prev + 1);
+        setActiveEnemyCount(prev => prev + 1);
         return [...prev, newEnemy];
       });
     }, 2500);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, killCount, currentWave, groupPool]);
+  }, [totalSpawned, maxSkeletons, killCount, currentWave, groupPool, activeEnemyCount]);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -304,14 +319,26 @@ export default function Scene2({
   }, [initialSkeletons]);
 
   useEffect(() => {
-    const resources = {
-      geometries: [] as THREE.BufferGeometry[],
-      materials: [] as THREE.Material[]
-    };
+    initializeSharedResources();
+    
+    // Initialize specific geometries and materials with proper values
+    sharedGeometries.mountain = new THREE.ConeGeometry(23, 35, 12);
+    sharedGeometries.mushroom = new THREE.CylinderGeometry(0.25, 0.25 * 1.225, 4, 8);
+    sharedGeometries.tree = new THREE.CylinderGeometry(0.25, 0.25 * 1.225, 4, 8);
+    
+    // Add specific materials
+    sharedMaterials.mountain = new THREE.MeshPhysicalMaterial({
+      color: "#2a2a2a",
+      metalness: 0.1,
+      roughness: 1,
+      emissive: "#222222",
+      flatShading: true,
+      clearcoat: 0.1,
+      clearcoatRoughness: 0.8,
+    });
 
     return () => {
-      resources.geometries.forEach(geometry => geometry.dispose());
-      resources.materials.forEach(material => material.dispose());
+      disposeSharedResources();
     };
   }, []);
 
@@ -320,24 +347,30 @@ export default function Scene2({
     setEnemies(prev => {
       prev.forEach(enemy => {
         removeEnemy(enemy);
-        //  dispose of any materials/geometries if they exist
+        // Only dispose of instance-specific resources
         enemy.ref?.current?.traverse((child) => {
           if ('geometry' in child && child.geometry instanceof THREE.BufferGeometry) {
-            child.geometry.dispose();
+            if (!Object.values(sharedGeometries).includes(child.geometry)) {
+              child.geometry.dispose();
+            }
           }
           if ('material' in child) {
             const material = child.material as THREE.Material | THREE.Material[];
             if (Array.isArray(material)) {
-              material.forEach(m => m.dispose());
-            } else {
-              material?.dispose();
+              material.forEach(m => {
+                if (!Object.values(sharedMaterials).includes(m)) {
+                  m.dispose();
+                }
+              });
+            } else if (material && !Object.values(sharedMaterials).includes(material)) {
+              material.dispose();
             }
           }
         });
       });
       return [];
     });
-    groupPool.clear(); // Clear the pool when unmounting
+    groupPool.clear();
   }, [groupPool, removeEnemy]);
 
   useEffect(() => {

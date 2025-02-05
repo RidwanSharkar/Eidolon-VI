@@ -8,6 +8,7 @@ import BoneVortex2 from '../../color/SpawnAnimation';
 import { Enemy } from '../enemy';
 import BoneVortex from '../../color/DeathAnimation';
 import { WeaponType } from '../../Weapons/weapons';
+import { stealthManager } from '../../Spells/Stealth/StealthManager';
 
 
 interface AbominationUnitProps {
@@ -65,6 +66,14 @@ export default function AbominationUnit({
   const DECELERATION = 7.0;
   const ROTATION_SPEED = 7.0;
 
+  const wanderTarget = useRef<Vector3 | null>(null);
+  const wanderStartTime = useRef<number>(Date.now());
+
+  const WANDER_DURATION = 4500;
+  const WANDER_RADIUS = 6;
+  const WANDER_ROTATION_SPEED = 3.5;
+  const WANDER_MOVEMENT_SPEED = 0.030;
+
   // Sync health changes
   useEffect(() => {
     currentHealth.current = health;
@@ -94,10 +103,74 @@ export default function AbominationUnit({
     }
   }, [position]);
 
+  const getNewWanderTarget = useCallback(() => {
+    if (!enemyRef.current) return null;
+    
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * WANDER_RADIUS;
+    
+    return new Vector3(
+      currentPosition.current.x + Math.cos(angle) * distance,
+      0,
+      currentPosition.current.z + Math.sin(angle) * distance
+    );
+  }, []);
+
   useFrame((_, delta) => {
     if (!enemyRef.current || currentHealth.current <= 0 || !playerPosition) {
       setIsMoving(false);
       return;
+    }
+
+    if (stealthManager.isUnitStealthed()) {
+      setIsAttacking(false);
+      
+      const now = Date.now();
+      if (!wanderTarget.current || now - wanderStartTime.current > WANDER_DURATION) {
+        if (!wanderTarget.current) {
+          wanderTarget.current = getNewWanderTarget();
+        } else {
+          const currentDir = new Vector3()
+            .subVectors(wanderTarget.current, currentPosition.current)
+            .normalize();
+          
+          const newTarget = new Vector3()
+            .copy(currentPosition.current)
+            .add(currentDir.multiplyScalar(WANDER_RADIUS));
+          
+          wanderTarget.current = newTarget;
+        }
+        wanderStartTime.current = now;
+      }
+      
+      if (wanderTarget.current) {
+        setIsMoving(true);
+        
+        const normalizedSpeed = WANDER_MOVEMENT_SPEED * 60;
+        const currentFrameSpeed = normalizedSpeed * delta;
+        
+        const direction = new Vector3()
+          .subVectors(wanderTarget.current, currentPosition.current)
+          .normalize();
+        
+        const targetVelocity = direction.multiplyScalar(currentFrameSpeed);
+        velocity.current.lerp(targetVelocity, (ACCELERATION * 0.5) * delta);
+        
+        currentPosition.current.add(velocity.current);
+        currentPosition.current.y = 0;
+        enemyRef.current.position.copy(currentPosition.current);
+        
+        const targetRotation = Math.atan2(direction.x, direction.z);
+        const currentRotationY = enemyRef.current.rotation.y;
+        let rotationDiff = targetRotation - currentRotationY;
+        
+        while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+        while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+        
+        enemyRef.current.rotation.y += rotationDiff * Math.min(1, WANDER_ROTATION_SPEED * delta);
+        
+        return;
+      }
     }
 
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
@@ -240,6 +313,19 @@ export default function AbominationUnit({
       return () => clearTimeout(cleanup);
     }
   }, [isDead]);
+
+  // Add stealth break event listener in a useEffect
+  useEffect(() => {
+    const handleStealthBreak = () => {
+      // Immediately re-enable targeting when stealth breaks
+      setIsMoving(true);
+    };
+
+    window.addEventListener('stealthBreak', handleStealthBreak);
+    return () => {
+      window.removeEventListener('stealthBreak', handleStealthBreak);
+    };
+  }, []);
 
   return (
     <>

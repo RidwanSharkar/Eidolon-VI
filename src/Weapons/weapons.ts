@@ -7,6 +7,8 @@ export enum WeaponType {
   SCYTHE = 'scythe',
   SWORD = 'sword',
   SABRES = 'sabres',
+  SPEAR = 'spear',
+  BOW = 'bow',
 }
 
 export interface AbilityInfo {
@@ -44,7 +46,7 @@ export type WeaponInfo = Record<WeaponType, WeaponAbilities>;
 
 export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   [WeaponType.SWORD]: {
-    normal: 31,
+    normal: 37,
     range: 5.5,
     maxHitsPerSwing: 1
   },
@@ -58,49 +60,57 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
     range: 4,
     maxHitsPerSwing: 2
   },
+  [WeaponType.SPEAR]: {
+    normal: 29,
+    range: 6.25,
+    maxHitsPerSwing: 1
+  },
+  [WeaponType.BOW]: {
+    normal: 17,
+    range: 80,
+    maxHitsPerSwing: 1
+  },
 };
 
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
-    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: '/Eidolon/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.725, currentCooldown: 0, icon: '/Eidolon/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 2.05, currentCooldown: 0, icon: '/Eidolon/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: '/Eidolon/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
-    active: { 
-      type: 'active', 
-      key: '2', 
-      cooldown: 4.5, 
-      currentCooldown: 0, 
-      icon: '/Eidolon/icons/a1.svg', 
-      maxCooldown: 4.5, 
-      name: 'Summon Skeleton', 
-      isUnlocked: false 
-    }
+    q: { type: 'q', key: 'q', cooldown: 0.775, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 0.725, currentCooldown: 0, icon: '/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 2.05, currentCooldown: 0, icon: '/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
+    passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: '/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
+    active: { type: 'active',  key: '2', cooldown: 4.5, currentCooldown: 0,  icon: '/icons/a1.svg', maxCooldown: 4.5, name: 'Summon Skeleton', isUnlocked: false}
   }, 
 
   [WeaponType.SWORD]: {
-    q: { type: 'q', key: 'q', cooldown: 0.925, currentCooldown: 0, icon: '/Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 3.85, currentCooldown: 0, icon: '/Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: '/Eidolon/icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
-    passive: { 
-      type: 'passive', 
-      key: '1', 
-      cooldown: 0, 
-      currentCooldown: 0, 
-      icon: '/Eidolon/icons/p2.svg', 
-      maxCooldown: 0, 
-      name: 'Crusader Aura', 
-      isUnlocked: false 
-    },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a2.svg', maxCooldown: 0, name: 'Sword Active', isUnlocked: false }
+    q: { type: 'q', key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 3.85, currentCooldown: 0, icon: '/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: '/icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
+    passive: {  type: 'passive', key: '1',  cooldown: 0,  currentCooldown: 0,  icon: '/icons/p2.svg', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: false },
+    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/icons/a2.svg', maxCooldown: 0, name: 'Sword Active', isUnlocked: false }
   },
   
   [WeaponType.SABRES]: {
-    q: { type: 'q', key: 'q', cooldown: 0.605, currentCooldown: 0, icon: '/Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.75, currentCooldown: 0, icon: '/Eidolon/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: '/Eidolon/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/Eidolon/icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
+    q: { type: 'q', key: 'q', cooldown: 0.6, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 5.75, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: '/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
+    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
+  },
+
+  [WeaponType.SPEAR]: {
+    q: { type: 'q', key: 'q', cooldown: 0.65, currentCooldown: 0, icon: '/icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 4, currentCooldown: 0, icon: '/icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 2.5, currentCooldown: 0, icon: '/icons/r4.svg', maxCooldown: 2.5, name: 'Spear R', isUnlocked: false },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/icons/p4.svg', maxCooldown: 0, name: 'Spear Passive', isUnlocked: false },
+    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/icons/a4.svg', maxCooldown: 0, name: 'Spear Active', isUnlocked: false }
+  },
+
+  [WeaponType.BOW]: {
+    q: { type: 'q', key: 'q', cooldown: 0.25, currentCooldown: 0, icon: '/icons/q5.svg', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 0.5, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 8, currentCooldown: 0, icon: '/icons/r5.svg', maxCooldown: 8, name: 'Rain of Arrows', isUnlocked: false },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/icons/p5.svg', maxCooldown: 0, name: 'Eagle Eye', isUnlocked: false },
+    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/icons/a5.svg', maxCooldown: 0, name: 'Ethereal Quiver', isUnlocked: false }
   },
 
 }; 
@@ -112,7 +122,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   if (weapon === WeaponType.SWORD && 
       ability === 'q' && 
       abilities[WeaponType.SWORD].passive.isUnlocked) {
-    return 0.725; // OP w/ chain lightning
+    return 0.7375; // OP w/ chain lightning
   }
   
   return baseAbility.cooldown;
@@ -199,11 +209,11 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       damage: "13"
     },
     e: {
-      title: "Etherbow",
-      description: "Conjures an arrow that deals damage based on charging time. Fully charged shots are guarnateed to critical hit.",
-      cost: " ",
-      range: "Range: 80 feet",
-      damage: "Damage: 53"
+      title: "Shadow Strike",
+      description: "Enter stealth for 10 seconds. Breaking stealth with an attack deals +100 bonus damage. If you are behind the target, this effect is doubled. If shadowstrike lands a killing blow on an enemy, you regain health.",
+      cost: "Cooldown: 10 seconds",
+      range: "Self",
+      damage: "Bonus Damage: 100"
     },
     r: {
       title: "Blizzard",
@@ -221,4 +231,74 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       description: "Passive: Melee attacks passively consume orb charges to extra damage based on the number of charges available."
     }
   },
+  [WeaponType.SPEAR]: {
+    q: {
+      title: "Spear Thrust",
+      description: "Long-range piercing thrust attack",
+      cost: "Cooldown: 0.85 seconds",
+      range: "Range: 6.25 feet",
+      damage: "Damage: 27"
+    },
+    e: {
+      title: "Whirlwind",
+      description: "Spin attack that hits all surrounding enemies",
+      cost: "Cooldown: 0.95 seconds",
+      range: "Range: 6.25 feet",
+      damage: "Damage: 31"
+    },
+    r: {
+      title: "Dragon's Lance",
+      description: "Powerful charging thrust that deals massive damage",
+      cost: "Cooldown: 2.5 seconds",
+      range: "Range: 8.0 feet",
+      damage: "Damage: 75"
+    },
+    passive: {
+      title: "Combat Expertise",
+      description: "Passive: Each successful hit increases attack speed slightly"
+    },
+    active: {
+      title: "Spear Mastery",
+      description: "Active: Next attack deals bonus damage based on distance to target"
+    }
+  },
+  [WeaponType.BOW]: {
+    q: {
+      title: "Quick Shot",
+      description: "Rapidly fire an ethereal arrow",
+      cost: "Cooldown: 0.85 seconds",
+      range: "Range: 80 feet",
+      damage: "Damage: 17"
+    },
+    e: {
+      title: "Power Shot",
+      description: "Charge a powerful shot that deals increased damage based on charge time. Fully charged shots pierce through enemies.",
+      cost: "Cooldown: 0.75 seconds",
+      range: "Range: 80 feet",
+      damage: "Damage: 53-125"
+    },
+    r: {
+      title: "Rain of Arrows",
+      description: "Unleash a barrage of ethereal arrows in an area",
+      cost: "Cooldown: 8 seconds",
+      range: "Range: 60 feet",
+      damage: "Damage: 85"
+    },
+    passive: {
+      title: "Eagle Eye",
+      description: "Passive: Increased critical hit chance at long range"
+    },
+    active: {
+      title: "Ethereal Quiver",
+      description: "Active: Next 3 shots split into multiple arrows"
+    }
+  },
+}; 
+
+export const WEAPON_ORB_COUNTS: Record<WeaponType, number> = {
+  [WeaponType.SCYTHE]: 8,
+  [WeaponType.SWORD]: 4,
+  [WeaponType.SABRES]: 6,
+  [WeaponType.SPEAR]: 8,
+  [WeaponType.BOW]: 6,
 }; 

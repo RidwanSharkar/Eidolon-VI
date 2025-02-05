@@ -21,7 +21,7 @@ export const useFirebeam = ({ parentRef }: FirebeamControllerProps) => {
 
     setIsActive(true);
     
-    const baseDamage = 47; // DAMAGE
+    const baseDamage = 43; // DAMAGE
     
     return {
       position,

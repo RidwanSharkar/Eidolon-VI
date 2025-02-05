@@ -1,8 +1,29 @@
-// src/versus/SkeletalMage/CustomSkeletonMage.tsx
-import React, { useRef, useState, useEffect } from 'react';
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry } from 'three';
+
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, RingGeometry, InstancedMesh, Matrix4, Euler, Vector3, Quaternion } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '@/gear/BonePlate';
+import * as THREE from 'three';
+import { useEffect, useRef, useState } from 'react';
+import { useMemo } from 'react';
+
+// Add helper function
+const tempMatrix = new Matrix4();
+const tempPosition = new Vector3();
+const tempRotation = new Euler();
+const tempScale = new Vector3();
+const tempQuaternion = new Quaternion();
+
+function setMatrixAt(
+  instancedMesh: InstancedMesh,
+  index: number,
+  position: Vector3,
+  rotation: Euler,
+  scale: Vector3
+) {
+  tempQuaternion.setFromEuler(rotation);
+  tempMatrix.compose(position, tempQuaternion, scale);
+  instancedMesh.setMatrixAt(index, tempMatrix);
+}
 
 interface CustomSkeletonMageProps {
   position: [number, number, number];
@@ -18,9 +39,76 @@ const standardBoneMaterial = new MeshStandardMaterial({
   metalness: 0.3
 });
 
+const glowingMaterial = new MeshStandardMaterial({
+  color: "#4169E1",
+  emissive: "#4169E1",
+  emissiveIntensity: 1.75,
+  transparent: true,
+  opacity: 0.875
+});
+
+const robeMaterial = new MeshStandardMaterial({
+  color: "#896BFF",
+  roughness: 0.7,
+  transparent: true,
+  opacity: 0.7
+});
+
 // Cache geometries that are reused frequently
 const jointGeometry = new SphereGeometry(0.06, 6, 6);
 const smallBoneGeometry = new CylinderGeometry(0.04, 0.032, 1, 4);
+const sphereGeometry = new SphereGeometry(0.02, 8, 8);
+const cylinderGeometry = new CylinderGeometry(0.03, 0.04, 2.8, 8);
+const ringGeometry = new RingGeometry(0.575, 0.7, 24);
+
+const sharedGeometries = {
+  tooth: new THREE.ConeGeometry(0.03, 0.075, 3),
+  lowerTooth: new THREE.ConeGeometry(0.01, 0.08, 3),
+  eye: new THREE.SphereGeometry(0.02, 8, 8),
+  eyeGlow: new THREE.SphereGeometry(0.035, 8, 8),
+  eyeOuterGlow: new THREE.SphereGeometry(0.05, 6.5, 2),
+  vertebrae: new THREE.CylinderGeometry(0.0225, 0.0225, 0.03, 6),
+  particle: new THREE.SphereGeometry(0.01, 6, 6)
+};
+
+const sharedMaterials = {
+  bone: new THREE.MeshStandardMaterial({
+    color: "#e8e8e8",
+    roughness: 0.4,
+    metalness: 0.3
+  }),
+  darkBone: new THREE.MeshStandardMaterial({
+    color: "#d8d8d8",
+    roughness: 0.5,
+    metalness: 0.2
+  }),
+  eyeCore: new THREE.MeshStandardMaterial({
+    color: "#2FFF00",
+    emissive: "#2FFF00",
+    emissiveIntensity: 3
+  }),
+  eyeGlow: new THREE.MeshStandardMaterial({
+    color: "#2FFF00",
+    emissive: "#2FFF00",
+    emissiveIntensity: 1,
+    transparent: true,
+    opacity: 0.75
+  }),
+  eyeOuterGlow: new THREE.MeshStandardMaterial({
+    color: "#2FFF00",
+    emissive: "#2FFF00",
+    emissiveIntensity: 1,
+    transparent: true,
+    opacity: 0.7
+  }),
+  particleGlow: new THREE.MeshStandardMaterial({
+    color: "#4169E1",
+    emissive: "#4169E1",
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 0.7
+  })
+};
 
 function BoneLegModel() {
   const createBoneSegment = (length: number, width: number) => (
@@ -52,14 +140,12 @@ function BoneLegModel() {
     <group>
       {/* Upper leg */}
       <group>
-        {createParallelBones(0.65, 0.05)}
+        {/* Use smallBoneGeometry and standardBoneMaterial */}
+        <mesh geometry={smallBoneGeometry} material={standardBoneMaterial} />
         
-        {/* Knee joint - reduced segments */}
+        {/* Knee joint */}
         <group position={[0, -0.35, 0]}>
-          <mesh>
-            <sphereGeometry args={[0.08, 8, 8]} />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-          </mesh>
+          <mesh geometry={jointGeometry} material={standardBoneMaterial} />
           
           {/* Lower leg */}
           <group position={[0, -0.15, 0]}>
@@ -138,7 +224,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
       <group>
         {createParallelBones(1.3, 0.15)}
         
-        <group position={[0.25, -0.85, 0.21]} scale={[0.8, 0.8, 1.1]}> 
+        <group position={[0.25, -0.875, 0.21]} scale={[0.8, 0.8, 1.1]}> 
           <mesh>
             <sphereGeometry args={[0.12, 12, 12]} />
             <meshStandardMaterial 
@@ -193,9 +279,6 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
     </group>
   );
 }
-
-
-
 
 function ShoulderPlate() {
   return (
@@ -282,10 +365,9 @@ function ShoulderPlate() {
 
 function StaffModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
   return (
-    <group rotation={[0, 0, isLeftHand ? Math.PI  : -Math.PI / 3]}>
+    <group rotation={[0, 0, isLeftHand ? Math.PI : -Math.PI / 3]}>
       {/* Staff handle */}
-      <mesh>
-        <cylinderGeometry args={[0.03, 0.04, 2.8, 8]} />
+      <mesh geometry={cylinderGeometry}>
         <meshStandardMaterial 
           color="#4a2105"
           roughness={0.6}
@@ -307,53 +389,32 @@ function StaffModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
         </group>
       ))}
 
-      
-
-      {/* Crystal top */}
+      {/* Crystal top - single light source instead of multiple */}
       <group position={[0, 1.25, 0]}>
-        {/* Crystal core */}
-        <mesh>
-          <octahedronGeometry args={[0.2]} />
-          <meshStandardMaterial 
-            color="#4169E1"
-            emissive="#4169E1"
-            emissiveIntensity={1.75}
-            transparent
-            opacity={0.875}
-          />
-        </mesh>
-
-        {/* Crystal glow */}
+        <mesh geometry={sphereGeometry} material={glowingMaterial} />
+        
+        {/* Single light source for all crystals */}
         <pointLight 
           color="#4169E1"
-          intensity={1}
-          distance={3}
+          intensity={1.5}
+          distance={4}
           decay={2}
         />
 
-        {/* Floating crystal shards */}
-        {[0, 1, 2, 3].map((i) => {
-          const angle = (Math.PI * 2 * i) / 4;
+        {/* Reduce floating crystal count from 4 to 2 */}
+        {[0, 1].map((i) => {
+          const angle = (Math.PI * i);
           return (
             <group 
               key={i} 
               rotation={[0, angle, 0]}
               position={[
-                0.3 * Math.cos(angle), // X position on circle
-                0.1 * Math.sin(i * Math.PI), // Y position for up/down float
-                0.3 * Math.sin(angle)  // Z position on circle
+                0.3 * Math.cos(angle),
+                0.1 * Math.sin(i * Math.PI),
+                0.3 * Math.sin(angle)
               ]}
             >
-              <mesh>
-                <octahedronGeometry args={[0.045]} />
-                <meshStandardMaterial 
-                  color="#4169E1"
-                  emissive="#4169E1"
-                  emissiveIntensity={1.5}
-                  transparent
-                  opacity={0.7}
-                />
-              </mesh>
+              <mesh geometry={sphereGeometry} material={glowingMaterial} />
             </group>
           );
         })}
@@ -365,15 +426,10 @@ function StaffModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
 function MageRobe() {
   return (
     <group>
-      {/* Main robe body - reduced segments */}
+      {/* Main robe body - use cached material */}
       <mesh position={[0, -0.15, 0]}>
         <cylinderGeometry args={[0.17, 0.45, 1.65, 6]} />
-        <meshStandardMaterial 
-          color="#896BFF"
-          roughness={0.7}
-          transparent
-          opacity={0.7}
-        />
+        <meshStandardMaterial {...robeMaterial} />
       </mesh>
 
       {/* Robe trim */}
@@ -385,27 +441,6 @@ function MageRobe() {
           roughness={0.6}
         />
       </mesh>
-
-
-      {/* EXTRA float
-      {[-1, 1].map((side) => (
-        <group 
-          key={side}
-          position={[0.3 * side, 1.175, -0]}
-          rotation={[0, 0, 0.52 * side]}
-        >
-          <mesh>
-            <cylinderGeometry args={[0.0775, 0.115, 0.275, 6]} />
-            <meshStandardMaterial 
-              color="#2a0845"
-              roughness={0.7}
-              transparent
-              opacity={0.75}
-            />
-          </mesh>
-        </group>
-      ))}
-         */}
 
       {/* Shoulder cape pieces */}
       {[-1, 1].map((side) => (
@@ -430,33 +465,84 @@ function MageRobe() {
   );
 }
 
+function TeethInstances({ isUpper = true }) {
+  const teethInstances = useMemo(() => {
+    const count = isUpper ? 5 : 4;
+    const geometry = isUpper ? sharedGeometries.tooth : sharedGeometries.lowerTooth;
+    const mesh = new THREE.InstancedMesh(geometry, sharedMaterials.bone, count);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    return mesh;
+  }, [isUpper]);
+
+  useEffect(() => {
+    const offsets = isUpper ? [-0.03, -0.06, -0.09, 0, 0.03] : [-0.06, -0.02, 0.02, 0.06];
+    offsets.forEach((offset, i) => {
+      tempPosition.set(offset, isUpper ? -0.25 : -0.18, 0.2);
+      tempRotation.set(isUpper ? 0.5 : 2.5, 0, 0);
+      tempScale.set(1, 1, 1);
+      setMatrixAt(teethInstances, i, tempPosition, tempRotation, tempScale);
+    });
+    teethInstances.instanceMatrix.needsUpdate = true;
+  }, [teethInstances, isUpper]);
+
+  return <primitive object={teethInstances} />;
+}
+
+function VertebraeInstances() {
+  const instances = useMemo(() => {
+    const mesh = new THREE.InstancedMesh(sharedGeometries.vertebrae, sharedMaterials.bone, 5);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    return mesh;
+  }, []);
+
+  useEffect(() => {
+    [0.15, 0.27, 0.39, 0.51, 0.63].forEach((y, i) => {
+      tempPosition.set(0, y, 0);
+      tempRotation.set(0, 0, 0);
+      tempScale.set(1, 1, 1);
+      setMatrixAt(instances, i, tempPosition, tempRotation, tempScale);
+    });
+    instances.instanceMatrix.needsUpdate = true;
+  }, [instances]);
+
+  return <primitive object={instances} />;
+}
+
 export default function CustomSkeletonMage({ position, isAttacking, isWalking, onHit }: CustomSkeletonMageProps) {
   const groupRef = useRef<Group>(null);
   const [walkCycle, setWalkCycle] = useState(0);
   const [attackCycle, setAttackCycle] = useState(0);
   const attackAnimationRef = useRef<NodeJS.Timeout>();
 
-  const walkSpeed = 3;
-  const attackSpeed = 0.6;
+  // Memoize animation calculations
+  const walkAnimationValues = useMemo(() => {
+    return {
+      walkSpeed: 3,
+      attackSpeed: 0.6,
+      walkHeightMultiplier: 0.1,
+      armSwingMultiplier: 0.3,
+      legSwingMultiplier: 0.4
+    };
+  }, []);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
+    // Batch position updates
     if (isWalking) {
-      setWalkCycle((prev) => (prev + delta * walkSpeed) % (Math.PI * 2));
+      const newWalkCycle = (walkCycle + delta * walkAnimationValues.walkSpeed) % (Math.PI * 2);
+      setWalkCycle(newWalkCycle);
       
-      const walkHeightOffset = Math.abs(Math.sin(walkCycle) * 0.1);
-      
-      if (groupRef.current) {
-        groupRef.current.position.y = position[1] - walkHeightOffset;
-      }
+      // Calculate all positions once
+      const walkHeightOffset = Math.abs(Math.sin(newWalkCycle) * walkAnimationValues.walkHeightMultiplier);
+      groupRef.current.position.y = position[1] - walkHeightOffset;
       
       // Enhanced walking animation with knee joints
       ['LeftLeg', 'RightLeg'].forEach(part => {
         const limb = groupRef.current?.getObjectByName(part) as Mesh;
         if (limb) {
           const isRight = part.includes('Right');
-          const phase = isRight ? walkCycle : walkCycle + Math.PI;
+          const phase = isRight ? newWalkCycle : newWalkCycle + Math.PI;
           
           // Upper leg movement
           const upperLegAngle = Math.sin(phase) * 0.4; // Increased range of motion
@@ -489,17 +575,17 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
         const limb = groupRef.current?.getObjectByName(part) as Mesh;
         if (limb) {
           const isRight = part.includes('Right');
-          const phase = isRight ? walkCycle + Math.PI : walkCycle;
+          const phase = isRight ? newWalkCycle + Math.PI : newWalkCycle;
           
           // Simpler rotation for the entire claw structure
-          const armAngle = Math.sin(phase) * 0.3;
+          const armAngle = Math.sin(phase) * walkAnimationValues.armSwingMultiplier;
           limb.rotation.x = armAngle;
         }
       });
     }
 
     if (isAttacking) {
-      setAttackCycle((prev) => prev + delta * attackSpeed);
+      setAttackCycle((prev) => prev + delta * walkAnimationValues.attackSpeed);
       const progress = Math.min(attackCycle, Math.PI / 4);
       const armAngle = Math.sin(progress) * Math.PI;
 
@@ -546,10 +632,6 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
         <BonePlate />
       </group>
 
-
-
-
-
       {/* Reduced magical runes from 3 to 2 */}
       <group>
         {[0, 1].map((i) => (
@@ -558,16 +640,7 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
             rotation={[0, (Math.PI * i), 0]}
             position={[0, 1.3, 0]}
           >
-            <mesh>
-              <ringGeometry args={[0.575, 0.7, 24]} />
-              <meshStandardMaterial 
-                color="#4169E1"
-                emissive="#4169E1"
-                emissiveIntensity={1.5}
-                transparent
-                opacity={0.4}
-              />
-            </mesh>
+            <mesh geometry={ringGeometry} material={glowingMaterial} />
           </group>
         ))}
       </group>
@@ -641,35 +714,13 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
           </group>
 
           {/* Upper teeth row */}
-          <group position={[0.025, -0.25, 0.2175]} >
-            {[-0.03, -0.06, -0.09, -0, 0.03].map((offset, i) => (
-              <group key={i} position={[offset, 0, 0]} rotation={[0.5, 0, 0]}>
-                <mesh>
-                  <coneGeometry args={[0.03, 0.075, 3]} />
-                  <meshStandardMaterial 
-                    color="#e8e8e8"
-                    roughness={0.3}
-                    metalness={0.4}
-                  />
-                </mesh>
-              </group>
-            ))}
+          <group position={[0.025, -0.25, 0.2175]}>
+            <TeethInstances isUpper={true} />
           </group>
 
           {/* Lower teeth row */}
           <group position={[0, -0.18, 0.2]}>
-            {[-0.06, -0.02, 0.02, 0.06].map((offset, i) => (
-              <group key={i} position={[offset, 0, 0]} rotation={[2.5, 0, 0]}>
-                <mesh>
-                  <coneGeometry args={[0.01, 0.08, 3]} />
-                  <meshStandardMaterial 
-                    color="#e8e8e8"
-                    roughness={0.3}
-                    metalness={0.4}
-                  />
-                </mesh>
-              </group>
-            ))}
+            <TeethInstances isUpper={false} />
           </group>
         </group>
 
@@ -784,12 +835,7 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
 
         {/* Sacral vertebrae */}
         <group position={[0, 0.15, -0.16]} rotation={[0.1, 0, 0]}>
-          {[0.15, 0.27, 0.39, 0.51, 0.63].map((y, i) => (
-            <mesh key={i} position={[0, y, 0]}>
-              <cylinderGeometry args={[0.0225, 0.0225, 0.03, 6]} />
-              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-            </mesh>
-          ))}
+          <VertebraeInstances />
         </group>
 
         {/* Pelvic joints */}

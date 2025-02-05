@@ -24,14 +24,14 @@ interface BoneclawHitResult {
 export function calculateBoneclawHits(
   position: Vector3,
   direction: Vector3,
-  enemies: Array<{ id: string; position: Vector3; health: number }>,
+  enemies: Array<{ id: string; position: Vector3; health: number; isDying?: boolean }>,
   hitEnemies: Set<string> // Track already hit enemies
 ): BoneclawHitResult[] {
   const hits: BoneclawHitResult[] = [];
   
   for (let i = 0; i < enemies.length; i++) {
     const enemy = enemies[i];
-    if (enemy.health <= 0 || hitEnemies.has(enemy.id)) continue;
+    if (enemy.health <= 0 || enemy.isDying || hitEnemies.has(enemy.id)) continue;
 
     STATIC_VECTORS.temp1.subVectors(enemy.position, position);
     const distance = STATIC_VECTORS.temp1.length();

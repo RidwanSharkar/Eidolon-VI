@@ -50,6 +50,16 @@ interface UseAbilityKeysProps {
   activateOathstrike: () => { position: Vector3; direction: Vector3; onComplete: () => void } | null;
   setIsOathstriking: (value: boolean) => void;
   orbShieldRef: React.RefObject<OrbShieldRef>;
+  setIsWhirlwinding: (value: boolean) => void;
+  whirlwindStartTime: React.MutableRefObject<number | null>;
+  isWhirlwinding: boolean;
+  fireballCharges: Array<{
+    id: number;
+    available: boolean;
+    cooldownStartTime: number | null;
+  }>;
+  activateStealth: () => void;
+  shootQuickShot: () => void;
 }
 
 export function useAbilityKeys({
@@ -80,6 +90,12 @@ export function useAbilityKeys({
   activateOathstrike,
   setIsOathstriking,
   orbShieldRef,
+  setIsWhirlwinding,
+  whirlwindStartTime,
+  isWhirlwinding,
+  fireballCharges,
+  activateStealth,
+  shootQuickShot,
 }: UseAbilityKeysProps) {
   // Ref to track the last Q usage time
   const lastQUsageTime = useRef(0);
@@ -116,48 +132,77 @@ export function useAbilityKeys({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isGameOver.current) return; // Early return if game is over
+      if (isGameOver.current) return;
       
       const key = e.key.toLowerCase();
 
-      // Prevent repeated keydown events while holding
       if (key in keys.current && keys.current[key]) return;
 
       if (key in keys.current) {
         keys.current[key] = true;
       }
 
-
       if (key === 'q') {
-        tryAttack();
+        if (currentWeapon === WeaponType.BOW) {
+          shootQuickShot();
+        } else {
+          tryAttack();
+        }
       }
 
       if (key === 'e') {
         const eAbility = abilities[currentWeapon].e;
         if (eAbility.currentCooldown <= 0) {
-          if (currentWeapon === WeaponType.SWORD && !isSmiting) {
-            // Check time since last Q usage for Sword
-            const timeSinceLastQ = Date.now() - lastQUsageTime.current;
-            if (timeSinceLastQ < 400) { // SMITE BUG TEMP FIX 
-              console.log('Cannot use Smite so soon after a normal attack');
-              return;
-            }
+          switch (currentWeapon) {
+            case WeaponType.SWORD:
+              if (!isSmiting) {
+                const timeSinceLastQ = Date.now() - lastQUsageTime.current;
+                if (timeSinceLastQ < 450) {
+                  console.log('Cannot use Smite so soon after a normal attack');
+                  return;
+                }
+                setIsSmiting(true);
+                setIsSwinging(true);
+                const targetPos = groupRef.current!.position.clone();
+                targetPos.add(new Vector3(0, 0, 3.5).applyQuaternion(groupRef.current!.quaternion));
+                setSmiteEffects(prev => [...prev, { 
+                  id: nextSmiteId.current++, 
+                  position: targetPos 
+                }]);
+                onAbilityUse(currentWeapon, 'e');
+              }
+              break;
 
-            setIsSmiting(true);
-            setIsSwinging(true);
-            const targetPos = groupRef.current!.position.clone();
-            targetPos.add(new Vector3(0, 0, 3.5).applyQuaternion(groupRef.current!.quaternion));
-            setSmiteEffects(prev => [...prev, { 
-              id: nextSmiteId.current++, 
-              position: targetPos 
-            }]);
-            onAbilityUse(currentWeapon, 'e');
-          } else if (currentWeapon === WeaponType.SABRES && !isBowCharging) {
-            setIsBowCharging(true);
-            setBowChargeStartTime(Date.now());
-          } else if (currentWeapon === WeaponType.SCYTHE) {
-            shootFireball();
-            onAbilityUse(currentWeapon, 'e');
+            case WeaponType.BOW:
+              if (!isBowCharging) {
+                setIsBowCharging(true);
+                setBowChargeStartTime(Date.now());
+              }
+              break;
+
+            case WeaponType.SABRES:
+              if (eAbility.currentCooldown <= 0) {
+                activateStealth();
+                onAbilityUse(currentWeapon, 'e');
+              }
+              break;
+
+            case WeaponType.SCYTHE:
+              shootFireball();
+              onAbilityUse(currentWeapon, 'e');
+              break;
+
+            case WeaponType.SPEAR:
+              if (!isWhirlwinding) {
+                const hasAvailableCharges = fireballCharges.some(charge => charge.available);
+                if (hasAvailableCharges) {
+                  setIsWhirlwinding(true);
+                  whirlwindStartTime.current = Date.now();
+                } else {
+                  console.log('Cannot use Whirlwind without available charges');
+                }
+              }
+              break;
           }
         }
       }
@@ -255,10 +300,17 @@ export function useAbilityKeys({
           }
         }
       }
+
+      if (!isSwinging && currentWeapon === WeaponType.BOW) {
+        if (e.key.toLowerCase() === 'q') {
+          shootQuickShot();
+          onAbilityUse(WeaponType.BOW, 'q');
+        }
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (isGameOver.current) return; // Early return if game is over
+      if (isGameOver.current) return;
       
       const key = e.key.toLowerCase();
 
@@ -266,8 +318,16 @@ export function useAbilityKeys({
         keys.current[key as keyof typeof keys.current] = false;
       }
 
-      if (key === 'e' && isBowCharging) {
+      // Only handle bow charge release for BOW weapon type
+      if (key === 'e' && currentWeapon === WeaponType.BOW && isBowCharging) {
         releaseBowShot(bowChargeProgress);
+      }
+
+      // Handle whirlwind cancellation for SPEAR
+      if (key === 'e' && currentWeapon === WeaponType.SPEAR && isWhirlwinding) {
+        setIsWhirlwinding(false);
+        whirlwindStartTime.current = null;
+        onAbilityUse(currentWeapon, 'e');
       }
     };
 
@@ -306,7 +366,13 @@ export function useAbilityKeys({
     onHealthChange,
     setIsOathstriking,
     activateOathstrike,
-    orbShieldRef
+    orbShieldRef,
+    setIsWhirlwinding,
+    whirlwindStartTime,
+    isWhirlwinding,
+    fireballCharges,
+    activateStealth,
+    shootQuickShot,
   ]);
 
   // Mouse event handlers to check game over state

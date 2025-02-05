@@ -5,8 +5,9 @@ import { UnitProps } from '../Unit/UnitProps';
 
 export interface SkeletonProps {
   id: string;
-  initialPosition: Vector3;
   position: Vector3;
+  rotation: number;
+  initialPosition: Vector3;
   health: number;
   maxHealth: number;
   onTakeDamage: (id: string, damage: number) => void;

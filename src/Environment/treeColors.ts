@@ -7,16 +7,15 @@ export const trunkColors = [
 ];
 
 export const leafColors = [ 
-  "#FFA1E0", // Brighter blue
-  "#B9FFAF", // Vibrant greensaew
-  "#A8E2FF", // Bright pink/orange
+  "#FFA1E0", // PINK  F495FF
+  "#8AFF7B", // GREEN
+  "#73D0FF", // BLUE
 
-  "#FFC3D8", // Brighter pinkwd
+  "#F495FF", // FFC3D8 Brighter pink >>>>>>> F495FF <<<< GooB
   "#98FF57", // Bright lime green
 
-  "#CEFF85",
-  "#CEFF85", 
-  "#EFFFB3", 
-
-  "#B8FF56", 
+//"#CEFF85",
+  //"#CEFF85", 
+    //"#EFFFB3", 
+      // "#B8FF56", 
 ]; 

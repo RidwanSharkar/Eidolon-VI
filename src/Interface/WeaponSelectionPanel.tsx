@@ -53,10 +53,10 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/Eidolon/icons/2.svg"
+                src="/icons/2.svg"
                 alt="Sword"
-                width={280}
-                height={320}
+                width={240}
+                height={280}
                 unoptimized
               />
             </div>
@@ -68,10 +68,10 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/Eidolon/icons/q2.svg"
+                src="/icons/q2.svg"
                 alt="Q Ability"
-                width={100}
-                height={120}
+                width={80}
+                height={100}
                 unoptimized
               />
               <span className={styles.abilityKey}>Q</span>
@@ -82,10 +82,10 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/Eidolon/icons/e2.svg"
+                src="/icons/e2.svg"
                 alt="E Ability"
-                width={100}
-                height={120}
+                width={80}
+                height={100}
                 unoptimized
               />
               <span className={styles.abilityKey}>E</span>
@@ -100,10 +100,10 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/Eidolon/icons/1.svg"
+                src="/icons/1.svg"
                 alt="Scythe"
-                width={280}
-                height={320}
+                width={240}
+                height={280}
                 unoptimized
               />
             </div>
@@ -115,10 +115,10 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/Eidolon/icons/q1.svg"
+                src="/icons/q1.svg"
                 alt="Q Ability"
-                width={100}
-                height={120}
+                width={80}
+                height={100}
                 unoptimized
               />
               <span className={styles.abilityKey}>Q</span>
@@ -129,10 +129,10 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/Eidolon/icons/e1.svg"
+                src="/icons/e1.svg"
                 alt="E Ability"
-                width={100}
-                height={120}
+                width={80}
+                height={100}
                 unoptimized
               />
               <span className={styles.abilityKey}>E</span>
@@ -147,10 +147,10 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/Eidolon/icons/3.svg"
+                src="/icons/3.svg"
                 alt="Sabres"
-                width={280}
-                height={320}
+                width={240}
+                height={280}
                 unoptimized
               />
             </div>
@@ -162,10 +162,10 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/Eidolon/icons/q3.svg"
+                src="/icons/q3.svg"
                 alt="Q Ability"
-                width={100}
-                height={120}
+                width={80}
+                height={100}
                 unoptimized
               />
               <span className={styles.abilityKey}>Q</span>
@@ -176,10 +176,104 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/Eidolon/icons/e3.svg"
+                src="/icons/e3.svg"
                 alt="E Ability"
-                width={100}
-                height={120}
+                width={80}
+                height={100}
+                unoptimized
+              />
+              <span className={styles.abilityKey}>E</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.weaponContainer}>
+          <div 
+            className={`${styles.icon} ${selectedWeapon === WeaponType.SPEAR ? styles.selected : ''}`}
+            onClick={() => onWeaponSelect(WeaponType.SPEAR)}
+          >
+            <div className={styles.iconContent}>
+              <Image 
+                src="/icons/q4.svg"
+                alt="Spear"
+                width={240}
+                height={280}
+                unoptimized
+              />
+            </div>
+          </div>
+          <div className={styles.abilityIcons}>
+            <div 
+              className={styles.abilityIcon}
+              onMouseEnter={(e) => handleAbilityHover(e, WeaponType.SPEAR, 'q')}
+              onMouseLeave={handleAbilityLeave}
+            >
+              <Image 
+                src="/icons/q4.svg"
+                alt="Q Ability"
+                width={80}
+                height={100}
+                unoptimized
+              />
+              <span className={styles.abilityKey}>Q</span>
+            </div>
+            <div 
+              className={styles.abilityIcon}
+              onMouseEnter={(e) => handleAbilityHover(e, WeaponType.SPEAR, 'e')}
+              onMouseLeave={handleAbilityLeave}
+            >
+              <Image 
+                src="/icons/e4.svg"
+                alt="E Ability"
+                width={80}
+                height={100}
+                unoptimized
+              />
+              <span className={styles.abilityKey}>E</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.weaponContainer}>
+          <div 
+            className={`${styles.icon} ${selectedWeapon === WeaponType.BOW ? styles.selected : ''}`}
+            onClick={() => onWeaponSelect(WeaponType.BOW)}
+          >
+            <div className={styles.iconContent}>
+              <Image 
+                src="/icons/5.svg"
+                alt="Bow"
+                width={240}
+                height={280}
+                unoptimized
+              />
+            </div>
+          </div>
+          <div className={styles.abilityIcons}>
+            <div 
+              className={styles.abilityIcon}
+              onMouseEnter={(e) => handleAbilityHover(e, WeaponType.BOW, 'q')}
+              onMouseLeave={handleAbilityLeave}
+            >
+              <Image 
+                src="/icons/q5.svg"
+                alt="Q Ability"
+                width={80}
+                height={100}
+                unoptimized
+              />
+              <span className={styles.abilityKey}>Q</span>
+            </div>
+            <div 
+              className={styles.abilityIcon}
+              onMouseEnter={(e) => handleAbilityHover(e, WeaponType.BOW, 'e')}
+              onMouseLeave={handleAbilityLeave}
+            >
+              <Image 
+                src="/icons/e3.svg"
+                alt="E Ability"
+                width={80}
+                height={100}
                 unoptimized
               />
               <span className={styles.abilityKey}>E</span>

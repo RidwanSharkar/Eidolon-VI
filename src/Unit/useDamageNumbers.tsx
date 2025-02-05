@@ -20,6 +20,7 @@ export interface DamageNumber {
   isChainLightning?: boolean;
   isFireball?: boolean;
   isSummon?: boolean;
+  isStealthStrike?: boolean;
 }
 
 export function useDamageNumbers() {

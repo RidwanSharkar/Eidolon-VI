@@ -5,19 +5,20 @@ import { useFrame } from '@react-three/fiber';
 import type { Group } from 'three';
 import type { Camera } from 'three';
 import { OrbitControls } from 'three-stdlib';
+import { stealthManager } from '@/Spells/Stealth/StealthManager';
 
 interface UseUnitControlsProps {
   groupRef: React.RefObject<Group>;
   controlsRef: React.RefObject<OrbitControls>;
   camera: Camera;
   speed?: number;
-  onPositionUpdate: (position: Vector3) => void;
+  onPositionUpdate: (position: Vector3, isStealthed?: boolean) => void;
   health: number;
   isCharging?: boolean;
   onMovementUpdate?: (direction: Vector3) => void;
 }
 
-const PLAY_AREA_RADIUS = 27.5 // MAP BOUNDARY
+const PLAY_AREA_RADIUS = 28 // MAP BOUNDARY
 
 // Base movement speed - this is our reference point
 const BASE_SPEED = 3.6; // MOVEMENT_SPEED
@@ -26,6 +27,7 @@ const BASE_SPEED = 3.6; // MOVEMENT_SPEED
 const BACKWARD_SPEED_MULTIPLIER = 0.6; // 60% speed moving backward
 const STRAFE_SPEED_MULTIPLIER = 0.85;   // 80% speed moving sideways
 const CHARGING_MULTIPLIER = 0.05;      // 4% speed while charging bow
+const STEALTH_SPEED_MULTIPLIER = 1.6; // 130% speed while stealthed
 
 export function useUnitControls({
   groupRef,
@@ -133,6 +135,12 @@ export function useUnitControls({
         frameSpeed *= CHARGING_MULTIPLIER;
       }
 
+      // Add stealth speed boost if stealthed
+      const isStealthed = stealthManager.isUnitStealthed();
+      if (isStealthed) {
+        frameSpeed *= STEALTH_SPEED_MULTIPLIER;
+      }
+
       // Calculate new position
       const movement = moveDirection.multiplyScalar(frameSpeed);
       const potentialPosition = groupRef.current.position.clone().add(movement);
@@ -140,24 +148,26 @@ export function useUnitControls({
       // Apply movement if within bounds
       if (potentialPosition.length() < PLAY_AREA_RADIUS) {
         groupRef.current.position.copy(potentialPosition);
-        onPositionUpdate(groupRef.current.position);
+        onPositionUpdate(groupRef.current.position, isStealthed);
       }
     }
 
-    // Handle rotation
-    if (controlsRef.current && !keys.current.shift) {
-      const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-      const currentRotation = groupRef.current.rotation.y;
-      
-      // Simple rotation interpolation
-      let rotationDiff = targetRotation - currentRotation;
-      while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
-      while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
-      
-      groupRef.current.rotation.y += rotationDiff * Math.min(1, 15 * delta);
-    }
-
+    // Updated rotation logic
     if (controlsRef.current) {
+      if (!keys.current.shift && !controlsRef.current.mouseButtons.LEFT) {
+        // Only rotate the unit when not holding shift and not using left mouse
+        const targetRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
+        const currentRotation = groupRef.current.rotation.y;
+        
+        // Simple rotation interpolation
+        let rotationDiff = targetRotation - currentRotation;
+        while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+        while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+        
+        groupRef.current.rotation.y += rotationDiff * Math.min(1, 15 * delta);
+      }
+
+      // Update orbit controls target to follow unit
       const unitPosition = groupRef.current.position;
       controlsRef.current.target.set(unitPosition.x, unitPosition.y, unitPosition.z);
     }

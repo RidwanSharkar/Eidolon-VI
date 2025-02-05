@@ -128,6 +128,7 @@ export default function HomePage() {
         id: `skeleton-${index}`,
         initialPosition,
         position: initialPosition.clone(),
+        rotation: 0,
         health: 196,
         maxHealth: 196,
         onTakeDamage: (id: string, damage: number) => {
@@ -262,6 +263,7 @@ export default function HomePage() {
       enemyData: skeletonProps.map(skeleton => ({
         id: skeleton.id,
         position: skeleton.position,
+        rotation: skeleton.rotation || 0,
         initialPosition: skeleton.initialPosition,
         currentPosition: skeleton.position.clone(),
         health: skeleton.health,

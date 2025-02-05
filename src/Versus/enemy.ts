@@ -9,6 +9,7 @@ export type EnemyType = 'regular' | 'mage' | 'abomination';
 export interface Enemy {
   id: string;
   position: Vector3;
+  rotation: number;
   initialPosition: Vector3;
   health: number;
   maxHealth: number;

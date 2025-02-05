@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface FrostExplosionProps {
   position: Vector3;
@@ -11,22 +11,21 @@ interface FrostExplosionProps {
 export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComplete }) => {
   const startTime = useRef(Date.now());
   const hasCompletedRef = useRef(false);
+  const particlesRef = useRef<Array<{
+    position: Vector3;
+    velocity: Vector3;
+    scale: number;
+    rotation: number;
+    rotationSpeed: number;
+    life: number;
+  }>>([]);
+  
   const MINIMUM_DURATION = 1250;
-  const MAXIMUM_DURATION = 2850; // Force cleanup after 2 seconds
+  const MAXIMUM_DURATION = 2850;
 
+  // Initialize particles only once
   useEffect(() => {
-    const forceCleanupTimer = setTimeout(() => {
-      if (!hasCompletedRef.current) {
-        hasCompletedRef.current = true;
-        onComplete?.();
-      }
-    }, MAXIMUM_DURATION);
-
-    return () => clearTimeout(forceCleanupTimer);
-  }, [onComplete]);
-
-  const [particles, setParticles] = useState(() => 
-    Array(40).fill(null).map(() => ({
+    particlesRef.current = Array(40).fill(null).map(() => ({
       position: new Vector3(
         position.x + (Math.random() - 0.5) * 1.65,
         position.y + 3 + Math.random() * 2,
@@ -41,33 +40,51 @@ export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComp
       rotation: Math.random() * Math.PI,
       rotationSpeed: (Math.random() - 0.5) * 5,
       life: 1.0
-    }))
-  );
+    }));
+  }, [position]);
+
+  const cleanupEffect = useCallback(() => {
+    if (!hasCompletedRef.current) {
+      hasCompletedRef.current = true;
+      onComplete?.();
+    }
+  }, [onComplete]);
+
+  useEffect(() => {
+    const forceCleanupTimer = setTimeout(cleanupEffect, MAXIMUM_DURATION);
+    return () => {
+      clearTimeout(forceCleanupTimer);
+      // Don't automatically cleanup on unmount
+    };
+  }, [cleanupEffect]);
+
+  const [renderParticles, setRenderParticles] = useState<typeof particlesRef.current>([]);
 
   useFrame((_, delta) => {
-    setParticles(prev => {
-      const updated = prev.map(particle => ({
+    if (hasCompletedRef.current) return;
+
+    const updatedParticles = particlesRef.current
+      .map(particle => ({
         ...particle,
         velocity: particle.velocity.clone().add(new Vector3(0, -delta * 8, 0)),
         position: particle.position.clone().add(particle.velocity.clone().multiplyScalar(delta)),
         rotation: particle.rotation + particle.rotationSpeed * delta,
         life: particle.life - delta
-      })).filter(particle => particle.life > 0);
-      
-      // Only trigger cleanup if minimum duration has passed AND all particles are done
-      const timeSinceStart = Date.now() - startTime.current;
-      if (!hasCompletedRef.current && updated.length === 0 && timeSinceStart >= MINIMUM_DURATION) {
-        hasCompletedRef.current = true;
-        onComplete?.();
-      }
-      
-      return updated;
-    });
+      }))
+      .filter(particle => particle.life > 0);
+
+    particlesRef.current = updatedParticles;
+    setRenderParticles(updatedParticles);
+
+    const timeSinceStart = Date.now() - startTime.current;
+    if (updatedParticles.length === 0 && timeSinceStart >= MINIMUM_DURATION) {
+      cleanupEffect();
+    }
   });
 
   return (
     <group>
-      {particles.map((particle, i) => (
+      {renderParticles.map((particle, i) => (
         <mesh 
           key={i} 
           position={particle.position.toArray()} 

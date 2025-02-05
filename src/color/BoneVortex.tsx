@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, } from 'three';
 import * as THREE from 'three';
 import { WeaponType } from '@/Weapons/weapons';
-
+ 
 
 interface BoneVortexProps {
   parentRef: React.RefObject<Group>;
@@ -18,6 +18,10 @@ const getVortexColor = (weaponType: WeaponType) => {
       return '#FF9748';
     case WeaponType.SABRES:
       return '#00AAFF';
+    case WeaponType.SPEAR:
+      return '#FF544E';
+    case WeaponType.BOW:
+      return '#3A905E';
     default:
       return '#00ff44';
   }

@@ -32,6 +32,10 @@ export default function GhostTrail({ parentRef, weaponType }: GhostTrailProps) {
         return '#FFB300'; // <--FFB300   FFD500 GOLDER F9A602 YELLOWER <--- 8783D1 FF9441
       case WeaponType.SABRES:
         return '#00BFFF'; //78DFFF
+      case WeaponType.SPEAR:
+        return '#FF544E'; // FF544E
+      case WeaponType.BOW:
+        return '#3A905E'; //D09A1D try 
     }
   };
   useFrame(() => {

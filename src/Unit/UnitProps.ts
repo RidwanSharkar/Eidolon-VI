@@ -42,7 +42,7 @@ export interface UnitProps {
   isPlayer?: boolean;
   abilities: WeaponInfo;
   onAbilityUse: (weapon: WeaponType, abilityType: AbilityType) => void;
-  onPositionUpdate: (pos: Vector3) => void;
+  onPositionUpdate: (position: Vector3, isStealthed?: boolean) => void;
   enemyData: Enemy[];
   onFireballDamage: (targetId: string, damage: number, isCritical: boolean, position: Vector3) => void;
   onDamage: (damage: number) => void;
