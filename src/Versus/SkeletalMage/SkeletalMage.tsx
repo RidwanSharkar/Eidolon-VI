@@ -136,11 +136,8 @@ export default function SkeletalMage({
   // Immediately sync with provided position
   useEffect(() => {
     if (position) {
-      currentPosition.current.copy(position);
       targetPosition.current.copy(position);
-      if (enemyRef.current) {
-        enemyRef.current.position.copy(position);
-      }
+      targetPosition.current.y = 0;
     }
   }, [position]);
 

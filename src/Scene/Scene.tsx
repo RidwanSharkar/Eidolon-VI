@@ -104,6 +104,8 @@ export default function Scene({
   // Modify enemy cleanup
   const removeEnemy = useCallback((enemy: Enemy) => {
     if (enemy.ref?.current) {
+      // Reset position before returning to pool
+      enemy.ref.current.position.set(0, 0, 0);
       groupPool.release(enemy.ref.current);
     }
   }, [groupPool]);
@@ -211,7 +213,6 @@ export default function Scene({
     })),
     onDamage: unitProps.onDamage,
     onEnemyDeath: () => {
-      console.log("Kill counted in Scene");  // Debug log
     },
     onFireballDamage: unitProps.onFireballDamage,
     fireballManagerRef: unitProps.fireballManagerRef,

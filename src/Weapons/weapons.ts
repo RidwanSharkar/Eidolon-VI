@@ -11,7 +11,7 @@ export enum WeaponType {
   BOW = 'bow',
 }
 
-export interface AbilityInfo {
+export interface AbilityInfo {  
   type: AbilityType;
   key: AbilityHotkey;
   cooldown: number; 
@@ -62,12 +62,12 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SPEAR]: {
     normal: 29,
-    range: 6.25,
+    range: 6.5,
     maxHitsPerSwing: 1
   },
   [WeaponType.BOW]: {
     normal: 17,
-    range: 80,
+    range: 0.125,
     maxHitsPerSwing: 1
   },
 };
@@ -90,7 +90,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   },
   
   [WeaponType.SABRES]: {
-    q: { type: 'q', key: 'q', cooldown: 0.6, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.62, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 5.75, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: '/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
@@ -98,21 +98,29 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   },
 
   [WeaponType.SPEAR]: {
-    q: { type: 'q', key: 'q', cooldown: 0.65, currentCooldown: 0, icon: '/icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.7, currentCooldown: 0, icon: '/icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 4, currentCooldown: 0, icon: '/icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 2.5, currentCooldown: 0, icon: '/icons/r4.svg', maxCooldown: 2.5, name: 'Spear R', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/icons/p4.svg', maxCooldown: 0, name: 'Spear Passive', isUnlocked: false },
+    r: { type: 'r', key: 'r', cooldown: 4.5, currentCooldown: 0, icon: '/icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: false },
+    passive: { 
+      type: 'passive', 
+      key: '1', 
+      cooldown: 0, 
+      currentCooldown: 0, 
+      icon: '/icons/p4.svg', 
+      maxCooldown: 0, 
+      name: 'Reignite', 
+      isUnlocked: false 
+    },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/icons/a4.svg', maxCooldown: 0, name: 'Spear Active', isUnlocked: false }
   },
 
   [WeaponType.BOW]: {
     q: { type: 'q', key: 'q', cooldown: 0.25, currentCooldown: 0, icon: '/icons/q5.svg', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 0.5, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 8, currentCooldown: 0, icon: '/icons/r5.svg', maxCooldown: 8, name: 'Rain of Arrows', isUnlocked: false },
+    r: { type: 'r', key: 'r', cooldown: 8, currentCooldown: 0, icon: '/icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/icons/p5.svg', maxCooldown: 0, name: 'Eagle Eye', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/icons/a5.svg', maxCooldown: 0, name: 'Ethereal Quiver', isUnlocked: false }
+    active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: '/icons/a5.svg', maxCooldown: 5, name: 'Cluster Shots', isUnlocked: false }
   },
-
 }; 
 
 export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbilities, abilities: WeaponInfo): number => {
@@ -122,7 +130,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   if (weapon === WeaponType.SWORD && 
       ability === 'q' && 
       abilities[WeaponType.SWORD].passive.isUnlocked) {
-    return 0.7375; // OP w/ chain lightning
+    return 0.7; // OP w/ chain lightning
   }
   
   return baseAbility.cooldown;
@@ -247,15 +255,14 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       damage: "Damage: 31"
     },
     r: {
-      title: "Dragon's Lance",
-      description: "Powerful charging thrust that deals massive damage",
-      cost: "Cooldown: 2.5 seconds",
-      range: "Range: 8.0 feet",
-      damage: "Damage: 75"
+      title: "Pyroclast",
+      description: "Charge and release a powerful missile that deals damage based on charge time.",
+      damage: "150-600",
+      range: "30",
     },
     passive: {
-      title: "Combat Expertise",
-      description: "Passive: Each successful hit increases attack speed slightly"
+      title: "Reignite",
+      description: "Passive: Restores 1 orb charge whenever you kill an enemy"
     },
     active: {
       title: "Spear Mastery",
@@ -278,19 +285,22 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       damage: "Damage: 53-125"
     },
     r: {
-      title: "Rain of Arrows",
-      description: "Unleash a barrage of ethereal arrows in an area",
+      title: "Vault",
+      description: "Quickly dash backwards",
       cost: "Cooldown: 8 seconds",
       range: "Range: 60 feet",
       damage: "Damage: 85"
     },
     passive: {
-      title: "Eagle Eye",
-      description: "Passive: Increased critical hit chance at long range"
+      title: "Venom Shots",
+      description: "Passive: Every 3rd shot that hits a target deals an additional 70 damage."
     },
     active: {
-      title: "Ethereal Quiver",
-      description: "Active: Next 3 shots split into multiple arrows"
+      title: "Cluster Shots",
+      description: "Fires a conical blast of arrows that deal damage and apply a 5-second debuff. Debuffed enemies take increased damage from bow shots.",
+      cost: "2 orb charges",
+      range: "15 feet",
+      damage: "50 per arrow + debuff effect"
     }
   },
 }; 

@@ -41,7 +41,6 @@ export default function GameWrapper({
   const [currentLevel, setCurrentLevel] = useState(1);
 
   const handleStart = () => {
-    console.log('handleStart called, currentWeapon:', currentWeapon);
     if (currentWeapon) {
       setGameStarted(true);
     }
@@ -62,7 +61,6 @@ export default function GameWrapper({
   }, []);
 
   const handleReset = useCallback(() => {
-    console.log("GameWrapper: Reset triggered");
     setGameStarted(false);
     setCurrentLevel(1);
     setShowLevelPanel(false);

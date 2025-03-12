@@ -182,7 +182,6 @@ export default function Scene2({
       })),
     onDamage: unitProps.onDamage,
     onEnemyDeath: () => {
-      console.log("Kill counted in Scene");  // Debug logwd
     },
     onFireballDamage: unitProps.onFireballDamage,
     fireballManagerRef: unitProps.fireballManagerRef,
@@ -385,14 +384,6 @@ export default function Scene2({
       onLevelComplete();
     }
   }, [enemies, totalSpawned, maxSkeletons, onLevelComplete]);
-
-  useEffect(() => {
-    console.log('Enemy Data:', enemies.map(e => ({
-      id: e.id,
-      position: e.position,
-      health: e.health
-    })));
-  }, [enemies]);
 
   return (
     <>

@@ -10,6 +10,7 @@ import BoneVortex from '@/color/DeathAnimation';
 import { WeaponType } from '@/Weapons/weapons';
 import { FrostExplosion } from '@/Spells/Avalanche/FrostExplosion';
 import { stealthManager } from '../Spells/Stealth/StealthManager';
+import * as THREE from 'three';
 
 
 interface EnemyUnitProps {
@@ -63,25 +64,25 @@ export default function EnemyUnit({
   const velocity = useRef(new Vector3());
   const targetRotation = useRef(0);
 
-  const ATTACK_RANGE = 2.25;
+  const ATTACK_RANGE = 2.5;
   const ATTACK_COOLDOWN = 2500;
-  const MOVEMENT_SPEED = 0.035;
-  const POSITION_UPDATE_THRESHOLD = 0.1;
-  const MINIMUM_UPDATE_INTERVAL = 50;
-  const ATTACK_DAMAGE = 0;
+  const MOVEMENT_SPEED = 0.075;
+  const POSITION_UPDATE_THRESHOLD = 0.15;
+  const MINIMUM_UPDATE_INTERVAL = 37.5;
+  const ATTACK_DAMAGE = 12;
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.155;
-  const ACCELERATION = 6.0;
-  const DECELERATION = 8.0;
-  const ROTATION_SPEED = 8.0;
+  const ACCELERATION = 3.0;
+  const DECELERATION = 4.0;
+  const ROTATION_SPEED = 5.0;
 
   // Add new refs for wandering behavior
   const wanderTarget = useRef<Vector3 | null>(null);
   const wanderStartTime = useRef<number>(Date.now());
   const WANDER_DURATION = 4500; // Increased from 3000 to make changes less frequent
   const WANDER_RADIUS = 5;
-  const WANDER_ROTATION_SPEED = 4.0; // Slower than normal rotation for smoother turns
-  const WANDER_MOVEMENT_SPEED = 0.018; // Half of normal speed for more controlled movement
+  const WANDER_ROTATION_SPEED = 2.5;
+  const WANDER_MOVEMENT_SPEED = 0.015;
   
   const getNewWanderTarget = useCallback(() => {
     if (!enemyRef.current) return null;
@@ -125,12 +126,8 @@ export default function EnemyUnit({
   // Immediately sync with provided position
   useEffect(() => {
     if (position) {
-      currentPosition.current.copy(position);
-      currentPosition.current.y = 0; // Force ground level
-      targetPosition.current.copy(currentPosition.current);
-      if (enemyRef.current) {
-        enemyRef.current.position.copy(currentPosition.current);
-      }
+      targetPosition.current.copy(position);
+      targetPosition.current.y = 0;
     }
   }, [position]);
 
@@ -252,14 +249,20 @@ export default function EnemyUnit({
       const finalDirection = direction.add(separationForce).normalize();
       finalDirection.y = 0;
 
-      // Calculate target velocity
-      const targetVelocity = finalDirection.multiplyScalar(currentFrameSpeed);
+      // Add velocity smoothing
+      const currentSpeed = velocity.current.length();
+      const targetSpeed = currentFrameSpeed;
+      const smoothedSpeed = THREE.MathUtils.lerp(currentSpeed, targetSpeed, ACCELERATION * delta);
       
-      // Smoothly interpolate current velocity towards target
-      velocity.current.lerp(targetVelocity, ACCELERATION * delta);
+      // Calculate target velocity with smoothed speed
+      const targetVelocity = finalDirection.multiplyScalar(smoothedSpeed);
       
-      // Update position with smoothed velocity
-      currentPosition.current.add(velocity.current);
+      // Add additional position smoothing
+      velocity.current.lerp(targetVelocity, ACCELERATION * delta * 0.5);
+      
+      // Update position with additional smoothing
+      const newPosition = currentPosition.current.clone().add(velocity.current);
+      currentPosition.current.lerp(newPosition, 0.8);
       currentPosition.current.y = 0;
 
       // Apply position to mesh

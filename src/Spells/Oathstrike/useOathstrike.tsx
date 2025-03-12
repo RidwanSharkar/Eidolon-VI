@@ -65,7 +65,6 @@ export const useOathstrike = ({
     // Find two available charges
     const availableCharges = charges.filter(charge => charge.available);
     if (availableCharges.length < 2) {
-      console.log('Not enough charges available for Oathstrike');
       return false;
     }
 

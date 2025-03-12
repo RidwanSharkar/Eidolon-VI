@@ -1,5 +1,5 @@
 // src/unit/Unit.tsx
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { Vector3, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import Fireball from '../Spells/Fireball/Fireball';
@@ -48,10 +48,36 @@ import StealthMistEffect from '../Spells/Stealth/StealthMistEffect';
 import StealthStrikeEffect from '@/Spells/Stealth/StealthStrikeEffect';
 import { useQuickShot } from '../Spells/QuickShot/QuickShot';
 import BoneArrow from '@/Spells/QuickShot/BoneArrow';
+import Vault from '@/Spells/Vault/Vault';
+import { usePyroclast } from '../Spells/Pyroclast/usePyroclast';
+import PyroclastMissile from '../Spells/Pyroclast/PyroclastMissile';
+import Reignite, { ReigniteRef } from '../Spells/Reignite/Reignite';
+import { useClusterShots } from '../Spells/ClusterShots/ClusterShots';
+import { ClusterShots } from '../Spells/ClusterShots/ClusterShots';
+import { DebuffIndicator } from '../Spells/ClusterShots/DebuffIndicator';
 
+class ObjectPool<T> {
+  private pool: T[] = [];
+  private createFn: () => T;
+  private resetFn: (obj: T) => void;
 
+  constructor(initialSize: number, createFn: () => T, resetFn: (obj: T) => void) {
+    this.createFn = createFn;
+    this.resetFn = resetFn;
+    for (let i = 0; i < initialSize; i++) {
+      this.pool.push(createFn());
+    }
+  }
 
-// EIDOLON 1,0 ABILITIES NEED REFACTORING DISGUSTING FILE
+  acquire(): T {
+    return this.pool.pop() || this.createFn();
+  }
+
+  release(obj: T): void {
+    this.resetFn(obj);
+    this.pool.push(obj);
+  }
+}
 
 //=====================================================================================================
 
@@ -122,7 +148,28 @@ export default function Unit({
     isFireball?: boolean;
     isSummon?: boolean;
     isStealthStrike?: boolean;
+    isPyroclast?: boolean;
+    isEagleEye?: boolean;
+    isClusterShot?: boolean;
   }[]>([]);
+  
+  // Cluster Shots
+  const [charges, setCharges] = useState<Array<{
+    id: number;
+    available: boolean;
+    cooldownStartTime: number | null;
+  }>>(Array.from({ length: 3 }, (_, i) => ({
+    id: i,
+    available: true,
+    cooldownStartTime: null
+  })));
+
+  const [debuffedEnemies, setDebuffedEnemies] = useState<Array<{
+    id: string;
+    timestamp: number;
+    duration: number;
+  }>>([]);
+
   const nextDamageNumberId = useRef(0);
   const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
 
@@ -141,6 +188,8 @@ export default function Unit({
     maxDistance: number;
     startPosition: Vector3;
     hasCollided?: boolean;
+    isFullyCharged?: boolean;
+    hitEnemies?: Set<string>;
   }>>([]);
 
 
@@ -200,6 +249,8 @@ export default function Unit({
     maxDistance: number;
     startPosition: Vector3;
     hasCollided?: boolean;
+    isFullyCharged?: boolean;
+    hitEnemies?: Set<string>;
   }>>([]);
 
   const {
@@ -232,6 +283,9 @@ export default function Unit({
     setDamageNumbers,
     nextDamageNumberId
   });
+
+  // Add this near other refs
+  const reigniteRef = useRef<ReigniteRef>(null);
 
   // Modify handleAttack to use the new stealth system
   const handleAttack = useCallback(
@@ -314,8 +368,23 @@ export default function Unit({
           startTime: Date.now()
         }]);
       }
+
+      if (onHit) {
+        onHit(targetId, finalDamage);
+        
+        // Get target after damage
+        const targetAfterDamage = target && target.health - finalDamage;
+        if (targetAfterDamage && targetAfterDamage <= 0) {
+          // Process kill for Reignite if using Spear with passive unlocked
+          if ((currentWeapon as WeaponType) === WeaponType.SPEAR && 
+              abilities[WeaponType.SPEAR].passive.isUnlocked && 
+              reigniteRef.current) {
+            reigniteRef.current.processKill();
+          }
+        }
+      }
     },
-    [onHit, setIsStealthed, setHasShadowStrikeBuff, enemyData, handleStealthKillHeal]
+    [onHit, setIsStealthed, setHasShadowStrikeBuff, enemyData, handleStealthKillHeal, currentWeapon, abilities]
   );
 
   // Add new state for whirlwind
@@ -325,31 +394,121 @@ export default function Unit({
   const whirlwindStartTime = useRef<number | null>(null);
   const WHIRLWIND_MAX_DURATION = 15000; // 1.5 seconds max duration
 
-  const { shootQuickShot, activeProjectilesRef: quickShotProjectilesRef } = useQuickShot({
+  const { shootQuickShot, projectilePool: quickShotProjectilesRef, resetEagleEyeCounter } = useQuickShot({
     parentRef: groupRef,
     onHit,
     enemyData,
     setDamageNumbers,
     nextDamageNumberId,
     charges: fireballCharges,
-    setCharges: setFireballCharges
+    setCharges: setFireballCharges,
+    isEagleEyeUnlocked: abilities[WeaponType.BOW].passive.isUnlocked
   });
 
+  // Add the hook
+  const {
+    isCharging: isPyroclastActive,
+    chargeStartTime,
+    activeMissiles: pyroclastMissiles,
+    startCharging: startPyroclastCharge,
+    releaseCharge: releasePyroclastCharge,
+    handleMissileImpact: handlePyroclastImpact,
+    checkMissileCollisions: checkPyroclastCollisions,
+    setChargeProgress: setPyroclastChargeProgress
+  } = usePyroclast({
+    parentRef: groupRef,
+    onHit,
+    enemyData,
+    setDamageNumbers,
+    nextDamageNumberId
+  });
 
   //=====================================================================================================
 
-  // FIREBALL SHOOTING 
+  // Define types for pooled objects
+  interface PooledProjectile {
+    id: number;
+    position: Vector3;
+    direction: Vector3;
+    power: number;
+    startTime: number;
+    maxDistance: number;
+    startPosition: Vector3;
+    hasCollided?: boolean;
+    isFullyCharged?: boolean;
+    hitEnemies?: Set<string>; 
+  }
+
+  interface PooledFireball {
+    id: number;
+    position: Vector3;
+    direction: Vector3;
+    startPosition: Vector3;
+    maxDistance: number;
+  }
+
+  // Initialize pools
+  const { fireballPool, projectilePool } = useMemo(() => ({
+    fireballPool: new ObjectPool<PooledFireball>(
+      10,
+      () => ({
+        id: 0,
+        position: new Vector3(),
+        direction: new Vector3(),
+        startPosition: new Vector3(),
+        maxDistance: 0
+      }),
+      (fireball) => {
+        fireball.position.set(0, 0, 0);
+        fireball.direction.set(0, 0, 0);
+        fireball.startPosition.set(0, 0, 0);
+        fireball.maxDistance = 0;
+      }
+    ),
+    projectilePool: new ObjectPool<PooledProjectile>(
+      20,
+      () => ({
+        id: 0,
+        position: new Vector3(),
+        direction: new Vector3(),
+        power: 0,
+        startTime: 0,
+        maxDistance: 0,
+        startPosition: new Vector3(),
+        hasCollided: false
+      }),
+      (proj) => {
+        proj.position.set(0, 0, 0);
+        proj.direction.set(0, 0, 0);
+        proj.power = 0;
+        proj.startTime = 0;
+        proj.maxDistance = 0;
+        proj.startPosition.set(0, 0, 0);
+        proj.hasCollided = false;
+      }
+    )
+  }), []);
+
+  // Add at the top of the component, after state declarations
+  const tempVec3 = useMemo(() => new Vector3(), []);
+  const tempVec3_2 = useMemo(() => new Vector3(), []);
+  const tempVec3_3 = useMemo(() => new Vector3(), []); // For additional calculations
+
+  // Modify shootFireball to reuse vectors
   const shootFireball = useCallback(() => {
     if (!groupRef.current) return;
 
     const availableChargeIndex = fireballCharges.findIndex(charge => charge.available);
     if (availableChargeIndex === -1) return;
 
-    const unitPosition = groupRef.current.position.clone();
-    unitPosition.y += 1;
+    // Reuse tempVec3 for unit position
+    tempVec3.copy(groupRef.current.position);
+    tempVec3.y += 1;
 
-    const direction = new Vector3(0, 0, 1);
-    direction.applyQuaternion(groupRef.current.quaternion);
+    // Reuse tempVec3_2 for direction
+    tempVec3_2.set(0, 0, 1);
+    tempVec3_2.applyQuaternion(groupRef.current.quaternion);
+    tempVec3_2.normalize();
 
     setFireballCharges(prev => prev.map((charge, index) => 
       index === availableChargeIndex
@@ -357,30 +516,82 @@ export default function Unit({
         : charge
     ));
 
-    const newFireball = {
-      id: nextFireballId.current++,
-      position: unitPosition.clone(),
-      startPosition: unitPosition.clone(),
-      direction: direction.normalize(),
-      maxDistance: 45
-    };
+    const newFireball = fireballPool.acquire();
+    newFireball.id = nextFireballId.current++;
+    newFireball.position.copy(tempVec3);
+    newFireball.startPosition.copy(tempVec3);
+    newFireball.direction.copy(tempVec3_2);
+    newFireball.maxDistance = 45;
 
-    // Update both ref and state
     activeFireballsRef.current.push(newFireball);
     setFireballs(prev => [...prev, newFireball]);
-  }, [groupRef, fireballCharges]);
+  }, [groupRef, fireballCharges, tempVec3, tempVec3_2, fireballPool]);
 
+  // Add state declaration at the top with component's other states
+  const [lastBowShotTime, setLastBowShotTime] = useState<number>(0);
+
+  // Now the releaseBowShot callback can use lastBowShotTime safely
+  const releaseBowShot = useCallback((power: number) => {
+    if (!groupRef.current) return;
+    
+    const now = Date.now();
+    const timeSinceLastShot = now - lastBowShotTime;
+    if (timeSinceLastShot < 750) return;
+    setLastBowShotTime(now);
+    
+    // Reuse tempVec3 for position
+    tempVec3.copy(groupRef.current.position);
+    tempVec3.y += 1;
+
+    // Reuse tempVec3_2 for direction
+    tempVec3_2.set(0, 0, 1);
+    tempVec3_2.applyQuaternion(groupRef.current.quaternion);
+
+    const newProjectile = projectilePool.acquire();
+    newProjectile.id = Date.now();
+    newProjectile.position.copy(tempVec3);
+    newProjectile.direction.copy(tempVec3_2);
+    newProjectile.power = power;
+    newProjectile.startTime = Date.now();
+    newProjectile.maxDistance = 40;
+    newProjectile.startPosition.copy(tempVec3);
+    newProjectile.hasCollided = false;
+
+    // Store additional projectile data for debuff checking
+    newProjectile.isFullyCharged = power >= 0.95;
+
+    // Update both ref and state
+    activeProjectilesRef.current.push(newProjectile);
+    setActiveProjectiles(prev => [...prev, newProjectile]);
+
+    setIsBowCharging(false);
+    setBowChargeProgress(0);
+    bowChargeStartTime.current = null;
+    onAbilityUse(currentWeapon, 'e');
+  }, [groupRef, lastBowShotTime, tempVec3, tempVec3_2, currentWeapon, onAbilityUse, projectilePool]);
+
+  // Modify handleFireballImpact to return fireball to pool
   const handleFireballImpact = (id: number, impactPosition?: Vector3) => {
-    if (impactPosition) {
-      const currentTime = Date.now();
-      setActiveEffects(prev => [...prev, {
-        id: currentTime,
-        type: 'unitFireballExplosion',
-        position: impactPosition,
-        direction: new Vector3(),
-        duration: 0.225,
-        startTime: currentTime
-      }]);
+
+    
+    // Find and release the fireball back to the pool
+    const fireball = activeFireballsRef.current.find(f => f.id === id);
+    if (fireball) {
+      // Store the final position before releasing
+      const finalPosition = fireball.position.clone();
+      fireballPool.release(fireball);
+      
+      // Add explosion effect at the final position if no impact position was provided
+      if (!impactPosition) {
+        setActiveEffects(prev => [...prev, {
+          id: Date.now(),
+          type: 'unitFireballExplosion',
+          position: finalPosition,
+          direction: new Vector3(),
+          duration: 0.225,
+          startTime: Date.now()
+        }]);
+      }
     }
     
     // Update both ref and state
@@ -394,7 +605,8 @@ export default function Unit({
   const lastHitDetectionTime = useRef<Record<string, number>>({});
   const HIT_DETECTION_DEBOUNCE = currentWeapon === WeaponType.SCYTHE ? 120 : 200; // ms
 
-  const handleWeaponHit = (targetId: string) => {
+  // Modify handleWeaponHit to reuse vectors
+  const handleWeaponHit = useCallback((targetId: string) => {
     if (!groupRef.current || !isSwinging) return;
 
     const now = Date.now();
@@ -425,19 +637,19 @@ export default function Unit({
 
     if (currentHits >= maxHits) return;
 
-    const distance = groupRef.current.position.distanceTo(target.position);
+    // Reuse tempVec3 for distance calculation
+    tempVec3.copy(target.position);
+    const distance = groupRef.current.position.distanceTo(tempVec3);
     const weaponRange = WEAPON_DAMAGES[currentWeapon].range;
 
     if (distance <= weaponRange) {
       // Spear-specific hit detection
       if (currentWeapon === WeaponType.SPEAR) {
-        const toTarget = new Vector3()
-          .subVectors(target.position, groupRef.current.position)
-          .normalize();
-        const forward = new Vector3(0, 0, 1)
-          .applyQuaternion(groupRef.current.quaternion);
+        // Reuse tempVec3_2 and tempVec3_3 for direction calculations
+        tempVec3_2.subVectors(tempVec3, groupRef.current.position).normalize();
+        tempVec3_3.set(0, 0, 1).applyQuaternion(groupRef.current.quaternion);
         
-        const angle = toTarget.angleTo(forward);
+        const angle = tempVec3_2.angleTo(tempVec3_3);
         
         // Spear has a narrower hit arc (30 degrees)
         if (Math.abs(angle) > Math.PI / 6) {
@@ -447,7 +659,7 @@ export default function Unit({
         // Check for max range critical strike
         // Consider hits between 85-100% of max range as "sweet spot" hits
         const maxRange = WEAPON_DAMAGES[WeaponType.SPEAR].range;
-        const isMaxRangeHit = distance >= maxRange * 0.8;
+        const isMaxRangeHit = distance >= maxRange * 0.75;
 
         const baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
         let damage, isCritical;
@@ -472,18 +684,27 @@ export default function Unit({
           isCritical
         }]);
 
+        // In the handleWeaponHit function, after calculating damage
+        const targetAfterDamage = target.health - damage;
+
+        // Check for kill with spear to trigger Reignite
+        if (targetAfterDamage <= 0 && 
+            (currentWeapon as WeaponType) === WeaponType.SPEAR && 
+            abilities[WeaponType.SPEAR].passive.isUnlocked && 
+            reigniteRef.current) {
+          reigniteRef.current.processKill();
+        }
+
         return;
       }
 
       // SABRES HIT ARC CHECK
       if (currentWeapon === WeaponType.SABRES ) {
-        const toTarget = new Vector3()
-          .subVectors(target.position, groupRef.current.position)
-          .normalize();
-        const forward = new Vector3(0, 0, 0.25) // SABRE FORWARD 
+        tempVec3_2.subVectors(tempVec3, groupRef.current.position).normalize();
+        tempVec3_3.set(0, 0, 0.25) // SABRE FORWARD 
           .applyQuaternion(groupRef.current.quaternion);
         
-        const angle = toTarget.angleTo(forward);
+        const angle = tempVec3_2.angleTo(tempVec3_3);
         
         if (Math.abs(angle) > Math.PI / 4.5) { // 52 degree?
           return;
@@ -556,10 +777,7 @@ export default function Unit({
           
           // Display bonus damage number separately
           setDamageNumbers(prev => {
-            console.log('Creating OrbShield damage number:', {
-              damage: bonusDamage,
-              isOrbShield: true
-            });
+
             return [...prev, {
               id: nextDamageNumberId.current++,
               damage: bonusDamage,
@@ -656,11 +874,19 @@ export default function Unit({
           chainLightningRef.current?.processChainLightning();
       }
 
+      // Check for kill with spear to trigger Reignite
+      if (targetAfterDamage <= 0 && 
+          (currentWeapon as WeaponType) === WeaponType.SPEAR && 
+          abilities[WeaponType.SPEAR].passive.isUnlocked && 
+          reigniteRef.current) {
+        reigniteRef.current.processKill();
+      }
+
       return;
     }
 
     return;
-  };
+  }, [groupRef, isSwinging, enemyData, currentWeapon, tempVec3, tempVec3_2, tempVec3_3, handleAttack, hasHealedThisSwing, hitCountThisSwing, HIT_DETECTION_DEBOUNCE, abilities, crusaderAuraRef, chainLightningRef, isOathstriking, isSmiting, reigniteRef]);
 
   const handleSwingComplete = () => {
     setIsSwinging(false);
@@ -669,19 +895,14 @@ export default function Unit({
     setHasHealedThisSwing(false);
   };
 
-
-
   useFrame((_, delta) => {
     if (!groupRef.current) return;
-
 
     if (isSwinging && groupRef.current) {
       enemyData.forEach(enemy => {
         handleWeaponHit(enemy.id);
       });
     }
-
-//======//======//==============================================================================================
 
     // SABRE BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
@@ -712,6 +933,11 @@ export default function Unit({
             .multiplyScalar(speed)
         );
 
+        // Initialize hitEnemies array if it doesn't exist
+        if (!projectile.hitEnemies) {
+          projectile.hitEnemies = new Set();
+        }
+
         // Check collisions
         for (const enemy of enemyData) {
           const projectilePos2D = new Vector3(
@@ -726,7 +952,11 @@ export default function Unit({
           );
           const distanceToEnemy = projectilePos2D.distanceTo(enemyPos2D);
           
-          if (distanceToEnemy < 1.3) {
+          // Only process collision if we haven't hit this enemy before
+          if (distanceToEnemy < 1.3 && !projectile.hitEnemies.has(enemy.id)) {
+            // Add enemy to hit list
+            projectile.hitEnemies.add(enemy.id);
+            
             handleProjectileHit(projectile.id, enemy.id, projectile.power, projectile.position);
             
             // Only set hasCollided if it's not a fully charged shot
@@ -747,8 +977,6 @@ export default function Unit({
     if (activeProjectilesRef.current.length !== activeProjectiles.length) {
       setActiveProjectiles([...activeProjectilesRef.current]);
     }
-
-    //=====================================================================================================
 
     // FIREBALLS 
     activeFireballsRef.current = activeFireballsRef.current.filter(fireball => {
@@ -821,54 +1049,24 @@ export default function Unit({
         onAbilityUse(currentWeapon, 'e');
       }
     }
-  });
 
-  //=====================================================================================================
-
-  // SABRE BOW SHOT 
-    const [lastBowShotTime, setLastBowShotTime] = useState<number>(0);
-
-  const releaseBowShot = useCallback((power: number) => {
-    if (!groupRef.current) return;
-    
-    const now = Date.now();
-    const timeSinceLastShot = now - lastBowShotTime;
-    if (timeSinceLastShot < 750) {
-      return;
+    // Pyroclast charge progress update
+    if (isPyroclastActive) {
+      const chargeTime = (Date.now() - chargeStartTime.current!) / 1000;
+      const progress = Math.min(chargeTime / 4, 1);
+      setPyroclastChargeProgress(progress);
+      
+      if (progress >= 1) {
+        releasePyroclastCharge();
+        onAbilityUse(WeaponType.SPEAR, 'r');
+      }
     }
-    setLastBowShotTime(now);
-    
-    const unitPosition = groupRef.current.position.clone();
-    unitPosition.y += 1;
 
-    const direction = new Vector3(0, 0, 1);
-    direction.applyQuaternion(groupRef.current.quaternion);
-
-    const maxRange = 40;
-    const rayStart = unitPosition.clone();
-
-    // Create new projectile
-    const newProjectile = {
-      id: Date.now(),
-      position: rayStart.clone(),
-      direction: direction.clone(),
-      power,
-      startTime: Date.now(),
-      maxDistance: maxRange,
-      startPosition: rayStart.clone()
-    };
-
-    // Update both ref and state
-    activeProjectilesRef.current.push(newProjectile);
-    setActiveProjectiles(prev => [...prev, newProjectile]);
-
-    setIsBowCharging(false);
-    setBowChargeProgress(0);
-    bowChargeStartTime.current = null;
-    onAbilityUse(currentWeapon, 'e');
-  }, [currentWeapon, groupRef, onAbilityUse, lastBowShotTime]);
-
-  //=====================================================================================================
+    // Pyroclast collision check
+    pyroclastMissiles.forEach(missile => {
+      checkPyroclastCollisions(missile.id, missile.position);
+    });
+  });
 
   // FROST LANCE
   const {  startFirebeam, stopFirebeam } = useFirebeamManager({
@@ -881,8 +1079,6 @@ export default function Unit({
     setDamageNumbers,
     nextDamageNumberId
   });
-
-  //=====================================================================================================
 
   // ABILITY KEYS 
   const reanimateRef = useRef<ReanimateRef>(null);
@@ -908,10 +1104,43 @@ export default function Unit({
     maxHealth: maxHealth
   });
 
+  const [isVaulting, setIsVaulting] = useState(false);
+
+  // Initialize ClusterShots hook before useAbilityKeys call
+  const {
+    activeArrows,
+    fireClusterShots  
+  } = useClusterShots({
+    parentRef: groupRef,
+    onHit: (targetId: string, damage: number) => {
+      const target = enemyData.find(e => e.id === targetId);
+      if (!target || target.health <= 0) return;
+      
+      // Apply damage
+      onHit(targetId, damage);
+      
+      // Add damage number
+      setDamageNumbers(prev => [...prev, {
+        id: nextDamageNumberId.current++,
+        damage,
+        position: target.position.clone().add(new Vector3(0, 2, 0)),
+        isCritical: false,
+        isClusterShot: true
+      }]);
+    },
+    enemyData,
+    setDamageNumbers,
+    nextDamageNumberId,
+    charges,
+    setCharges,
+    setDebuffedEnemies,
+    setActiveEffects  
+  });
+
   useAbilityKeys({
     keys: movementKeys,
     groupRef,
-    currentWeapon,
+    currentWeapon, 
     abilities,
     isSwinging,
     isSmiting,
@@ -923,7 +1152,7 @@ export default function Unit({
     setIsBowCharging,
     setBowChargeStartTime: (value) => { bowChargeStartTime.current = value; },
     setSmiteEffects,
-    setActiveEffects,
+    setActiveEffects, 
     onAbilityUse,
     shootFireball,
     releaseBowShot,
@@ -944,7 +1173,13 @@ export default function Unit({
     whirlwindStartTime,
     fireballCharges,
     activateStealth,
-    shootQuickShot
+    shootQuickShot,
+    setIsVaulting,
+    isVaulting,
+    startPyroclastCharge,
+    releasePyroclastCharge,
+    isPyroclastActive,
+    fireClusterShots
   });
 
   //=====================================================================================================
@@ -960,14 +1195,10 @@ export default function Unit({
     setSmiteEffects(prev => prev.filter(effect => effect.id !== id));
   };
 
-  //=====================================================================================================
-
   // DAMAGE NUMBERS COMPLETE 
   const handleDamageNumberComplete = (id: number) => {
     setDamageNumbers(prev => prev.filter(dn => dn.id !== id));
   };
-
-  //=====================================================================================================
 
   // SABRE DOUBLE HIT
   useEffect(() => {
@@ -976,64 +1207,67 @@ export default function Unit({
     }
   }, [currentWeapon]);
 
-  //=====================================================================================================
-
   //BOW PROJECTILE HIT 
   const handleProjectileHit = (projectileId: number, targetId: string, power: number, projectilePosition: Vector3) => {
-    const isEnemy = targetId.startsWith('enemy');
-    if (!isEnemy) return;
-
-    const enemy = enemyData.find(e => e.id === targetId);
-    if (!enemy || enemy.health <= 0 || enemy.isDying) return;
-
-    // Skip if projectile has already hit this target
-    const hitKey = `${projectileId}_${targetId}`;
-    if (hitCountThisSwing[hitKey]) {
-        return;
+    const projectile = activeProjectilesRef.current.find(p => p.id === projectileId);
+    if (!projectile) return;
+    
+    // Calculate base damage based on charge level
+    let baseDamage;
+    if (projectile.power >= 0.99) { // Fully charged
+      baseDamage = 139;
+    } else {
+      // Minimum damage of 41, scaling up with charge
+      baseDamage = 37 + Math.floor((projectile.power * 108));
+    }
+    
+    // Apply critical hit calculation
+    const { damage, isCritical } = calculateDamage(baseDamage);
+    
+    // Check if the target has the ClusterShots debuff
+    const isDebuffed = debuffedEnemies.some(enemy => enemy.id === targetId);
+    
+    // Apply additional damage if debuffed
+    let finalDamage = damage;
+    if (isDebuffed) {
+      const additionalDamage = projectile.isFullyCharged ? 210 : 70;
+      finalDamage += additionalDamage;
     }
 
-    // Create 2D positions by ignoring Y axis
-    const projectilePos2D = new Vector3(
-      projectilePosition.x,
-      0,
-      projectilePosition.z
-    );
-    const enemyPos2D = new Vector3(
-      enemy.position.x,
-      0,
-      enemy.position.z
-    );
-
-    // Check distance in 2D space (ignoring Y axis)
-    const distanceToEnemy = projectilePos2D.distanceTo(enemyPos2D);
-    if (distanceToEnemy > 1.3) return; // Hit radius check in 2D
-
-    // Mark this specific projectile-target combination as hit
-    setHitCountThisSwing(prev => ({
-        ...prev,
-        [hitKey]: 1
-    }));
-
-    const baseDamage = 41;
-    const maxDamage = 71;
-    const scaledDamage = Math.floor(baseDamage + (maxDamage - baseDamage) * power); // LINEAR SCALING NOW
-    const fullChargeDamage = power >= 0.99 ? 71 : 0;
-    const finalDamage = scaledDamage + fullChargeDamage;
+    // Create damage number with proper flags
+    setDamageNumbers(prev => [
+      ...prev,
+      {
+        id: nextDamageNumberId.current++,
+        damage: finalDamage,
+        position: projectilePosition.clone().add(new Vector3(0, 0, 0)),
+        isCritical: isCritical || isDebuffed, 
+        isClusterShot: false,   
+        isLightning: false,
+        isHealing: false,
+        isBlizzard: false,
+        isBoneclaw: false,
+        isOathstrike: false,
+        isFirebeam: false,
+        isOrbShield: false,
+        isChainLightning: false,
+        isFireball: false,
+        isSummon: false,
+        isStealthStrike: false,
+        isPyroclast: false,
+        isEagleEye: false
+      }
+    ]);
     
+    // Handle damage effects
     onHit(targetId, finalDamage);
-
-    const targetAfterDamage = enemy.health - finalDamage;
-    if (targetAfterDamage > 0) {
-        setDamageNumbers(prev => [...prev, {
-            id: nextDamageNumberId.current++,
-            damage: finalDamage,
-            position: enemy.position.clone(),
-            isCritical: power >= 0.99
-        }]);
+    
+    // Only set hasCollided for non-fully charged shots
+    // This allows fully charged shots to pierce through enemies
+    if (!projectile.isFullyCharged) {
+      projectile.hasCollided = true;
     }
   };
-
-  //=====================================================================================================
 
   // FIREBALL HIT 
   const handleFireballHit = (fireballId: number, targetId: string) => {
@@ -1059,13 +1293,9 @@ export default function Unit({
       }]);
     }
 
-
-
     // Remove the fireball
     handleFireballImpact(fireballId);
   };
-
-  //=====================================================================================================
 
   // POSITION UPDATE 
   useFrame(() => {
@@ -1074,8 +1304,6 @@ export default function Unit({
       onPositionUpdate(position, isStealthed); // Pass stealth state to parent
     }
   });
-
-  //=====================================================================================================
 
   // OATHSTRIKE COMPLETE
   const handleOathstrikeComplete = () => {
@@ -1195,7 +1423,6 @@ export default function Unit({
       );
     };
 
-
     const cleanupInterval = setInterval(cleanupEffects, 100);
     return () => clearInterval(cleanupInterval);
   }, [setActiveEffects]);
@@ -1238,6 +1465,40 @@ export default function Unit({
       setIsWhirlwinding(false);
       whirlwindStartTime.current = null;
     };
+  }, []);
+
+  // Add cleanup in useEffect
+  useEffect(() => {
+    return () => {
+      // Return all active projectiles and fireballs to their pools
+      activeProjectilesRef.current.forEach(proj => projectilePool.release(proj));
+      activeFireballsRef.current.forEach(fireball => fireballPool.release(fireball));
+      
+      // Clear refs and states
+      activeProjectilesRef.current = [];
+      activeFireballsRef.current = [];
+      setActiveProjectiles([]);
+      setFireballs([]);
+    };
+  }, [projectilePool, fireballPool]);
+
+  useEffect(() => {
+    // Reset Eagle Eye counter when switching weapons
+    if (resetEagleEyeCounter) {
+      resetEagleEyeCounter();
+    }
+  }, [currentWeapon, resetEagleEyeCounter]);
+
+  // Clean up expired debuffs
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setDebuffedEnemies(prev => prev.filter(debuff => {
+        return (now - debuff.timestamp) < 5000; // 5 seconds
+      }));
+    }, 1000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -1420,6 +1681,9 @@ export default function Unit({
           isFireball={dn.isFireball}
           isSummon={dn.isSummon}
           isStealthStrike={dn.isStealthStrike}
+          isPyroclast={dn.isPyroclast}
+          isEagleEye={dn.isEagleEye}
+          isClusterShot={dn.isClusterShot}
           onComplete={() => handleDamageNumberComplete(dn.id)}
         />
       ))}
@@ -1702,6 +1966,39 @@ export default function Unit({
               parentRef={groupRef}
             />
           );
+        } else if (effect.type === 'clusterImpact') {
+          const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
+          const fade = Math.max(0, 1 - (elapsed / (effect.duration || 0.3)));
+          
+          return (
+            <group key={effect.id} position={effect.position.toArray()}>
+              {/* Impact burst */}
+              <mesh>
+                <sphereGeometry args={[0.3 * (1 + elapsed * 2), 16, 16]} />
+                <meshBasicMaterial
+                  color="#40ff40"
+                  transparent
+                  opacity={0.5 * fade}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
+              
+              {/* Energy rings */}
+              {[0.3, 0.5, 0.7].map((size, i) => (
+                <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
+                  <ringGeometry args={[size * (1 + elapsed * 2), size * (1 + elapsed * 2) + 0.1, 16]} />
+                  <meshBasicMaterial
+                    color="#80ff80"
+                    transparent
+                    opacity={0.3 * fade}
+                    blending={THREE.AdditiveBlending}
+                  />
+                </mesh>
+              ))}
+              
+              <pointLight color="#40ff40" intensity={2 * fade} distance={3} decay={2} />
+            </group>
+          );
         }
         return null;
       })}
@@ -1954,6 +2251,59 @@ export default function Unit({
           direction={projectile.direction}
         />
       ))}
+
+      {currentWeapon === WeaponType.BOW && (
+        <Vault
+          parentRef={groupRef}
+          isActive={isVaulting}
+          onComplete={() => {
+            setIsVaulting(false);
+            onAbilityUse(WeaponType.BOW, 'r');
+          }}
+        />
+      )}
+
+      {pyroclastMissiles.map(missile => (
+        <PyroclastMissile
+          key={missile.id}
+          id={missile.id}  // Add this
+          position={missile.position}
+          direction={missile.direction}
+          power={missile.power}
+          onImpact={() => handlePyroclastImpact(missile.id)}
+          checkCollisions={(missileId, position) => checkPyroclastCollisions(missileId, position)}
+        />
+      ))}
+
+      {currentWeapon === WeaponType.SPEAR && 
+       abilities[WeaponType.SPEAR].passive.isUnlocked && (
+        <Reignite
+          ref={reigniteRef}
+          parentRef={groupRef}
+          charges={fireballCharges}
+          setCharges={setFireballCharges}
+        />
+      )}
+
+      {/* Render ClusterShots */}
+      <ClusterShots activeArrows={activeArrows} />
+
+      {/* Render debuff indicators */}
+      {debuffedEnemies.map(debuff => {
+        const now = Date.now();
+        const elapsedTime = (now - debuff.timestamp) / debuff.duration; // Calculate elapsed time as 0-1 value
+        
+        return (
+          <DebuffIndicator
+            key={`${debuff.id}-${debuff.timestamp}`}
+            position={
+              enemyData.find(enemy => enemy.id === debuff.id)?.position ||
+              new Vector3()
+            }
+            elapsedTime={elapsedTime} // Pass elapsedTime instead of duration and startTime
+          />
+        );
+      })}
     </>
   );
 }

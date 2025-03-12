@@ -3,13 +3,19 @@ import * as THREE from 'three';
 import { useLoader, useFrame } from '@react-three/fiber';
 
 const Planet: React.FC = () => {
-  const ringTexture = useLoader(THREE.TextureLoader, '/textures/ring-alpha.jpg');
+  const texture = useLoader(THREE.TextureLoader, '/textures/ring-alpha.jpg');
+  const ringTexture = useMemo(() => {
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    return texture;
+  }, [texture]);
   const ringRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
 
-  // Memoize geometries
-  const sphereGeometry = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
-  const ringGeometry = useMemo(() => new THREE.RingGeometry(1.4, 2.1, 64), []);
+  // Memoize geometries with reduced segments for better performance
+  const sphereGeometry = useMemo(() => new THREE.SphereGeometry(1, 24, 24), []);
+  const ringGeometry = useMemo(() => new THREE.RingGeometry(1.4, 2.1, 48), []);
   
   // Memoize materials
   const planetMaterial = useMemo(() => new THREE.MeshStandardMaterial({
@@ -26,6 +32,11 @@ const Planet: React.FC = () => {
     opacity: 0.5
   }), []);
 
+  // Cache frustum and matrices to reduce garbage collection
+  const frustum = useMemo(() => new THREE.Frustum(), []);
+  const matrix = useMemo(() => new THREE.Matrix4(), []);
+  const sphere = useMemo(() => new THREE.Sphere(new THREE.Vector3(), 24 * Math.sqrt(3)), []);
+
   // Rotate the ring slowly
   useFrame((state, delta) => {
     if (ringRef.current) {
@@ -34,15 +45,14 @@ const Planet: React.FC = () => {
     
     // Apply frustum culling
     if (groupRef.current) {
-      const frustum = new THREE.Frustum();
-      const matrix = new THREE.Matrix4().multiplyMatrices(
+      // Update frustum check with cached objects
+      matrix.multiplyMatrices(
         state.camera.projectionMatrix,
         state.camera.matrixWorldInverse
       );
       frustum.setFromProjectionMatrix(matrix);
-
-      // Check if planet group is in view
-      const sphere = new THREE.Sphere(groupRef.current.position, 24 * Math.sqrt(3));
+      
+      sphere.center.copy(groupRef.current.position);
       groupRef.current.visible = frustum.intersectsSphere(sphere);
     }
   });

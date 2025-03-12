@@ -60,6 +60,12 @@ interface UseAbilityKeysProps {
   }>;
   activateStealth: () => void;
   shootQuickShot: () => void;
+  setIsVaulting: (value: boolean) => void;
+  isVaulting: boolean;
+  startPyroclastCharge: () => void;
+  releasePyroclastCharge: () => void;
+  isPyroclastActive: boolean;
+  fireClusterShots: () => boolean;
 }
 
 export function useAbilityKeys({
@@ -96,6 +102,12 @@ export function useAbilityKeys({
   fireballCharges,
   activateStealth,
   shootQuickShot,
+  setIsVaulting,
+  isVaulting,
+  isPyroclastActive,
+  startPyroclastCharge,
+  releasePyroclastCharge,
+  fireClusterShots,
 }: UseAbilityKeysProps) {
   // Ref to track the last Q usage time
   const lastQUsageTime = useRef(0);
@@ -158,7 +170,6 @@ export function useAbilityKeys({
               if (!isSmiting) {
                 const timeSinceLastQ = Date.now() - lastQUsageTime.current;
                 if (timeSinceLastQ < 450) {
-                  console.log('Cannot use Smite so soon after a normal attack');
                   return;
                 }
                 setIsSmiting(true);
@@ -199,7 +210,6 @@ export function useAbilityKeys({
                   setIsWhirlwinding(true);
                   whirlwindStartTime.current = Date.now();
                 } else {
-                  console.log('Cannot use Whirlwind without available charges');
                 }
               }
               break;
@@ -221,41 +231,36 @@ export function useAbilityKeys({
 
       if (key === '2') {
         const activeAbility = abilities[currentWeapon].active;
-        if (
-          activeAbility.isUnlocked && 
-          activeAbility.currentCooldown <= 0 &&
-          currentWeapon === WeaponType.SCYTHE
-        ) {
-          const summonId = Date.now();
-          
-          setActiveEffects(prev => {
-            // Prevent multiple summons by checking if one already exists
-            if (prev.some(effect => effect.type === 'summon')) {
-              return prev;
-            }
-
-            return [
-              ...prev,
-              {
-                id: summonId,
-                type: 'summon',  // main effect that controls the totem
-                position: groupRef.current!.position.clone(),
-                direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
-                onComplete: () => {
-                  console.log('Summon completed, ID:', summonId);
-                  onAbilityUse(currentWeapon, 'active');
-                  setActiveEffects(current => 
-                    current.filter(effect => 
-                      effect.id !== summonId
-                    )
-                  );
-                },
-                onStartCooldown: () => {
-                  console.log('Starting cooldown for summon:', summonId);
-                }
+        if (activeAbility.isUnlocked && activeAbility.currentCooldown <= 0) {
+          if (currentWeapon === WeaponType.SCYTHE) {
+            const summonId = Date.now();
+            
+            setActiveEffects(prev => {
+              // Prevent multiple summons by checking if one already exists
+              if (prev.some(effect => effect.type === 'summon')) {
+                return prev;
               }
-            ];
-          });
+
+              return [
+                ...prev,
+                {
+                  id: summonId,
+                  type: 'summon',  // main effect that controls the totem
+                  position: groupRef.current!.position.clone(),
+                  direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
+                  onComplete: () => {
+                  },
+                  onStartCooldown: () => {
+                  }
+                }
+              ];
+            });
+            onAbilityUse(currentWeapon, 'active');
+          } else if (currentWeapon === WeaponType.BOW) {
+            if (fireClusterShots()) {
+              onAbilityUse(currentWeapon, 'active');
+            }
+          }
         }
       }
 
@@ -297,6 +302,17 @@ export function useAbilityKeys({
               }]);
               onAbilityUse(currentWeapon, 'r');
               break;
+            case WeaponType.BOW:
+              if (!isVaulting) {
+                setIsVaulting(true);
+                onAbilityUse(currentWeapon, 'r');
+              }
+              break;
+            case WeaponType.SPEAR:
+              if (!isPyroclastActive) {
+                startPyroclastCharge();
+              }
+              break;
           }
         }
       }
@@ -329,6 +345,11 @@ export function useAbilityKeys({
         whirlwindStartTime.current = null;
         onAbilityUse(currentWeapon, 'e');
       }
+
+      if (key === 'r' && currentWeapon === WeaponType.SPEAR && isPyroclastActive) {
+        releasePyroclastCharge();
+        onAbilityUse(currentWeapon, 'r');
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -339,6 +360,7 @@ export function useAbilityKeys({
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [
+    isVaulting,
     keys,
     tryAttack,
     groupRef,
@@ -373,6 +395,11 @@ export function useAbilityKeys({
     fireballCharges,
     activateStealth,
     shootQuickShot,
+    setIsVaulting,
+    isPyroclastActive,
+    startPyroclastCharge,
+    releasePyroclastCharge,
+    fireClusterShots,
   ]);
 
   // Mouse event handlers to check game over state

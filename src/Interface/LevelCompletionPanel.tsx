@@ -52,6 +52,18 @@ export default function LevelCompletionPanel({
           p: '/Eidolon/icons/p3.svg',
           s: '/Eidolon/icons/a3.svg'
         };
+      case WeaponType.SPEAR:
+        return { 
+          r: '/Eidolon/icons/r4.svg', 
+          p: '/Eidolon/icons/p4.svg',
+          s: '/Eidolon/icons/a4.svg'
+        };
+      case WeaponType.BOW:
+        return { 
+          r: '/Eidolon/icons/r5.svg', 
+          p: '/Eidolon/icons/p5.svg',
+          s: '/Eidolon/icons/a5.svg'
+        };
     }
   };
 
@@ -142,7 +154,9 @@ export default function LevelCompletionPanel({
         </div>
         {(currentWeapon === WeaponType.SCYTHE || 
           currentWeapon === WeaponType.SABRES || 
-          currentWeapon === WeaponType.SWORD) && (
+          currentWeapon === WeaponType.SWORD ||
+          currentWeapon === WeaponType.SPEAR ||
+          currentWeapon === WeaponType.BOW) && (
           <div 
             className={`${styles.icon} 
               ${selectedIcon === 3 ? styles.selected : ''} 

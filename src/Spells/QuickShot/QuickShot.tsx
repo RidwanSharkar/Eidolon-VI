@@ -3,6 +3,7 @@ import { useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { useQuickShotManager } from '../QuickShot/useQuickShotManager';
 import { WeaponType, WEAPON_DAMAGES } from '../../Weapons/weapons';
+import { useEagleEye } from '../EagleEye/useEagleEye';
 
 interface QuickShotProps {
   parentRef: React.RefObject<THREE.Group>;
@@ -18,11 +19,13 @@ interface QuickShotProps {
     damage: number;
     position: Vector3;
     isCritical: boolean;
+    isEagleEye?: boolean;
   }>) => Array<{
     id: number;
     damage: number;
     position: Vector3;
     isCritical: boolean;
+    isEagleEye?: boolean;
   }>) => void;
   nextDamageNumberId: React.MutableRefObject<number>;
   charges: Array<{
@@ -35,6 +38,20 @@ interface QuickShotProps {
     available: boolean;
     cooldownStartTime: number | null;
   }>>>;
+  isEagleEyeUnlocked: boolean;
+}
+
+interface ProjectileData {
+  id: number;
+  position: Vector3;
+  direction: Vector3;
+  startPosition: Vector3;
+  maxDistance: number;
+  isQuickShot: boolean;
+  power: number;
+  startTime: number;
+  hasCollided: boolean;
+  active: boolean;
 }
 
 export const useQuickShot = ({
@@ -44,46 +61,59 @@ export const useQuickShot = ({
   setDamageNumbers,
   nextDamageNumberId,
   charges,
-  setCharges
+  setCharges,
+  isEagleEyeUnlocked
 }: QuickShotProps) => {
-  const activeProjectilesRef = useRef<Array<{
-    id: number;
-    position: Vector3;
-    direction: Vector3;
-    startPosition: Vector3;
-    maxDistance: number;
-    isQuickShot: boolean;
-    power: number;
-    startTime: number;
-    hasCollided: boolean;
-  }>>([]);
+  const projectilePool = useRef<ProjectileData[]>([]);
+  const POOL_SIZE = 20;
   const lastShotTime = useRef(0);
-  const SHOT_DELAY = 150; // 166ms between shots
+  const SHOT_DELAY = 166;
 
   const { consumeCharge } = useQuickShotManager({
     charges,
     setCharges
   });
+  
+  const { processHit, resetCounter } = useEagleEye({
+    isUnlocked: isEagleEyeUnlocked,
+    setDamageNumbers,
+    nextDamageNumberId,
+    onHit
+  });
+
+  useEffect(() => {
+    projectilePool.current = Array(POOL_SIZE).fill(null).map((_, index) => ({
+      id: index,
+      position: new Vector3(),
+      direction: new Vector3(),
+      startPosition: new Vector3(),
+      maxDistance: 40,
+      isQuickShot: true,
+      power: 1,
+      startTime: 0,
+      hasCollided: false,
+      active: false
+    }));
+  }, []);
+
+  const getInactiveProjectile = () => {
+    return projectilePool.current.find(p => !p.active);
+  };
 
   const shootQuickShot = useCallback(() => {
     const now = Date.now();
-    if (now - lastShotTime.current < SHOT_DELAY) {
-      return;
-    }
+    if (now - lastShotTime.current < SHOT_DELAY) return;
 
-    // Check for available charges
     const hasAvailableCharges = charges.some(charge => charge.available);
-    if (!hasAvailableCharges) {
-      return;
-    }
+    if (!hasAvailableCharges || !parentRef.current) return;
 
-    // Consume a charge
     const success = consumeCharge();
-    if (!success || !parentRef.current) {
-      return;
-    }
+    if (!success) return;
 
     lastShotTime.current = now;
+
+    const projectile = getInactiveProjectile();
+    if (!projectile) return;
 
     const unitPosition = parentRef.current.position.clone();
     unitPosition.y += 1;
@@ -91,91 +121,84 @@ export const useQuickShot = ({
     const direction = new Vector3(0, 0, 1);
     direction.applyQuaternion(parentRef.current.quaternion);
 
-    const maxRange = 40;
-    const rayStart = unitPosition.clone();
+    projectile.position.copy(unitPosition);
+    projectile.direction.copy(direction);
+    projectile.startPosition.copy(unitPosition);
+    projectile.startTime = now;
+    projectile.hasCollided = false;
+    projectile.active = true;
+  }, [parentRef, charges, consumeCharge]);
 
-    const newProjectile = {
-      id: Date.now(),
-      position: rayStart.clone(),
-      direction: direction.clone(),
-      startPosition: rayStart.clone(),
-      maxDistance: maxRange,
-      isQuickShot: true,
-      power: 1,
-      startTime: Date.now(),
-      hasCollided: false
-    };
+  useEffect(() => {
+    let animationFrameId: number;
 
-    activeProjectilesRef.current.push(newProjectile);
-
-    // Handle projectile movement and collision
-    const handleProjectileUpdate = () => {
-      activeProjectilesRef.current = activeProjectilesRef.current.filter(projectile => {
+    const updateProjectiles = () => {
+      const activeProjectiles = projectilePool.current.filter(p => p.active);
+      
+      activeProjectiles.forEach(projectile => {
         const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
         
-        if (distanceTraveled < projectile.maxDistance) {
-          // Move projectile
-          projectile.position.add(
-            projectile.direction
-              .clone()
-              .multiplyScalar(0.5)
-          );
-
-          // Check collisions
-          for (const enemy of enemyData) {
-            // Skip enemies that are dying or have 0 health
-            if (enemy.isDying || enemy.health <= 0) continue;
-
-            const projectilePos2D = new Vector3(
-              projectile.position.x,
-              0,
-              projectile.position.z
-            );
-            const enemyPos2D = new Vector3(
-              enemy.position.x,
-              0,
-              enemy.position.z
-            );
-            
-            if (projectilePos2D.distanceTo(enemyPos2D) < 1.3) {
-              const damage = WEAPON_DAMAGES[WeaponType.BOW].normal;
-              onHit(enemy.id, damage);
-
-              if (enemy.health - damage > 0) {
-                setDamageNumbers(prev => [...prev, {
-                  id: nextDamageNumberId.current++,
-                  damage,
-                  position: enemy.position.clone(),
-                  isCritical: false
-                }]);
-              }
-
-              return false;
-            }
-          }
-          
-          return true;
+        if (distanceTraveled >= projectile.maxDistance) {
+          projectile.active = false;
+          return;
         }
-        return false;
+
+        projectile.position.add(
+          projectile.direction.clone().multiplyScalar(0.5)
+        );
+
+        for (const enemy of enemyData) {
+          if (enemy.isDying || enemy.health <= 0) continue;
+
+          const projectilePos2D = new Vector3(
+            projectile.position.x,
+            0,
+            projectile.position.z
+          );
+          const enemyPos2D = new Vector3(
+            enemy.position.x,
+            0,
+            enemy.position.z
+          );
+          
+          if (projectilePos2D.distanceTo(enemyPos2D) < 1.3) {
+            const damage = WEAPON_DAMAGES[WeaponType.BOW].normal;
+            onHit(enemy.id, damage);
+
+            if (enemy.health - damage > 0) {
+              setDamageNumbers(prev => [...prev, {
+                id: nextDamageNumberId.current++,
+                damage,
+                position: enemy.position.clone(),
+                isCritical: false
+              }]);
+              
+              if (isEagleEyeUnlocked) {
+                processHit(enemy.id, enemy.position);
+              }
+            }
+
+            projectile.active = false;
+            return;
+          }
+        }
       });
 
-      if (activeProjectilesRef.current.length > 0) {
-        requestAnimationFrame(handleProjectileUpdate);
+      if (projectilePool.current.some(p => p.active)) {
+        animationFrameId = requestAnimationFrame(updateProjectiles);
       }
     };
 
-    requestAnimationFrame(handleProjectileUpdate);
-  }, [parentRef, enemyData, onHit, setDamageNumbers, nextDamageNumberId, charges, consumeCharge]);
+    animationFrameId = requestAnimationFrame(updateProjectiles);
 
-  useEffect(() => {
-    console.log('QuickShot hook initialized');
     return () => {
-      console.log('QuickShot hook cleanup');
+      cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [enemyData, onHit, setDamageNumbers, nextDamageNumberId, isEagleEyeUnlocked, processHit]);
 
   return {
     shootQuickShot,
-    activeProjectilesRef
+    projectilePool,
+    resetEagleEyeCounter: resetCounter
   };
 }; 

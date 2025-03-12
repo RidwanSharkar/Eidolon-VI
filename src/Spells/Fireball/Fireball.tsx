@@ -49,7 +49,6 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
       const hit = intersects[0];
       const movementDistance = currentPosition.current.distanceTo(nextPosition);
       if (hit.distance <= movementDistance) {
-        console.log('Collision detected:', hit.point);
         return true;
       }
     }

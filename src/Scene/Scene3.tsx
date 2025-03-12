@@ -226,9 +226,7 @@ export default function Scene3({
       }] : [])
     ],
     onDamage: unitProps.onDamage,
-    onEnemyDeath: () => {
-      console.log("Kill counted in Scene");  // Debug log
-    },
+    onEnemyDeath: () => { },
     onFireballDamage: unitProps.onFireballDamage,
     fireballManagerRef: unitProps.fireballManagerRef,
     onSmiteDamage: unitProps.onSmiteDamage

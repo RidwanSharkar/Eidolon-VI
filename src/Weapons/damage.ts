@@ -10,4 +10,3 @@ export function calculateDamage(baseAmount: number): DamageResult {
   const damage = isCritical ? baseAmount * 2 : baseAmount;
   return { damage, isCritical };
 }
-  

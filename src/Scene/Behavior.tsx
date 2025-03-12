@@ -47,7 +47,6 @@ export default function Behavior({
   }, [playerHealth, isGameOver]);
 
   const handleReset = () => {
-    console.log("Behavior: Reset triggered");
     // Perform a full page refresh
     window.location.reload();
   };

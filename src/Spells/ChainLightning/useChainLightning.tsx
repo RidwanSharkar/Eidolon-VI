@@ -37,7 +37,6 @@ export const useChainLightning = ({
 
     // Check chain chance first
     if (Math.random() >= CHAIN_CHANCE) {
-      console.log('Chain Lightning failed random check');
       setIsProcessing(false);
       return;
     }
@@ -95,7 +94,6 @@ export const useChainLightning = ({
       if (!nextTarget) break;
       
       const damage = chainDamage(i);
-      console.log(`Chain Lightning jump ${i}: Damage=${damage}`);
       
       targets.push(nextTarget.position);
       hitTargets.add(nextTarget.id);

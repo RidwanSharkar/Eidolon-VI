@@ -21,6 +21,9 @@ interface DamageNumberProps {
   isFireball?: boolean;
   isSummon?: boolean;
   isStealthStrike?: boolean;
+  isPyroclast?: boolean;
+  isEagleEye?: boolean;
+  isClusterShot?: boolean;
   onComplete: () => void;
 }
 
@@ -45,9 +48,11 @@ export default function DamageNumber({
   isFireball = false,
   isSummon = false,
   isStealthStrike = false,
+  isPyroclast = false,
+  isEagleEye = false,
+  isClusterShot = false,
   onComplete 
 }: DamageNumberProps) {
-  console.log('DamageNumber props:', { damage, isCritical, isBlizzard, isLightning, isHealing, isBoneclaw, isOrbShield, isChainLightning });
   const textRef = useRef<TextMesh>(null);
   const startTime = useRef(Date.now());
   const startY = position.y + 3.5;
@@ -94,6 +99,7 @@ export default function DamageNumber({
     if (isHealing) return "#338C66";
     if (isChainLightning) return "#ffff00";
     if (isOrbShield) return "#13F3FF"; // 58FCEC
+    if (isEagleEye) return "#ffcc00"; // Gold color for Eagle Eye
     if (isCritical) return "#FF2D22";  //ff0000
     if (isSummon) return "#B999FF"; // 00FF51 00FF59 NO CRIT FOR TOTEM
     if (isBoneclaw) return "#00FF11"; // 39ff14
@@ -103,10 +109,11 @@ export default function DamageNumber({
     if (isBlizzard) return "#00B7FF"; // 61EDFF
     if (isFireball) return "#00C946"; // 00C946
     if (isStealthStrike) return "#FF00FF"; // bright magenta for stealth strikes
+    if (isPyroclast) return "#FF6A00"; // Orange for Pyroclast
+    if (isClusterShot) return "#80ff80"; // Green color for cluster shots
     return "#EBEBEB";
   };
 
-  console.log('Text color:', getTextColor(), 'isHealing:', isHealing);
 
   return (
     <Text

@@ -76,31 +76,21 @@ export default function LevelManager({
 
     const killCount = sceneProps.killCount || 0;
     
-    // Logging for debugging
-    console.log('Checking level completion conditions:');
-    console.log(`Level 1 condition: killCount >= 13 && currentLevel === 1: ${killCount >= 13 && currentLevel === 1}`);
-    console.log(`Level 2 condition: killCount >= 30 && currentLevel === 2: ${killCount >= 30 && currentLevel === 2}`);
-    console.log(`Level 3 condition: killCount >= 50 && currentLevel === 3: ${killCount >= 50 && currentLevel === 3}`);
-    
     // Level completion conditions
     if (killCount >= 13 && currentLevel === 1) {
-      console.log('Level 1 completion triggered');
       onLevelTransition(1, true);
       setLevelCompleted(true);
     } else if (killCount >= 30 && currentLevel === 2) {
-      console.log('Level 2 completion triggered');
       onLevelTransition(2, true);
       setLevelCompleted(true);
     } else if (currentLevel === 3 && killCount >= 50) {
-      console.log('Level 3 completion triggered');
       onLevelTransition(3, false);
       setLevelCompleted(true);
     }
   }, [currentLevel, onLevelTransition, sceneProps.killCount, levelCompleted]);
 
-  // Add a useEffect to monitor kill count changes
+  // useEffect to monitor kill count changes
   useEffect(() => {
-    console.log(`Kill count changed: ${sceneProps.killCount}`);
   }, [sceneProps.killCount]);
 
   // Scene switching based on current level
@@ -129,7 +119,6 @@ export default function LevelManager({
 
   // Keep existing kill count monitoring effect
   useEffect(() => {
-    console.log(`Kill count changed: ${sceneProps.killCount}`);
   }, [sceneProps.killCount]);
 
   // Add cleanup on unmount
