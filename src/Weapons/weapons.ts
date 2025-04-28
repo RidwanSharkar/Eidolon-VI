@@ -52,7 +52,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SCYTHE]: {
     normal: 23,
-    range: 5,
+    range: 4.65,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
@@ -62,7 +62,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SPEAR]: {
     normal: 29,
-    range: 6.5,
+    range: 6.25,
     maxHitsPerSwing: 1
   },
   [WeaponType.BOW]: {
@@ -74,7 +74,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
-    q: { type: 'q', key: 'q', cooldown: 0.775, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.725, currentCooldown: 0, icon: '/icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 0.725, currentCooldown: 0, icon: '/icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 2.05, currentCooldown: 0, icon: '/icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: '/icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
@@ -90,16 +90,16 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   },
   
   [WeaponType.SABRES]: {
-    q: { type: 'q', key: 'q', cooldown: 0.62, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 5.75, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.625, currentCooldown: 0, icon: '/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 6, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: '/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
   },
 
   [WeaponType.SPEAR]: {
-    q: { type: 'q', key: 'q', cooldown: 0.7, currentCooldown: 0, icon: '/icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 4, currentCooldown: 0, icon: '/icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.775, currentCooldown: 0, icon: '/icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 5, currentCooldown: 0, icon: '/icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 4.5, currentCooldown: 0, icon: '/icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: false },
     passive: { 
       type: 'passive', 

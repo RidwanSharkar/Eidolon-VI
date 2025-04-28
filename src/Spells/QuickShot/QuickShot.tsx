@@ -67,7 +67,7 @@ export const useQuickShot = ({
   const projectilePool = useRef<ProjectileData[]>([]);
   const POOL_SIZE = 20;
   const lastShotTime = useRef(0);
-  const SHOT_DELAY = 166;
+  const SHOT_DELAY = 188;
 
   const { consumeCharge } = useQuickShotManager({
     charges,

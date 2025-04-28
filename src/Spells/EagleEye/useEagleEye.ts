@@ -31,9 +31,9 @@ export function useEagleEye({
   // Time of last hit for tracking consecutive hits
   const lastHitTime = useRef(0);
   // Maximum time between hits to count as consecutive (milliseconds)
-  const MAX_TIME_BETWEEN_HITS = 5000; // 5 seconds
+  const MAX_TIME_BETWEEN_HITS = 3000; // 5 seconds
   // Eagle Eye bonus damage amount
-  const EAGLE_EYE_BONUS_DAMAGE = 70;
+  const EAGLE_EYE_BONUS_DAMAGE = 67;
   
   /**
    * Process a hit to count for Eagle Eye and apply bonus damage if needed

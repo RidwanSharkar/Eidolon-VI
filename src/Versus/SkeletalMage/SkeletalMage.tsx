@@ -360,6 +360,18 @@ export default function SkeletalMage({
     }
   }, [isDead]);
 
+  // 1. Update position sync to only happen during spawning
+  useEffect(() => {
+    if (position && isSpawning) {
+      currentPosition.current.copy(position);
+      currentPosition.current.y = 0;
+      targetPosition.current.copy(currentPosition.current);
+      if (enemyRef.current) {
+        enemyRef.current.position.copy(currentPosition.current);
+      }
+    }
+  }, [position, isSpawning]);
+
   return (
     <>
       <group 

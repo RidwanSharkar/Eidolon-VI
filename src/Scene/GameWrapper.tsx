@@ -66,7 +66,7 @@ export default function GameWrapper({
     setShowLevelPanel(false);
     setSelectedIcon(null);
     onReset();
-  }, [onReset, ,]);
+  }, [onReset]);
 
   useEffect(() => {
     const preventSpaceScroll = (e: KeyboardEvent) => {
@@ -88,7 +88,7 @@ export default function GameWrapper({
       // Clear any game-wide resources
       THREE.Cache.clear();
     };
-  }, [sceneProps.unitProps.controlsRef,]);
+  }, [sceneProps.unitProps.controlsRef]);
 
   return (
     <GameStateProvider>

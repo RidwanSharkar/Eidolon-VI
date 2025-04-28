@@ -18,7 +18,7 @@ export function useQuickShotManager({
   charges,
   setCharges,
 }: UseQuickShotManagerProps) {
-  const shotsPerCharge = 6;
+  const shotsPerCharge = 5;
   const currentShotsRef = useRef(0);
   const currentChargeRef = useRef<number | null>(null);
 

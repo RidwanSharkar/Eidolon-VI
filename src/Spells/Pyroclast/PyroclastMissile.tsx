@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -22,9 +22,17 @@ export default function PyroclastMissile({
 }: PyroclastMissileProps) {
   const missileRef = useRef<THREE.Group>(null);
   const startPosition = useRef(position.clone());
+  const hasCollided = useRef(false);
+
+  // Initialize position on mount
+  useEffect(() => {
+    if (missileRef.current) {
+      missileRef.current.position.copy(position);
+    }
+  }, [position]);
 
   useFrame((_, delta) => {
-    if (!missileRef.current) return;
+    if (!missileRef.current || hasCollided.current) return;
 
     // Move missile forward with consistent speed using delta
     const speed = 30 * delta;
@@ -34,12 +42,15 @@ export default function PyroclastMissile({
 
     // Check collisions each frame with current position
     if (checkCollisions) {
-      checkCollisions(id, missileRef.current.position);
+      checkCollisions(id, missileRef.current.position.clone());
     }
 
     // Check max distance (40 units)
     if (missileRef.current.position.distanceTo(startPosition.current) > 40) {
-      onImpact?.(missileRef.current.position.clone());
+      if (onImpact && !hasCollided.current) {
+        hasCollided.current = true;
+        onImpact(missileRef.current.position.clone());
+      }
     }
   });
 

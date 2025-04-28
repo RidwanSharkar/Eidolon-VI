@@ -117,12 +117,12 @@ export function useAbilityKeys({
 
   // DEBOUNCE
   const lastAttackTime = useRef(0);
-  const ATTACK_DEBOUNCE = 200; // ms
+  const ATTACK_DEBOUNCE = currentWeapon === WeaponType.SCYTHE ? 125 : 250; // ms
 
-  // Shared attack logic function
+  // Shared attack logic function - simplify to match the working version
   const tryAttack = useCallback(() => {
     const now = Date.now();
-    if (now - lastAttackTime.current < ATTACK_DEBOUNCE) return;
+    if (now - lastAttackTime.current < ATTACK_DEBOUNCE) return false;
     
     const qAbility = abilities[currentWeapon].q;
     if (qAbility.currentCooldown <= 0 && !isSwinging) {
@@ -130,8 +130,10 @@ export function useAbilityKeys({
       lastQUsageTime.current = now;
       setIsSwinging(true);
       onAbilityUse(currentWeapon, 'q');
+      return true;
     }
-  }, [abilities, currentWeapon, isSwinging, onAbilityUse, setIsSwinging]);
+    return false;
+  }, [abilities, currentWeapon, isSwinging, onAbilityUse, setIsSwinging, ATTACK_DEBOUNCE]);
 
   // Update isGameOver when health reaches 0
   useEffect(() => {
@@ -157,7 +159,7 @@ export function useAbilityKeys({
       if (key === 'q') {
         if (currentWeapon === WeaponType.BOW) {
           shootQuickShot();
-        } else {
+        } else if (!keys.current['mouse0'] && !isSwinging) {  // Add isSwinging check
           tryAttack();
         }
       }
@@ -427,24 +429,30 @@ export function useAbilityKeys({
     };
   }, [keys]);
 
-  // Attack interval respect game over state
+  // Near the top with other refs
+  const attackDebounceRef = useRef(ATTACK_DEBOUNCE);
+
+  // Update the ref when ATTACK_DEBOUNCE changes
+  useEffect(() => {
+    attackDebounceRef.current = ATTACK_DEBOUNCE;
+  }, [ATTACK_DEBOUNCE]);
+
+  // Attack interval - update to use the simpler pattern
   useEffect(() => {
     const attackInterval = setInterval(() => {
-      if (isGameOver.current || !keys.current) return;
+      if (isGameOver.current || !keys.current || isSwinging) return;
       
-      // Only check for mouse0, since 'q' is handled by keydown event
       if (keys.current['mouse0']) {
         tryAttack();
       }
     }, 50);
 
     return () => clearInterval(attackInterval);
-  }, [tryAttack, keys, abilities, currentWeapon, isSwinging, onAbilityUse]);
+  }, [tryAttack, keys, isSwinging]);
 
   useEffect(() => {
     const handleGameOver = () => {
       isGameOver.current = true;
-      // Clear effects or leave them running while game is over
 
     };
 

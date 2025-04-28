@@ -13,17 +13,26 @@ interface ClusterShotsProps {
     health: number;
     isDying?: boolean;
   }>;
-  setDamageNumbers: (callback: (prev: Array<{
+  setDamageNumbers: React.Dispatch<React.SetStateAction<Array<{
     id: number;
     damage: number;
     position: Vector3;
     isCritical: boolean;
-  }>) => Array<{
-    id: number;
-    damage: number;
-    position: Vector3;
-    isCritical: boolean;
-  }>) => void;
+    isLightning?: boolean;
+    isHealing?: boolean;
+    isBlizzard?: boolean;
+    isBoneclaw?: boolean;
+    isOathstrike?: boolean;
+    isFirebeam?: boolean;
+    isOrbShield?: boolean;
+    isChainLightning?: boolean;
+    isFireball?: boolean;
+    isSummon?: boolean;
+    isStealthStrike?: boolean;
+    isPyroclast?: boolean;
+    isEagleEye?: boolean;
+    isClusterShot?: boolean;
+  }>>>;
   nextDamageNumberId: React.MutableRefObject<number>;
   charges: Array<{
     id: number;
@@ -76,7 +85,7 @@ export const useClusterShots = ({
   const [activeArrows, setActiveArrows] = useState<ArrowData[]>([]);
   const activeArrowsRef = useRef<ArrowData[]>([]);
   const arrowPool = useRef<ArrowData[]>([]);
-  const POOL_SIZE = 30;
+  const POOL_SIZE = 15;
   const DAMAGE_PER_ARROW = 50;
   const CONE_ANGLE = Math.PI / 6; // 30 degrees
   const CONE_RANGE = 15; // Units
@@ -181,7 +190,7 @@ export const useClusterShots = ({
       
       // Check for collisions with enemies
       for (const enemy of enemyData) {
-        if (enemy.isDying || hitEnemies.has(enemy.id)) continue;
+        if (enemy.isDying || enemy.health <= 0 || hitEnemies.has(enemy.id)) continue;
         
         const distance = arrow.position.distanceTo(enemy.position);
         if (distance < 1.5) { // Hit radius
@@ -195,7 +204,8 @@ export const useClusterShots = ({
               id: nextDamageNumberId.current++,
               damage: DAMAGE_PER_ARROW,
               position: enemy.position.clone().add(new Vector3(0, 2, 0)),
-              isCritical: false
+              isCritical: false,
+              isClusterShot: true
             }
           ]);
           

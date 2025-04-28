@@ -289,10 +289,10 @@ export default function Unit({
 
   // Modify handleAttack to use the new stealth system
   const handleAttack = useCallback(
-    (targetId: string, baseDamage: number) => {
+    (targetId: string, baseDamage: number, wasWeaponCritical: boolean = false) => {
       let finalDamage = baseDamage;
       let isStealthStrike = false;
-      let isCritical = false;
+      let isCritical = wasWeaponCritical; // Use the passed critical flag as a starting point
       let stealthBonusAmount = 0;
 
       // Cache stealth status at the start of the attack
@@ -341,9 +341,6 @@ export default function Unit({
           }
         }
       }
-
-      // Dispatch hit event immediately
-      onHit(targetId, finalDamage);
 
       // Handle damage numbers after hit is confirmed
       const target = enemyData.find(e => e.id === targetId);
@@ -492,7 +489,6 @@ export default function Unit({
   // Add at the top of the component, after state declarations
   const tempVec3 = useMemo(() => new Vector3(), []);
   const tempVec3_2 = useMemo(() => new Vector3(), []);
-  const tempVec3_3 = useMemo(() => new Vector3(), []); // For additional calculations
 
   // Modify shootFireball to reuse vectors
   const shootFireball = useCallback(() => {
@@ -605,8 +601,8 @@ export default function Unit({
   const lastHitDetectionTime = useRef<Record<string, number>>({});
   const HIT_DETECTION_DEBOUNCE = currentWeapon === WeaponType.SCYTHE ? 120 : 200; // ms
 
-  // Modify handleWeaponHit to reuse vectors
-  const handleWeaponHit = useCallback((targetId: string) => {
+  // Change to regular function without useCallback
+  const handleWeaponHit = (targetId: string) => {
     if (!groupRef.current || !isSwinging) return;
 
     const now = Date.now();
@@ -620,91 +616,39 @@ export default function Unit({
     const target = enemyData.find(e => e.id === targetId);
     if (!target || target.health <= 0 || target.isDying) return;
 
-    // store the hit time
-    setHitCountThisSwing(prev => ({
-      ...prev,
-      [target.id]: (prev[target.id] || 0) + 1,
-      [`${target.id}_time`]: now
-    }));
+    // Get the current hit count for this target during this swing
+    const currentHits = hitCountThisSwing[target.id] || 0;
 
     const isEnemy = target.id.startsWith('enemy');
     if (!isEnemy) return;
 
     const maxHits = isEnemy 
-      ? (currentWeapon === WeaponType.SABRES  ? 2 : 1)
+      ? (currentWeapon === WeaponType.SABRES ? 2 : 1)
       : 1;
-    const currentHits = hitCountThisSwing[target.id] || 0;
 
+    // Return immediately if max hits is already reached for this target
     if (currentHits >= maxHits) return;
 
-    // Reuse tempVec3 for distance calculation
-    tempVec3.copy(target.position);
-    const distance = groupRef.current.position.distanceTo(tempVec3);
+    // Update hit count before processing damage to prevent race conditions
+    setHitCountThisSwing(prev => ({
+      ...prev,
+      [target.id]: currentHits + 1,
+      [`${target.id}_time`]: now
+    }));
+
+    const distance = groupRef.current.position.distanceTo(target.position);
     const weaponRange = WEAPON_DAMAGES[currentWeapon].range;
 
     if (distance <= weaponRange) {
-      // Spear-specific hit detection
-      if (currentWeapon === WeaponType.SPEAR) {
-        // Reuse tempVec3_2 and tempVec3_3 for direction calculations
-        tempVec3_2.subVectors(tempVec3, groupRef.current.position).normalize();
-        tempVec3_3.set(0, 0, 1).applyQuaternion(groupRef.current.quaternion);
-        
-        const angle = tempVec3_2.angleTo(tempVec3_3);
-        
-        // Spear has a narrower hit arc (30 degrees)
-        if (Math.abs(angle) > Math.PI / 6) {
-          return;
-        }
-
-        // Check for max range critical strike
-        // Consider hits between 85-100% of max range as "sweet spot" hits
-        const maxRange = WEAPON_DAMAGES[WeaponType.SPEAR].range;
-        const isMaxRangeHit = distance >= maxRange * 0.75;
-
-        const baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
-        let damage, isCritical;
-
-        if (isMaxRangeHit) {
-          // Guaranteed critical at max range with bonus damage
-          damage = baseDamage * 2; // Critical multiplier
-          isCritical = true;
-        } else {
-          // Normal damage calculation for non-max range hits
-          const damageResult = calculateDamage(baseDamage);
-          damage = damageResult.damage;
-          isCritical = damageResult.isCritical;
-        }
-
-        handleAttack(target.id, damage);
-        
-        setDamageNumbers(prev => [...prev, {
-          id: nextDamageNumberId.current++,
-          damage,
-          position: target.position.clone(),
-          isCritical
-        }]);
-
-        // In the handleWeaponHit function, after calculating damage
-        const targetAfterDamage = target.health - damage;
-
-        // Check for kill with spear to trigger Reignite
-        if (targetAfterDamage <= 0 && 
-            (currentWeapon as WeaponType) === WeaponType.SPEAR && 
-            abilities[WeaponType.SPEAR].passive.isUnlocked && 
-            reigniteRef.current) {
-          reigniteRef.current.processKill();
-        }
-
-        return;
-      }
-
       // SABRES HIT ARC CHECK
       if (currentWeapon === WeaponType.SABRES ) {
-        tempVec3_2.subVectors(tempVec3, groupRef.current.position).normalize();
-        tempVec3_3.set(0, 0, 0.25) // SABRE FORWARD 
+        const toTarget = new Vector3()
+          .subVectors(target.position, groupRef.current.position)
+          .normalize();
+        const forward = new Vector3(0, 0, 0.25) // SABRE FORWARD 
           .applyQuaternion(groupRef.current.quaternion);
         
-        const angle = tempVec3_2.angleTo(tempVec3_3);
+        const angle = toTarget.angleTo(forward);
         
         if (Math.abs(angle) > Math.PI / 4.5) { // 52 degree?
           return;
@@ -729,7 +673,7 @@ export default function Unit({
         
         // Initial hit
         const { damage, isCritical } = calculateDamage(13); // Smite Swing Bonus Damage 
-        handleAttack(target.id, damage);
+        onHit(target.id, damage);
         
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
@@ -748,7 +692,7 @@ export default function Unit({
           }
 
           const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(41);
-          handleAttack(target.id, lightningDamage);
+          onHit(target.id, lightningDamage);
           
           setDamageNumbers(prev => [...prev, {
             id: nextDamageNumberId.current++,
@@ -765,8 +709,35 @@ export default function Unit({
       //=====================================================================================================
 
       // NORMAL WEAPON HIT HANDLING
-      const { damage, isCritical } = calculateDamage(baseDamage);
-
+      let isCritical = false;
+      let damage = baseDamage;
+      
+      if (currentWeapon === WeaponType.SPEAR) {
+        // Calculate if the hit is within 80-100% of max range
+        const maxRange = WEAPON_DAMAGES[WeaponType.SPEAR].range;
+        const sweetSpotStart = maxRange * 0.8;
+        
+        // Guaranteed critical at 80-100% of max range
+        if (distance >= sweetSpotStart && distance <= maxRange) {
+          isCritical = true;
+          damage = baseDamage * 2;
+        } else {
+          // Normal damage calculation for non-sweet spot hits
+          const result = calculateDamage(baseDamage);
+          damage = result.damage;
+          isCritical = result.isCritical;
+        }
+      } else if (currentWeapon === WeaponType.SABRES) {
+        // STILL NEED TO FIX THIS TO INDEPENDENT CRIT CHANCE PER SWING
+        isCritical = Math.random() < 0.13;
+        damage = isCritical ? baseDamage * 2 : baseDamage;
+      } else {
+        // Normal damage calculation for other weapons
+        const result = calculateDamage(baseDamage);
+        damage = result.damage;
+        isCritical = result.isCritical;
+      }
+      
       // Add orb shield bonus damage for Sabres
       let totalDamage = damage;
       if (currentWeapon === WeaponType.SABRES && orbShieldRef.current && 
@@ -777,7 +748,10 @@ export default function Unit({
           
           // Display bonus damage number separately
           setDamageNumbers(prev => {
-
+            console.log('Creating OrbShield damage number:', {
+              damage: bonusDamage,
+              isOrbShield: true
+            });
             return [...prev, {
               id: nextDamageNumberId.current++,
               damage: bonusDamage,
@@ -827,7 +801,7 @@ export default function Unit({
       }
 
       // Use totalDamage instead of just damage
-      handleAttack(target.id, totalDamage);
+      handleAttack(target.id, totalDamage, isCritical);
 
       // Calculate target's health after damage
       const targetAfterDamage = target.health - totalDamage;
@@ -874,19 +848,11 @@ export default function Unit({
           chainLightningRef.current?.processChainLightning();
       }
 
-      // Check for kill with spear to trigger Reignite
-      if (targetAfterDamage <= 0 && 
-          (currentWeapon as WeaponType) === WeaponType.SPEAR && 
-          abilities[WeaponType.SPEAR].passive.isUnlocked && 
-          reigniteRef.current) {
-        reigniteRef.current.processKill();
-      }
-
       return;
     }
 
     return;
-  }, [groupRef, isSwinging, enemyData, currentWeapon, tempVec3, tempVec3_2, tempVec3_3, handleAttack, hasHealedThisSwing, hitCountThisSwing, HIT_DETECTION_DEBOUNCE, abilities, crusaderAuraRef, chainLightningRef, isOathstriking, isSmiting, reigniteRef]);
+  };
 
   const handleSwingComplete = () => {
     setIsSwinging(false);
@@ -940,6 +906,9 @@ export default function Unit({
 
         // Check collisions
         for (const enemy of enemyData) {
+          // Skip dead enemies - add this check
+          if (enemy.health <= 0 || enemy.isDying) continue;
+          
           const projectilePos2D = new Vector3(
             projectile.position.x,
             0,
@@ -1398,19 +1367,6 @@ export default function Unit({
     };
   }, []);
 
-  useEffect(() => {
-    const now = Date.now();
-    setActiveEffects(prev => 
-      prev.filter(effect => {
-        if (effect.startTime && effect.duration) {
-          return now - effect.startTime < effect.duration;
-        }
-        return true;
-      })
-    );
-  }, []);
-
-  // ============================== FIREBALL EXTRA CLEANER TEST
   useEffect(() => {
     const cleanupEffects = () => {
       setActiveEffects(prev => 
@@ -2266,7 +2222,7 @@ export default function Unit({
       {pyroclastMissiles.map(missile => (
         <PyroclastMissile
           key={missile.id}
-          id={missile.id}  // Add this
+          id={missile.id}  // Add this line
           position={missile.position}
           direction={missile.direction}
           power={missile.power}

@@ -84,6 +84,8 @@ export default function LevelManager({
       onLevelTransition(2, true);
       setLevelCompleted(true);
     } else if (currentLevel === 3 && killCount >= 50) {
+      // For level 3, we rely on the boss defeat to trigger completion
+      // This condition is a fallback
       onLevelTransition(3, false);
       setLevelCompleted(true);
     }
@@ -91,7 +93,8 @@ export default function LevelManager({
 
   // useEffect to monitor kill count changes
   useEffect(() => {
-  }, [sceneProps.killCount]);
+    handleLevelComplete();
+  }, [sceneProps.killCount, handleLevelComplete]);
 
   // Scene switching based on current level
   useEffect(() => {
@@ -116,10 +119,6 @@ export default function LevelManager({
 
     switchScene();
   }, [currentLevel, thoroughCleanup]);
-
-  // Keep existing kill count monitoring effect
-  useEffect(() => {
-  }, [sceneProps.killCount]);
 
   // Add cleanup on unmount
   useEffect(() => {

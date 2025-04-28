@@ -66,9 +66,9 @@ export default function EnemyUnit({
 
   const ATTACK_RANGE = 2.5;
   const ATTACK_COOLDOWN = 2500;
-  const MOVEMENT_SPEED = 0.075;
+  const MOVEMENT_SPEED = 0.045;
   const POSITION_UPDATE_THRESHOLD = 0.15;
-  const MINIMUM_UPDATE_INTERVAL = 37.5;
+  const MINIMUM_UPDATE_INTERVAL = 40;
   const ATTACK_DAMAGE = 12;
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.155;
@@ -125,11 +125,15 @@ export default function EnemyUnit({
 
   // Immediately sync with provided position
   useEffect(() => {
-    if (position) {
-      targetPosition.current.copy(position);
-      targetPosition.current.y = 0;
+    if (position && isSpawning) {
+      currentPosition.current.copy(position);
+      currentPosition.current.y = 0; // Force ground level
+      targetPosition.current.copy(currentPosition.current);
+      if (enemyRef.current) {
+        enemyRef.current.position.copy(currentPosition.current);
+      }
     }
-  }, [position]);
+  }, [position, isSpawning]);
 
   const handleEnemyPositionUpdate = useCallback((id: string, newPosition: Vector3) => {
     if (enemyRef.current) {

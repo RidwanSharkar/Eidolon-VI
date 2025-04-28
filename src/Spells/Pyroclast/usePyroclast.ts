@@ -51,6 +51,7 @@ export function usePyroclast({
     position: Vector3;
     direction: Vector3;
     power: number;
+    hitEnemies?: Set<string>; // Track enemies that have been hit
   }>>([]);
   const nextMissileId = useRef(0);
 
@@ -76,7 +77,8 @@ export function usePyroclast({
       id: nextMissileId.current++,
       position,
       direction,
-      power
+      power,
+      hitEnemies: new Set<string>() // Initialize empty set to track hit enemies
     }]);
 
     setIsCharging(false);
@@ -89,39 +91,67 @@ export function usePyroclast({
   }, []);
 
   const checkMissileCollisions = useCallback((missileId: number, currentPosition: Vector3) => {
-    const missile = activeMissiles.find(m => m.id === missileId);
-    if (!missile) return;
-
-    // Update missile position
-    missile.position.copy(currentPosition);
-
-    // Check for initial hit
-    for (const enemy of enemyData) {
-      if (enemy.health <= 0) continue;
-
-      const distance = currentPosition.distanceTo(enemy.position);
-      if (distance < PYROCLAST_HIT_RADIUS) {
-        // Calculate damage
-        const { damage, isCritical } = calculatePyroclastDamage(missile.power);
+    // Find the missile in our active missiles array
+    setActiveMissiles(prev => {
+      const missileIndex = prev.findIndex(m => m.id === missileId);
+      if (missileIndex === -1) return prev; // Missile not found
+      
+      const missile = prev[missileIndex];
+      
+      // Update missile position
+      const updatedMissile = {
+        ...missile,
+        position: currentPosition.clone()
+      };
+      
+      // Check for collisions with enemies
+      let hasCollided = false;
+      
+      for (const enemy of enemyData) {
+        if (enemy.health <= 0) continue; // Skip dead enemies
         
-        // Apply damage
-        onHit(enemy.id, damage);
+        // Skip enemies we've already hit with this missile
+        if (missile.hitEnemies?.has(enemy.id)) continue;
         
-        // Show damage number
-        setDamageNumbers(prev => [...prev, {
-          id: nextDamageNumberId.current++,
-          damage,
-          position: enemy.position.clone(),
-          isCritical,
-          isPyroclast: true
-        }]);
-
-        // Remove the missile after hit
-        handleMissileImpact(missile.id);
-        break;
+        const distance = currentPosition.distanceTo(enemy.position);
+        if (distance < PYROCLAST_HIT_RADIUS) {
+          // Calculate damage
+          const { damage, isCritical } = calculatePyroclastDamage(missile.power);
+          
+          // Apply damage
+          onHit(enemy.id, damage);
+          
+          // Show damage number
+          setDamageNumbers(prev => [...prev, {
+            id: nextDamageNumberId.current++,
+            damage,
+            position: enemy.position.clone(),
+            isCritical,
+            isPyroclast: true
+          }]);
+          
+          // Mark this enemy as hit
+          updatedMissile.hitEnemies?.add(enemy.id);
+          
+          // Flag that we've had a collision
+          hasCollided = true;
+          
+          // Don't break here - allow the missile to potentially hit multiple enemies
+        }
       }
-    }
-  }, [activeMissiles, enemyData, onHit, setDamageNumbers, nextDamageNumberId, handleMissileImpact]);
+      
+      // If we had a collision, remove the missile after processing all potential hits
+      if (hasCollided) {
+        // Remove this missile from the array
+        return prev.filter(m => m.id !== missileId);
+      }
+      
+      // Otherwise update the missile position and return the updated array
+      const newMissiles = [...prev];
+      newMissiles[missileIndex] = updatedMissile;
+      return newMissiles;
+    });
+  }, [enemyData, onHit, setDamageNumbers, nextDamageNumberId]);
 
   return {
     isCharging,

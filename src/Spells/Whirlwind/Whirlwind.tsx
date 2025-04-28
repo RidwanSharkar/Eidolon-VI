@@ -102,6 +102,9 @@ export default function Whirlwind({
     // Hit detection
     if (onHit && setDamageNumbers && nextDamageNumberId && enemyData) {
       enemyData.forEach(enemy => {
+        // Check if enemy is already dead - add this check
+        if (enemy.health <= 0) return;
+        
         const now = Date.now();
         const lastHit = lastHitTime.current[enemy.id] || 0;
         

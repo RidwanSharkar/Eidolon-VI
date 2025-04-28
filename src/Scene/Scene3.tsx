@@ -70,9 +70,29 @@ export default function Scene3({
   }, POOL_CONFIG.initialSize, POOL_CONFIG.expandSize, POOL_CONFIG.maxSize));
 
 
-  // Modify enemy state initialization to use pool
-  const [enemies, setEnemies] = useState<Enemy[]>(() => 
-    skeletonProps.map((skeleton, index) => {
+  // Modify enemy state initialization to ensure we have initial enemies
+  const [enemies, setEnemies] = useState<Enemy[]>(() => {
+    // If skeletonProps is empty or undefined, create some default enemies
+    if (!skeletonProps || skeletonProps.length === 0) {
+      return Array.from({ length: initialSkeletons }, (_, index) => {
+        const spawnPosition = generateRandomPosition();
+        const group = groupPool.acquire();
+        group.visible = true;
+        return {
+          id: `skeleton-${index}`,
+          position: spawnPosition.clone(),
+          initialPosition: spawnPosition.clone(),
+          currentPosition: spawnPosition.clone(),
+          health: 361,
+          maxHealth: 361,
+          ref: { current: group },
+          rotation: 0
+        };
+      });
+    }
+    
+    // Use skeletonProps if available
+    return skeletonProps.map((skeleton, index) => {
       const group = groupPool.acquire();
       group.visible = true;
       return {
@@ -85,8 +105,8 @@ export default function Scene3({
         ref: { current: group },
         rotation: 0
       };
-    })
-  );
+    });
+  });
 
   // State for enemies (with Scene2-specific health values)
   const [playerHealth, setPlayerHealth] = useState<number>(unitProps.health);
@@ -122,6 +142,11 @@ export default function Scene3({
     if (targetId.includes('boss')) {
       const newHealth = Math.max(0, bossHealth - damage);
       setBossHealth(newHealth);
+      
+      // If boss is defeated, stop all spawning immediately
+      if (newHealth <= 0 && bossHealth > 0) {
+        setSpawnStarted(false);
+      }
       return;
     }
 
@@ -153,7 +178,7 @@ export default function Scene3({
       }
       return newEnemies;
     });
-  }, [bossHealth, unitProps]);
+  }, [bossHealth, unitProps, setSpawnStarted]);
 
   // Update handlePlayerDamage to use setPlayerHealth
   const handlePlayerDamage = useCallback((damage: number) => {
@@ -236,9 +261,11 @@ export default function Scene3({
   useEffect(() => {
     const allEnemiesDefeated = enemies.every(enemy => enemy.health <= 0);
     const hasStartedSpawning = spawnStarted && totalSpawned > initialSkeletons;
-    const shouldSpawnBoss = allEnemiesDefeated && hasStartedSpawning && killCount >= 47 && !isBossSpawned;
+    // Lower the kill count requirement for boss spawn from 47 to 40
+    const shouldSpawnBoss = allEnemiesDefeated && hasStartedSpawning && killCount >= 40 && !isBossSpawned;
     
     if (shouldSpawnBoss) {
+      console.log("BOSS SPAWN CONDITION MET - Preparing to spawn boss");
       const cleanupBeforeBoss = async () => {
         // 1. Stop all spawns and clear intervals
         setSpawnStarted(false);
@@ -314,14 +341,17 @@ export default function Scene3({
         
         // 10. Spawn the boss with delay 
         setTimeout(() => {
+          console.log("SPAWNING BOSS NOW");
           setIsBossSpawned(true);
-        }, 2750);
+        }, 1000); // Reduced from 2750 to 1000 for faster boss spawn
       };
 
       cleanupBeforeBoss();
     }
     
     if (isBossSpawned && bossHealth <= 0) {
+      // Immediately stop any further spawning when boss is defeated
+      setSpawnStarted(false);
       onLevelComplete();
     }
   }, [unitProps.controlsRef, enemies, killCount, onLevelComplete, spawnStarted, totalSpawned, initialSkeletons, isBossSpawned, bossHealth, groupPool]);
@@ -335,18 +365,51 @@ export default function Scene3({
     return () => clearTimeout(initialDelay);
   }, []);
 
-  // SPAWNING LOGIC
+  // Modify the SPAWNING LOGIC to ensure initial enemies
   useEffect(() => {
-    if (totalSpawned >= maxSkeletons) return;
+    // If we have no enemies at the start and haven't reached max, spawn some
+    if (enemies.length === 0 && totalSpawned < initialSkeletons) {
+      setEnemies(() => {
+        const newEnemies = Array.from({ length: initialSkeletons }, (_, index) => {
+          const spawnPosition = generateRandomPosition();
+          const group = groupPool.acquire();
+          group.visible = true;
+          return {
+            id: `skeleton-${totalSpawned + index}`,
+            position: spawnPosition.clone(),
+            initialPosition: spawnPosition.clone(),
+            currentPosition: spawnPosition.clone(),
+            health: 361,
+            maxHealth: 361,
+            ref: { current: group },
+            rotation: 0
+          };
+        });
+        
+        setTotalSpawned(initialSkeletons);
+        setActiveEnemyCount(initialSkeletons);
+        return newEnemies;
+      });
+    }
+  }, [enemies.length, totalSpawned, initialSkeletons, groupPool]);
+
+  // Modify the regular spawning logic
+  useEffect(() => {
+    // Don't spawn if any of these conditions are true
+    if (!spawnStarted || 
+        totalSpawned >= maxSkeletons || 
+        isBossSpawned || 
+        bossHealth <= 0 || 
+        killCount >= 40) return; // Stop spawning at 40 kills to prepare for boss
 
     const spawnTimer = setInterval(() => {
       // Add check for active enemy count
       if (activeEnemyCount >= 6) return;
 
-      // WAVE CONTROL
-      if (killCount < 31) return;
-
       setEnemies(prev => {
+        // Double-check conditions inside the state update
+        if (isBossSpawned || bossHealth <= 0 || killCount >= 40) return prev;
+        
         const remainingSpawns = maxSkeletons - totalSpawned;
         if (remainingSpawns <= 0) return prev;
 
@@ -356,7 +419,7 @@ export default function Scene3({
         // Define specific spawn points for abominations
         const shouldSpawnAbomination = 
           (killCount >= 36 && abominationsSpawned === 0) ||
-          (killCount >= 45 && abominationsSpawned === 1);
+          (killCount >= 38 && abominationsSpawned === 1);
 
         if (shouldSpawnAbomination && abominationsSpawned < 2) {
           const spawnPosition = generateRandomPosition();
@@ -418,7 +481,7 @@ export default function Scene3({
     }, 2500);
 
     return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount, groupPool, activeEnemyCount]);
+  }, [totalSpawned, maxSkeletons, spawnInterval, abominationsSpawned, killCount, groupPool, activeEnemyCount, spawnStarted, isBossSpawned, bossHealth]);
 
   useEffect(() => {
     if (unitProps.controlsRef.current) {
@@ -621,6 +684,7 @@ export default function Scene3({
         })}
 
 
+        {/* Boss Unit - Ensure it's rendered when isBossSpawned is true */}
         {isBossSpawned && (
           <BossUnit
             key="boss-1"
@@ -630,6 +694,7 @@ export default function Scene3({
             health={bossHealth}
             maxHealth={6084}
             onTakeDamage={(id, damage) => {
+              console.log(`Boss taking damage: ${damage}, current health: ${bossHealth}`);
               setBossHealth(prev => Math.max(0, prev - damage));
             }}
             onPositionUpdate={handleEnemyPositionUpdate}

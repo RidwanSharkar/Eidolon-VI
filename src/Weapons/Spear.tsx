@@ -102,11 +102,11 @@ export default function Spear({
       // THRUST ANIMATION
       const thrustPhase = swingPhase;
       
-      const windUpAmount = -0.8; // Reduced wind-up
+      const windUpAmount = -0.65; // Reduced wind-up
       const forwardThrustAmount = 3.350; // Adjusted thrust distance
       
       let thrustZ;
-      if (thrustPhase < 0.2) { // Faster wind-up
+      if (thrustPhase < 0.25) { // Faster wind-up
         // Wind-up phase - pull back
         thrustZ = basePosition[2] + (windUpAmount * (thrustPhase / 0.2));
       } else if (thrustPhase < 0.5) { // Faster thrust

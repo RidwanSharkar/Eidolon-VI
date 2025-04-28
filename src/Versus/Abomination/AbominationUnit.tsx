@@ -52,12 +52,12 @@ export default function AbominationUnit({
   const velocity = useRef(new Vector3());
   const lastUpdateTime = useRef(Date.now());
 
-  const ATTACK_RANGE = 2.5;
+  const ATTACK_RANGE = 2.75;
   const ATTACK_COOLDOWN = 3000;
-  const MOVEMENT_SPEED = 0.040;
+  const MOVEMENT_SPEED = 0.050;
   const POSITION_UPDATE_THRESHOLD = 0.1;
-  const MINIMUM_UPDATE_INTERVAL = 40;
-  const ATTACK_DAMAGE = 8;
+  const MINIMUM_UPDATE_INTERVAL = 50;
+  const ATTACK_DAMAGE = 10;
   const SEPARATION_RADIUS = 4;
   const SEPARATION_FORCE = 0.15;
   const ARM_DELAY = 300;
@@ -94,11 +94,15 @@ export default function AbominationUnit({
 
   // Immediately sync with provided position
   useEffect(() => {
-    if (position) {
-      targetPosition.current.copy(position);
-      targetPosition.current.y = 0;
+    if (position && isSpawning) {
+      currentPosition.current.copy(position);
+      currentPosition.current.y = 0;
+      targetPosition.current.copy(currentPosition.current);
+      if (enemyRef.current) {
+        enemyRef.current.position.copy(currentPosition.current);
+      }
     }
-  }, [position]);
+  }, [position, isSpawning]);
 
   const getNewWanderTarget = useCallback(() => {
     if (!enemyRef.current) return null;
@@ -165,6 +169,14 @@ export default function AbominationUnit({
         while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
         
         enemyRef.current.rotation.y += rotationDiff * Math.min(1, WANDER_ROTATION_SPEED * delta);
+        
+        const now = Date.now();
+        if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL) {
+          if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD) {
+            onPositionUpdate(id, currentPosition.current.clone());
+            lastUpdateTime.current = now;
+          }
+        }
         
         return;
       }
@@ -237,7 +249,6 @@ export default function AbominationUnit({
       
       enemyRef.current.rotation.y += rotationDiff * Math.min(1, ROTATION_SPEED * delta);
 
-      // Update position with rate limiting
       const now = Date.now();
       if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL) {
         if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD) {
