@@ -36,33 +36,33 @@ export default function LevelCompletionPanel({
     switch (currentWeapon) {
       case WeaponType.SCYTHE:
         return { 
-          r: '/icons/r1.svg', 
-          p: '/icons/p1.svg',
-          s: '/icons/a1.svg'
+          r: '/Eidolon/icons/r1.svg', 
+          p: '/Eidolon/icons/p1.svg',
+          s: '/Eidolon/icons/a1.svg'
         };
       case WeaponType.SWORD:
         return { 
-          r: '/icons/r2.svg', 
-          p: '/icons/p2.svg',
-          s: '/icons/a2.svg'
+          r: '/Eidolon/icons/r2.svg', 
+          p: '/Eidolon/icons/p2.svg',
+          s: '/Eidolon/icons/a2.svg'
         };
       case WeaponType.SABRES:
         return { 
-          r: '/icons/r3.svg', 
-          p: '/icons/p3.svg',
-          s: '/icons/a3.svg'
+          r: '/Eidolon/icons/r3.svg', 
+          p: '/Eidolon/icons/p3.svg',
+          s: '/Eidolon/icons/a3.svg'
         };
       case WeaponType.SPEAR:
         return { 
-          r: '/icons/r4.svg', 
-          p: '/icons/p4.svg',
-          s: '/icons/a4.svg'
+          r: '/Eidolon/icons/r4.svg', 
+          p: '/Eidolon/icons/p4.svg',
+          s: '/Eidolon/icons/a4.svg'
         };
       case WeaponType.BOW:
         return { 
-          r: '/icons/r5.svg', 
-          p: '/icons/p5.svg',
-          s: '/icons/a5.svg'
+          r: '/Eidolon/icons/r5.svg', 
+          p: '/Eidolon/icons/p5.svg',
+          s: '/Eidolon/icons/a5.svg'
         };
     }
   };
