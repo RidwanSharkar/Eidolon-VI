@@ -53,7 +53,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/icons/2.svg"
+                src="/icons/1.svg"
                 alt="Sword"
                 width={240}
                 height={280}
@@ -100,7 +100,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/icons/1.svg"
+                src="/icons/3.svg"
                 alt="Scythe"
                 width={240}
                 height={280}
@@ -147,7 +147,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/icons/3.svg"
+                src="/icons/2.svg"
                 alt="Sabres"
                 width={240}
                 height={280}
@@ -194,7 +194,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/icons/q4.svg"
+                src="/icons/4.svg"
                 alt="Spear"
                 width={240}
                 height={280}
@@ -270,7 +270,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/e3.svg"
+                src="/icons/e5.svg"
                 alt="E Ability"
                 width={80}
                 height={100}

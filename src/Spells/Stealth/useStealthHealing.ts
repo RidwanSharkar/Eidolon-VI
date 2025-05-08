@@ -23,8 +23,8 @@ export const useStealthHealing = ({
   setDamageNumbers,
   nextDamageNumberId
 }: UseStealthHealingProps) => {
-  const STEALTH_KILL_HEAL_AMOUNT = 5;
-  const BACKSTAB_KILL_HEAL_AMOUNT = 7;
+  const STEALTH_KILL_HEAL_AMOUNT = 4;
+  const BACKSTAB_KILL_HEAL_AMOUNT = 4;
 
   const { processHealing } = useHealing({
     currentHealth,

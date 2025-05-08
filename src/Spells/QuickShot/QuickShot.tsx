@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useQuickShotManager } from '../QuickShot/useQuickShotManager';
 import { WeaponType, WEAPON_DAMAGES } from '../../Weapons/weapons';
 import { useEagleEye } from '../EagleEye/useEagleEye';
+import EagleEyeManager from '../EagleEye/EagleEyeManager';
 
 interface QuickShotProps {
   parentRef: React.RefObject<THREE.Group>;
@@ -65,9 +66,12 @@ export const useQuickShot = ({
   isEagleEyeUnlocked
 }: QuickShotProps) => {
   const projectilePool = useRef<ProjectileData[]>([]);
-  const POOL_SIZE = 20;
+  const POOL_SIZE = 7;
   const lastShotTime = useRef(0);
-  const SHOT_DELAY = 188;
+  const SHOT_DELAY = 166;
+  const eagleEyeManagerRef = useRef<{
+    createEagleEyeEffect: (position: Vector3) => void;
+  }>(null);
 
   const { consumeCharge } = useQuickShotManager({
     charges,
@@ -78,7 +82,8 @@ export const useQuickShot = ({
     isUnlocked: isEagleEyeUnlocked,
     setDamageNumbers,
     nextDamageNumberId,
-    onHit
+    onHit,
+    eagleEyeManagerRef
   });
 
   useEffect(() => {
@@ -199,6 +204,8 @@ export const useQuickShot = ({
   return {
     shootQuickShot,
     projectilePool,
-    resetEagleEyeCounter: resetCounter
+    resetEagleEyeCounter: resetCounter,
+    eagleEyeManagerRef,
+    eagleEyeManager: <EagleEyeManager ref={eagleEyeManagerRef} isUnlocked={isEagleEyeUnlocked} />
   };
 }; 

@@ -66,7 +66,7 @@ export default function EnemyUnit({
 
   const ATTACK_RANGE = 2.5;
   const ATTACK_COOLDOWN = 2500;
-  const MOVEMENT_SPEED = 0.045;
+  const MOVEMENT_SPEED = 0.06;
   const POSITION_UPDATE_THRESHOLD = 0.15;
   const MINIMUM_UPDATE_INTERVAL = 40;
   const ATTACK_DAMAGE = 12;

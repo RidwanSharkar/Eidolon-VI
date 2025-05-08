@@ -3,6 +3,7 @@ import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWhirlwindManager } from './useWhirlwindManager';
+import { ReigniteRef } from '../Reignite/Reignite';
 
 interface WhirlwindProps {
   parentRef: React.RefObject<Group>;
@@ -36,6 +37,7 @@ interface WhirlwindProps {
     cooldownStartTime: number | null;
   }>>>;
   onWhirlwindEnd?: () => void;
+  reigniteRef?: React.RefObject<ReigniteRef>;
 }
 
 export default function Whirlwind({
@@ -47,7 +49,8 @@ export default function Whirlwind({
   nextDamageNumberId,
   charges,
   setCharges,
-  onWhirlwindEnd
+  onWhirlwindEnd,
+  reigniteRef
 }: WhirlwindProps) {
   const whirlwindRef = useRef<Group>(null);
   const rotationSpeed = useRef(0);
@@ -112,7 +115,7 @@ export default function Whirlwind({
         if (now - lastHit < 333) return;
 
         const distance = whirlwindRef.current!.position.distanceTo(enemy.position);
-        const maxRange = 6.25; // Spear range
+        const maxRange = 4.85; // Spear range
         
         if (distance <= maxRange) {
           // Sweet spot check (85-100% of max range)
@@ -130,7 +133,16 @@ export default function Whirlwind({
             isCritical = false;
           }
           
+          // Get enemy health before damage
+          const previousHealth = enemy.health;
+          
+          // Apply damage
           onHit(enemy.id, damage);
+          
+          // Check if enemy was killed and process Reignite if needed
+          if (previousHealth > 0 && previousHealth - damage <= 0 && reigniteRef?.current) {
+            reigniteRef.current.processKill();
+          }
           
           setDamageNumbers(prev => [...prev, {
             id: nextDamageNumberId.current++,
@@ -151,7 +163,7 @@ export default function Whirlwind({
         <>
           {/* Whirlwind effect rings - rotated to be parallel to ground */}
           {[0.5, 1, 1.5].map((radius, i) => (
-            <mesh key={i} position={[0, 0.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh key={i} position={[0, -0.25, 0]} rotation={[Math.PI / 2, 0, 0]}>
               <torusGeometry args={[radius * 2, 0.1, 16, 32]} />
               <meshStandardMaterial
                 color={new THREE.Color(0xFF0000)}
@@ -168,10 +180,10 @@ export default function Whirlwind({
           {[...Array(8)].map((_, i) => (
             <mesh
               key={`trail-${i}`}
-              position={[0, 0.5, 0]}
+              position={[0, -0.25, 0]}
               rotation={[0, (i / 8) * Math.PI*2, 0]}
             >
-              <planeGeometry args={[6.75, 0.5]} />
+              <planeGeometry args={[6, 0.25]} />
               <meshStandardMaterial
                 color={new THREE.Color(0xFF0000)}
                 emissive={new THREE.Color(0xFF0000)}

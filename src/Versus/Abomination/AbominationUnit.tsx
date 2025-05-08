@@ -52,9 +52,9 @@ export default function AbominationUnit({
   const velocity = useRef(new Vector3());
   const lastUpdateTime = useRef(Date.now());
 
-  const ATTACK_RANGE = 2.75;
+  const ATTACK_RANGE = 3;
   const ATTACK_COOLDOWN = 3000;
-  const MOVEMENT_SPEED = 0.050;
+  const MOVEMENT_SPEED = 0.0485;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
   const ATTACK_DAMAGE = 10;

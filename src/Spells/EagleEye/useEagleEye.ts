@@ -18,13 +18,17 @@ interface UseEagleEyeProps {
   }>) => void;
   nextDamageNumberId: React.MutableRefObject<number>;
   onHit: (targetId: string, damage: number) => void;
+  eagleEyeManagerRef?: React.RefObject<{
+    createEagleEyeEffect: (position: Vector3) => void;
+  }>;
 }
 
 export function useEagleEye({
   isUnlocked,
   setDamageNumbers,
   nextDamageNumberId,
-  onHit
+  onHit,
+  eagleEyeManagerRef
 }: UseEagleEyeProps) {
   // Track consecutive hits
   const consecutiveHits = useRef(0);
@@ -72,13 +76,15 @@ export function useEagleEye({
       }]);
       
       // Create Eagle Eye visual effect
-      createEagleEyeEffect(/* position: Vector3 */);
+      if (eagleEyeManagerRef?.current) {
+        eagleEyeManagerRef.current.createEagleEyeEffect(position);
+      }
       
       return true;
     }
     
     return false;
-  }, [isUnlocked, onHit, setDamageNumbers, nextDamageNumberId]);
+  }, [isUnlocked, onHit, setDamageNumbers, nextDamageNumberId, eagleEyeManagerRef]);
   
   /**
    * Reset the consecutive hits counter
@@ -86,16 +92,6 @@ export function useEagleEye({
   const resetCounter = useCallback(() => {
     consecutiveHits.current = 0;
   }, []);
-  
-  /**
-   * Create a visual effect for Eagle Eye procs
-   * Note: In a real implementation, this would dispatch an action to create 
-   * the visual effect in the scene
-   */
-  const createEagleEyeEffect = (/* position: Vector3 */) => {
-    // Implementation would be handled in the parent component
-    // This is just a placeholder for the concept
-  };
   
   return {
     processHit,

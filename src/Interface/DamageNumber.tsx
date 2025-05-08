@@ -24,6 +24,8 @@ interface DamageNumberProps {
   isPyroclast?: boolean;
   isEagleEye?: boolean;
   isClusterShot?: boolean;
+  isBreach?: boolean;
+  isBowLightning?: boolean;
   onComplete: () => void;
 }
 
@@ -51,6 +53,8 @@ export default function DamageNumber({
   isPyroclast = false,
   isEagleEye = false,
   isClusterShot = false,
+  isBreach = false,
+  isBowLightning = false,
   onComplete 
 }: DamageNumberProps) {
   const textRef = useRef<TextMesh>(null);
@@ -99,7 +103,7 @@ export default function DamageNumber({
     if (isHealing) return "#338C66";
     if (isChainLightning) return "#ffff00";
     if (isOrbShield) return "#13F3FF"; // 58FCEC
-    if (isEagleEye) return "#ffcc00"; // Gold color for Eagle Eye
+    if (isEagleEye) return "#48FF00"; // venom green
     if (isCritical) return "#FF2D22";  //ff0000
     if (isSummon) return "#B999FF"; // 00FF51 00FF59 NO CRIT FOR TOTEM
     if (isBoneclaw) return "#00FF11"; // 39ff14
@@ -111,6 +115,8 @@ export default function DamageNumber({
     if (isStealthStrike) return "#FF00FF"; // bright magenta for stealth strikes
     if (isPyroclast) return "#FF6A00"; // Orange for Pyroclast
     if (isClusterShot) return "#80ff80"; // Green color for cluster shots
+    if (isBreach) return "#FF6A00"; // Orange color for Breach
+    if (isBowLightning) return "#80D9FF"; // Light blue for bow lightning
     return "#EBEBEB";
   };
 

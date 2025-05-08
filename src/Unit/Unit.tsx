@@ -55,6 +55,13 @@ import Reignite, { ReigniteRef } from '../Spells/Reignite/Reignite';
 import { useClusterShots } from '../Spells/ClusterShots/ClusterShots';
 import { ClusterShots } from '../Spells/ClusterShots/ClusterShots';
 import { DebuffIndicator } from '../Spells/ClusterShots/DebuffIndicator';
+import PyrochargeEffect from '../Spells/Pyroclast/PyrochargeEffect';
+import PyroclastExplosion from '@/Spells/Pyroclast/PyroclastExplosion';
+import Breach from '@/Spells/Breach/Breach';
+import { useBreachController } from '@/Spells/Breach/useBreachController';
+import { useBowLightning } from '@/Spells/BowLightning/useBowLightning';
+import BowLightningStrike from '@/Spells/BowLightning/BowLightningStrike';
+import EagleEyeManager from '@/Spells/EagleEye/EagleEyeManager';
 
 class ObjectPool<T> {
   private pool: T[] = [];
@@ -113,23 +120,7 @@ export default function Unit({
   const nextFireballId = useRef(0);
   const { camera } = useThree();
   const [isBowCharging, setIsBowCharging] = useState(false);
-  const { keys: movementKeys } = useUnitControls({
-    groupRef,
-    controlsRef,
-    camera: camera!,
-    onPositionUpdate,
-    health,
-    isCharging: isBowCharging,
-    onMovementUpdate: (direction: Vector3) => {
-      movementDirection.copy(direction);
-    }
-  });
-
-  // SMITE 
-  const [isSmiting, setIsSmiting] = useState(false);
-  const [smiteEffects, setSmiteEffects] = useState<{ id: number; position: Vector3 }[]>([]);
-  const nextSmiteId = useRef(0);
-
+  
   // DAMAGE NUMBERS 
   const [damageNumbers, setDamageNumbers] = useState<{
     id: number;
@@ -153,6 +144,85 @@ export default function Unit({
     isClusterShot?: boolean;
   }[]>([]);
   
+  const nextDamageNumberId = useRef(0);
+  
+  // ORBITAL CHARGES
+  const [fireballCharges, setFireballCharges] = useState<Array<{
+    id: number;
+    available: boolean;
+    cooldownStartTime: number | null;
+  }>>(() => {
+    const count = WEAPON_ORB_COUNTS[currentWeapon];
+    return Array.from({ length: count }, (_, i) => ({
+      id: i + 1,
+      available: true,
+      cooldownStartTime: null
+    }));
+  });
+  
+  const [activeEffects, setActiveEffects] = useState<Array<{
+    id: number;
+    type: string;
+    position: Vector3;
+    direction: Vector3;
+    duration?: number;
+    startTime?: number;
+  }>>([]);
+  
+  // Add this BEFORE usePyroclast initialization
+  const reigniteRef = useRef<ReigniteRef>(null);
+
+  const {
+    isCharging: isPyroclastActive,
+    chargeStartTime,
+    activeMissiles: pyroclastMissiles,
+    startCharging: startPyroclastCharge,
+    releaseCharge: releasePyroclastCharge,
+    handleMissileImpact: handlePyroclastImpact,
+    checkMissileCollisions: checkPyroclastCollisions
+  } = usePyroclast({
+    parentRef: groupRef,
+    onHit,
+    enemyData,
+    setDamageNumbers,
+    nextDamageNumberId,
+    onImpact: (missileId: number, impactPosition?: Vector3) => {
+      const missile = pyroclastMissiles.find(m => m.id === missileId);
+      if (missile) {
+        setActiveEffects(prev => [...prev, {
+          id: Date.now(),
+          type: 'pyroclastExplosion',
+          position: impactPosition || missile.position.clone(),
+          direction: new Vector3(),
+          duration: 0.3,
+          startTime: Date.now()
+        }]);
+      }
+    },
+    charges: fireballCharges,
+    setCharges: setFireballCharges,
+    reigniteRef: reigniteRef
+  });
+
+  const { keys: movementKeys } = useUnitControls({
+    groupRef,
+    controlsRef,
+    camera: camera!,
+    onPositionUpdate,
+    health,
+    isCharging: isBowCharging || isPyroclastActive,
+    onMovementUpdate: (direction: Vector3) => {
+      movementDirection.copy(direction);
+    },
+    currentWeapon,
+    abilities
+  });
+
+  // SMITE 
+  const [isSmiting, setIsSmiting] = useState(false);
+  const [smiteEffects, setSmiteEffects] = useState<{ id: number; position: Vector3 }[]>([]);
+  const nextSmiteId = useRef(0);
+  
   // Cluster Shots
   const [charges, setCharges] = useState<Array<{
     id: number;
@@ -170,7 +240,6 @@ export default function Unit({
     duration: number;
   }>>([]);
 
-  const nextDamageNumberId = useRef(0);
   const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
 
   // BOW CHARGING
@@ -192,34 +261,8 @@ export default function Unit({
     hitEnemies?: Set<string>;
   }>>([]);
 
-
-  // ORBITAL CHARGES
-  const [fireballCharges, setFireballCharges] = useState<Array<{
-    id: number;
-    available: boolean;
-    cooldownStartTime: number | null;
-  }>>(() => {
-    const count = WEAPON_ORB_COUNTS[currentWeapon];
-    return Array.from({ length: count }, (_, i) => ({
-      id: i + 1,
-      available: true,
-      cooldownStartTime: null
-    }));
-  });
-  const [collectedBones, ] = useState<number>(15); // LATER
-
-
-
   const pendingLightningTargets = useRef<Set<string>>(new Set()); 
-  const [activeEffects, setActiveEffects] = useState<Array<{
-    id: number;
-    type: string;
-    position: Vector3;
-    direction: Vector3;
-    duration?: number;
-    startTime?: number;
-  }>>([]);
-
+  const [collectedBones, ] = useState<number>(15); // LATER
 
   const [isOathstriking, setIsOathstriking] = useState(false);
   const [hasHealedThisSwing, setHasHealedThisSwing] = useState(false);
@@ -229,6 +272,9 @@ export default function Unit({
   const chainLightningRef = useRef<{ processChainLightning: () => void }>(null);
   const lastFrostExplosionTime = useRef(0);
   const FROST_EXPLOSION_COOLDOWN = 1000; // 1 second cooldown between frost explosions
+  
+  // Track Pyroclast charge progress
+  const pyroclastChargeProgress = useRef(0);
 
   // ref for frame-by-frame fireball updates
   const activeFireballsRef = useRef<{
@@ -283,9 +329,6 @@ export default function Unit({
     setDamageNumbers,
     nextDamageNumberId
   });
-
-  // Add this near other refs
-  const reigniteRef = useRef<ReigniteRef>(null);
 
   // Modify handleAttack to use the new stealth system
   const handleAttack = useCallback(
@@ -391,7 +434,7 @@ export default function Unit({
   const whirlwindStartTime = useRef<number | null>(null);
   const WHIRLWIND_MAX_DURATION = 15000; // 1.5 seconds max duration
 
-  const { shootQuickShot, projectilePool: quickShotProjectilesRef, resetEagleEyeCounter } = useQuickShot({
+  const { shootQuickShot, projectilePool: quickShotProjectilesRef, resetEagleEyeCounter, eagleEyeManagerRef } = useQuickShot({
     parentRef: groupRef,
     onHit,
     enemyData,
@@ -400,24 +443,6 @@ export default function Unit({
     charges: fireballCharges,
     setCharges: setFireballCharges,
     isEagleEyeUnlocked: abilities[WeaponType.BOW].passive.isUnlocked
-  });
-
-  // Add the hook
-  const {
-    isCharging: isPyroclastActive,
-    chargeStartTime,
-    activeMissiles: pyroclastMissiles,
-    startCharging: startPyroclastCharge,
-    releaseCharge: releasePyroclastCharge,
-    handleMissileImpact: handlePyroclastImpact,
-    checkMissileCollisions: checkPyroclastCollisions,
-    setChargeProgress: setPyroclastChargeProgress
-  } = usePyroclast({
-    parentRef: groupRef,
-    onHit,
-    enemyData,
-    setDamageNumbers,
-    nextDamageNumberId
   });
 
   //=====================================================================================================
@@ -729,7 +754,7 @@ export default function Unit({
         }
       } else if (currentWeapon === WeaponType.SABRES) {
         // STILL NEED TO FIX THIS TO INDEPENDENT CRIT CHANCE PER SWING
-        isCritical = Math.random() < 0.13;
+        isCritical = Math.random() < 0.15;
         damage = isCritical ? baseDamage * 2 : baseDamage;
       } else {
         // Normal damage calculation for other weapons
@@ -1022,10 +1047,12 @@ export default function Unit({
     // Pyroclast charge progress update
     if (isPyroclastActive) {
       const chargeTime = (Date.now() - chargeStartTime.current!) / 1000;
-      const progress = Math.min(chargeTime / 4, 1);
-      setPyroclastChargeProgress(progress);
+      // Update progress calculation to show it charging up to 8 seconds 
+      const progress = Math.min(chargeTime / 6, 1);
+      pyroclastChargeProgress.current = progress;
       
-      if (progress >= 1) {
+      // Auto-release after 8 seconds (max charge)
+      if (chargeTime >= 6) {
         releasePyroclastCharge();
         onAbilityUse(WeaponType.SPEAR, 'r');
       }
@@ -1074,6 +1101,8 @@ export default function Unit({
   });
 
   const [isVaulting, setIsVaulting] = useState(false);
+  // Add isBreaching state before useAbilityKeys call
+  const [isBreaching, setIsBreaching] = useState(false);
 
   // Initialize ClusterShots hook before useAbilityKeys call
   const {
@@ -1105,6 +1134,16 @@ export default function Unit({
     setDebuffedEnemies,
     setActiveEffects  
   });
+
+  // In the Unit component, add this before useAbilityKeys initialization
+  const { activateBreach } = useBreachController({
+    parentRef: groupRef,
+    charges: fireballCharges,
+    setCharges: setFireballCharges
+  });
+
+  // First, add this near the top of the component:
+  const { activeStrikes, createLightningStrike, removeLightningStrike } = useBowLightning();
 
   useAbilityKeys({
     keys: movementKeys,
@@ -1148,7 +1187,10 @@ export default function Unit({
     startPyroclastCharge,
     releasePyroclastCharge,
     isPyroclastActive,
-    fireClusterShots
+    fireClusterShots,
+    isBreaching,
+    setIsBreaching,
+    activateBreach  // Add this new prop
   });
 
   //=====================================================================================================
@@ -1184,10 +1226,25 @@ export default function Unit({
     // Calculate base damage based on charge level
     let baseDamage;
     if (projectile.power >= 0.99) { // Fully charged
-      baseDamage = 139;
+      baseDamage = 137;
+      
+      // Add bonus damage from Elemental Shots (active ability) if it's unlocked
+      if (abilities[WeaponType.BOW].active.isUnlocked) {
+        // Random damage between 80-200 instead of fixed 100
+        const randomBonus = Math.floor(Math.random() * 121) + 80; // 80-200 range
+        baseDamage += randomBonus;
+      }
     } else {
       // Minimum damage of 41, scaling up with charge
       baseDamage = 37 + Math.floor((projectile.power * 108));
+      
+      // Add bonus damage from Elemental Shots for non-fully charged shots
+      if (abilities[WeaponType.BOW].active.isUnlocked) {
+        baseDamage += 27; // Add 27 bonus damage to non-fully charged shots
+        
+        // Create lightning strike effect
+        createLightningStrike(projectilePosition);
+      }
     }
     
     // Apply critical hit calculation
@@ -1213,6 +1270,7 @@ export default function Unit({
         isCritical: isCritical || isDebuffed, 
         isClusterShot: false,   
         isLightning: false,
+        isBowLightning: !projectile.isFullyCharged && abilities[WeaponType.BOW].active.isUnlocked,
         isHealing: false,
         isBlizzard: false,
         isBoneclaw: false,
@@ -1264,6 +1322,16 @@ export default function Unit({
 
     // Remove the fireball
     handleFireballImpact(fireballId);
+
+    // Add this check for Reignite passive
+    if (targetAfterDamage <= 0) {
+      // Process kill for Reignite if using Spear with passive unlocked
+      if ((currentWeapon as WeaponType) === WeaponType.SPEAR && 
+          abilities[WeaponType.SPEAR].passive.isUnlocked && 
+          reigniteRef.current) {
+        reigniteRef.current.processKill();
+      }
+    }
   };
 
   // POSITION UPDATE 
@@ -1457,6 +1525,39 @@ export default function Unit({
     return () => clearInterval(interval);
   }, []);
 
+  // Add this function after the handleAttack function in Unit.tsx
+  const checkForSpearKillAndProcessReignite = useCallback((
+    targetId: string, 
+    damageFn: (id: string, damage: number) => void, 
+    damage: number
+  ) => {
+    // Only proceed if using Spear with passive unlocked
+    if (currentWeapon !== WeaponType.SPEAR || 
+        !abilities[WeaponType.SPEAR].passive.isUnlocked || 
+        !reigniteRef.current) {
+      damageFn(targetId, damage);
+      return;
+    }
+    
+    // Get the target and store its health before damage
+    const target = enemyData.find(e => e.id === targetId);
+    if (!target) {
+      damageFn(targetId, damage);
+      return;
+    }
+    
+    const previousHealth = target.health;
+    
+    // Apply the damage
+    damageFn(targetId, damage);
+    
+    // Check if the enemy was killed by this hit
+    if (previousHealth > 0 && target.health <= 0) {
+      console.log("[Reignite] Kill detected with Spear ability, processing...");
+      reigniteRef.current.processKill();
+    }
+  }, [currentWeapon, abilities, enemyData, reigniteRef]);
+
   return (
     <>
       <group ref={groupRef} position={[0, 1, 0]}>
@@ -1555,6 +1656,7 @@ export default function Unit({
             onHit={onHit}
             setDamageNumbers={setDamageNumbers}
             nextDamageNumberId={nextDamageNumberId}
+            isWhirlwinding={isWhirlwinding}
           />
         ) : currentWeapon === WeaponType.BOW ? (
           <group position={[0, 0.1, 0.3]}>
@@ -1657,7 +1759,7 @@ export default function Unit({
           >
             {/* Base arrow */}
             <mesh rotation={[Math.PI/2, 0, 0]}>
-              <cylinderGeometry args={[0.03, 0.125, 2.1, 6]} /> {/* Reduced segments */}
+              <cylinderGeometry args={[0.03, 0.125, 2.1, 6]} /> {/* Segments */}
               <meshStandardMaterial
                 color="#00ffff"
                 emissive="#00ffff"
@@ -1667,14 +1769,14 @@ export default function Unit({
               />
             </mesh>
 
-            {/* Reduced number of rings */}
-            {[...Array(3)].map((_, i) => ( // Reduced from 5 to 3 rings
+            {/* Arrow Rings */}
+            {[...Array(3)].map((_, i) => ( 
               <mesh
                 key={`ring-${i}`}
                 position={[0, 0, -i * 0.45 + 0.5]}
                 rotation={[Math.PI, 0, Date.now() * 0.003 + i * Math.PI / 3]}
               >
-                <torusGeometry args={[0.125 + i * 0.04, 0.05, 6, 12]} /> {/* Reduced segments */}
+                <torusGeometry args={[0.125 + i * 0.04, 0.05, 6, 12]} /> {/* Segments */}
                 <meshStandardMaterial
                   color="#00ffff"
                   emissive="#00ffff"
@@ -1711,17 +1813,17 @@ export default function Unit({
               <mesh rotation={[Math.PI/2, 0, 0]}>
                 <cylinderGeometry args={[0.15, 0.35, 2, 4]} /> {/* Reduced segments */}
                 <meshStandardMaterial
-                  color="#EAC4D5"
-                  emissive="#EAC4D5"
-                  emissiveIntensity={1.5}
+                  color={abilities[WeaponType.BOW].active.isUnlocked ? "#ff6a00" : "#EAC4D5"}
+                  emissive={abilities[WeaponType.BOW].active.isUnlocked ? "#ff3300" : "#EAC4D5"}
+                  emissiveIntensity={abilities[WeaponType.BOW].active.isUnlocked ? 2.5 : 1.5}
                   transparent
                   opacity={0.7}
                 />
               </mesh>
 
               {/* Reduced ethereal trails */}
-              {[...Array(4)].map((_, i) => { // Reduced from 8 to 4
-                const angle = (i / 4) * Math.PI * 2;
+              {[...Array(abilities[WeaponType.BOW].active.isUnlocked ? 6 : 4)].map((_, i) => { // More particles if ability unlocked
+                const angle = (i / (abilities[WeaponType.BOW].active.isUnlocked ? 6 : 4)) * Math.PI * 2;
                 const radius = 0.4;
                 return (
                   <group 
@@ -1735,9 +1837,9 @@ export default function Unit({
                     <mesh>
                       <sphereGeometry args={[0.125, 3, 3]} /> {/* Reduced segments */}
                       <meshStandardMaterial
-                        color="#00ffff"
-                        emissive="#00ffff"
-                        emissiveIntensity={1}
+                        color={abilities[WeaponType.BOW].active.isUnlocked ? "#ff5500" : "#00ffff"}
+                        emissive={abilities[WeaponType.BOW].active.isUnlocked ? "#ff3300" : "#00ffff"}
+                        emissiveIntensity={abilities[WeaponType.BOW].active.isUnlocked ? 1.5 : 1}
                         transparent
                         opacity={0.5}
                         blending={THREE.AdditiveBlending}
@@ -1746,6 +1848,37 @@ export default function Unit({
                   </group>
                 );
               })}
+
+              {/* Fire particles for elemental shots */}
+              {abilities[WeaponType.BOW].active.isUnlocked && 
+                [...Array(8)].map((_, i) => {
+                  const angle = Math.random() * Math.PI * 2;
+                  const radius = 0.25 + Math.random() * 0.3;
+                  const offset = -Math.random() * 2.5;
+                  return (
+                    <group 
+                      key={`fire-particle-${i}`}
+                      position={[
+                        Math.sin(angle) * radius,
+                        Math.cos(angle) * radius,
+                        offset
+                      ]}
+                    >
+                      <mesh>
+                        <sphereGeometry args={[0.07 + Math.random() * 0.1, 3, 3]} />
+                        <meshStandardMaterial
+                          color={i % 2 === 0 ? "#ffcc00" : "#ff4400"}
+                          emissive={i % 2 === 0 ? "#ffcc00" : "#ff4400"}
+                          emissiveIntensity={2}
+                          transparent
+                          opacity={0.7}
+                          blending={THREE.AdditiveBlending}
+                        />
+                      </mesh>
+                    </group>
+                  );
+                })
+              }
 
               {/* Reduced ghostly wisps */}
               {[...Array(6)].map((_, i) => { // Reduced from 12 to 6
@@ -1760,9 +1893,9 @@ export default function Unit({
                     <mesh scale={scale}>
                       <torusGeometry args={[0.4, 0.1, 3, 6]} /> {/* Reduced segments */}
                       <meshStandardMaterial
-                        color="#00ffff"
-                        emissive="#00ffff"
-                        emissiveIntensity={1}
+                        color={abilities[WeaponType.BOW].active.isUnlocked ? "#ff7700" : "#00ffff"}
+                        emissive={abilities[WeaponType.BOW].active.isUnlocked ? "#ff5500" : "#00ffff"}
+                        emissiveIntensity={abilities[WeaponType.BOW].active.isUnlocked ? 1.5 : 1}
                         transparent
                         opacity={0.3}
                         blending={THREE.AdditiveBlending}
@@ -1772,11 +1905,11 @@ export default function Unit({
                 );
               })}
 
-              {/* Single light instead of two */}
+              {/* Single light with proper color */}
               <pointLight
-                color="#EAC4D5"
-                intensity={3}
-                distance={5}
+                color={abilities[WeaponType.BOW].active.isUnlocked ? "#ff5500" : "#EAC4D5"}
+                intensity={abilities[WeaponType.BOW].active.isUnlocked ? 5 : 3}
+                distance={abilities[WeaponType.BOW].active.isUnlocked ? 7 : 5}
                 decay={2}
               />
             </group>
@@ -1954,6 +2087,20 @@ export default function Unit({
               
               <pointLight color="#40ff40" intensity={2 * fade} distance={3} decay={2} />
             </group>
+          );
+        } else if (effect.type === 'pyroclastExplosion') {
+          return (
+            <PyroclastExplosion
+              key={effect.id}
+              position={effect.position}
+              chargeTime={1.0} // You might want to pass the actual charge time from the missile
+              explosionStartTime={effect.startTime || null}
+              onComplete={() => {
+                setActiveEffects(prev => 
+                  prev.filter(e => e.id !== effect.id)
+                );
+              }}
+            />
           );
         }
         return null;
@@ -2191,12 +2338,16 @@ export default function Unit({
         <Whirlwind
           parentRef={groupRef}
           isActive={isWhirlwinding}
-          onHit={onHit}
+          onHit={(targetId, damage) => {
+            // Use the centralized function to check for kills
+            checkForSpearKillAndProcessReignite(targetId, onHit, damage);
+          }}
           enemyData={enemyData}
           setDamageNumbers={setDamageNumbers}
           nextDamageNumberId={nextDamageNumberId}
           charges={fireballCharges}
           setCharges={setFireballCharges}
+          reigniteRef={reigniteRef}
         />
       )}
 
@@ -2219,14 +2370,22 @@ export default function Unit({
         />
       )}
 
+      {currentWeapon === WeaponType.SPEAR && isPyroclastActive && (
+        <PyrochargeEffect
+          parentRef={groupRef}
+          isActive={isPyroclastActive}
+          chargeProgress={pyroclastChargeProgress.current}
+        />
+      )}
+
       {pyroclastMissiles.map(missile => (
-        <PyroclastMissile
+        <PyroclastMissile 
           key={missile.id}
-          id={missile.id}  // Add this line
+          id={missile.id}  
           position={missile.position}
           direction={missile.direction}
-          power={missile.power}
-          onImpact={() => handlePyroclastImpact(missile.id)}
+          chargeTime={missile.chargeTime}
+          onImpact={(position) => handlePyroclastImpact(missile.id, position)}
           checkCollisions={(missileId, position) => checkPyroclastCollisions(missileId, position)}
         />
       ))}
@@ -2260,6 +2419,51 @@ export default function Unit({
           />
         );
       })}
+
+      {currentWeapon === WeaponType.SPEAR && 
+       abilities[WeaponType.SPEAR].active.isUnlocked && (
+        <Breach
+          parentRef={groupRef}
+          isActive={isBreaching}
+          onComplete={() => {
+            setIsBreaching(false);
+            onAbilityUse(WeaponType.SPEAR, 'active');
+          }}
+          enemyData={enemyData}
+          onHit={(targetId, damage) => {
+            checkForSpearKillAndProcessReignite(targetId, onHit, damage);
+          }}
+          showDamageNumber={(targetId, damage, position) => {
+            // Apply critical hit calculation for breach damage
+            const { damage: finalDamage, isCritical } = calculateDamage(damage);
+            
+            setDamageNumbers(prev => [...prev, {
+              id: nextDamageNumberId.current++,
+              damage: finalDamage,
+              position: position.clone().add(new Vector3(0, 1.5, 0)), // Raise it a bit
+              isCritical,
+              isBreach: true
+            }]);
+          }}
+          reigniteRef={reigniteRef}
+        />
+      )}
+
+      {/* BowLightning strikes */}
+      {activeStrikes.map(strike => (
+        <BowLightningStrike
+          key={strike.id}
+          position={strike.position}
+          onComplete={() => removeLightningStrike(strike.id)}
+        />
+      ))}
+
+      {currentWeapon === WeaponType.BOW && abilities[WeaponType.BOW].passive.isUnlocked && (
+        <EagleEyeManager 
+          ref={eagleEyeManagerRef}
+          isUnlocked={abilities[WeaponType.BOW].passive.isUnlocked}
+        />
+      )}
     </>
   );
 }

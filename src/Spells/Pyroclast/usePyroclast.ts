@@ -1,6 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Vector3 } from 'three';
 import { Group } from 'three';
+import { ORBITAL_COOLDOWN } from '@/color/ChargedOrbitals';
+import { ReigniteRef } from '../Reignite/Reignite';
 
 interface UsePyroclastProps {
   parentRef: React.RefObject<Group>;
@@ -24,15 +26,37 @@ interface UsePyroclastProps {
     isPyroclast?: boolean;
   }>) => void;
   nextDamageNumberId: { current: number };
+  onImpact?: (missileId: number, impactPosition?: Vector3) => void;
+  charges: Array<{
+    id: number;
+    available: boolean;
+    cooldownStartTime: number | null;
+  }>;
+  setCharges: React.Dispatch<React.SetStateAction<Array<{
+    id: number;
+    available: boolean;
+    cooldownStartTime: number | null;
+  }>>>;
+  reigniteRef?: React.RefObject<ReigniteRef>;
 }
 
-const PYROCLAST_BASE_DAMAGE = 150;
-const PYROCLAST_HIT_RADIUS = 1.5;
+const PYROCLAST_DAMAGE_PER_SECOND = 277;
+const PYROCLAST_MAX_CHARGE_TIME = 4;
+const PYROCLAST_HIT_RADIUS = 3.25;
+const CHARGE_CONSUME_INTERVAL = 500;
 
-function calculatePyroclastDamage(power: number): { damage: number; isCritical: boolean } {
-  const baseDamage = PYROCLAST_BASE_DAMAGE * (power * 4);
-  const damage = Math.floor(baseDamage);
-  const isCritical = power >= 0.99;
+function calculatePyroclastDamage(chargeTimeSeconds: number): { damage: number; isCritical: boolean } {
+  // Clamp charge time between 0.5 and MAX_CHARGE_TIME seconds
+  const clampedChargeTime = Math.max(0.5, Math.min(PYROCLAST_MAX_CHARGE_TIME, chargeTimeSeconds));
+  
+  // Calculate damage linearly: 277 damage per second
+  const damage = Math.floor(clampedChargeTime * PYROCLAST_DAMAGE_PER_SECOND);
+  
+  // Critical if fully charged (4 seconds)
+  const isCritical = clampedChargeTime >= PYROCLAST_MAX_CHARGE_TIME;
+  
+  console.log('Pyroclast damage calculation:', { chargeTimeSeconds, damage, isCritical });
+  
   return { damage, isCritical };
 }
 
@@ -41,7 +65,11 @@ export function usePyroclast({
   onHit,
   enemyData,
   setDamageNumbers,
-  nextDamageNumberId
+  nextDamageNumberId,
+  onImpact,
+  charges,
+  setCharges,
+  reigniteRef
 }: UsePyroclastProps) {
   const [isCharging, setIsCharging] = useState(false);
   const [chargeProgress, setChargeProgress] = useState(0);
@@ -50,10 +78,25 @@ export function usePyroclast({
     id: number;
     position: Vector3;
     direction: Vector3;
-    power: number;
+    chargeTime: number; // Changed from power to chargeTime
     hitEnemies?: Set<string>; // Track enemies that have been hit
   }>>([]);
   const nextMissileId = useRef(0);
+  const lastChargeConsumeTime = useRef<number>(0);
+
+  // Add health tracker for kill detection
+  const enemyHealthTracker = useRef<Record<string, number>>({});
+  
+  // Update health tracker when enemy data changes
+  useEffect(() => {
+    if (enemyData) {
+      enemyData.forEach(enemy => {
+        if (!(enemy.id in enemyHealthTracker.current)) {
+          enemyHealthTracker.current[enemy.id] = enemy.health;
+        }
+      });
+    }
+  }, [enemyData]);
 
   const startCharging = useCallback(() => {
     setIsCharging(true);
@@ -63,8 +106,15 @@ export function usePyroclast({
   const releaseCharge = useCallback(() => {
     if (!parentRef.current || !chargeStartTime.current) return;
 
-    const chargeTime = Math.min((Date.now() - chargeStartTime.current) / 1000, 4);
-    const power = Math.max(chargeTime / 4, 0.25); // Minimum 25% power for 1 second charge
+    const chargeTime = (Date.now() - chargeStartTime.current) / 1000;
+    
+    // Only fire if charged for at least 0.5 seconds
+    if (chargeTime < 0.05) {
+      setIsCharging(false);
+      setChargeProgress(0);
+      chargeStartTime.current = null;
+      return;
+    }
 
     const position = parentRef.current.position.clone();
     position.y += 1;
@@ -77,7 +127,7 @@ export function usePyroclast({
       id: nextMissileId.current++,
       position,
       direction,
-      power,
+      chargeTime, // Store the actual charge time in seconds
       hitEnemies: new Set<string>() // Initialize empty set to track hit enemies
     }]);
 
@@ -86,72 +136,180 @@ export function usePyroclast({
     chargeStartTime.current = null;
   }, [parentRef]);
 
-  const handleMissileImpact = useCallback((missileId: number) => {
+  const handleMissileImpact = useCallback((missileId: number, impactPosition?: Vector3) => {
+    if (onImpact) {
+      onImpact(missileId, impactPosition);
+    }
     setActiveMissiles(prev => prev.filter(missile => missile.id !== missileId));
-  }, []);
+  }, [onImpact]);
 
-  const checkMissileCollisions = useCallback((missileId: number, currentPosition: Vector3) => {
-    // Find the missile in our active missiles array
-    setActiveMissiles(prev => {
-      const missileIndex = prev.findIndex(m => m.id === missileId);
-      if (missileIndex === -1) return prev; // Missile not found
-      
-      const missile = prev[missileIndex];
-      
-      // Update missile position
-      const updatedMissile = {
-        ...missile,
-        position: currentPosition.clone()
-      };
-      
-      // Check for collisions with enemies
-      let hasCollided = false;
-      
-      for (const enemy of enemyData) {
-        if (enemy.health <= 0) continue; // Skip dead enemies
+  const checkMissileCollisions = useCallback((missileId: number, currentPosition: Vector3, previousPosition?: Vector3): boolean => {
+    let collisionOccurred = false;
+    const missile = activeMissiles.find(m => m.id === missileId);
+
+    if (!missile) return false;
+
+    for (const enemy of enemyData) {
+      if (enemy.health <= 0 || missile.hitEnemies?.has(enemy.id)) continue;
+
+      // Check current position
+      const distance = currentPosition.distanceTo(enemy.position);
+      if (distance < PYROCLAST_HIT_RADIUS) {
+        const { damage, isCritical } = calculatePyroclastDamage(missile.chargeTime);
         
-        // Skip enemies we've already hit with this missile
-        if (missile.hitEnemies?.has(enemy.id)) continue;
+        // Store previous health before applying damage
+        const previousHealth = enemyHealthTracker.current[enemy.id] || enemy.health;
         
-        const distance = currentPosition.distanceTo(enemy.position);
-        if (distance < PYROCLAST_HIT_RADIUS) {
-          // Calculate damage
-          const { damage, isCritical } = calculatePyroclastDamage(missile.power);
+        // Apply damage
+        onHit(enemy.id, damage);
+        
+        // Check if the enemy was killed by this hit
+        if (previousHealth > 0 && enemy.health <= 0) {
+          // Enemy was killed by Pyroclast, trigger Reignite
+          if (reigniteRef?.current) {
+            reigniteRef.current.processKill();
+          }
+        }
+        
+        // Update tracked health
+        enemyHealthTracker.current[enemy.id] = enemy.health;
+        
+        setDamageNumbers(prev => [...prev, {
+          id: nextDamageNumberId.current++,
+          damage,
+          position: enemy.position.clone(),
+          isCritical,
+          isPyroclast: true
+        }]);
+        missile.hitEnemies?.add(enemy.id);
+        collisionOccurred = true;
+        console.log(`Pyroclast hit enemy ${enemy.id} for ${damage} damage (charge time: ${missile.chargeTime}s)`);
+        break;
+      }
+
+      // If we have a previous position, also check points along the path
+      if (previousPosition) {
+        const direction = currentPosition.clone().sub(previousPosition);
+        const length = direction.length();
+        const steps = Math.ceil(length / (PYROCLAST_HIT_RADIUS * 0.5));
+        
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const interpolatedPosition = previousPosition.clone().lerp(currentPosition, t);
+          const interpolatedDistance = interpolatedPosition.distanceTo(enemy.position);
           
-          // Apply damage
-          onHit(enemy.id, damage);
-          
-          // Show damage number
-          setDamageNumbers(prev => [...prev, {
-            id: nextDamageNumberId.current++,
-            damage,
-            position: enemy.position.clone(),
-            isCritical,
-            isPyroclast: true
-          }]);
-          
-          // Mark this enemy as hit
-          updatedMissile.hitEnemies?.add(enemy.id);
-          
-          // Flag that we've had a collision
-          hasCollided = true;
-          
-          // Don't break here - allow the missile to potentially hit multiple enemies
+          if (interpolatedDistance < PYROCLAST_HIT_RADIUS) {
+            const { damage, isCritical } = calculatePyroclastDamage(missile.chargeTime);
+            
+            // Store previous health before applying damage
+            const previousHealth = enemyHealthTracker.current[enemy.id] || enemy.health;
+            
+            // Apply damage
+            onHit(enemy.id, damage);
+            
+            // Check if the enemy was killed by this hit
+            if (previousHealth > 0 && enemy.health <= 0) {
+              // Enemy was killed by Pyroclast, trigger Reignite
+              if (reigniteRef?.current) {
+                reigniteRef.current.processKill();
+              }
+            }
+            
+            // Update tracked health
+            enemyHealthTracker.current[enemy.id] = enemy.health;
+            
+            setDamageNumbers(prev => [...prev, {
+              id: nextDamageNumberId.current++,
+              damage,
+              position: enemy.position.clone(),
+              isCritical,
+              isPyroclast: true
+            }]);
+            missile.hitEnemies?.add(enemy.id);
+            collisionOccurred = true;
+            console.log(`Pyroclast hit enemy ${enemy.id} for ${damage} damage (charge time: ${missile.chargeTime}s)`);
+            break;
+          }
         }
       }
-      
-      // If we had a collision, remove the missile after processing all potential hits
-      if (hasCollided) {
-        // Remove this missile from the array
-        return prev.filter(m => m.id !== missileId);
-      }
-      
-      // Otherwise update the missile position and return the updated array
-      const newMissiles = [...prev];
-      newMissiles[missileIndex] = updatedMissile;
-      return newMissiles;
+    }
+
+    return collisionOccurred;
+  }, [activeMissiles, enemyData, onHit, setDamageNumbers, nextDamageNumberId, reigniteRef]);
+
+  const consumeCharge = useCallback(() => {
+    const now = Date.now();
+    if (now - lastChargeConsumeTime.current < CHARGE_CONSUME_INTERVAL) {
+      return false;
+    }
+
+    const availableChargeIndex = charges.findIndex(charge => charge.available);
+    if (availableChargeIndex === -1) {
+      // Force release and reset charging state
+      releaseCharge();
+      setIsCharging(false);
+      setChargeProgress(0);
+      chargeStartTime.current = null;
+      return false;
+    }
+
+    lastChargeConsumeTime.current = now;
+
+    setCharges(prev => {
+      const newCharges = [...prev];
+      newCharges[availableChargeIndex] = {
+        ...newCharges[availableChargeIndex],
+        available: false,
+        cooldownStartTime: now
+      };
+      return newCharges;
     });
-  }, [enemyData, onHit, setDamageNumbers, nextDamageNumberId]);
+
+    setTimeout(() => {
+      setCharges(prev => {
+        const newCharges = [...prev];
+        newCharges[availableChargeIndex] = {
+          ...newCharges[availableChargeIndex],
+          available: true,
+          cooldownStartTime: null
+        };
+        return newCharges;
+      });
+    }, ORBITAL_COOLDOWN);
+
+    return true;
+  }, [charges, setCharges, releaseCharge]);
+
+  useEffect(() => {
+    if (isCharging) {
+      const hasAvailableCharges = charges.some(charge => charge.available);
+      if (!hasAvailableCharges) {
+        // Force release if no charges available
+        releaseCharge();
+        setIsCharging(false);
+        setChargeProgress(0);
+        chargeStartTime.current = null;
+      }
+    }
+  }, [isCharging, charges, releaseCharge]);
+
+  useEffect(() => {
+    if (isCharging) {
+      // Check if we have any charges available
+      const hasAvailableCharges = charges.some(charge => charge.available);
+      if (!hasAvailableCharges) {
+        releaseCharge();
+        return;
+      }
+
+      // Consume first charge immediately
+      consumeCharge();
+      
+      // Set up interval for subsequent charges
+      const interval = setInterval(consumeCharge, CHARGE_CONSUME_INTERVAL);
+      return () => clearInterval(interval);
+    }
+  }, [isCharging, consumeCharge, charges, releaseCharge]);
 
   return {
     isCharging,
@@ -162,6 +320,8 @@ export function usePyroclast({
     handleMissileImpact,
     checkMissileCollisions,
     setChargeProgress,
-    chargeStartTime
+    chargeStartTime,
+    charges,
+    setCharges
   };
 }

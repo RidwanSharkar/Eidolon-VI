@@ -227,6 +227,9 @@ export default function Panel({
                       isActive={true}
                     />
                   </div>
+                ) : (key === 'active' && currentWeapon === WeaponType.BOW) ? (
+                  // No cooldown overlay for Bow's passive ability
+                  null
                 ) : ability.currentCooldown > 0 && (
                   <div className={styles.cooldownOverlay}>
                     <RoundedSquareProgress

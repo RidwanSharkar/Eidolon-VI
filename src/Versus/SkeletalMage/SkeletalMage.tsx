@@ -77,16 +77,16 @@ export default function SkeletalMage({
   const velocity = useRef(new Vector3());
 
   const ATTACK_RANGE = 20;
-  const MOVEMENT_SPEED = 0.030;
+  const MOVEMENT_SPEED = 0.035;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 35;
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.155;
-  const FIREBALL_COOLDOWN = 4250;
-  const FIREBALL_DAMAGE = 18;
+  const FIREBALL_COOLDOWN = 3500;
+  const FIREBALL_DAMAGE = 22;
   const ACCELERATION = 6.0;
-  const DECELERATION = 8.0;
-  const ROTATION_SPEED = 8.0;
+  const DECELERATION = 7.0;
+  const ROTATION_SPEED = 7.0;
 
   // Add these constants near the other ones (after line 89)
   const WANDER_DURATION = 4500;

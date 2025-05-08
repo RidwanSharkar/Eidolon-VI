@@ -66,6 +66,9 @@ interface UseAbilityKeysProps {
   releasePyroclastCharge: () => void;
   isPyroclastActive: boolean;
   fireClusterShots: () => boolean;
+  isBreaching: boolean;
+  setIsBreaching: (value: boolean) => void;
+  activateBreach: () => boolean;
 }
 
 export function useAbilityKeys({
@@ -108,6 +111,9 @@ export function useAbilityKeys({
   startPyroclastCharge,
   releasePyroclastCharge,
   fireClusterShots,
+  isBreaching,
+  setIsBreaching,
+  activateBreach,
 }: UseAbilityKeysProps) {
   // Ref to track the last Q usage time
   const lastQUsageTime = useRef(0);
@@ -124,6 +130,11 @@ export function useAbilityKeys({
     const now = Date.now();
     if (now - lastAttackTime.current < ATTACK_DEBOUNCE) return false;
     
+    // Prevent using spear Q ability during whirlwind
+    if (currentWeapon === WeaponType.SPEAR && isWhirlwinding) {
+      return false;
+    }
+    
     const qAbility = abilities[currentWeapon].q;
     if (qAbility.currentCooldown <= 0 && !isSwinging) {
       lastAttackTime.current = now;
@@ -133,7 +144,7 @@ export function useAbilityKeys({
       return true;
     }
     return false;
-  }, [abilities, currentWeapon, isSwinging, onAbilityUse, setIsSwinging, ATTACK_DEBOUNCE]);
+  }, [abilities, currentWeapon, isSwinging, onAbilityUse, setIsSwinging, ATTACK_DEBOUNCE, isWhirlwinding]);
 
   // Update isGameOver when health reaches 0
   useEffect(() => {
@@ -159,7 +170,7 @@ export function useAbilityKeys({
       if (key === 'q') {
         if (currentWeapon === WeaponType.BOW) {
           shootQuickShot();
-        } else if (!keys.current['mouse0'] && !isSwinging) {  // Add isSwinging check
+        } else if (!keys.current['mouse0'] && !isSwinging && !(currentWeapon === WeaponType.SPEAR && isWhirlwinding)) {
           tryAttack();
         }
       }
@@ -247,20 +258,24 @@ export function useAbilityKeys({
                 ...prev,
                 {
                   id: summonId,
-                  type: 'summon',  // main effect that controls the totem
+                  type: 'summon',
                   position: groupRef.current!.position.clone(),
                   direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
-                  onComplete: () => {
-                  },
-                  onStartCooldown: () => {
-                  }
+                  onComplete: () => {},
+                  onStartCooldown: () => {}
                 }
               ];
             });
             onAbilityUse(currentWeapon, 'active');
           } else if (currentWeapon === WeaponType.BOW) {
-            if (fireClusterShots()) {
-              onAbilityUse(currentWeapon, 'active');
+            // SWITCHED TO PASSIVE behavior for Bow's active ability
+          } else if (currentWeapon === WeaponType.SPEAR) {
+            if (!isBreaching) {
+              const breachActivated = activateBreach();
+              if (breachActivated) {
+                setIsBreaching(true);
+                onAbilityUse(currentWeapon, 'active');
+              }
             }
           }
         }
@@ -312,7 +327,11 @@ export function useAbilityKeys({
               break;
             case WeaponType.SPEAR:
               if (!isPyroclastActive) {
-                startPyroclastCharge();
+                // Check if we have at least 2 available charges before starting
+                const availableChargesCount = fireballCharges.filter(charge => charge.available).length;
+                if (availableChargesCount >= 2) {
+                  startPyroclastCharge();
+                }
               }
               break;
           }
@@ -402,6 +421,9 @@ export function useAbilityKeys({
     startPyroclastCharge,
     releasePyroclastCharge,
     fireClusterShots,
+    isBreaching,
+    setIsBreaching,
+    activateBreach,
   ]);
 
   // Mouse event handlers to check game over state
@@ -429,7 +451,7 @@ export function useAbilityKeys({
     };
   }, [keys]);
 
-  // Near the top with other refs
+
   const attackDebounceRef = useRef(ATTACK_DEBOUNCE);
 
   // Update the ref when ATTACK_DEBOUNCE changes
@@ -442,13 +464,16 @@ export function useAbilityKeys({
     const attackInterval = setInterval(() => {
       if (isGameOver.current || !keys.current || isSwinging) return;
       
+      // Don't attack during whirlwind for Spear
+      if (currentWeapon === WeaponType.SPEAR && isWhirlwinding) return;
+      
       if (keys.current['mouse0']) {
         tryAttack();
       }
     }, 50);
 
     return () => clearInterval(attackInterval);
-  }, [tryAttack, keys, isSwinging]);
+  }, [tryAttack, keys, isSwinging, currentWeapon, isWhirlwinding]);
 
   useEffect(() => {
     const handleGameOver = () => {

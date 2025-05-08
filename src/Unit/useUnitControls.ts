@@ -6,6 +6,7 @@ import type { Group } from 'three';
 import type { Camera } from 'three';
 import { OrbitControls } from 'three-stdlib';
 import { stealthManager } from '@/Spells/Stealth/StealthManager';
+import { WeaponType } from '@/Weapons/weapons';
 
 interface UseUnitControlsProps {
   groupRef: React.RefObject<Group>;
@@ -16,6 +17,8 @@ interface UseUnitControlsProps {
   health: number;
   isCharging?: boolean;
   onMovementUpdate?: (direction: Vector3) => void;
+  currentWeapon: WeaponType;
+  abilities: Record<WeaponType, { active?: { isUnlocked: boolean } }>;
 }
 
 const PLAY_AREA_RADIUS = 28 // MAP BOUNDARY
@@ -26,8 +29,8 @@ const BASE_SPEED = 3.6; // MOVEMENT_SPEED
 // Direction multipliers
 const BACKWARD_SPEED_MULTIPLIER = 0.6; // 60% speed moving backward
 const STRAFE_SPEED_MULTIPLIER = 0.85;   // 80% speed moving sideways
-const CHARGING_MULTIPLIER = 0.05;      // 4% speed while charging bow
-const STEALTH_SPEED_MULTIPLIER = 1.6; // 130% speed while stealthed
+const BASE_ABILITY_CHARGING_MULTIPLIER = 0.10; // Default charging speed
+const STEALTH_SPEED_MULTIPLIER = 1.7; // 130% speed while stealthed
 
 export function useUnitControls({
   groupRef,
@@ -37,7 +40,9 @@ export function useUnitControls({
   onPositionUpdate,
   health,
   isCharging = false,
-  onMovementUpdate
+  onMovementUpdate,
+  currentWeapon,
+  abilities
 }: UseUnitControlsProps) {
   const keys = useRef({
     w: false,
@@ -49,6 +54,10 @@ export function useUnitControls({
 
   const isGameOver = useRef(false);
   const movementDirection = useRef(new Vector3());
+
+  // Inside the function, calculate the actual multiplier based on parameters
+  const ABILITY_CHARGING_MULTIPLIER = currentWeapon === WeaponType.BOW && 
+    abilities?.[WeaponType.BOW]?.active?.isUnlocked ? 0.60 : BASE_ABILITY_CHARGING_MULTIPLIER;
 
   useEffect(() => {
     if (health <= 0) {
@@ -130,9 +139,9 @@ export function useUnitControls({
         frameSpeed *= STRAFE_SPEED_MULTIPLIER;
       }
 
-      // Apply charging multiplier if charging
+      // Apply charging multiplier if charging any ability
       if (isCharging) {
-        frameSpeed *= CHARGING_MULTIPLIER;
+        frameSpeed *= ABILITY_CHARGING_MULTIPLIER;
       }
 
       // Add stealth speed boost if stealthed

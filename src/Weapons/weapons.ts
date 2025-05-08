@@ -62,7 +62,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SPEAR]: {
     normal: 29,
-    range: 6.25,
+    range: 6,
     maxHitsPerSwing: 1
   },
   [WeaponType.BOW]: {
@@ -82,7 +82,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   }, 
 
   [WeaponType.SWORD]: {
-    q: { type: 'q', key: 'q', cooldown: 1, currentCooldown: 0, icon: '/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 1.1, currentCooldown: 0, icon: '/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 3.85, currentCooldown: 0, icon: '/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: '/icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
     passive: {  type: 'passive', key: '1',  cooldown: 0,  currentCooldown: 0,  icon: '/icons/p2.svg', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: false },
@@ -100,7 +100,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SPEAR]: {
     q: { type: 'q', key: 'q', cooldown: 0.775, currentCooldown: 0, icon: '/icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 5, currentCooldown: 0, icon: '/icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 4.5, currentCooldown: 0, icon: '/icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: false },
+    r: { type: 'r', key: 'r', cooldown: 2.5, currentCooldown: 0, icon: '/icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: false },
     passive: { 
       type: 'passive', 
       key: '1', 
@@ -111,15 +111,15 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
       name: 'Reignite', 
       isUnlocked: false 
     },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: '/icons/a4.svg', maxCooldown: 0, name: 'Spear Active', isUnlocked: false }
+    active: { type: 'active', key: '2', cooldown: 4, currentCooldown: 0, icon: '/icons/a4.svg', maxCooldown: 8, name: 'Breach', isUnlocked: false }
   },
 
   [WeaponType.BOW]: {
     q: { type: 'q', key: 'q', cooldown: 0.25, currentCooldown: 0, icon: '/icons/q5.svg', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.5, currentCooldown: 0, icon: '/icons/e3.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 8, currentCooldown: 0, icon: '/icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/icons/p5.svg', maxCooldown: 0, name: 'Eagle Eye', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: '/icons/a5.svg', maxCooldown: 5, name: 'Cluster Shots', isUnlocked: false }
+    e: { type: 'e', key: 'e', cooldown: 0.5, currentCooldown: 0, icon: '/icons/e5.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 5, currentCooldown: 0, icon: '/icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: false },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: '/icons/p5.svg', maxCooldown: 0, name: 'Venom Shots', isUnlocked: false },
+    active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: '/icons/a5.svg', maxCooldown: 5, name: 'Elemental Shots', isUnlocked: false }
   },
 }; 
 
@@ -244,14 +244,14 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       title: "Spear Thrust",
       description: "Long-range piercing thrust attack",
       cost: "Cooldown: 0.85 seconds",
-      range: "Range: 6.25 feet",
+      range: "Range: 6 feet",
       damage: "Damage: 27"
     },
     e: {
       title: "Whirlwind",
       description: "Spin attack that hits all surrounding enemies",
       cost: "Cooldown: 0.95 seconds",
-      range: "Range: 6.25 feet",
+      range: "Range: 5.75 feet",
       damage: "Damage: 31"
     },
     r: {
@@ -265,8 +265,10 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       description: "Passive: Restores 1 orb charge whenever you kill an enemy"
     },
     active: {
-      title: "Spear Mastery",
-      description: "Active: Next attack deals bonus damage based on distance to target"
+      title: "Breach",
+      description: "Quickly dash forward, covering significant distance to engage or escape combat.",
+      cost: "Cooldown: 8 seconds",
+      range: "Distance: 10 feet",
     }
   },
   [WeaponType.BOW]: {
@@ -296,11 +298,10 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       description: "Passive: Every 3rd shot that hits a target deals an additional 70 damage."
     },
     active: {
-      title: "Cluster Shots",
-      description: "Fires a conical blast of arrows that deal damage and apply a 5-second debuff. Debuffed enemies take increased damage from bow shots.",
-      cost: "2 orb charges",
-      range: "15 feet",
-      damage: "50 per arrow + debuff effect"
+      title: "Elemental Shots",
+      description: "Fully charged shots deal an additional 100 damage. Non-fully charged shots deal 20 additional damage and call down a lightning bolt on the target.",
+      cost: "Passive",
+      damage: "+100 to fully charged shots, +20 to regular shots"
     }
   },
 }; 

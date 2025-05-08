@@ -25,7 +25,7 @@ export function useWhirlwindManager({
   onWhirlwindEnd
 }: UseWhirlwindManagerProps) {
   const lastChargeConsumeTime = useRef<number>(0);
-  const CHARGE_CONSUME_INTERVAL = 1000; // 1 second
+  const CHARGE_CONSUME_INTERVAL = 980; // 1 second
 
   // Add check for available charges
   useEffect(() => {
