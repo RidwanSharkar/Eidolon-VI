@@ -82,25 +82,25 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   }, 
 
   [WeaponType.SWORD]: {
-    q: { type: 'q', key: 'q', cooldown: 1.1, currentCooldown: 0, icon: 'Eidolon/icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 3.85, currentCooldown: 0, icon: 'Eidolon/icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: 'Eidolon/icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
-    passive: {  type: 'passive', key: '1',  cooldown: 0,  currentCooldown: 0,  icon: 'Eidolon/icons/p2.svg', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'Eidolon/icons/a2.svg', maxCooldown: 0, name: 'Sword Active', isUnlocked: false }
+    q: { type: 'q', key: 'q', cooldown: 1.1, currentCooldown: 0, icon: 'icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 3.85, currentCooldown: 0, icon: 'icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: 'icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
+    passive: {  type: 'passive', key: '1',  cooldown: 0,  currentCooldown: 0,  icon: 'icons/p2.svg', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: false },
+    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a2.svg', maxCooldown: 0, name: 'Sword Active', isUnlocked: false }
   },
   
   [WeaponType.SABRES]: {
-    q: { type: 'q', key: 'q', cooldown: 0.625, currentCooldown: 0, icon: 'Eidolon/icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 6, currentCooldown: 0, icon: 'Eidolon/icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: 'Eidolon/icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'Eidolon/icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'Eidolon/icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
+    q: { type: 'q', key: 'q', cooldown: 0.625, currentCooldown: 0, icon: 'icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 6, currentCooldown: 0, icon: 'icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: 'icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
+    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
   },
 
   [WeaponType.SPEAR]: {
-    q: { type: 'q', key: 'q', cooldown: 0.775, currentCooldown: 0, icon: 'Eidolon/icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 5, currentCooldown: 0, icon: 'Eidolon/icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 2.5, currentCooldown: 0, icon: 'Eidolon/icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: false },
+    q: { type: 'q', key: 'q', cooldown: 0.775, currentCooldown: 0, icon: 'icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 5, currentCooldown: 0, icon: 'icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 2.5, currentCooldown: 0, icon: 'icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: false },
     passive: { 
       type: 'passive', 
       key: '1', 
@@ -111,15 +111,15 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
       name: 'Reignite', 
       isUnlocked: false 
     },
-    active: { type: 'active', key: '2', cooldown: 4, currentCooldown: 0, icon: 'Eidolon/icons/a4.svg', maxCooldown: 8, name: 'Breach', isUnlocked: false }
+    active: { type: 'active', key: '2', cooldown: 4, currentCooldown: 0, icon: 'icons/a4.svg', maxCooldown: 8, name: 'Breach', isUnlocked: false }
   },
 
   [WeaponType.BOW]: {
-    q: { type: 'q', key: 'q', cooldown: 0.25, currentCooldown: 0, icon: 'Eidolon/icons/q5.svg', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.5, currentCooldown: 0, icon: 'Eidolon/icons/e5.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 5, currentCooldown: 0, icon: 'Eidolon/icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'Eidolon/icons/p5.svg', maxCooldown: 0, name: 'Venom Shots', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: 'Eidolon/icons/a5.svg', maxCooldown: 5, name: 'Elemental Shots', isUnlocked: false }
+    q: { type: 'q', key: 'q', cooldown: 0.25, currentCooldown: 0, icon: 'icons/q5.svg', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 0.5, currentCooldown: 0, icon: 'icons/e5.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: false },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p5.svg', maxCooldown: 0, name: 'Venom Shots', isUnlocked: false },
+    active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: 'icons/a5.svg', maxCooldown: 5, name: 'Elemental Shots', isUnlocked: false }
   },
 }; 
 
