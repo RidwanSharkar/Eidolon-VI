@@ -53,7 +53,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/icons/1.svg"
+                src="/Eidolon/icons/1.svg"
                 alt="Sword"
                 width={240}
                 height={280}
@@ -68,7 +68,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/q2.svg"
+                src="/Eidolon/icons/q2.svg"
                 alt="Q Ability"
                 width={80}
                 height={100}
@@ -82,7 +82,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/e2.svg"
+                src="/Eidolon/icons/e2.svg"
                 alt="E Ability"
                 width={80}
                 height={100}
@@ -100,7 +100,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/icons/3.svg"
+                src="/Eidolon/icons/3.svg"
                 alt="Scythe"
                 width={240}
                 height={280}
@@ -115,7 +115,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/q1.svg"
+                src="/Eidolon/icons/q1.svg"
                 alt="Q Ability"
                 width={80}
                 height={100}
@@ -129,7 +129,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/e1.svg"
+                src="/Eidolon/icons/e1.svg"
                 alt="E Ability"
                 width={80}
                 height={100}
@@ -147,7 +147,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/icons/2.svg"
+                src="/Eidolon/icons/2.svg"
                 alt="Sabres"
                 width={240}
                 height={280}
@@ -162,7 +162,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/q3.svg"
+                src="/Eidolon/icons/q3.svg"
                 alt="Q Ability"
                 width={80}
                 height={100}
@@ -176,7 +176,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/e3.svg"
+                src="/Eidolon/icons/e3.svg"
                 alt="E Ability"
                 width={80}
                 height={100}
@@ -194,7 +194,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/icons/4.svg"
+                src="/Eidolon/icons/4.svg"
                 alt="Spear"
                 width={240}
                 height={280}
@@ -209,7 +209,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/q4.svg"
+                src="/Eidolon/icons/q4.svg"
                 alt="Q Ability"
                 width={80}
                 height={100}
@@ -223,7 +223,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/e4.svg"
+                src="/Eidolon/icons/e4.svg"
                 alt="E Ability"
                 width={80}
                 height={100}
@@ -241,7 +241,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src="/icons/5.svg"
+                src="/Eidolon/icons/5.svg"
                 alt="Bow"
                 width={240}
                 height={280}
@@ -256,7 +256,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/q5.svg"
+                src="/Eidolon/icons/q5.svg"
                 alt="Q Ability"
                 width={80}
                 height={100}
@@ -270,7 +270,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src="/icons/e5.svg"
+                src="/Eidolon/icons/e5.svg"
                 alt="E Ability"
                 width={80}
                 height={100}
