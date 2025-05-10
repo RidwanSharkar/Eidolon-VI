@@ -46,9 +46,16 @@ export default function PyroclastMissile({
 
     // Check collisions each frame with current position
     if (checkCollisions) {
+      // Store previous position before checking collisions
+      const prevPosition = startPosition.current.clone();
+      
+      // Log both previous and current positions to help track movement
+      console.log(`[PyroclastMissile] Missile ${id} moved from ${prevPosition.x.toFixed(2)}, ${prevPosition.y.toFixed(2)}, ${prevPosition.z.toFixed(2)} to ${missileRef.current.position.x.toFixed(2)}, ${missileRef.current.position.y.toFixed(2)}, ${missileRef.current.position.z.toFixed(2)}`);
+      
       const hitSomething = checkCollisions(id, missileRef.current.position.clone());
       
       if (hitSomething) {
+        console.log(`[PyroclastMissile] Missile ${id} hit something, creating explosion`);
         hasCollided.current = true;
         setImpactPosition(missileRef.current.position.clone());
         setExplosionStartTime(Date.now());
@@ -63,6 +70,7 @@ export default function PyroclastMissile({
     // Check max distance (40 units)
     if (missileRef.current.position.distanceTo(startPosition.current) > 40) {
       if (!hasCollided.current) {
+        console.log(`[PyroclastMissile] Missile ${id} reached max distance, creating explosion`);
         hasCollided.current = true;
         setImpactPosition(missileRef.current.position.clone());
         setExplosionStartTime(Date.now());
@@ -94,23 +102,62 @@ export default function PyroclastMissile({
       {!hasCollided.current && (
         <group ref={missileRef} position={position.toArray()}>
           {/* Core missile */}
-          <mesh rotation={[0, Math.atan2(direction.x, direction.z), 0]}>
-            <cylinderGeometry args={[0.2 * scale, 0.4 * scale, 2 * scale, 6]} />
-            <meshStandardMaterial
-              color="#FF544E"
-              emissive="#FF544E"
-              emissiveIntensity={intensity}
-              transparent
-              opacity={0.9}
-            />
-          </mesh>
+          <group>
+            <mesh 
+              rotation={[0, 0, 0]}
+              onUpdate={(self) => {
+                // Calculate quaternion to align with direction
+                const alignAxis = new THREE.Vector3(0, 1, 0);
+                const targetQuaternion = new THREE.Quaternion().setFromUnitVectors(
+                  alignAxis, 
+                  direction.clone().normalize()
+                );
+                self.quaternion.copy(targetQuaternion);
+              }}
+            >
+              <cylinderGeometry args={[0.2 * scale, 0.4 * scale, 2 * scale, 6]} />
+              <meshStandardMaterial
+                color="#FF544E"
+                emissive="#FF544E"
+                emissiveIntensity={intensity}
+                transparent
+                opacity={0.9}
+              />
+            </mesh>
+          </group>
 
           {/* Flame trail */}
           {[...Array(4)].map((_, i) => (
             <mesh
               key={i}
               position={[0, 0, -i * 0.5]}
-              rotation={[0, Math.random() * Math.PI * 2, 0]}
+              onUpdate={(self) => {
+                // For rings to be perpendicular to the projectile direction
+                const dirNormalized = direction.clone().normalize();
+                
+                // Start with a quaternion that aligns with the missile direction
+                const alignQuaternion = new THREE.Quaternion().setFromUnitVectors(
+                  new THREE.Vector3(0, 1, 0),
+                  dirNormalized
+                );
+                
+                // Create perpendicular rotation (90 degrees around X axis)
+                const perpRotation = new THREE.Quaternion().setFromAxisAngle(
+                  new THREE.Vector3(0, 1, 1),
+                  -Math.PI / 2  // Negative rotation to correct alignment
+                );
+                
+                // Apply rotations in the correct order
+                self.quaternion.copy(perpRotation).multiply(alignQuaternion);
+                
+                // Add very subtle random rotation for variety
+                const randomRotation = new THREE.Quaternion().setFromAxisAngle(
+                  dirNormalized,
+                  Math.random() * Math.PI * 0.05  // Even smaller random variation
+                );
+                
+                self.quaternion.multiply(randomRotation);
+              }}
             >
               <torusGeometry args={[0.3 * scale + (i * 0.1), 0.1, 6, 12]} />
               <meshStandardMaterial

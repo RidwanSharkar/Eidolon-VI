@@ -18,6 +18,7 @@ import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMag
 import { MemoizedAbominationUnit } from '../Versus/Abomination/MemoizedAbomination';
 import { ObjectPool } from './ObjectPool';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
+import InstancedVegetation from '../Environment/InstancedVegetation';
 import Pillar from '../Environment/Pillar';
 import { initializeSharedResources, sharedGeometries, sharedMaterials, disposeSharedResources } from './SharedResources';
 
@@ -613,6 +614,7 @@ export default function Scene3({
         <Planet />
 
         <Terrain />
+        <InstancedVegetation />
         
         {/* Add Pillar in center */}
         <Pillar />

@@ -222,7 +222,7 @@ export function useAbilityKeys({
                 if (hasAvailableCharges) {
                   setIsWhirlwinding(true);
                   whirlwindStartTime.current = Date.now();
-                } else {
+                  onAbilityUse(currentWeapon, 'e');
                 }
               }
               break;
@@ -494,4 +494,17 @@ export function useAbilityKeys({
     };
   }, []);
 
+  // Add a useEffect that monitors fireballCharges to detect when all charges are depleted during whirlwind
+  useEffect(() => {
+    // Check if whirlwind is active but there are no charges available
+    if (isWhirlwinding && currentWeapon === WeaponType.SPEAR) {
+      const hasAvailableCharges = fireballCharges.some(charge => charge.available);
+      if (!hasAvailableCharges) {
+        // End whirlwind and trigger cooldown
+        setIsWhirlwinding(false);
+        whirlwindStartTime.current = null;
+        onAbilityUse(currentWeapon, 'e');
+      }
+    }
+  }, [fireballCharges, isWhirlwinding, currentWeapon, setIsWhirlwinding, whirlwindStartTime, onAbilityUse]);
 }

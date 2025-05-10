@@ -64,12 +64,12 @@ export default function EnemyUnit({
   const velocity = useRef(new Vector3());
   const targetRotation = useRef(0);
 
-  const ATTACK_RANGE = 2.5;
+  const ATTACK_RANGE = 2.4;
   const ATTACK_COOLDOWN = 2500;
   const MOVEMENT_SPEED = 0.06;
   const POSITION_UPDATE_THRESHOLD = 0.15;
   const MINIMUM_UPDATE_INTERVAL = 40;
-  const ATTACK_DAMAGE = 12;
+  const ATTACK_DAMAGE = 10;
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.155;
   const ACCELERATION = 3.0;
@@ -79,10 +79,10 @@ export default function EnemyUnit({
   // Add new refs for wandering behavior
   const wanderTarget = useRef<Vector3 | null>(null);
   const wanderStartTime = useRef<number>(Date.now());
-  const WANDER_DURATION = 4500; // Increased from 3000 to make changes less frequent
-  const WANDER_RADIUS = 5;
+  const WANDER_DURATION = 4500; 
+  const WANDER_RADIUS = 6;
   const WANDER_ROTATION_SPEED = 2.5;
-  const WANDER_MOVEMENT_SPEED = 0.015;
+  const WANDER_MOVEMENT_SPEED = 0.0175;
   
   const getNewWanderTarget = useCallback(() => {
     if (!enemyRef.current) return null;
@@ -320,10 +320,10 @@ export default function EnemyUnit({
           // 3. Enemy hasn't moved too far from attack start position
           if (currentHealth.current > 0 && 
               finalDistanceToPlayer <= ATTACK_RANGE && 
-              attackStartPosition.distanceTo(currentPosition.current) < 0.75) { // leeway distance 
+              attackStartPosition.distanceTo(currentPosition.current) < 0.55) { // leeway distance 
             onAttackPlayer(ATTACK_DAMAGE);
           }
-        }, 935); // REACTION TIME 
+        }, 1250); // REACTION TIME 
         
         lastAttackTime.current = currentTime;
 

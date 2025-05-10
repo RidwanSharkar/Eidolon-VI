@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Vector3, Group } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ReigniteRef } from '../Reignite/Reignite';
 
 // Import the constant from useUnitControls or define it here
-const PLAY_AREA_RADIUS = 28; // MAP BOUNDARY (same as in useUnitControls)
+const PLAY_AREA_RADIUS = 28.5; // MAP BOUNDARY (same as in useUnitControls)
 
 interface BreachProps {
   parentRef: React.RefObject<Group>;
@@ -17,7 +17,7 @@ interface BreachProps {
     health: number;
   }>;
   onHit?: (targetId: string, damage: number) => void;
-  showDamageNumber?: (targetId: string, damage: number, position: Vector3) => void;
+  showDamageNumber?: (targetId: string, damage: number, position: Vector3, isBreach: boolean) => void;
   reigniteRef?: React.RefObject<ReigniteRef>;
 }
 
@@ -43,6 +43,11 @@ export default function Breach({
   const [fireTrail, setFireTrail] = useState<Array<{id: number, position: Vector3}>>([]);
   const nextFireParticleId = useRef(1);
   const enemyHealthTracker = useRef<Record<string, number>>({});
+
+  // Log if reigniteRef is available when the component mounts
+  useEffect(() => {
+    console.log("[Breach] Component mounted, reigniteRef available:", !!reigniteRef);
+  }, [reigniteRef]);
 
   useFrame(() => {
     if (!isActive || !parentRef.current) return;
@@ -145,26 +150,34 @@ export default function Breach({
           // We hit this enemy
           hitEnemies.current.add(enemy.id);
           
-          // Store previous health before applying damage
-          const previousHealth = enemyHealthTracker.current[enemy.id] || enemy.health;
+          // IMPORTANT: Store previous health before damage is applied
+          const previousHealth = enemy.health;
+          console.log(`[Breach] Enemy ${enemy.id} previous health: ${previousHealth}`);
           
           // Apply damage
           onHit(enemy.id, BREACH_DAMAGE);
           
-          // Check if the enemy was killed by this hit
-          if (previousHealth > 0 && enemy.health <= 0) {
-            // Enemy was killed by Breach, trigger Reignite
-            if (reigniteRef?.current) {
-              reigniteRef.current.processKill();
-            }
-          }
-          
-          // Update tracked health
-          enemyHealthTracker.current[enemy.id] = enemy.health;
-          
           // Show damage number if function is provided
           if (showDamageNumber) {
-            showDamageNumber(enemy.id, BREACH_DAMAGE, enemy.position.clone());
+            showDamageNumber(
+              enemy.id, 
+              BREACH_DAMAGE, 
+              enemy.position.clone(), 
+              true
+            );
+          }
+          
+          // Check if enemy was killed by this hit
+          if (previousHealth > 0 && previousHealth - BREACH_DAMAGE <= 0) {
+            console.log(`[Breach] Enemy ${enemy.id} was killed! Calling Reignite`);
+            
+            // Verify reigniteRef is available before calling
+            if (reigniteRef && reigniteRef.current) {
+              console.log(`[Breach] Triggering Reignite effect at position:`, enemy.position);
+              reigniteRef.current.processKill(enemy.position.clone());
+            } else {
+              console.warn(`[Breach] Cannot trigger Reignite: reigniteRef is ${reigniteRef ? 'defined but current is null' : 'undefined'}`);
+            }
           }
         }
       }

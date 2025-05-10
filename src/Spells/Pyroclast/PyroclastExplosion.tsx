@@ -9,7 +9,7 @@ interface PyroclastExplosionProps {
   onComplete?: () => void;
 }
 
-const IMPACT_DURATION = 0.6; // Reduced from 1.5s to make it more immediate and impactful
+const IMPACT_DURATION = 0.8; 
 
 export default function PyroclastExplosion({ 
   position, 
@@ -20,9 +20,9 @@ export default function PyroclastExplosion({
   const startTime = useRef(explosionStartTime || Date.now());
   const [, forceUpdate] = useState({}); // Force updates to animate
   const normalizedCharge = Math.min(chargeTime / 4, 1.0);
-  const scale = 0.7 + (normalizedCharge * 0.8); // Increased base scale
+  const scale = 0.5 + (normalizedCharge * 0.8); // Increased base scale
   const intensity = 2 + (normalizedCharge * 3); // Increased intensity
-  const sparkCount = 8; // More sparks
+  const sparkCount = 12; // More sparks
   
   useEffect(() => {
     // Animation timer
@@ -57,17 +57,17 @@ export default function PyroclastExplosion({
   if (fade <= 0) return null;
 
   // More dynamic effect - faster expansion for initial impact
-  const expansionRate = 4 + (elapsed < 0.1 ? 8 : 0);
+  const expansionRate = 3 + (elapsed < 0.1 ? 8 : 0);
 
   return (
     <group position={position}>
       {/* Core explosion sphere */}
       <mesh>
-        <sphereGeometry args={[0.675 * scale * (1 + elapsed * expansionRate), 32, 32]} />
+        <sphereGeometry args={[0.475 * scale * (1 + elapsed * expansionRate), 32, 32]} />
         <meshStandardMaterial
           color="#FF4422"
           emissive="#FF5533" 
-          emissiveIntensity={intensity * fade}
+          emissiveIntensity={intensity * fade * 0.5}
           transparent
           opacity={0.9 * fade}
           depthWrite={false}
@@ -77,11 +77,11 @@ export default function PyroclastExplosion({
       
       {/* Inner energy sphere */}
       <mesh>
-        <sphereGeometry args={[0.6 * scale * (1 + elapsed * (expansionRate + 1)), 24, 24]} />
+        <sphereGeometry args={[0.475 * scale * (1 + elapsed * (expansionRate + 1)), 24, 24]} />
         <meshStandardMaterial
           color="#FF7755"
           emissive="#FFFFFF"
-          emissiveIntensity={intensity * 1.5 * fade}
+          emissiveIntensity={intensity * 0.5 * fade}
           transparent
           opacity={0.95 * fade}
           depthWrite={false}
@@ -90,13 +90,13 @@ export default function PyroclastExplosion({
       </mesh>
 
       {/* Multiple expanding rings */}
-      {[0.45, 0.675, 0.9, 1.175].map((ringSize, i) => (
+      {[0.45, 0.675, 0.8, 0.925, 1.125].map((ringSize, i) => (
         <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
           <torusGeometry args={[ringSize * scale * (1 + elapsed * (expansionRate + 2)), 0.06 * scale, 16, 32]} />
           <meshStandardMaterial  
             color="#FF4422"
             emissive="#FF7744"
-            emissiveIntensity={intensity * fade * 0.9}
+            emissiveIntensity={intensity * fade * 0.3}
             transparent
             opacity={0.7 * fade * (1 - i * 0.15)}
             depthWrite={false}

@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import InstancedTrees from '../Environment/InstancedTrees';
 import InstancedMountains from '../Environment/InstancedMountains';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
+import InstancedVegetation from '../Environment/InstancedVegetation';
 import Pillar from '../Environment/Pillar';
 import { initializeSharedResources, sharedGeometries, sharedMaterials, disposeSharedResources } from './SharedResources';
 
@@ -360,31 +361,17 @@ export default function Scene({
   return (
     <>
       <group>
-        {/* Background Environment */}
         <CustomSky />
         <Planet />
-
-        {/* Ground Environment */}
         <Terrain />
-        
-        {/* Add Pillar in center */}
-        <Pillar />
-        
-        {/* Render instanced mountains */}
-        <InstancedMountains mountains={mountainData} />
-
-        {/* Render instanced trees */}
+        <InstancedVegetation />
         <InstancedTrees trees={treeData} />
-
-        {/* Replaced individual mushrooms with InstancedMushrooms */}
+        <InstancedMountains mountains={mountainData} />
         <InstancedMushrooms mushrooms={mushroomData} />
-
-        {/* Player Unit with ref */}
+        <Pillar />
         <group ref={playerRef}>
           <Unit {...unitComponentProps} />
         </group>
-
-        {/* Enemy Units (Skeletons only) */}
         {enemies.map((enemy) => (
           <MemoizedEnemyUnit
             key={enemy.id}

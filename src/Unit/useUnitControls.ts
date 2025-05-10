@@ -154,11 +154,28 @@ export function useUnitControls({
       const movement = moveDirection.multiplyScalar(frameSpeed);
       const potentialPosition = groupRef.current.position.clone().add(movement);
       
-      // Apply movement if within bounds
-      if (potentialPosition.length() < PLAY_AREA_RADIUS) {
+      // Check if we would exceed the boundary
+      const distanceFromCenter = potentialPosition.length();
+      if (distanceFromCenter < PLAY_AREA_RADIUS) {
+        // If within bounds, move normally
         groupRef.current.position.copy(potentialPosition);
-        onPositionUpdate(groupRef.current.position, isStealthed);
+      } else {
+        // If we hit the boundary, calculate the tangent movement
+        // Project the movement vector onto the circular boundary
+        const currentPos = groupRef.current.position.clone();
+        const toCenter = currentPos.clone().normalize();
+        const tangent = new Vector3(-toCenter.z, 0, toCenter.x);
+        
+        // Project our movement onto the tangent
+        const tangentMovement = tangent.multiplyScalar(movement.dot(tangent));
+        
+        // Apply the tangential movement while keeping distance to center constant
+        const newPosition = currentPos.add(tangentMovement);
+        newPosition.normalize().multiplyScalar(PLAY_AREA_RADIUS);
+        groupRef.current.position.copy(newPosition);
       }
+      
+      onPositionUpdate(groupRef.current.position, isStealthed);
     }
 
     // Updated rotation logic

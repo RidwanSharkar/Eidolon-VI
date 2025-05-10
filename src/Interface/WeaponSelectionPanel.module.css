@@ -23,6 +23,12 @@
   -ms-user-select: none;
 }
 
+/* Add a content wrapper for scaling */
+.panel > * {
+  transform: scale(0.85);
+  transform-origin: center center;
+}
+
 .iconContent {
   display: flex;
   flex-direction: column;
@@ -75,6 +81,57 @@ menu on the entire panel */
     rgba(0, 255, 128, 0.4), 
     rgba(0, 255, 128, 1),
     rgba(0, 255, 128, 0.4),
+    transparent
+  );
+}
+
+/* Theme-specific title underlines */
+.swordTheme h2::after {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 215, 0, 0.4), 
+    rgba(255, 215, 0, 1),
+    rgba(255, 215, 0, 0.4),
+    transparent
+  );
+}
+
+.scytheTheme h2::after {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 255, 136, 0.4), 
+    rgba(0, 255, 136, 1),
+    rgba(0, 255, 136, 0.4),
+    transparent
+  );
+}
+
+.sabresTheme h2::after {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 255, 255, 0.4), 
+    rgba(0, 255, 255, 1),
+    rgba(0, 255, 255, 0.4),
+    transparent
+  );
+}
+
+.spearTheme h2::after {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 68, 0, 0.4), 
+    rgba(255, 68, 0, 1),
+    rgba(255, 68, 0, 0.4),
+    transparent
+  );
+}
+
+.bowTheme h2::after {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(144, 238, 144, 0.4), 
+    rgba(144, 238, 144, 1),
+    rgba(144, 238, 144, 0.4),
     transparent
   );
 }
@@ -378,4 +435,244 @@ menu on the entire panel */
 
 .weaponContainer:has(.selected) .abilityIcons .abilityIcon:hover img {
   filter: drop-shadow(0 0 12px rgba(0, 255, 128, 0.8));
+}
+
+/* Theme variations */
+.swordTheme {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.97),
+    rgba(20, 15, 0, 0.95)
+  );
+}
+
+.swordTheme h2 {
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+.swordTheme .selected {
+  background: rgba(255, 215, 0, 0.2);
+}
+
+.swordTheme .selected::after {
+  background: linear-gradient(45deg, 
+    #ffd70088,
+    #daa52088
+  );
+}
+
+.swordTheme .startButton,
+.swordTheme .selected .iconContent img {
+  filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8));
+  color: #ffd700;
+}
+
+.scytheTheme {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.97),
+    rgba(0, 15, 5, 0.95)
+  );
+}
+
+.scytheTheme h2 {
+  color: #00ff88;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+}
+
+.scytheTheme .selected {
+  background: rgba(0, 255, 136, 0.2);
+}
+
+.scytheTheme .selected::after {
+  background: linear-gradient(45deg, 
+    #00ff8888,
+    #00ff9988
+  );
+}
+
+.scytheTheme .startButton,
+.scytheTheme .selected .iconContent img {
+  filter: drop-shadow(0 0 25px rgba(0, 255, 136, 0.8));
+  color: #00ff88;
+}
+
+.sabresTheme {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.97),
+    rgba(0, 10, 20, 0.95)
+  );
+}
+
+.sabresTheme h2 {
+  color: #00ffff;
+  text-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+}
+
+.sabresTheme .selected {
+  background: rgba(0, 255, 255, 0.2);
+}
+
+.sabresTheme .selected::after {
+  background: linear-gradient(45deg, 
+    #00ffff88,
+    #00ccff88
+  );
+}
+
+.sabresTheme .startButton,
+.sabresTheme .selected .iconContent img {
+  filter: drop-shadow(0 0 25px rgba(0, 255, 255, 0.8));
+  color: #00ffff;
+}
+
+.spearTheme {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.97),
+    rgba(20, 5, 0, 0.95)
+  );
+}
+
+.spearTheme h2 {
+  color: #ff4400;
+  text-shadow: 0 0 20px rgba(255, 68, 0, 0.6);
+}
+
+.spearTheme .selected {
+  background: rgba(255, 68, 0, 0.2);
+}
+
+.spearTheme .selected::after {
+  background: linear-gradient(45deg, 
+    #ff440088,
+    #ff660088
+  );
+}
+
+.spearTheme .startButton,
+.spearTheme .selected .iconContent img {
+  filter: drop-shadow(0 0 25px rgba(255, 68, 0, 0.8));
+  color: #ff4400;
+}
+
+.bowTheme {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.97),
+    rgba(10, 15, 5, 0.95)
+  );
+}
+
+.bowTheme h2 {
+  color: #90EE90;
+  text-shadow: 0 0 20px rgba(144, 238, 144, 0.6);
+}
+
+.bowTheme .selected {
+  background: rgba(144, 238, 144, 0.2);
+}
+
+.bowTheme .selected::after {
+  background: linear-gradient(45deg, 
+    #90EE9088,
+    #8B451388
+  );
+}
+
+.bowTheme .startButton,
+.bowTheme .selected .iconContent img {
+  filter: drop-shadow(0 0 25px rgba(144, 238, 144, 0.8));
+  color: #90EE90;
+}
+
+/* Update ability icons for each theme */
+.swordTheme .abilityIcon:hover,
+.swordTheme .weaponContainer:has(.selected) .abilityIcons .abilityIcon {
+  background: rgba(255, 215, 0, 0.08);
+}
+
+.scytheTheme .abilityIcon:hover,
+.scytheTheme .weaponContainer:has(.selected) .abilityIcons .abilityIcon {
+  background: rgba(0, 255, 136, 0.08);
+}
+
+.sabresTheme .abilityIcon:hover,
+.sabresTheme .weaponContainer:has(.selected) .abilityIcons .abilityIcon {
+  background: rgba(0, 255, 255, 0.08);
+}
+
+.spearTheme .abilityIcon:hover,
+.spearTheme .weaponContainer:has(.selected) .abilityIcons .abilityIcon {
+  background: rgba(255, 68, 0, 0.08);
+}
+
+.bowTheme .abilityIcon:hover,
+.bowTheme .weaponContainer:has(.selected) .abilityIcons .abilityIcon {
+  background: rgba(144, 238, 144, 0.08);
+}
+
+/* Update ability key colors for each theme */
+.swordTheme .abilityKey { color: #ffd700; border-color: rgba(255, 215, 0, 0.3); }
+.scytheTheme .abilityKey { color: #00ff88; border-color: rgba(0, 255, 136, 0.3); }
+.sabresTheme .abilityKey { color: #00ffff; border-color: rgba(0, 255, 255, 0.3); }
+.spearTheme .abilityKey { color: #ff4400; border-color: rgba(255, 68, 0, 0.3); }
+.bowTheme .abilityKey { color: #90EE90; border-color: rgba(144, 238, 144, 0.3); }
+
+/* Update Enter button styles for each theme */
+.swordTheme .startButton {
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd700;
+}
+
+.swordTheme .startButton:hover:not(:disabled) {
+  background: rgba(255, 215, 0, 0.25);
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.3),
+              0 0 80px rgba(255, 215, 0, 0.2);
+}
+
+.scytheTheme .startButton {
+  background: rgba(0, 255, 136, 0.15);
+  color: #00ff88;
+}
+
+.scytheTheme .startButton:hover:not(:disabled) {
+  background: rgba(0, 255, 136, 0.25);
+  box-shadow: 0 0 40px rgba(0, 255, 136, 0.3),
+              0 0 80px rgba(0, 255, 136, 0.2);
+}
+
+.sabresTheme .startButton {
+  background: rgba(0, 255, 255, 0.15);
+  color: #00ffff;
+}
+
+.sabresTheme .startButton:hover:not(:disabled) {
+  background: rgba(0, 255, 255, 0.25);
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.3),
+              0 0 80px rgba(0, 255, 255, 0.2);
+}
+
+.spearTheme .startButton {
+  background: rgba(255, 68, 0, 0.15);
+  color: #ff4400;
+}
+
+.spearTheme .startButton:hover:not(:disabled) {
+  background: rgba(255, 68, 0, 0.25);
+  box-shadow: 0 0 40px rgba(255, 68, 0, 0.3),
+              0 0 80px rgba(255, 68, 0, 0.2);
+}
+
+.bowTheme .startButton {
+  background: rgba(144, 238, 144, 0.15);
+  color: #90EE90;
+}
+
+.bowTheme .startButton:hover:not(:disabled) {
+  background: rgba(144, 238, 144, 0.25);
+  box-shadow: 0 0 40px rgba(144, 238, 144, 0.3),
+              0 0 80px rgba(144, 238, 144, 0.2);
 }

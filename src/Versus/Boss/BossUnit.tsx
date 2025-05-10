@@ -61,15 +61,15 @@ export default function BossUnit({
 
   // Boss-specific constants
   const ATTACK_RANGE = 5;
-  const ATTACK_COOLDOWN_NORMAL = 3500;
-  const ATTACK_COOLDOWN_ENRAGED =2250;
-  const MOVEMENT_SPEED = 0.035;
-  const ATTACK_DAMAGE = 26;
+  const ATTACK_COOLDOWN_NORMAL = 3550;
+  const ATTACK_COOLDOWN_ENRAGED =2125;
+  const MOVEMENT_SPEED = 0.039;
+  const ATTACK_DAMAGE = 32;
   const BOSS_HIT_HEIGHT = 2.0;       
   const BOSS_HIT_RADIUS = 4.0;
   const BOSS_HIT_HEIGHT_RANGE = 4.0;
   const METEOR_COOLDOWN_NORMAL = 7000;
-  const METEOR_COOLDOWN_ENRAGED = 4750;
+  const METEOR_COOLDOWN_ENRAGED = 4500;
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 50;
 

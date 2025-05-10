@@ -1,6 +1,6 @@
 // src/weapons/Spear.tsx
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { Group, Shape, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -18,6 +18,11 @@ interface SpearProps {
   setDamageNumbers?: (callback: (prev: DamageNumber[]) => DamageNumber[]) => void;
   nextDamageNumberId?: { current: number };
   isWhirlwinding?: boolean;
+  fireballCharges?: Array<{
+    id: number;
+    available: boolean;
+    cooldownStartTime: number | null;
+  }>;
 }
 
 export default function Spear({ 
@@ -27,7 +32,8 @@ export default function Spear({
   onHit,
   setDamageNumbers,
   nextDamageNumberId,
-  isWhirlwinding = false
+  isWhirlwinding = false,
+  fireballCharges = []
 }: SpearProps) {
   const spearRef = useRef<Group>(null);
   const swingProgress = useRef(0);
@@ -35,14 +41,33 @@ export default function Spear({
   const hitCountThisSwing = useRef<Record<string, number>>({});
   const lastHitDetectionTime = useRef<Record<string, number>>({});
   const whirlwindRotation = useRef(0);
+  const whirlwindSpeed = useRef(0);
+  const prevWhirlwindState = useRef(false);
+
+  // Check if whirlwind should be active based on charges
+  const hasAvailableCharges = fireballCharges.some(charge => charge.available);
+  const shouldWhirlwind = isWhirlwinding && hasAvailableCharges;
+
+  // Track whirlwind state changes
+  useEffect(() => {
+    // If whirlwind is active but there are no charges, force deceleration
+    if (isWhirlwinding && !hasAvailableCharges && whirlwindSpeed.current > 0) {
+      whirlwindSpeed.current = Math.max(whirlwindSpeed.current - 5, 0);
+    }
+    
+    prevWhirlwindState.current = shouldWhirlwind;
+  }, [isWhirlwinding, hasAvailableCharges, shouldWhirlwind]);
 
   useFrame((_, delta) => {
     if (!spearRef.current) return;
 
     // Handle whirlwind spinning animation
-    if (isWhirlwinding) {
-      // Rotate the spear around the player during whirlwind
-      whirlwindRotation.current += delta * 15; // 12 radians per second rotation
+    if (shouldWhirlwind) {
+      // Accelerate rotation speed when whirlwind is active
+      whirlwindSpeed.current = Math.min(whirlwindSpeed.current + delta * 15, 35);
+      
+      // Update rotation based on speed
+      whirlwindRotation.current += delta * whirlwindSpeed.current;
       
       // Orbit parameters
       const orbitRadius = 2.5; // Radius of orbit circle
@@ -75,6 +100,46 @@ export default function Spear({
       
       // Apply position after rotation is set
       spearRef.current.position.set(orbitalX, fixedHeight, orbitalZ);
+      
+      return;
+    } else if (whirlwindSpeed.current > 0) {
+      // Deceleration when whirlwind ends or no charges available
+      whirlwindSpeed.current = Math.max(0, whirlwindSpeed.current - delta * 30);
+      
+      // Continue rotation but slowing down
+      whirlwindRotation.current += delta * whirlwindSpeed.current;
+      
+      // If we're almost stopped, return to normal position
+      if (whirlwindSpeed.current < 0.5) {
+        whirlwindSpeed.current = 0;
+        
+        // Reset position smoothly
+        spearRef.current.position.x += (basePosition[0] - spearRef.current.position.x) * 0.75;
+        spearRef.current.position.y += (basePosition[1] - spearRef.current.position.y) * 0.75;
+        spearRef.current.position.z += (basePosition[2] - spearRef.current.position.z) * 0.75;
+        
+        // Reset rotation smoothly
+        spearRef.current.rotation.x += (-Math.PI/2 - spearRef.current.rotation.x) * 0.75;
+        spearRef.current.rotation.y += (0 - spearRef.current.rotation.y) * 0.75;
+        spearRef.current.rotation.z += (Math.PI - spearRef.current.rotation.z) * 0.75;
+      } else {
+        // Continue orbital movement while slowing down
+        const orbitRadius = 2.5; // Radius of orbit circle
+        const angle = whirlwindRotation.current;
+        
+        const orbitalX = Math.cos(angle) * orbitRadius;
+        const orbitalZ = Math.sin(angle) * orbitRadius;
+        const fixedHeight = 0.4;
+        
+        spearRef.current.rotation.set(
+          Math.PI/3,
+          -angle + Math.PI,
+          1
+        );
+        
+        spearRef.current.rotateY(-angle + Math.PI);
+        spearRef.current.position.set(orbitalX, fixedHeight, orbitalZ);
+      }
       
       return;
     }
@@ -173,13 +238,16 @@ export default function Spear({
       spearRef.current.rotation.set(rotationX, 0, Math.PI);
 
     } else {
-      spearRef.current.rotation.x = -Math.PI/2;
-      spearRef.current.rotation.y = 0;
-      spearRef.current.rotation.z = Math.PI;
-      
-      spearRef.current.position.x += (basePosition[0] - spearRef.current.position.x) * 0.2;
-      spearRef.current.position.y += (basePosition[1] - spearRef.current.position.y) * 0.2;
-      spearRef.current.position.z += (basePosition[2] - spearRef.current.position.z) * 0.2;
+      // Normal idle state - only apply if not transitioning from whirlwind
+      if (whirlwindSpeed.current === 0) {
+        spearRef.current.rotation.x = -Math.PI/2;
+        spearRef.current.rotation.y = 0;
+        spearRef.current.rotation.z = Math.PI;
+        
+        spearRef.current.position.x += (basePosition[0] - spearRef.current.position.x) * 0.2;
+        spearRef.current.position.y += (basePosition[1] - spearRef.current.position.y) * 0.2;
+        spearRef.current.position.z += (basePosition[2] - spearRef.current.position.z) * 0.2;
+      }
     }
 
   });

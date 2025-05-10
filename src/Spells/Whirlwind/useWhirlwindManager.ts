@@ -25,15 +25,20 @@ export function useWhirlwindManager({
   onWhirlwindEnd
 }: UseWhirlwindManagerProps) {
   const lastChargeConsumeTime = useRef<number>(0);
-  const CHARGE_CONSUME_INTERVAL = 980; // 1 second
+  const CHARGE_CONSUME_INTERVAL = 1000; // 1 second
+  const hasCalledEndCallback = useRef<boolean>(false);
 
   // Add check for available charges
   useEffect(() => {
     if (isWhirlwinding) {
       const hasAvailableCharges = charges.some(charge => charge.available);
-      if (!hasAvailableCharges) {
+      if (!hasAvailableCharges && !hasCalledEndCallback.current) {
+        hasCalledEndCallback.current = true;
         onWhirlwindEnd?.();
       }
+    } else {
+      // Reset the flag when whirlwind is not active
+      hasCalledEndCallback.current = false;
     }
   }, [charges, isWhirlwinding, onWhirlwindEnd]);
 
@@ -45,7 +50,10 @@ export function useWhirlwindManager({
 
     const availableChargeIndex = charges.findIndex(charge => charge.available);
     if (availableChargeIndex === -1) {
-      onWhirlwindEnd?.();
+      if (!hasCalledEndCallback.current) {
+        hasCalledEndCallback.current = true;
+        onWhirlwindEnd?.();
+      }
       return false;
     }
 
@@ -74,6 +82,21 @@ export function useWhirlwindManager({
       });
     }, ORBITAL_COOLDOWN);
 
+    // Check if this was the last available charge
+    const remainingCharges = charges.filter((charge, idx) => 
+      idx !== availableChargeIndex && charge.available
+    ).length;
+
+    if (remainingCharges === 0) {
+      // This was the last charge, schedule the end callback
+      setTimeout(() => {
+        if (!hasCalledEndCallback.current) {
+          hasCalledEndCallback.current = true;
+          onWhirlwindEnd?.();
+        }
+      }, 100);
+    }
+
     return true;
   }, [charges, setCharges, onWhirlwindEnd]);
 
@@ -82,7 +105,10 @@ export function useWhirlwindManager({
       // Check if we have any charges available before starting
       const hasAvailableCharges = charges.some(charge => charge.available);
       if (!hasAvailableCharges) {
-        onWhirlwindEnd?.();
+        if (!hasCalledEndCallback.current) {
+          hasCalledEndCallback.current = true;
+          onWhirlwindEnd?.();
+        }
         return;
       }
 

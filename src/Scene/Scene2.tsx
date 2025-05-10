@@ -16,6 +16,7 @@ import { ObjectPool } from './ObjectPool';
 import InstancedTrees from '../Environment/InstancedTrees';
 import InstancedMountains from '../Environment/InstancedMountains';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
+import InstancedVegetation from '../Environment/InstancedVegetation';
 import Pillar from '../Environment/Pillar';
 import { sharedGeometries, sharedMaterials, initializeSharedResources, disposeSharedResources } from './SharedResources';
 
@@ -394,6 +395,7 @@ export default function Scene2({
 
         {/* Ground Environment */}
         <Terrain />
+        <InstancedVegetation />
         
         {/* Add Pillar in center */}
         <Pillar />

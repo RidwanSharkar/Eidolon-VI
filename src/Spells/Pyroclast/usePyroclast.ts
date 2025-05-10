@@ -38,12 +38,13 @@ interface UsePyroclastProps {
     cooldownStartTime: number | null;
   }>>>;
   reigniteRef?: React.RefObject<ReigniteRef>;
+  checkForSpearKillAndProcessReignite?: (targetId: string, damage: number) => void;
 }
 
 const PYROCLAST_DAMAGE_PER_SECOND = 277;
 const PYROCLAST_MAX_CHARGE_TIME = 4;
 const PYROCLAST_HIT_RADIUS = 3.25;
-const CHARGE_CONSUME_INTERVAL = 500;
+const CHARGE_CONSUME_INTERVAL = 600;
 
 function calculatePyroclastDamage(chargeTimeSeconds: number): { damage: number; isCritical: boolean } {
   // Clamp charge time between 0.5 and MAX_CHARGE_TIME seconds
@@ -69,8 +70,12 @@ export function usePyroclast({
   onImpact,
   charges,
   setCharges,
-  reigniteRef
+  reigniteRef,
+  checkForSpearKillAndProcessReignite
 }: UsePyroclastProps) {
+  // Add debug log to check if reigniteRef is properly passed
+  console.log('[usePyroclast] Initializing with reigniteRef:', reigniteRef);
+  
   const [isCharging, setIsCharging] = useState(false);
   const [chargeProgress, setChargeProgress] = useState(0);
   const chargeStartTime = useRef<number | null>(null);
@@ -90,13 +95,64 @@ export function usePyroclast({
   // Update health tracker when enemy data changes
   useEffect(() => {
     if (enemyData) {
+      // Update our health tracker with the current enemy health values
       enemyData.forEach(enemy => {
-        if (!(enemy.id in enemyHealthTracker.current)) {
-          enemyHealthTracker.current[enemy.id] = enemy.health;
-        }
+        enemyHealthTracker.current[enemy.id] = enemy.health;
       });
     }
   }, [enemyData]);
+
+  // Create a custom damage function that checks for kills and processes Reignite
+  const handleDamageWithKillCheck = useCallback((targetId: string, damage: number) => {
+    // Get the target and store its health before damage
+    const target = enemyData.find(e => e.id === targetId);
+    if (!target) {
+      console.log(`[Pyroclast] Target ${targetId} not found for damage check`);
+      onHit(targetId, damage);
+      return;
+    }
+    
+    const previousHealth = target.health;
+    console.log(`[Pyroclast] Processing damage for enemy ${targetId}, health before: ${previousHealth}, damage: ${damage}`);
+    
+    // Store the position BEFORE applying damage (in case the enemy gets removed)
+    const enemyPosition = target.position.clone();
+    console.log(`[Pyroclast] Stored enemy position:`, {
+      x: enemyPosition.x.toFixed(3),
+      y: enemyPosition.y.toFixed(3),
+      z: enemyPosition.z.toFixed(3)
+    });
+    
+    // Apply the damage
+    onHit(targetId, damage);
+    
+    // Find the enemy again to get its updated health
+    const updatedEnemy = enemyData.find(e => e.id === targetId);
+    
+    // If the enemy isn't found (removed) or its health is now ≤ 0, it was killed
+    if (!updatedEnemy || updatedEnemy.health <= 0) {
+      if (previousHealth > 0) {
+        console.log(`[Pyroclast] Enemy ${targetId} was killed! Processing Reignite...`);
+        
+        // Trigger Reignite effect if reigniteRef is available
+        if (reigniteRef && reigniteRef.current) {
+          console.log(`[Pyroclast] Calling reigniteRef.processKill with position:`, {
+            x: enemyPosition.x.toFixed(3),
+            y: enemyPosition.y.toFixed(3),
+            z: enemyPosition.z.toFixed(3)
+          });
+          
+          // CHANGE: Direct call instead of setTimeout
+          if (reigniteRef.current) {
+            console.log(`[Pyroclast] Executing processKill call directly`);
+            reigniteRef.current.processKill(enemyPosition);
+          }
+        } else {
+          console.warn(`[Pyroclast] Cannot trigger Reignite: reigniteRef is ${reigniteRef ? 'defined but current is null' : 'undefined'}`);
+        }
+      }
+    }
+  }, [enemyData, onHit, reigniteRef]);
 
   const startCharging = useCallback(() => {
     setIsCharging(true);
@@ -143,54 +199,100 @@ export function usePyroclast({
     setActiveMissiles(prev => prev.filter(missile => missile.id !== missileId));
   }, [onImpact]);
 
+  // Optimize the checkMissileCollisions callback to handle multiple hits better
   const checkMissileCollisions = useCallback((missileId: number, currentPosition: Vector3, previousPosition?: Vector3): boolean => {
     let collisionOccurred = false;
     const missile = activeMissiles.find(m => m.id === missileId);
 
-    if (!missile) return false;
+    if (!missile) {
+      console.log(`[Pyroclast] Missile ${missileId} not found for collision check`);
+      return false;
+    }
 
+    console.log(`[Pyroclast] Checking collisions for missile ${missileId} at position ${currentPosition.x.toFixed(2)}, ${currentPosition.y.toFixed(2)}, ${currentPosition.z.toFixed(2)}`);
+
+    // Initialize hitEnemies if it doesn't exist
+    if (!missile.hitEnemies) {
+      missile.hitEnemies = new Set<string>();
+    }
+
+    // Track if we hit any enemies with this collision check
+    let anyHits = false;
+
+    // Check all enemies for collisions
     for (const enemy of enemyData) {
-      if (enemy.health <= 0 || missile.hitEnemies?.has(enemy.id)) continue;
+      // Skip dead enemies or enemies we've already hit with this missile
+      if (enemy.health <= 0 || missile.hitEnemies.has(enemy.id)) {
+        // Debug log for skipped enemies (reduce noise by only logging once per enemy)
+        if (enemy.health <= 0 && !missile.hitEnemies.has(enemy.id)) {
+          console.log(`[Pyroclast] Skipping dead enemy ${enemy.id} with health ${enemy.health}`);
+          // Add to hitEnemies to avoid logging again
+          missile.hitEnemies.add(enemy.id);
+        }
+        continue;
+      }
 
       // Check current position
       const distance = currentPosition.distanceTo(enemy.position);
+      
+      // If within hit radius, process the hit
       if (distance < PYROCLAST_HIT_RADIUS) {
+        console.log(`[Pyroclast] Hit detected! Enemy ${enemy.id} at distance ${distance.toFixed(2)}, health before: ${enemy.health}`);
+        
+        // Calculate damage based on charge time
         const { damage, isCritical } = calculatePyroclastDamage(missile.chargeTime);
+        console.log(`[Pyroclast] Calculated damage for enemy ${enemy.id}: ${damage} (critical: ${isCritical}), charge time: ${missile.chargeTime.toFixed(2)}s`);
         
-        // Store previous health before applying damage
-        const previousHealth = enemyHealthTracker.current[enemy.id] || enemy.health;
+        // Store enemy position before marking as hit
+        const enemyPosition = enemy.position.clone();
+        console.log(`[Pyroclast] Stored enemy position before hit:`, {
+          x: enemyPosition.x.toFixed(3),
+          y: enemyPosition.y.toFixed(3),
+          z: enemyPosition.z.toFixed(3)
+        });
         
-        // Apply damage
-        onHit(enemy.id, damage);
+        // Mark this enemy as hit before applying damage to prevent potential double-hits
+        missile.hitEnemies.add(enemy.id);
         
-        // Check if the enemy was killed by this hit
-        if (previousHealth > 0 && enemy.health <= 0) {
-          // Enemy was killed by Pyroclast, trigger Reignite
-          if (reigniteRef?.current) {
-            reigniteRef.current.processKill();
+        // Apply damage using the appropriate function
+        if (checkForSpearKillAndProcessReignite) {
+          // Use the centralized function that handles kills and Reignite
+          console.log(`[Pyroclast] Using checkForSpearKillAndProcessReignite for enemy ${enemy.id}`);
+          checkForSpearKillAndProcessReignite(enemy.id, damage);
+          
+          // Also directly call processKill if the enemy died (as a fallback)
+          const updatedEnemy = enemyData.find(e => e.id === enemy.id);
+          if ((!updatedEnemy || updatedEnemy.health <= 0) && enemy.health > 0 && reigniteRef?.current) {
+            console.log(`[Pyroclast] DIRECT FALLBACK: Enemy ${enemy.id} was killed, calling reigniteRef.processKill directly`);
+            reigniteRef.current.processKill(enemyPosition);
           }
+        } else {
+          // Fallback to our custom function
+          handleDamageWithKillCheck(enemy.id, damage);
         }
         
-        // Update tracked health
-        enemyHealthTracker.current[enemy.id] = enemy.health;
-        
+        // Create damage number for visual feedback
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
           damage,
-          position: enemy.position.clone(),
+          position: enemyPosition, // Use stored position
           isCritical,
           isPyroclast: true
         }]);
-        missile.hitEnemies?.add(enemy.id);
+        
+        anyHits = true;
         collisionOccurred = true;
-        console.log(`Pyroclast hit enemy ${enemy.id} for ${damage} damage (charge time: ${missile.chargeTime}s)`);
-        break;
+        
+        console.log(`[Pyroclast] Processed hit on enemy ${enemy.id} for ${damage} damage`);
       }
-
-      // If we have a previous position, also check points along the path
-      if (previousPosition) {
+      // Also check points along the path if we have a previous position
+      else if (previousPosition) {
         const direction = currentPosition.clone().sub(previousPosition);
         const length = direction.length();
+        
+        // Skip interpolation check if the movement is too small
+        if (length < 0.1) continue;
+        
         const steps = Math.ceil(length / (PYROCLAST_HIT_RADIUS * 0.5));
         
         for (let i = 0; i <= steps; i++) {
@@ -199,43 +301,58 @@ export function usePyroclast({
           const interpolatedDistance = interpolatedPosition.distanceTo(enemy.position);
           
           if (interpolatedDistance < PYROCLAST_HIT_RADIUS) {
+            console.log(`[Pyroclast] Interpolated hit detected! Enemy ${enemy.id} at distance ${interpolatedDistance.toFixed(2)}`);
+            
             const { damage, isCritical } = calculatePyroclastDamage(missile.chargeTime);
             
-            // Store previous health before applying damage
-            const previousHealth = enemyHealthTracker.current[enemy.id] || enemy.health;
+            // Store enemy position before marking as hit
+            const enemyPosition = enemy.position.clone();
             
-            // Apply damage
-            onHit(enemy.id, damage);
+            // Mark as hit before applying damage
+            missile.hitEnemies.add(enemy.id);
             
-            // Check if the enemy was killed by this hit
-            if (previousHealth > 0 && enemy.health <= 0) {
-              // Enemy was killed by Pyroclast, trigger Reignite
-              if (reigniteRef?.current) {
-                reigniteRef.current.processKill();
+            // Apply damage using the appropriate function
+            if (checkForSpearKillAndProcessReignite) {
+              // Use the centralized function that handles kills and Reignite
+              console.log(`[Pyroclast] Using checkForSpearKillAndProcessReignite for enemy ${enemy.id}`);
+              checkForSpearKillAndProcessReignite(enemy.id, damage);
+              
+              // Also directly call processKill if the enemy died (as a fallback)
+              const updatedEnemy = enemyData.find(e => e.id === enemy.id);
+              if ((!updatedEnemy || updatedEnemy.health <= 0) && enemy.health > 0 && reigniteRef?.current) {
+                console.log(`[Pyroclast] DIRECT FALLBACK: Enemy ${enemy.id} was killed, calling reigniteRef.processKill directly`);
+                reigniteRef.current.processKill(enemyPosition);
               }
+            } else {
+              // Fallback to our custom function
+              handleDamageWithKillCheck(enemy.id, damage);
             }
             
-            // Update tracked health
-            enemyHealthTracker.current[enemy.id] = enemy.health;
-            
+            // Create damage number
             setDamageNumbers(prev => [...prev, {
               id: nextDamageNumberId.current++,
               damage,
-              position: enemy.position.clone(),
+              position: enemyPosition, // Use stored position
               isCritical,
               isPyroclast: true
             }]);
-            missile.hitEnemies?.add(enemy.id);
+            
+            anyHits = true;
             collisionOccurred = true;
-            console.log(`Pyroclast hit enemy ${enemy.id} for ${damage} damage (charge time: ${missile.chargeTime}s)`);
-            break;
+            
+            console.log(`[Pyroclast] Processed interpolated hit on enemy ${enemy.id} for ${damage} damage`);
+            break; // Found hit for this enemy, move to next enemy
           }
         }
       }
     }
 
+    if (anyHits) {
+      console.log(`[Pyroclast] Missile ${missileId} hit one or more enemies`);
+    }
+
     return collisionOccurred;
-  }, [activeMissiles, enemyData, onHit, setDamageNumbers, nextDamageNumberId, reigniteRef]);
+  }, [reigniteRef,activeMissiles, enemyData, handleDamageWithKillCheck, setDamageNumbers, nextDamageNumberId, checkForSpearKillAndProcessReignite]);
 
   const consumeCharge = useCallback(() => {
     const now = Date.now();

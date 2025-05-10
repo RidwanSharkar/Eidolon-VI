@@ -40,10 +40,17 @@ export default function WeaponSelectionPanel({
 
   return (
     <div 
-      className={styles.panel} 
+      className={`${styles.panel} ${
+        selectedWeapon === WeaponType.SWORD ? styles.swordTheme :
+        selectedWeapon === WeaponType.SCYTHE ? styles.scytheTheme :
+        selectedWeapon === WeaponType.SABRES ? styles.sabresTheme :
+        selectedWeapon === WeaponType.SPEAR ? styles.spearTheme :
+        selectedWeapon === WeaponType.BOW ? styles.bowTheme :
+        ''
+      }`}
       onContextMenu={(e) => e.preventDefault()}
     >
-      <h2>Eidolon IV</h2>
+      <h2>Eidolon</h2>
       
       <div className={styles.iconSelection}>
         <div className={styles.weaponContainer}>

@@ -5,9 +5,9 @@ import * as THREE from 'three';
 
 const SunsetSkyShader = {
   uniforms: {
-    topColor: { value: new THREE.Color('#1500FF') },  //  FF00A6
-    middleColor: { value: new THREE.Color('#FF79AF') },
-    bottomColor: { value: new THREE.Color('#FFCDA2') },
+    topColor: { value: new THREE.Color('#4B0082') },  // Deep purple (Indigo)
+    middleColor: { value: new THREE.Color('#8A2BE2') },  // Medium purple
+    bottomColor: { value: new THREE.Color('#87CEEB') },  // Light blue (Sky blue)
     offset: { value: 33 },
     exponent: { value: 0.6 },
   },

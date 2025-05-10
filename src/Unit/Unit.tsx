@@ -141,7 +141,7 @@ export default function Unit({
     isStealthStrike?: boolean;
     isPyroclast?: boolean;
     isEagleEye?: boolean;
-    isClusterShot?: boolean;
+    isBreach?: boolean;
   }[]>([]);
   
   const nextDamageNumberId = useRef(0);
@@ -169,7 +169,7 @@ export default function Unit({
     startTime?: number;
   }>>([]);
   
-  // Add this BEFORE usePyroclast initialization
+  // BEFORE usePyroclast initialization
   const reigniteRef = useRef<ReigniteRef>(null);
 
   const {
@@ -201,7 +201,10 @@ export default function Unit({
     },
     charges: fireballCharges,
     setCharges: setFireballCharges,
-    reigniteRef: reigniteRef
+    reigniteRef: reigniteRef,
+    checkForSpearKillAndProcessReignite: (targetId: string, damage: number) => {
+      checkForSpearKillAndProcessReignite(targetId, onHit, damage);
+    }
   });
 
   const { keys: movementKeys } = useUnitControls({
@@ -419,7 +422,14 @@ export default function Unit({
           if ((currentWeapon as WeaponType) === WeaponType.SPEAR && 
               abilities[WeaponType.SPEAR].passive.isUnlocked && 
               reigniteRef.current) {
-            reigniteRef.current.processKill();
+            // Ensure we pass a fresh clone of the position
+            const killPosition = target.position.clone();
+            console.log(`[Attack] Reignite processKill at position:`, {
+              x: killPosition.x.toFixed(3),
+              y: killPosition.y.toFixed(3),
+              z: killPosition.z.toFixed(3)
+            });
+            reigniteRef.current.processKill(killPosition);
           }
         }
       }
@@ -665,8 +675,23 @@ export default function Unit({
     const weaponRange = WEAPON_DAMAGES[currentWeapon].range;
 
     if (distance <= weaponRange) {
+      // SPEAR STRAIGHT LINE CHECK
+      if (currentWeapon === WeaponType.SPEAR) {
+        const toTarget = new Vector3()
+          .subVectors(target.position, groupRef.current.position)
+          .normalize();
+        const forward = new Vector3(0, 0, 0.025)
+          .applyQuaternion(groupRef.current.quaternion);
+        
+        const angle = toTarget.angleTo(forward);
+        
+        // Spear only hits in a narrow forward cone (about 20 degrees)
+        if (Math.abs(angle) > Math.PI / 8.5) { // ~20 degrees
+          return;
+        }
+      }
       // SABRES HIT ARC CHECK
-      if (currentWeapon === WeaponType.SABRES ) {
+      else if (currentWeapon === WeaponType.SABRES) {
         const toTarget = new Vector3()
           .subVectors(target.position, groupRef.current.position)
           .normalize();
@@ -679,6 +704,7 @@ export default function Unit({
           return;
         }
       }
+      
       const baseDamage = WEAPON_DAMAGES[currentWeapon].normal;
       
       //=====================================================================================================
@@ -696,10 +722,6 @@ export default function Unit({
         
         currentPendingTargets.add(target.id);
         
-        // Initial hit
-        const { damage, isCritical } = calculateDamage(13); // Smite Swing Bonus Damage 
-        onHit(target.id, damage);
-        
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
           damage,
@@ -716,7 +738,7 @@ export default function Unit({
             return;
           }
 
-          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(41);
+          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(53);
           onHit(target.id, lightningDamage);
           
           setDamageNumbers(prev => [...prev, {
@@ -753,8 +775,8 @@ export default function Unit({
           isCritical = result.isCritical;
         }
       } else if (currentWeapon === WeaponType.SABRES) {
-        // STILL NEED TO FIX THIS TO INDEPENDENT CRIT CHANCE PER SWING
-        isCritical = Math.random() < 0.15;
+        // Calculate damage independently for each hit
+        isCritical = Math.random() < 0.17; // 17% crit chance for Sabres
         damage = isCritical ? baseDamage * 2 : baseDamage;
       } else {
         // Normal damage calculation for other weapons
@@ -846,6 +868,12 @@ export default function Unit({
         // Special handling for Sabres to offset damage numbers
         if (currentWeapon === WeaponType.SABRES) {
           const offset = currentHits === 0 ? -0.4 : 0.4;
+          // Use the stored critical hit status for this specific hit
+          const critValue = hitCountThisSwing[`${target.id}_crit_${currentHits}`];
+          const hitIsCritical = typeof critValue === 'boolean' && critValue === true;
+          
+          console.log(`Sabre hit ${currentHits} critical status:`, hitIsCritical, critValue);
+          
           setDamageNumbers(prev => [...prev, {
             id: nextDamageNumberId.current++,
             damage,
@@ -871,6 +899,21 @@ export default function Unit({
           !isSmiting && !isOathstriking) {
           
           chainLightningRef.current?.processChainLightning();
+      }
+
+      // Process kill for Reignite if using Spear with passive unlocked
+      if ((currentWeapon as WeaponType) === WeaponType.SPEAR && 
+          abilities[WeaponType.SPEAR].passive.isUnlocked && 
+          reigniteRef.current &&
+          targetAfterDamage <= 0) {
+        // Ensure we pass a fresh clone of the position
+        const killPosition = target.position.clone();
+        console.log(`[Weapon] Reignite processKill at position:`, {
+          x: killPosition.x.toFixed(3),
+          y: killPosition.y.toFixed(3),
+          z: killPosition.z.toFixed(3)
+        });
+        reigniteRef.current.processKill(killPosition);
       }
 
       return;
@@ -1139,7 +1182,8 @@ export default function Unit({
   const { activateBreach } = useBreachController({
     parentRef: groupRef,
     charges: fireballCharges,
-    setCharges: setFireballCharges
+    setCharges: setFireballCharges,
+    reigniteRef
   });
 
   // First, add this near the top of the component:
@@ -1231,16 +1275,16 @@ export default function Unit({
       // Add bonus damage from Elemental Shots (active ability) if it's unlocked
       if (abilities[WeaponType.BOW].active.isUnlocked) {
         // Random damage between 80-200 instead of fixed 100
-        const randomBonus = Math.floor(Math.random() * 121) + 80; // 80-200 range
+        const randomBonus = Math.floor(Math.random() * 121) + 100; // 80-200 range
         baseDamage += randomBonus;
       }
     } else {
       // Minimum damage of 41, scaling up with charge
-      baseDamage = 37 + Math.floor((projectile.power * 108));
+      baseDamage = 35 + Math.floor((projectile.power * 108));
       
       // Add bonus damage from Elemental Shots for non-fully charged shots
       if (abilities[WeaponType.BOW].active.isUnlocked) {
-        baseDamage += 27; // Add 27 bonus damage to non-fully charged shots
+        baseDamage += 29; // Add 27 bonus damage to non-fully charged shots
         
         // Create lightning strike effect
         createLightningStrike(projectilePosition);
@@ -1282,7 +1326,8 @@ export default function Unit({
         isSummon: false,
         isStealthStrike: false,
         isPyroclast: false,
-        isEagleEye: false
+        isEagleEye: false,
+        isBreach: false
       }
     ]);
     
@@ -1329,7 +1374,14 @@ export default function Unit({
       if ((currentWeapon as WeaponType) === WeaponType.SPEAR && 
           abilities[WeaponType.SPEAR].passive.isUnlocked && 
           reigniteRef.current) {
-        reigniteRef.current.processKill();
+        // Ensure we pass a fresh clone of the position
+        const killPosition = enemy.position.clone();
+        console.log(`[Fireball] Reignite processKill at position:`, {
+          x: killPosition.x.toFixed(3),
+          y: killPosition.y.toFixed(3),
+          z: killPosition.z.toFixed(3)
+        });
+        reigniteRef.current.processKill(killPosition);
       }
     }
   };
@@ -1535,6 +1587,7 @@ export default function Unit({
     if (currentWeapon !== WeaponType.SPEAR || 
         !abilities[WeaponType.SPEAR].passive.isUnlocked || 
         !reigniteRef.current) {
+      console.log(`[SpearKill] Not processing Reignite - weapon: ${currentWeapon}, passive unlocked: ${abilities[WeaponType.SPEAR]?.passive?.isUnlocked}, reigniteRef: ${reigniteRef.current ? 'available' : 'null'}`);
       damageFn(targetId, damage);
       return;
     }
@@ -1542,19 +1595,43 @@ export default function Unit({
     // Get the target and store its health before damage
     const target = enemyData.find(e => e.id === targetId);
     if (!target) {
+      console.log(`[SpearKill] Target ${targetId} not found`);
       damageFn(targetId, damage);
       return;
     }
     
     const previousHealth = target.health;
+    console.log(`[SpearKill] Target ${targetId} health before damage: ${previousHealth}, damage: ${damage}`);
     
     // Apply the damage
     damageFn(targetId, damage);
     
+    // Need to find the target again to get updated health
+    const updatedTarget = enemyData.find(e => e.id === targetId);
+    if (!updatedTarget) {
+      console.log(`[SpearKill] Target ${targetId} was removed after damage`);
+      return;
+    }
+    
+    console.log(`[SpearKill] Target ${targetId} health after damage: ${updatedTarget.health}`);
+    
     // Check if the enemy was killed by this hit
-    if (previousHealth > 0 && target.health <= 0) {
-      console.log("[Reignite] Kill detected with Spear ability, processing...");
-      reigniteRef.current.processKill();
+    if (previousHealth > 0 && updatedTarget.health <= 0) {
+      console.log(`[SpearKill] Kill detected with Spear ability, processing Reignite...`);
+      if (reigniteRef.current) {
+        // Ensure we pass a fresh clone of the position
+        const killPosition = updatedTarget.position.clone();
+        console.log(`[SpearKill] Reignite processKill at position:`, {
+          x: killPosition.x.toFixed(3),
+          y: killPosition.y.toFixed(3),
+          z: killPosition.z.toFixed(3)
+        });
+        reigniteRef.current.processKill(killPosition);
+      } else {
+        console.log(`[SpearKill] ISSUE: reigniteRef.current is null at kill time`);
+      }
+    } else {
+      console.log(`[SpearKill] No kill detected - health before: ${previousHealth}, after: ${updatedTarget.health}`);
     }
   }, [currentWeapon, abilities, enemyData, reigniteRef]);
 
@@ -1657,6 +1734,7 @@ export default function Unit({
             setDamageNumbers={setDamageNumbers}
             nextDamageNumberId={nextDamageNumberId}
             isWhirlwinding={isWhirlwinding}
+            fireballCharges={fireballCharges}
           />
         ) : currentWeapon === WeaponType.BOW ? (
           <group position={[0, 0.1, 0.3]}>
@@ -1741,7 +1819,7 @@ export default function Unit({
           isStealthStrike={dn.isStealthStrike}
           isPyroclast={dn.isPyroclast}
           isEagleEye={dn.isEagleEye}
-          isClusterShot={dn.isClusterShot}
+          isBreach={dn.isBreach} 
           onComplete={() => handleDamageNumberComplete(dn.id)}
         />
       ))}
@@ -2259,8 +2337,8 @@ export default function Unit({
               ]} 
             />
             <meshStandardMaterial
-              color="#00ffff"
-              emissive="#00ffff"
+              color="#C18C4B"
+              emissive="#C18C4B"
               emissiveIntensity={1}
               transparent
               opacity={0.3 + (0.4 * bowGroundEffectProgress)}
@@ -2278,8 +2356,8 @@ export default function Unit({
             >
               <planeGeometry args={[0.125, bowGroundEffectProgress * 15+10]} />
               <meshStandardMaterial
-                color="#80ffff"
-                emissive="#80ffff"
+                color="#C18C4B"
+                emissive="#C18C4B"
                 emissiveIntensity={2}
                 transparent
                 opacity={0.6 * bowGroundEffectProgress}
@@ -2298,8 +2376,8 @@ export default function Unit({
             >
               <planeGeometry args={[1, 0.1]} />
               <meshStandardMaterial
-                color="#00ffff"
-                emissive="#00ffff"
+                color="#C18C4B"
+                emissive="#C18C4B"
                 emissiveIntensity={1.5}
                 transparent
                 opacity={0.4 * bowGroundEffectProgress * (1 - i * 0.07)}
@@ -2348,6 +2426,11 @@ export default function Unit({
           charges={fireballCharges}
           setCharges={setFireballCharges}
           reigniteRef={reigniteRef}
+          onWhirlwindEnd={() => {
+            setIsWhirlwinding(false);
+            whirlwindStartTime.current = null;
+            onAbilityUse(WeaponType.SPEAR, 'e');
+          }}
         />
       )}
 
@@ -2356,6 +2439,7 @@ export default function Unit({
           key={projectile.id}
           position={projectile.position}
           direction={projectile.direction}
+          opacity={projectile.opacity}
         />
       ))}
 
@@ -2390,15 +2474,14 @@ export default function Unit({
         />
       ))}
 
-      {currentWeapon === WeaponType.SPEAR && 
-       abilities[WeaponType.SPEAR].passive.isUnlocked && (
-        <Reignite
-          ref={reigniteRef}
-          parentRef={groupRef}
-          charges={fireballCharges}
-          setCharges={setFireballCharges}
-        />
-      )}
+      {/* Always render Reignite component but only activate its effect when using Spear with passive unlocked */}
+      <Reignite
+        ref={reigniteRef}
+        parentRef={groupRef}
+        charges={fireballCharges}
+        setCharges={setFireballCharges}
+        isActive={currentWeapon === WeaponType.SPEAR && abilities[WeaponType.SPEAR].passive.isUnlocked}
+      />
 
       {/* Render ClusterShots */}
       <ClusterShots activeArrows={activeArrows} />
@@ -2430,18 +2513,13 @@ export default function Unit({
             onAbilityUse(WeaponType.SPEAR, 'active');
           }}
           enemyData={enemyData}
-          onHit={(targetId, damage) => {
-            checkForSpearKillAndProcessReignite(targetId, onHit, damage);
-          }}
+          onHit={onHit}
           showDamageNumber={(targetId, damage, position) => {
-            // Apply critical hit calculation for breach damage
-            const { damage: finalDamage, isCritical } = calculateDamage(damage);
-            
             setDamageNumbers(prev => [...prev, {
               id: nextDamageNumberId.current++,
-              damage: finalDamage,
-              position: position.clone().add(new Vector3(0, 1.5, 0)), // Raise it a bit
-              isCritical,
+              damage: damage,
+              position: position.clone().add(new Vector3(0, 1.5, 0)),
+              isCritical: false,
               isBreach: true
             }]);
           }}

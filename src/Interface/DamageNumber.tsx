@@ -101,6 +101,7 @@ export default function DamageNumber({
   // *** HEIRARCHY - orderIS CRUCIAL ***
   const getTextColor = () => {
     if (isHealing) return "#338C66";
+    if (isBreach) return "#FF6A00"; // OrangE
     if (isChainLightning) return "#ffff00";
     if (isOrbShield) return "#13F3FF"; // 58FCEC
     if (isEagleEye) return "#48FF00"; // venom green
@@ -115,7 +116,6 @@ export default function DamageNumber({
     if (isStealthStrike) return "#FF00FF"; // bright magenta for stealth strikes
     if (isPyroclast) return "#FF6A00"; // Orange for Pyroclast
     if (isClusterShot) return "#80ff80"; // Green color for cluster shots
-    if (isBreach) return "#FF6A00"; // Orange color for Breach
     if (isBowLightning) return "#80D9FF"; // Light blue for bow lightning
     return "#EBEBEB";
   };

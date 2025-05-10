@@ -4,14 +4,17 @@ import * as THREE from 'three';
 interface BoneArrowProps {
   position: Vector3;
   direction: Vector3;
+  opacity?: number;
 }
 
-export default function BoneArrow({ position, direction }: BoneArrowProps) {
+export default function BoneArrow({ position, direction, opacity = 1 }: BoneArrowProps) {
   // Shared materials
   const boneMaterial = new THREE.MeshStandardMaterial({
     color: "#d6cfc7",
     roughness: 0.9,
-    metalness: 0.1
+    metalness: 0.1,
+    transparent: true,
+    opacity: opacity
   });
 
   return (
@@ -68,7 +71,7 @@ export default function BoneArrow({ position, direction }: BoneArrowProps) {
       {/* Subtle glow effect */}
       <pointLight 
         color="#a8e6cf"
-        intensity={0.5}
+        intensity={0.5 * opacity}
         distance={2}
         decay={2}
       />

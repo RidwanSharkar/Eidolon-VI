@@ -74,8 +74,8 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
-    q: { type: 'q', key: 'q', cooldown: 0.725, currentCooldown: 0, icon: 'icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.725, currentCooldown: 0, icon: 'icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.7125, currentCooldown: 0, icon: 'icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 0.70, currentCooldown: 0, icon: 'icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 2.05, currentCooldown: 0, icon: 'icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: 'icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
     active: { type: 'active',  key: '2', cooldown: 4.5, currentCooldown: 0,  icon: 'icons/a1.svg', maxCooldown: 4.5, name: 'Summon Skeleton', isUnlocked: false}
@@ -91,16 +91,16 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   
   [WeaponType.SABRES]: {
     q: { type: 'q', key: 'q', cooldown: 0.625, currentCooldown: 0, icon: 'icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 6, currentCooldown: 0, icon: 'icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: 'icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
+    e: { type: 'e', key: 'e', cooldown: 5.5, currentCooldown: 0, icon: 'icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 9.5, currentCooldown: 0, icon: 'icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
   },
 
   [WeaponType.SPEAR]: {
-    q: { type: 'q', key: 'q', cooldown: 0.775, currentCooldown: 0, icon: 'icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.625, currentCooldown: 0, icon: 'icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 5, currentCooldown: 0, icon: 'icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 2.5, currentCooldown: 0, icon: 'icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: false },
+    r: { type: 'r', key: 'r', cooldown: .5, currentCooldown: 0, icon: 'icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: false },
     passive: { 
       type: 'passive', 
       key: '1', 
@@ -111,13 +111,13 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
       name: 'Reignite', 
       isUnlocked: false 
     },
-    active: { type: 'active', key: '2', cooldown: 4, currentCooldown: 0, icon: 'icons/a4.svg', maxCooldown: 8, name: 'Breach', isUnlocked: false }
+    active: { type: 'active', key: '2', cooldown: 2, currentCooldown: 0, icon: 'icons/a4.svg', maxCooldown: 8, name: 'Breach', isUnlocked: false }
   },
 
   [WeaponType.BOW]: {
     q: { type: 'q', key: 'q', cooldown: 0.25, currentCooldown: 0, icon: 'icons/q5.svg', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.5, currentCooldown: 0, icon: 'icons/e5.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: false },
+    e: { type: 'e', key: 'e', cooldown: 0.55, currentCooldown: 0, icon: 'icons/e5.svg', maxCooldown: 1, name: 'Sabres E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p5.svg', maxCooldown: 0, name: 'Venom Shots', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: 'icons/a5.svg', maxCooldown: 5, name: 'Elemental Shots', isUnlocked: false }
   },
@@ -130,7 +130,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   if (weapon === WeaponType.SWORD && 
       ability === 'q' && 
       abilities[WeaponType.SWORD].passive.isUnlocked) {
-    return 0.7; // OP w/ chain lightning
+    return 0.7; // ATTACK SPEED BUFF
   }
   
   return baseAbility.cooldown;
@@ -187,14 +187,14 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     e: {
       title: "Divine Smite",
-      description: "Unleashes an extra strike that calls down radiant energy upon nearby enemies.",
+      description: "Unleashes an extra instant strike that calls down a radiant bolt to deal additional damage to nearby enemies.",
       cost: "30",
       range: "4.0",
       damage: "35"
     },
     r: {
       title: "Oathstrike",
-      description: "Active: Consumes 4 Orb Charges to unleash a devastating strike in an arc that heals the wielder if at least one enemy is hit.",
+      description: "Active: Consumes 2 Orb Charges to unleash a devastating strike in an arc that heals the wielder if at least one enemy is hit.",
       cost: "50",
       range: "7.0",
       damage: "65"
@@ -204,7 +204,7 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       description: "Passive: Increases attack speed by 30% and gives attacks a 20% chance to heal for 3 HP."
     },
     active: {
-      title: "Chain Lightning",
+      title: "Static Discharge",
       description: "Passive: Sword attacks conduct electricity, bouncing lightning damage to nearby enemies on every hit."
     }
   },
@@ -217,8 +217,8 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
       damage: "13"
     },
     e: {
-      title: "Shadow Strike",
-      description: "Enter stealth for 10 seconds. Breaking stealth with an attack deals +100 bonus damage. If you are behind the target, this effect is doubled. If shadowstrike lands a killing blow on an enemy, you regain health.",
+      title: "Blinding Mist/Shadowstrike",
+      description: "Blinds enemies around you, causing them to wander aimlessly, granting invisibility for 5 seconds. Breaking stealth with an attack deals +100 bonus damage. If you are behind the target, this effect is doubled. If Shadowstrike lands a killing blow on an enemy, you regain health.",
       cost: "Cooldown: 10 seconds",
       range: "Self",
       damage: "Bonus Damage: 100"
@@ -241,65 +241,65 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
   },
   [WeaponType.SPEAR]: {
     q: {
-      title: "Spear Thrust",
-      description: "Long-range piercing thrust attack",
+      title: "Spear",
+      description: "Long-range piercing thrust attack. Ineffective at very close range; however, attacks that land at the tip of the spear are guaranteed to be critical strikes.",
       cost: "Cooldown: 0.85 seconds",
       range: "Range: 6 feet",
       damage: "Damage: 27"
     },
     e: {
-      title: "Whirlwind",
-      description: "Spin attack that hits all surrounding enemies",
+      title: "Razorwind",
+      description: "Consumes 1 orb per second to unleash a bladestorm that hits all surrounding enemies. Attacks that land at the tip of the spear are guaranteed to be critical strikes",
       cost: "Cooldown: 0.95 seconds",
       range: "Range: 5.75 feet",
       damage: "Damage: 31"
     },
     r: {
-      title: "Pyroclast",
-      description: "Charge and release a powerful missile that deals damage based on charge time.",
+      title: "Inferno",
+      description: "Charge and release a powerful missile that deals damage based on charge time. 2 orbs are consumed per second while charging, consuming up to 8 orb charges to deal maxmimum damage.",
       damage: "150-600",
       range: "30",
     },
     passive: {
       title: "Reignite",
-      description: "Passive: Restores 1 orb charge whenever you kill an enemy"
+      description: "Passive: Restores 2-3 orb charges whenever you kill an enemy"
     },
     active: {
       title: "Breach",
-      description: "Quickly dash forward, covering significant distance to engage or escape combat.",
+      description: "Quickly thrust forward, covering significant distance to engage or escape combat. Enemies caught within the path of Breach take fire damage - Cost: 2 Orb Charges",
       cost: "Cooldown: 8 seconds",
       range: "Distance: 10 feet",
     }
   },
   [WeaponType.BOW]: {
     q: {
-      title: "Quick Shot",
-      description: "Rapidly fire an ethereal arrow",
+      title: "Quick Shots",
+      description: "Rapidly fire bone arrows - 6 shots per orb charge",
       cost: "Cooldown: 0.85 seconds",
       range: "Range: 80 feet",
       damage: "Damage: 17"
     },
     e: {
       title: "Power Shot",
-      description: "Charge a powerful shot that deals increased damage based on charge time. Fully charged shots pierce through enemies.",
+      description: "Charge a powerful shot that deals increased damage based on charge time. Fully charged shots pierce through all enemies in the arrow's path.",
       cost: "Cooldown: 0.75 seconds",
       range: "Range: 80 feet",
       damage: "Damage: 53-125"
     },
     r: {
       title: "Vault",
-      description: "Quickly dash backwards",
+      description: "Quickly dash backwards to escape danger or obtain better positioning - 4 Second Cooldown.",
       cost: "Cooldown: 8 seconds",
       range: "Range: 60 feet",
       damage: "Damage: 85"
     },
     passive: {
       title: "Venom Shots",
-      description: "Passive: Every 3rd shot that hits a target deals an additional 70 damage."
+      description: "Passive: Every 3rd shot that hits a target deals an additional 67 damage."
     },
     active: {
       title: "Elemental Shots",
-      description: "Fully charged shots deal an additional 100 damage. Non-fully charged shots deal 20 additional damage and call down a lightning bolt on the target.",
+      description: "Fully charged shots deal an additional 100-200 fire damage. Non-fully charged shots deal 30 additional lightning damage to the target. Movement speed while charging the Power-Shot is increased 1000%",
       cost: "Passive",
       damage: "+100 to fully charged shots, +20 to regular shots"
     }

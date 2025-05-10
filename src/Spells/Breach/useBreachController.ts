@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Group } from 'three';
 import { ORBITAL_COOLDOWN } from '@/color/ChargedOrbitals';
+import { ReigniteRef } from '../Reignite/Reignite';
 
 interface UseBreachControllerProps {
   parentRef: React.RefObject<Group>;
@@ -14,14 +15,19 @@ interface UseBreachControllerProps {
     available: boolean;
     cooldownStartTime: number | null;
   }>>>;
+  reigniteRef?: React.RefObject<ReigniteRef>;
 }
 
 export const useBreachController = ({
   parentRef,
   charges,
-  setCharges
+  setCharges,
+  reigniteRef
 }: UseBreachControllerProps) => {
   const [isActive, setIsActive] = useState(false);
+
+  // Log reigniteRef availability when component initializes
+  console.log('[useBreachController] Initialized with reigniteRef:', reigniteRef ? 'available' : 'undefined');
 
   const consumeCharges = useCallback(() => {
     // Find two available charges
@@ -75,6 +81,7 @@ export const useBreachController = ({
   return {
     isActive,
     setIsActive,
-    activateBreach
+    activateBreach,
+    reigniteRef // Return reigniteRef so it can be passed to Breach component
   };
 };

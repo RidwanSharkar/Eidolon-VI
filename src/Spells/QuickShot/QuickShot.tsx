@@ -53,6 +53,8 @@ interface ProjectileData {
   startTime: number;
   hasCollided: boolean;
   active: boolean;
+  opacity: number;
+  fadeStartTime: number | null;
 }
 
 export const useQuickShot = ({
@@ -69,6 +71,7 @@ export const useQuickShot = ({
   const POOL_SIZE = 7;
   const lastShotTime = useRef(0);
   const SHOT_DELAY = 166;
+  const FADE_DURATION = 500; // 500ms fade out duration
   const eagleEyeManagerRef = useRef<{
     createEagleEyeEffect: (position: Vector3) => void;
   }>(null);
@@ -97,7 +100,9 @@ export const useQuickShot = ({
       power: 1,
       startTime: 0,
       hasCollided: false,
-      active: false
+      active: false,
+      opacity: 1,
+      fadeStartTime: null
     }));
   }, []);
 
@@ -132,19 +137,34 @@ export const useQuickShot = ({
     projectile.startTime = now;
     projectile.hasCollided = false;
     projectile.active = true;
+    projectile.opacity = 1;
+    projectile.fadeStartTime = null;
   }, [parentRef, charges, consumeCharge]);
 
   useEffect(() => {
     let animationFrameId: number;
 
     const updateProjectiles = () => {
+      const now = Date.now();
       const activeProjectiles = projectilePool.current.filter(p => p.active);
       
       activeProjectiles.forEach(projectile => {
+        // Handle fading out projectiles
+        if (projectile.fadeStartTime !== null) {
+          const fadeElapsed = now - projectile.fadeStartTime;
+          if (fadeElapsed >= FADE_DURATION) {
+            projectile.active = false;
+            return;
+          }
+          
+          projectile.opacity = 1 - (fadeElapsed / FADE_DURATION);
+          return;
+        }
+        
         const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
         
         if (distanceTraveled >= projectile.maxDistance) {
-          projectile.active = false;
+          projectile.fadeStartTime = now;
           return;
         }
 
@@ -183,7 +203,9 @@ export const useQuickShot = ({
               }
             }
 
-            projectile.active = false;
+            // Start fading out instead of immediately deactivating
+            projectile.hasCollided = true;
+            projectile.fadeStartTime = now;
             return;
           }
         }
