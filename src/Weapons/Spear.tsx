@@ -183,7 +183,7 @@ export default function Spear({
               .length();
             
             if (distanceFromLine <= 1) {
-              const damage = 27;
+              const damage = 29;
               onHit(enemy.id, damage);
               
               setDamageNumbers(prev => [...prev, {

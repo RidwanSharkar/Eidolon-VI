@@ -6,10 +6,15 @@
   border-radius: 5px;
   pointer-events: none;
   transform: translate(-50%, -100%);
-  white-space: nowrap;
   z-index: 1001;
   opacity: 0;
   animation: fadeIn 0.3s forwards;
+  max-width: 300px;
+  width: max-content;
+  white-space: normal;
+  word-wrap: break-word;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes fadeIn {
@@ -21,9 +26,13 @@
 .tooltip h3 {
   margin: 0;
   font-size: 1.2rem;
+  margin-bottom: 0.4rem;
+  color: #00ffaa;
 }
 
 .tooltip p {
   margin: 0.2rem 0;
   font-size: 0.9rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
 } 

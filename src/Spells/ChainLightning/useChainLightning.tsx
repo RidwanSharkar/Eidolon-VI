@@ -24,7 +24,7 @@ export const useChainLightning = ({
   setDamageNumbers,
   nextDamageNumberId
 }: ChainLightningProps) => {
-  const CHAIN_CHANCE = 0.375;
+  const CHAIN_CHANCE = 0.675;
   const INITIAL_DAMAGE = 19;
   const MAX_JUMPS = 5; 
   

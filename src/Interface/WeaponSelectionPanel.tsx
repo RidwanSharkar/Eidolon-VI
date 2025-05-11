@@ -24,14 +24,38 @@ export default function WeaponSelectionPanel({
   const handleAbilityHover = (e: React.MouseEvent, weapon: WeaponType, abilityType: 'q' | 'e') => {
     const tooltip = WEAPON_ABILITY_TOOLTIPS[weapon][abilityType];
     const rect = e.currentTarget.getBoundingClientRect();
+    
+    // Calculate viewport boundaries
+    const viewportWidth = window.innerWidth;
+    
+    // Initial position calculation
+    let x = rect.left + rect.width / 2;
+    let y = rect.top - 10;
+    
+    // Ensure tooltip stays within viewport bounds
+    // Add some padding from viewport edges
+    const VIEWPORT_PADDING = 20;
+    const TOOLTIP_WIDTH = 300; // This should match the max-width in CSS
+    const TOOLTIP_HEIGHT = 150; // Approximate height, adjust as needed
+    
+    // Adjust horizontal position if needed
+    if (x - TOOLTIP_WIDTH / 2 < VIEWPORT_PADDING) {
+      x = VIEWPORT_PADDING + TOOLTIP_WIDTH / 2;
+    } else if (x + TOOLTIP_WIDTH / 2 > viewportWidth - VIEWPORT_PADDING) {
+      x = viewportWidth - VIEWPORT_PADDING - TOOLTIP_WIDTH / 2;
+    }
+    
+    // Adjust vertical position if needed
+    if (y - TOOLTIP_HEIGHT < VIEWPORT_PADDING) {
+      // If tooltip would be cut off at top, show it below the element instead
+      y = rect.bottom + TOOLTIP_HEIGHT / 2;
+    }
+    
     setTooltipContent({
       title: tooltip.title,
       description: tooltip.description
     });
-    setTooltipPosition({
-      x: rect.left + rect.width / 2,
-      y: rect.top - 10
-    });
+    setTooltipPosition({ x, y });
   };
 
   const handleAbilityLeave = () => {

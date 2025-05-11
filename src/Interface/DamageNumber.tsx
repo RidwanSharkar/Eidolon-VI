@@ -23,7 +23,6 @@ interface DamageNumberProps {
   isStealthStrike?: boolean;
   isPyroclast?: boolean;
   isEagleEye?: boolean;
-  isClusterShot?: boolean;
   isBreach?: boolean;
   isBowLightning?: boolean;
   onComplete: () => void;
@@ -52,7 +51,6 @@ export default function DamageNumber({
   isStealthStrike = false,
   isPyroclast = false,
   isEagleEye = false,
-  isClusterShot = false,
   isBreach = false,
   isBowLightning = false,
   onComplete 
@@ -115,7 +113,6 @@ export default function DamageNumber({
     if (isFireball) return "#00C946"; // 00C946
     if (isStealthStrike) return "#FF00FF"; // bright magenta for stealth strikes
     if (isPyroclast) return "#FF6A00"; // Orange for Pyroclast
-    if (isClusterShot) return "#80ff80"; // Green color for cluster shots
     if (isBowLightning) return "#80D9FF"; // Light blue for bow lightning
     return "#EBEBEB";
   };

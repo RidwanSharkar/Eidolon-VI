@@ -1,5 +1,5 @@
 // src/Spells/Pyroclast/PyrochargeEffect.tsx
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -17,9 +17,27 @@ export default function PyrochargeEffect({
 }: PyrochargeEffectProps) {
   const flameParticlesRef = useRef<THREE.Group>(null);
   const lastUpdateTime = useRef(0);
+  // Add state to track if we should show the effect (with a short delay)
+  const [shouldShowEffect, setShouldShowEffect] = useState(false);
+  
+  // Add effect to handle the activation delay
+  useEffect(() => {
+    if (isActive) {
+      // Add a small delay before showing the effect to prevent flickering
+      const timer = setTimeout(() => {
+        setShouldShowEffect(true);
+      }, 100); // 100ms delay
+      
+      return () => {
+        clearTimeout(timer);
+      };
+    } else {
+      setShouldShowEffect(false);
+    }
+  }, [isActive]);
 
   useFrame(() => {
-    if (!isActive || !parentRef.current || !flameParticlesRef.current) return;
+    if (!shouldShowEffect || !parentRef.current || !flameParticlesRef.current) return;
 
     // Position the effect at the player's position
     flameParticlesRef.current.position.copy(parentRef.current.position);
@@ -50,7 +68,8 @@ export default function PyrochargeEffect({
     }
   });
 
-  if (!isActive) return null;
+  // Don't render anything if we shouldn't show the effect yet
+  if (!shouldShowEffect) return null;
 
   // Generate random particles around the player
   const particleCount = 12;

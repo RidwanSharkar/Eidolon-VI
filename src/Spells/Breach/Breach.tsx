@@ -21,9 +21,9 @@ interface BreachProps {
   reigniteRef?: React.RefObject<ReigniteRef>;
 }
 
-const BREACH_DISTANCE = 7; // Distance in units to dash forward
-const BREACH_DURATION = 0.25; // Duration in seconds
-const BREACH_DAMAGE = 71; // Base damage for wbreach collision
+const BREACH_DISTANCE = 7.5; // Distance in units to dash forward
+const BREACH_DURATION = 0.35; // Duration in seconds
+const BREACH_DAMAGE = 113; // Base damage for wbreach collision
 const BREACH_COLLISION_RADIUS = 2.0; // collision radius
 
 export default function Breach({ 

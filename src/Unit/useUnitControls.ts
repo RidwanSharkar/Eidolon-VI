@@ -21,14 +21,14 @@ interface UseUnitControlsProps {
   abilities: Record<WeaponType, { active?: { isUnlocked: boolean } }>;
 }
 
-const PLAY_AREA_RADIUS = 28 // MAP BOUNDARY
+const PLAY_AREA_RADIUS = 29 // MAP BOUNDARY
 
 // Base movement speed - this is our reference point
-const BASE_SPEED = 3.6; // MOVEMENT_SPEED
+const BASE_SPEED = 3.625; // MOVEMENT_SPEED
 
 // Direction multipliers
-const BACKWARD_SPEED_MULTIPLIER = 0.6; // 60% speed moving backward
-const STRAFE_SPEED_MULTIPLIER = 0.85;   // 80% speed moving sideways
+const BACKWARD_SPEED_MULTIPLIER = 0.60; // 60% speed moving backward
+const STRAFE_SPEED_MULTIPLIER = 0.80;   // 80% speed moving sideways
 const BASE_ABILITY_CHARGING_MULTIPLIER = 0.10; // Default charging speed
 const STEALTH_SPEED_MULTIPLIER = 1.7; // 130% speed while stealthed
 

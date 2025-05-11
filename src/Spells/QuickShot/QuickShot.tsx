@@ -68,10 +68,10 @@ export const useQuickShot = ({
   isEagleEyeUnlocked
 }: QuickShotProps) => {
   const projectilePool = useRef<ProjectileData[]>([]);
-  const POOL_SIZE = 7;
+  const POOL_SIZE = 8;
   const lastShotTime = useRef(0);
-  const SHOT_DELAY = 166;
-  const FADE_DURATION = 500; // 500ms fade out duration
+  const SHOT_DELAY = 155;
+  const FADE_DURATION = 400; // 500ms fade out duration
   const eagleEyeManagerRef = useRef<{
     createEagleEyeEffect: (position: Vector3) => void;
   }>(null);

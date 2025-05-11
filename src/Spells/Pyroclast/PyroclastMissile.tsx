@@ -35,11 +35,11 @@ export default function PyroclastMissile({
     }
   }, [position]);
 
-  useFrame((_, delta) => {
+  useFrame((_, delta) => { 
     if (!missileRef.current || hasCollided.current) return;
 
     // Move missile forward with consistent speed using delta
-    const speed = 30 * delta;
+    const speed = 25 * delta;
     missileRef.current.position.add(
       direction.clone().multiplyScalar(speed)
     );
@@ -94,8 +94,8 @@ export default function PyroclastMissile({
 
   // Calculate scale and intensity based on chargeTime
   const normalizedCharge = Math.min(chargeTime / 4, 1.0);
-  const scale = 0.5 + (normalizedCharge * 0.5);
-  const intensity = 1 + (normalizedCharge * 2);
+  const scale = 0.4 + (normalizedCharge * 0.75);
+  const intensity = 1.25 + (normalizedCharge * 2.5);
 
   return (
     <group>
@@ -117,8 +117,8 @@ export default function PyroclastMissile({
             >
               <cylinderGeometry args={[0.2 * scale, 0.4 * scale, 2 * scale, 6]} />
               <meshStandardMaterial
-                color="#FF544E"
-                emissive="#FF544E"
+                color="#FF2200"
+                emissive="#FF2200"
                 emissiveIntensity={intensity}
                 transparent
                 opacity={0.9}
@@ -130,39 +130,13 @@ export default function PyroclastMissile({
           {[...Array(4)].map((_, i) => (
             <mesh
               key={i}
-              position={[0, 0, -i * 0.5]}
-              onUpdate={(self) => {
-                // For rings to be perpendicular to the projectile direction
-                const dirNormalized = direction.clone().normalize();
-                
-                // Start with a quaternion that aligns with the missile direction
-                const alignQuaternion = new THREE.Quaternion().setFromUnitVectors(
-                  new THREE.Vector3(0, 1, 0),
-                  dirNormalized
-                );
-                
-                // Create perpendicular rotation (90 degrees around X axis)
-                const perpRotation = new THREE.Quaternion().setFromAxisAngle(
-                  new THREE.Vector3(0, 1, 1),
-                  -Math.PI / 2  // Negative rotation to correct alignment
-                );
-                
-                // Apply rotations in the correct order
-                self.quaternion.copy(perpRotation).multiply(alignQuaternion);
-                
-                // Add very subtle random rotation for variety
-                const randomRotation = new THREE.Quaternion().setFromAxisAngle(
-                  dirNormalized,
-                  Math.random() * Math.PI * 0.05  // Even smaller random variation
-                );
-                
-                self.quaternion.multiply(randomRotation);
-              }}
+              position={[0, 0, -i * 0.45 + 0.5]}
+              rotation={[0, 0, 0]}
             >
-              <torusGeometry args={[0.3 * scale + (i * 0.1), 0.1, 6, 12]} />
+              <torusGeometry args={[0.4 * scale + (i * 0.1), 0.1, 6, 12]} />
               <meshStandardMaterial
-                color="#FF8066"
-                emissive="#FF8066"
+                color="#FF2200"
+                emissive="#FF2200"
                 emissiveIntensity={intensity * (1 - i * 0.2)}
                 transparent
                 opacity={0.7 - (i * 0.15)}
@@ -174,7 +148,7 @@ export default function PyroclastMissile({
           {/* Light source */}
           <pointLight
             color="#FF544E"
-            intensity={intensity * 2}
+            intensity={intensity * 1}
             distance={5}
             decay={2}
           />

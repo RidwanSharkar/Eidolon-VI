@@ -121,7 +121,7 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
         // Set position relative to center, with height variation
         child.position.set(
           x,
-          particle.height + Math.sin(now * 0.002 + i) * 0.2 - 0.65, // Add slight vertical movement
+          particle.height + Math.sin(now * 0.002 + i) * 0.2 - 0.35, // Add slight vertical movement
           z
         );
         
@@ -149,11 +149,11 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
       {/* Fire particles */}
       {particleRefs.current.map((_, i) => (
         <mesh key={i}>
-          <dodecahedronGeometry args={[0.11, 0]} /> {/*  particle size */}
+          <dodecahedronGeometry args={[0.115, 0]} /> {/*  particle size */}
           <meshStandardMaterial
             color="#FF4400"
-            emissive="#FF6600"
-            emissiveIntensity={1}
+            emissive="#FF2200"
+            emissiveIntensity={2}
             transparent
             opacity={0.3}
             blending={THREE.AdditiveBlending}
@@ -167,8 +167,8 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
         <ringGeometry args={[0.65, 0.5, 32]} /> 
         <meshStandardMaterial
           color="#FF3000"
-          emissive="#FF6000"
-          emissiveIntensity={0.5}
+          emissive="#FF2200"
+          emissiveIntensity={1.5}
           transparent
           opacity={0.3}
           blending={THREE.AdditiveBlending}

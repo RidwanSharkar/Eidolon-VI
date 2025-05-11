@@ -8,7 +8,7 @@ interface VaultProps {
   onComplete: () => void;
 }
 
-const VAULT_DISTANCE = 4; // Distance in units to vault backwards
+const VAULT_DISTANCE = 3.5; // Distance in units to vault backwards
 const VAULT_DURATION = 0.25; // Duration in seconds
 
 export default function Vault({ parentRef, isActive, onComplete }: VaultProps) {

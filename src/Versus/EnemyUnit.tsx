@@ -64,11 +64,11 @@ export default function EnemyUnit({
   const velocity = useRef(new Vector3());
   const targetRotation = useRef(0);
 
-  const ATTACK_RANGE = 2.4;
+  const ATTACK_RANGE = 2.5;
   const ATTACK_COOLDOWN = 2500;
-  const MOVEMENT_SPEED = 0.06;
-  const POSITION_UPDATE_THRESHOLD = 0.15;
-  const MINIMUM_UPDATE_INTERVAL = 40;
+  const MOVEMENT_SPEED = 0.059;
+  const POSITION_UPDATE_THRESHOLD = 0.125;
+  const MINIMUM_UPDATE_INTERVAL = 20;
   const ATTACK_DAMAGE = 10;
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.155;

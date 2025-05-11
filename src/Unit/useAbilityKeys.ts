@@ -65,7 +65,6 @@ interface UseAbilityKeysProps {
   startPyroclastCharge: () => void;
   releasePyroclastCharge: () => void;
   isPyroclastActive: boolean;
-  fireClusterShots: () => boolean;
   isBreaching: boolean;
   setIsBreaching: (value: boolean) => void;
   activateBreach: () => boolean;
@@ -110,7 +109,6 @@ export function useAbilityKeys({
   isPyroclastActive,
   startPyroclastCharge,
   releasePyroclastCharge,
-  fireClusterShots,
   isBreaching,
   setIsBreaching,
   activateBreach,
@@ -420,7 +418,6 @@ export function useAbilityKeys({
     isPyroclastActive,
     startPyroclastCharge,
     releasePyroclastCharge,
-    fireClusterShots,
     isBreaching,
     setIsBreaching,
     activateBreach,

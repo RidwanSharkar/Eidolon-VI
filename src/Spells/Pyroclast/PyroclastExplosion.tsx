@@ -63,10 +63,10 @@ export default function PyroclastExplosion({
     <group position={position}>
       {/* Core explosion sphere */}
       <mesh>
-        <sphereGeometry args={[0.475 * scale * (1 + elapsed * expansionRate), 32, 32]} />
+        <sphereGeometry args={[0.5 * scale * (1 + elapsed * expansionRate), 32, 32]} />
         <meshStandardMaterial
-          color="#FF4422"
-          emissive="#FF5533" 
+          color="#FF2200"
+          emissive="#FF3300" 
           emissiveIntensity={intensity * fade * 0.5}
           transparent
           opacity={0.9 * fade}
@@ -77,10 +77,10 @@ export default function PyroclastExplosion({
       
       {/* Inner energy sphere */}
       <mesh>
-        <sphereGeometry args={[0.475 * scale * (1 + elapsed * (expansionRate + 1)), 24, 24]} />
+        <sphereGeometry args={[0.525 * scale * (1 + elapsed * (expansionRate + 1)), 24, 24]} />
         <meshStandardMaterial
-          color="#FF7755"
-          emissive="#FFFFFF"
+          color="#FF4400"
+          emissive="#FF6600"
           emissiveIntensity={intensity * 0.5 * fade}
           transparent
           opacity={0.95 * fade}
@@ -94,8 +94,8 @@ export default function PyroclastExplosion({
         <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
           <torusGeometry args={[ringSize * scale * (1 + elapsed * (expansionRate + 2)), 0.06 * scale, 16, 32]} />
           <meshStandardMaterial  
-            color="#FF4422"
-            emissive="#FF7744"
+            color="#FF2200"
+            emissive="#FF4400"
             emissiveIntensity={intensity * fade * 0.3}
             transparent
             opacity={0.7 * fade * (1 - i * 0.15)}
@@ -123,8 +123,8 @@ export default function PyroclastExplosion({
           >
             <sphereGeometry args={[0.08 * scale, 8, 8]} />
             <meshStandardMaterial
-              color="#FF8866"
-              emissive="#FFFFFF"
+              color="#FF5500"
+              emissive="#FF7700"
               emissiveIntensity={intensity * 1.2 * fade}
               transparent
               opacity={0.9 * fade}
@@ -137,13 +137,13 @@ export default function PyroclastExplosion({
 
       {/* Dynamic lights - brighter and more intense */}
       <pointLight
-        color="#FF4422"
+        color="#FF2200"
         intensity={intensity * 3 * fade}
         distance={5 * scale}
         decay={1.8}
       />
       <pointLight
-        color="#FF8855"
+        color="#FF4400"
         intensity={intensity * 1.5 * fade}
         distance={8 * scale}
         decay={1.5}
@@ -152,7 +152,7 @@ export default function PyroclastExplosion({
       {/* Additional bright flash at the beginning */}
       {elapsed < 0.1 && (
         <pointLight
-          color="#FFFFFF"
+          color="#FF3300"
           intensity={intensity * 5 * (1 - elapsed * 10)}
           distance={3 * scale}
           decay={1}

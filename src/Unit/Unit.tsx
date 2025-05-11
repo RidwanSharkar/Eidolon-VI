@@ -52,9 +52,6 @@ import Vault from '@/Spells/Vault/Vault';
 import { usePyroclast } from '../Spells/Pyroclast/usePyroclast';
 import PyroclastMissile from '../Spells/Pyroclast/PyroclastMissile';
 import Reignite, { ReigniteRef } from '../Spells/Reignite/Reignite';
-import { useClusterShots } from '../Spells/ClusterShots/ClusterShots';
-import { ClusterShots } from '../Spells/ClusterShots/ClusterShots';
-import { DebuffIndicator } from '../Spells/ClusterShots/DebuffIndicator';
 import PyrochargeEffect from '../Spells/Pyroclast/PyrochargeEffect';
 import PyroclastExplosion from '@/Spells/Pyroclast/PyroclastExplosion';
 import Breach from '@/Spells/Breach/Breach';
@@ -202,8 +199,40 @@ export default function Unit({
     charges: fireballCharges,
     setCharges: setFireballCharges,
     reigniteRef: reigniteRef,
-    checkForSpearKillAndProcessReignite: (targetId: string, damage: number) => {
-      checkForSpearKillAndProcessReignite(targetId, onHit, damage);
+    checkForSpearKillAndProcessReignite: (targetId: string, damageFn: (id: string, damage: number) => void, damage: number, bypassWeaponCheck: boolean) => {
+      // For Pyroclast, we need to bypass weapon checks when bypassWeaponCheck is true
+      // The only check we need is to ensure reigniteRef.current exists
+      if (reigniteRef.current) {
+        // Get the target and store its health before damage
+        const target = enemyData.find(e => e.id === targetId);
+        if (!target) {
+          damageFn(targetId, damage);
+          return;
+        }
+        
+        const previousHealth = target.health;
+        
+        // Apply the damage
+        damageFn(targetId, damage);
+        
+        // Need to find the target again to get updated health
+        const updatedTarget = enemyData.find(e => e.id === targetId);
+        if (!updatedTarget) {
+          return;
+        }
+        
+        // Check if the enemy was killed by this hit
+        if (previousHealth > 0 && updatedTarget.health <= 0) {
+          // Pass a fresh clone of the position
+          const killPosition = updatedTarget.position.clone();
+          console.log(`[${bypassWeaponCheck ? 'Pyroclast' : 'SpearKill'}] Kill detected! Processing Reignite at position:`, killPosition);
+          reigniteRef.current.processKill(killPosition);
+        }
+      } else {
+        // Just apply damage if reigniteRef is not available
+        console.log(`[${bypassWeaponCheck ? 'Pyroclast' : 'SpearKill'}] reigniteRef is not available, just applying damage`);
+        damageFn(targetId, damage);
+      }
     }
   });
 
@@ -226,24 +255,8 @@ export default function Unit({
   const [smiteEffects, setSmiteEffects] = useState<{ id: number; position: Vector3 }[]>([]);
   const nextSmiteId = useRef(0);
   
-  // Cluster Shots
-  const [charges, setCharges] = useState<Array<{
-    id: number;
-    available: boolean;
-    cooldownStartTime: number | null;
-  }>>(Array.from({ length: 3 }, (_, i) => ({
-    id: i,
-    available: true,
-    cooldownStartTime: null
-  })));
-
-  const [debuffedEnemies, setDebuffedEnemies] = useState<Array<{
-    id: string;
-    timestamp: number;
-    duration: number;
-  }>>([]);
-
-  const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number>>({});
+ 
+  const [hitCountThisSwing, setHitCountThisSwing] = useState<Record<string, number | boolean>>({});
 
   // BOW CHARGING
   const [bowChargeProgress, setBowChargeProgress] = useState(0);
@@ -651,8 +664,9 @@ export default function Unit({
     const target = enemyData.find(e => e.id === targetId);
     if (!target || target.health <= 0 || target.isDying) return;
 
-    // Get the current hit count for this target during this swing
-    const currentHits = hitCountThisSwing[target.id] || 0;
+    // When retrieving currentHits, ensure it's a number:
+    const currentHits = typeof hitCountThisSwing[target.id] === 'number' ? 
+        hitCountThisSwing[target.id] as number : 0;
 
     const isEnemy = target.id.startsWith('enemy');
     if (!isEnemy) return;
@@ -667,7 +681,7 @@ export default function Unit({
     // Update hit count before processing damage to prevent race conditions
     setHitCountThisSwing(prev => ({
       ...prev,
-      [target.id]: currentHits + 1,
+      [target.id]: (prev[target.id] as number || 0) + 1,
       [`${target.id}_time`]: now
     }));
 
@@ -680,13 +694,18 @@ export default function Unit({
         const toTarget = new Vector3()
           .subVectors(target.position, groupRef.current.position)
           .normalize();
-        const forward = new Vector3(0, 0, 0.025)
+        const forward = new Vector3(0, 0, 1)
           .applyQuaternion(groupRef.current.quaternion);
         
         const angle = toTarget.angleTo(forward);
         
-        // Spear only hits in a narrow forward cone (about 20 degrees)
-        if (Math.abs(angle) > Math.PI / 8.5) { // ~20 degrees
+        // DEADZONE
+        const closeRange = weaponRange * 0.6; // 40% of max range
+        const maxAllowedAngle = distance <= closeRange ? 
+          Math.PI / 6 : // 30 degrees for close range
+          Math.PI / 8.5; // ~20 degrees for normal range
+        
+        if (Math.abs(angle) > maxAllowedAngle) {
           return;
         }
       }
@@ -776,7 +795,16 @@ export default function Unit({
         }
       } else if (currentWeapon === WeaponType.SABRES) {
         // Calculate damage independently for each hit
-        isCritical = Math.random() < 0.17; // 17% crit chance for Sabres
+        // Calculate and store critical status for this specific hit
+        const currentHitIndex = currentHits;
+        isCritical = Math.random() < 0.25; // 17% crit chance for Sabres
+        
+        // Store the critical hit status for this specific hit
+        setHitCountThisSwing(prev => ({
+          ...prev,
+          [`${target.id}_crit_${currentHitIndex}`]: isCritical
+        }));
+        
         damage = isCritical ? baseDamage * 2 : baseDamage;
       } else {
         // Normal damage calculation for other weapons
@@ -882,7 +910,7 @@ export default function Unit({
               target.position.y,
               target.position.z
             ),
-            isCritical
+            isCritical: hitIsCritical
           }]);
         } else {
           setDamageNumbers(prev => [...prev, {
@@ -938,7 +966,7 @@ export default function Unit({
       });
     }
 
-    // SABRE BOW CHARGING 
+    // BOW CHARGING 
     if (isBowCharging && bowChargeStartTime.current !== null) {
       const chargeTime = (Date.now() - bowChargeStartTime.current) / 1000;
       const progress = Math.min(chargeTime / 1.675, 1); // BOWCHARGE CHARGETIME - 1.5 no movemvent
@@ -1089,15 +1117,26 @@ export default function Unit({
 
     // Pyroclast charge progress update
     if (isPyroclastActive) {
-      const chargeTime = (Date.now() - chargeStartTime.current!) / 1000;
-      // Update progress calculation to show it charging up to 8 seconds 
-      const progress = Math.min(chargeTime / 6, 1);
-      pyroclastChargeProgress.current = progress;
-      
-      // Auto-release after 8 seconds (max charge)
-      if (chargeTime >= 6) {
-        releasePyroclastCharge();
-        onAbilityUse(WeaponType.SPEAR, 'r');
+      const now = Date.now();
+      if (chargeStartTime.current) {
+        const chargeTime = (now - chargeStartTime.current) / 1000;
+        // Update progress calculation to show it charging up to 6 seconds 
+        // Use a more smooth ease-in curve for progress
+        const progress = Math.min(chargeTime / 4, 1);
+        // Apply smoothing to the progress update using a simple easing function
+        const smoothProgress = progress * progress * (3 - 2 * progress); // Smooth step function
+        pyroclastChargeProgress.current = smoothProgress;
+        
+        // Auto-release after 6 seconds (max charge)
+        if (chargeTime >= 4) {
+          releasePyroclastCharge();
+          onAbilityUse(WeaponType.SPEAR, 'r');
+        }
+      }
+    } else {
+      // Ensure progress resets to zero when not charging
+      if (pyroclastChargeProgress.current > 0) {
+        pyroclastChargeProgress.current = 0;
       }
     }
 
@@ -1147,36 +1186,6 @@ export default function Unit({
   // Add isBreaching state before useAbilityKeys call
   const [isBreaching, setIsBreaching] = useState(false);
 
-  // Initialize ClusterShots hook before useAbilityKeys call
-  const {
-    activeArrows,
-    fireClusterShots  
-  } = useClusterShots({
-    parentRef: groupRef,
-    onHit: (targetId: string, damage: number) => {
-      const target = enemyData.find(e => e.id === targetId);
-      if (!target || target.health <= 0) return;
-      
-      // Apply damage
-      onHit(targetId, damage);
-      
-      // Add damage number
-      setDamageNumbers(prev => [...prev, {
-        id: nextDamageNumberId.current++,
-        damage,
-        position: target.position.clone().add(new Vector3(0, 2, 0)),
-        isCritical: false,
-        isClusterShot: true
-      }]);
-    },
-    enemyData,
-    setDamageNumbers,
-    nextDamageNumberId,
-    charges,
-    setCharges,
-    setDebuffedEnemies,
-    setActiveEffects  
-  });
 
   // In the Unit component, add this before useAbilityKeys initialization
   const { activateBreach } = useBreachController({
@@ -1231,7 +1240,6 @@ export default function Unit({
     startPyroclastCharge,
     releasePyroclastCharge,
     isPyroclastActive,
-    fireClusterShots,
     isBreaching,
     setIsBreaching,
     activateBreach  // Add this new prop
@@ -1275,16 +1283,16 @@ export default function Unit({
       // Add bonus damage from Elemental Shots (active ability) if it's unlocked
       if (abilities[WeaponType.BOW].active.isUnlocked) {
         // Random damage between 80-200 instead of fixed 100
-        const randomBonus = Math.floor(Math.random() * 121) + 100; // 80-200 range
+        const randomBonus = Math.floor(Math.random() * 121) + 120; // 80-200 range
         baseDamage += randomBonus;
       }
     } else {
       // Minimum damage of 41, scaling up with charge
-      baseDamage = 35 + Math.floor((projectile.power * 108));
+      baseDamage = 47 + Math.floor((projectile.power * 108));
       
       // Add bonus damage from Elemental Shots for non-fully charged shots
       if (abilities[WeaponType.BOW].active.isUnlocked) {
-        baseDamage += 29; // Add 27 bonus damage to non-fully charged shots
+        baseDamage += 67; // Add 27 bonus damage to non-fully charged shots
         
         // Create lightning strike effect
         createLightningStrike(projectilePosition);
@@ -1294,25 +1302,14 @@ export default function Unit({
     // Apply critical hit calculation
     const { damage, isCritical } = calculateDamage(baseDamage);
     
-    // Check if the target has the ClusterShots debuff
-    const isDebuffed = debuffedEnemies.some(enemy => enemy.id === targetId);
-    
-    // Apply additional damage if debuffed
-    let finalDamage = damage;
-    if (isDebuffed) {
-      const additionalDamage = projectile.isFullyCharged ? 210 : 70;
-      finalDamage += additionalDamage;
-    }
-
     // Create damage number with proper flags
     setDamageNumbers(prev => [
       ...prev,
       {
         id: nextDamageNumberId.current++,
-        damage: finalDamage,
+        damage: damage,
         position: projectilePosition.clone().add(new Vector3(0, 0, 0)),
-        isCritical: isCritical || isDebuffed, 
-        isClusterShot: false,   
+        isCritical: isCritical, 
         isLightning: false,
         isBowLightning: !projectile.isFullyCharged && abilities[WeaponType.BOW].active.isUnlocked,
         isHealing: false,
@@ -1332,7 +1329,7 @@ export default function Unit({
     ]);
     
     // Handle damage effects
-    onHit(targetId, finalDamage);
+    onHit(targetId, damage);
     
     // Only set hasCollided for non-fully charged shots
     // This allows fully charged shots to pierce through enemies
@@ -1565,28 +1562,15 @@ export default function Unit({
     }
   }, [currentWeapon, resetEagleEyeCounter]);
 
-  // Clean up expired debuffs
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      setDebuffedEnemies(prev => prev.filter(debuff => {
-        return (now - debuff.timestamp) < 5000; // 5 seconds
-      }));
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
   // Add this function after the handleAttack function in Unit.tsx
   const checkForSpearKillAndProcessReignite = useCallback((
     targetId: string, 
     damageFn: (id: string, damage: number) => void, 
-    damage: number
+    damage: number,
+    ignoreWeaponCheck = false 
   ) => {
-    // Only proceed if using Spear with passive unlocked
-    if (currentWeapon !== WeaponType.SPEAR || 
-        !abilities[WeaponType.SPEAR].passive.isUnlocked || 
-        !reigniteRef.current) {
+    // Skip weapon check if ignoreWeaponCheck is true
+    if (!ignoreWeaponCheck && (currentWeapon !== WeaponType.SPEAR || !abilities[WeaponType.SPEAR].passive.isUnlocked)) {
       console.log(`[SpearKill] Not processing Reignite - weapon: ${currentWeapon}, passive unlocked: ${abilities[WeaponType.SPEAR]?.passive?.isUnlocked}, reigniteRef: ${reigniteRef.current ? 'available' : 'null'}`);
       damageFn(targetId, damage);
       return;
@@ -2133,39 +2117,6 @@ export default function Unit({
               parentRef={groupRef}
             />
           );
-        } else if (effect.type === 'clusterImpact') {
-          const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
-          const fade = Math.max(0, 1 - (elapsed / (effect.duration || 0.3)));
-          
-          return (
-            <group key={effect.id} position={effect.position.toArray()}>
-              {/* Impact burst */}
-              <mesh>
-                <sphereGeometry args={[0.3 * (1 + elapsed * 2), 16, 16]} />
-                <meshBasicMaterial
-                  color="#40ff40"
-                  transparent
-                  opacity={0.5 * fade}
-                  blending={THREE.AdditiveBlending}
-                />
-              </mesh>
-              
-              {/* Energy rings */}
-              {[0.3, 0.5, 0.7].map((size, i) => (
-                <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-                  <ringGeometry args={[size * (1 + elapsed * 2), size * (1 + elapsed * 2) + 0.1, 16]} />
-                  <meshBasicMaterial
-                    color="#80ff80"
-                    transparent
-                    opacity={0.3 * fade}
-                    blending={THREE.AdditiveBlending}
-                  />
-                </mesh>
-              ))}
-              
-              <pointLight color="#40ff40" intensity={2 * fade} distance={3} decay={2} />
-            </group>
-          );
         } else if (effect.type === 'pyroclastExplosion') {
           return (
             <PyroclastExplosion
@@ -2480,28 +2431,10 @@ export default function Unit({
         parentRef={groupRef}
         charges={fireballCharges}
         setCharges={setFireballCharges}
-        isActive={currentWeapon === WeaponType.SPEAR && abilities[WeaponType.SPEAR].passive.isUnlocked}
+        isActive={abilities[WeaponType.SPEAR].passive.isUnlocked}
       />
 
-      {/* Render ClusterShots */}
-      <ClusterShots activeArrows={activeArrows} />
 
-      {/* Render debuff indicators */}
-      {debuffedEnemies.map(debuff => {
-        const now = Date.now();
-        const elapsedTime = (now - debuff.timestamp) / debuff.duration; // Calculate elapsed time as 0-1 value
-        
-        return (
-          <DebuffIndicator
-            key={`${debuff.id}-${debuff.timestamp}`}
-            position={
-              enemyData.find(enemy => enemy.id === debuff.id)?.position ||
-              new Vector3()
-            }
-            elapsedTime={elapsedTime} // Pass elapsedTime instead of duration and startTime
-          />
-        );
-      })}
 
       {currentWeapon === WeaponType.SPEAR && 
        abilities[WeaponType.SPEAR].active.isUnlocked && (
