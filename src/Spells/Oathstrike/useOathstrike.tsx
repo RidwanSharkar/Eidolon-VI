@@ -133,7 +133,7 @@ export const useOathstrike = ({
         const angle = Math.abs(forward.angleTo(toEnemy));
         if (angle <= ARC_ANGLE / 2) {
           hitEnemies = true;
-          const { damage, isCritical } = calculateDamage(47); // DAMAGE
+          const { damage, isCritical } = calculateDamage(53); // DAMAGE
           onHit(enemy.id, damage);
           
           setDamageNumbers(prev => [...prev, {

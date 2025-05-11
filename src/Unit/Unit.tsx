@@ -766,7 +766,7 @@ export default function Unit({
             return;
           }
 
-          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(53);
+          const { damage: lightningDamage, isCritical: lightningCrit } = calculateDamage(59);
           onHit(target.id, lightningDamage);
           
           setDamageNumbers(prev => [...prev, {

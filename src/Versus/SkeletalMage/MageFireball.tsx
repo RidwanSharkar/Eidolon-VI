@@ -29,12 +29,14 @@ export default function MageFireball({ position, target, onHit, playerPosition }
   const fireballRef = useRef<Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const initialDirection = target.clone().sub(position).normalize();
-  const speed = 0.25
-  const hitRadius = 1.175;
+  const speed = 0.26
+  const hitRadius = 1.2;
   const [showExplosion, setShowExplosion] = useState(false);
   const [explosionStartTime, setExplosionStartTime] = useState<number | null>(null);
   const [, forceUpdate] = useState({});
   const hasDealtDamage = useRef(false);
+  // Maximum distance the fireball can travel before disappearing
+  const MAX_TRAVEL_DISTANCE = 50;
 
   useFrame(() => {
     if (!fireballRef.current) return;
@@ -46,18 +48,12 @@ export default function MageFireball({ position, target, onHit, playerPosition }
         hasDealtDamage.current = true;
         onHit(true);
       }
-      
-      if (explosionStartTime && Date.now() - explosionStartTime > 200) {
-        onHit(false);
-        return;
-      }
-      return;
     }
     
     fireballRef.current.position.add(initialDirection.clone().multiplyScalar(speed));
     
     const distanceToPlayer = fireballRef.current.position.distanceTo(playerPosition);
-    const directHitRadius = 1.175;
+    const directHitRadius = 1.2;
     
     if (distanceToPlayer < directHitRadius) {
       setShowExplosion(true);
@@ -72,14 +68,13 @@ export default function MageFireball({ position, target, onHit, playerPosition }
       if (playerDistanceToTarget < hitRadius) {
         setShowExplosion(true);
         setExplosionStartTime(Date.now());
-      } else {
-        onHit(false);
       }
-      return;
+      // Removed the early return here so fireball continues past the target
     }
 
     const distanceFromStart = fireballRef.current.position.distanceTo(position);
-    if (distanceFromStart > 300) {
+    // Only destroy the fireball after it travels the maximum distance
+    if (distanceFromStart > MAX_TRAVEL_DISTANCE) {
       onHit(false);
     }
   });

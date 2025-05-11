@@ -51,7 +51,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
     maxHitsPerSwing: 1
   },
   [WeaponType.SCYTHE]: {
-    normal: 23,
+    normal: 29,
     range: 4.75,
     maxHitsPerSwing: 1
   },
@@ -62,7 +62,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SPEAR]: {
     normal: 31,
-    range: 6,
+    range: 6.05,
     maxHitsPerSwing: 1
   },
   [WeaponType.BOW]: {
@@ -74,7 +74,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
-    q: { type: 'q', key: 'q', cooldown: 0.70, currentCooldown: 0, icon: 'icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: 'icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 0.69, currentCooldown: 0, icon: 'icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 2.15, currentCooldown: 0, icon: 'icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: 'icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
@@ -82,7 +82,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   }, 
 
   [WeaponType.SWORD]: {
-    q: { type: 'q', key: 'q', cooldown: 1.125, currentCooldown: 0, icon: 'icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 1.1, currentCooldown: 0, icon: 'icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 3.85, currentCooldown: 0, icon: 'icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: 'icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
     passive: {  type: 'passive', key: '1',  cooldown: 0,  currentCooldown: 0,  icon: 'icons/p2.svg', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: false },
@@ -121,7 +121,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   if (weapon === WeaponType.SWORD && 
       ability === 'q' && 
       abilities[WeaponType.SWORD].passive.isUnlocked) {
-    return 0.725; // ATTACK SPEED BUFF
+    return 0.7125; // ATTACK SPEED BUFF
   }
   
   return baseAbility.cooldown;

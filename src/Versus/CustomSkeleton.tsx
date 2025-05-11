@@ -1,9 +1,8 @@
 // src/versus/CustomSkeleton.tsx
-import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, InstancedMesh, Matrix4, Euler, Vector3 } from 'three';
+import React, { useRef, useState, useEffect } from 'react';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../gear/BonePlate';
-import * as THREE from 'three';
 
 interface CustomSkeletonProps {
   position: [number, number, number];
@@ -26,139 +25,9 @@ const darkBoneMaterial = new MeshStandardMaterial({
 });
 
 // Cache geometries that are reused frequently
-const jointGeometry = new SphereGeometry(0.06, 6, 6);
-const smallBoneGeometry = new CylinderGeometry(0.04, 0.032, 1, 5);
-const clawGeometry = new ConeGeometry(0.02, 0.15, 5);
-
-// Add these helper functions at the top level
-const tempMatrix = new Matrix4();
-const tempPosition = new Vector3();
-const tempRotation = new Euler();
-const tempScale = new Vector3();
-const tempQuaternion = new THREE.Quaternion();
-
-function setMatrixAt(
-  instancedMesh: InstancedMesh,
-  index: number,
-  position: Vector3,
-  rotation: Euler,
-  scale: Vector3
-) {
-  tempQuaternion.setFromEuler(rotation);
-  tempMatrix.compose(position, tempQuaternion, scale);
-  instancedMesh.setMatrixAt(index, tempMatrix);
-}
-
-// Create instanced components
-function TeethInstances({ isUpper = true }: { isUpper?: boolean }) {
-  const teethInstances = useMemo(() => {
-    const count = isUpper ? 5 : 4;
-    const mesh = new InstancedMesh(clawGeometry, standardBoneMaterial, count);
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    return mesh;
-  }, [ isUpper ]);
-
-  useEffect(() => {
-    const offsets = isUpper ? [-0.03, -0.06, -0.09, 0, 0.03] : [-0.06, -0.02, 0.02, 0.06];
-    offsets.forEach((offset, i) => {
-      tempPosition.set(offset, isUpper ? -0.25 : -0.18, 0.2);
-      tempRotation.set(isUpper ? 0.5 : 2.5, 0, 0);
-      tempScale.set(1, 1, 1);
-      setMatrixAt(teethInstances, i, tempPosition, tempRotation, tempScale);
-    });
-    teethInstances.instanceMatrix.needsUpdate = true;
-  }, [teethInstances, isUpper]);
-
-  return <primitive object={teethInstances} />;
-}
-
-function ShoulderPlateInstances() {
-  const plateInstances = useMemo(() => {
-    const mesh = new InstancedMesh(
-      new THREE.BoxGeometry(0.12, 0.19, 0.02),
-      darkBoneMaterial,
-      4
-    );
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    return mesh;
-  }, []);
-
-  useEffect(() => {
-    for (let i = 0; i < 4; i++) {
-      const angle = (i * Math.PI) / 2;
-      tempPosition.set(0.11 * Math.cos(angle), 0, 0.11 * Math.sin(angle));
-      tempRotation.set(0, angle + Math.PI / 6, 0);
-      tempScale.set(1, 1, 1);
-      setMatrixAt(plateInstances, i, tempPosition, tempRotation, tempScale);
-    }
-    plateInstances.instanceMatrix.needsUpdate = true;
-  }, [plateInstances]);
-
-  return <primitive object={plateInstances} />;
-}
-
-// Update the ShoulderPlate component to use instances
-function ShoulderPlate() {
-  return (
-    <group>
-      {/* Main shoulder plate with layered armor design */}
-      <group>
-        {/* Base plate */}
-        <mesh>
-          <cylinderGeometry args={[0.123, 0.19, 0.175, 6, 1, false, 0, Math.PI*2]} />
-          <meshStandardMaterial 
-            color="#e8e8e8"
-            roughness={0.4}
-            metalness={0.3}
-          />
-        </mesh>
-
-        {/* Replace individual plates with instanced version */}
-        <ShoulderPlateInstances />
-
-        {/* Top rim */}
-        <mesh position={[0, 0.22, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.065, 0.02, 3, 4]} />
-          <meshStandardMaterial 
-            color="#d4d4d4"
-            roughness={0.3}
-            metalness={0.5}
-          />
-        </mesh>
-
-                {/* bottom rim */}
-                <mesh position={[0, 0, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.16, 0.02, 4, 5]} />
-          <meshStandardMaterial 
-            color="#d4d4d4"
-            roughness={0.3}
-            metalness={0.5}
-          />
-        </mesh>
-                {/* bottom rim */}
-                <mesh position={[0, -0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.20, 0.02, 4, 5]} />
-          <meshStandardMaterial 
-            color="#d4d4d4"
-            roughness={0.3}
-            metalness={0.5}
-          />
-        </mesh>
-
-
-        {/* h0ver rim */}
-        <mesh position={[0, 0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.125, 0.0175, 6, 6]} />
-          <meshStandardMaterial 
-            color="#d4d4d4"
-            roughness={0.3}
-            metalness={0.5}
-          />
-        </mesh>
-      </group>
-    </group>
-  );
-}
+const jointGeometry = new SphereGeometry(0.06, 8, 8);
+const smallBoneGeometry = new CylinderGeometry(0.04, 0.032, 1, 6);
+const clawGeometry = new ConeGeometry(0.02, 0.15, 6);
 
 function BoneLegModel() {
   // Simplified version that reuses geometries and materials
@@ -375,13 +244,97 @@ function BoneSwordModel() {
         />
       </mesh>
 
-      {/* Optimize light settings */}
+      {/* Subtle glow effect */}
       <pointLight 
         color="#FF4D00"
-        intensity={0.3}
-        distance={3}
-        decay={2.5}
+        intensity={0.5}
+        distance={2}
+        decay={2}
       />
+    </group>
+  );
+}
+
+
+function ShoulderPlate() {
+  return (
+    <group>
+      {/* Main shoulder plate with layered armor design */}
+      <group>
+        {/* Base plate */}
+        <mesh>
+          <cylinderGeometry args={[0.123, 0.19, 0.175, 6, 1, false, 0, Math.PI*2]} />
+          <meshStandardMaterial 
+            color="#e8e8e8"
+            roughness={0.4}
+            metalness={0.3}
+          />
+        </mesh>
+
+        {/* Overlapping armor plates */}
+        {[0, 1, 2, 3].map((i) => ( // Reduced from 6 plates to 4
+          <group key={i} rotation={[0, (i * Math.PI) / 2, 0]}>
+            <mesh position={[0.11, 0, 0]} rotation={[0, Math.PI / 6, 0]}>
+              <boxGeometry args={[0.12, 0.19, 0.02]} />
+              <meshStandardMaterial 
+                color="#d4d4d4"
+                roughness={0.5}
+                metalness={0.4}
+              />
+            </mesh>
+            
+            {/* Decorative ridge on each plate */}
+            <mesh position={[0.07, 0.05, 0.0]} rotation={[0, Math.PI / 6, 0]}>
+              <boxGeometry args={[0.035, 0.24, 0.015]} />
+              <meshStandardMaterial 
+                color="#c0c0c0"
+                roughness={0.3}
+                metalness={0.5}
+              />
+            </mesh>
+          </group>
+        ))}
+
+        {/* Top rim */}
+        <mesh position={[0, 0.22, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
+          <torusGeometry args={[0.065, 0.02, 3, 5]} />
+          <meshStandardMaterial 
+            color="#d4d4d4"
+            roughness={0.3}
+            metalness={0.5}
+          />
+        </mesh>
+
+                {/* bottom rim */}
+                <mesh position={[0, 0, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
+          <torusGeometry args={[0.16, 0.02, 4, 5]} />
+          <meshStandardMaterial 
+            color="#d4d4d4"
+            roughness={0.3}
+            metalness={0.5}
+          />
+        </mesh>
+                {/* bottom rim */}
+                <mesh position={[0, -0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
+          <torusGeometry args={[0.20, 0.02, 4, 5]} />
+          <meshStandardMaterial 
+            color="#d4d4d4"
+            roughness={0.3}
+            metalness={0.5}
+          />
+        </mesh>
+
+
+        {/* h0ver rim */}
+        <mesh position={[0, 0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
+          <torusGeometry args={[0.125, 0.0175, 6, 6]} />
+          <meshStandardMaterial 
+            color="#d4d4d4"
+            roughness={0.3}
+            metalness={0.5}
+          />
+        </mesh>
+      </group>
     </group>
   );
 }
@@ -398,65 +351,54 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    // Cache commonly used values
-    const currentGroup = groupRef.current;
-    
     if (isWalking) {
-      // Calculate walk cycle once
-      const newWalkCycle = (walkCycle + delta * walkSpeed) % (Math.PI * 2);
-      setWalkCycle(newWalkCycle);
+      setWalkCycle((prev) => (prev + delta * walkSpeed) % (Math.PI * 2));
       
-      // Cache trigonometric calculations
-      const sinWalkCycle = Math.sin(newWalkCycle);
-      const walkHeightOffset = Math.abs(sinWalkCycle * 0.1);
+      const walkHeightOffset = Math.abs(Math.sin(walkCycle) * 0.1);
       
-      currentGroup.position.y = position[1] - walkHeightOffset;
+      if (groupRef.current) {
+        groupRef.current.position.y = position[1] - walkHeightOffset;
+      }
       
-      // Use object pooling for rotations
-      const rotation = new THREE.Euler();
-      
+      // Enhanced walking animation with knee joints
       ['LeftLeg', 'RightLeg'].forEach(part => {
-        const limb = currentGroup.getObjectByName(part) as Mesh;
-        if (!limb) return;
-        
-        const isRight = part.includes('Right');
-        const phase = isRight ? newWalkCycle : newWalkCycle + Math.PI;
-        const sinPhase = Math.sin(phase);
-        
-        rotation.set(sinPhase * 0.4, Math.sin(phase) * 0.05, 0);
-        limb.rotation.copy(rotation);
-        
-        // Upper leg movement
-        const upperLegAngle = Math.sin(phase) * 0.4; // Increased range of motion
-        limb.rotation.x = upperLegAngle;
-
-        // Find and animate the knee joint
-        const lowerLeg = limb.children[0]?.children[1]; // Access the lower leg group
-        if (lowerLeg) {
-          // Knee flexion happens when leg is moving backward and lifting
-          const kneePhase = phase + Math.PI / 4; // Offset to sync with leg movement
-          const baseKneeAngle = 0.2; // Minimum bend
-          const kneeFlexion = Math.max(0, Math.sin(kneePhase)); // Only bend, don't hyperextend
-          const kneeAngle = baseKneeAngle + kneeFlexion * 0.8; // Increased range of motion
-
-          lowerLeg.rotation.x = kneeAngle;
+        const limb = groupRef.current?.getObjectByName(part) as Mesh;
+        if (limb) {
+          const isRight = part.includes('Right');
+          const phase = isRight ? walkCycle : walkCycle + Math.PI;
           
-          // Add slight inward/outward rotation during stride
-          const twistAngle = Math.sin(phase) * 0.1;
-          lowerLeg.rotation.y = twistAngle;
-        }
+          // Upper leg movement
+          const upperLegAngle = Math.sin(phase) * 0.4; // Increased range of motion
+          limb.rotation.x = upperLegAngle;
 
-        // Add slight hip rotation
-        const hipTwist = Math.sin(phase) * 0.05;
-        limb.rotation.y = hipTwist;
+          // Find and animate the knee joint
+          const lowerLeg = limb.children[0]?.children[1]; // Access the lower leg group
+          if (lowerLeg) {
+            // Knee flexion happens when leg is moving backward and lifting
+            const kneePhase = phase + Math.PI / 4; // Offset to sync with leg movement
+            const baseKneeAngle = 0.2; // Minimum bend
+            const kneeFlexion = Math.max(0, Math.sin(kneePhase)); // Only bend, don't hyperextend
+            const kneeAngle = baseKneeAngle + kneeFlexion * 0.8; // Increased range of motion
+
+            lowerLeg.rotation.x = kneeAngle;
+            
+            // Add slight inward/outward rotation during stride
+            const twistAngle = Math.sin(phase) * 0.1;
+            lowerLeg.rotation.y = twistAngle;
+          }
+
+          // Add slight hip rotation
+          const hipTwist = Math.sin(phase) * 0.05;
+          limb.rotation.y = hipTwist;
+        }
       });
 
       // Modified arm swing animation for boss claws
       ['LeftArm', 'RightArm'].forEach(part => {
-        const limb = currentGroup.getObjectByName(part) as Mesh;
+        const limb = groupRef.current?.getObjectByName(part) as Mesh;
         if (limb) {
           const isRight = part.includes('Right');
-          const phase = isRight ? newWalkCycle + Math.PI : newWalkCycle;
+          const phase = isRight ? walkCycle + Math.PI : walkCycle;
           
           // Simpler rotation for the entire claw structure
           const armAngle = Math.sin(phase) * 0.1;
@@ -470,7 +412,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
       const progress = Math.min(attackCycle, Math.PI / 2);
       const armAngle = Math.sin(progress) * Math.PI;
 
-      const rightArm = currentGroup.getObjectByName('RightArm') as Mesh;
+      const rightArm = groupRef.current.getObjectByName('RightArm') as Mesh;
       if (rightArm) {
         rightArm.rotation.x = -armAngle;
       }
@@ -500,19 +442,6 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
       if (attackAnimationRef.current) {
         clearTimeout(attackAnimationRef.current);
       }
-    };
-  }, []);
-
-  // At the component level, add cleanup
-  useEffect(() => {
-    return () => {
-      // Dispose of shared materials and geometries when component unmounts
-      standardBoneMaterial.dispose();
-      darkBoneMaterial.dispose();
-      jointGeometry.dispose();
-      smallBoneGeometry.dispose();
-      clawGeometry.dispose();
-      // ... dispose of other shared resources
     };
   }, []);
 
@@ -563,14 +492,36 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
             </mesh>
           </group>
 
-          {/* Upper teeth */}
-          <group position={[0.025, -0.25, 0.2175]}>
-            <TeethInstances isUpper={true} />
+          {/* Upper teeth row */}
+          <group position={[0.025, -0.25, 0.2175]} >
+            {[-0.03, -0.06, -0.09, -0, 0.03].map((offset, i) => (
+              <group key={i} position={[offset, 0, 0]} rotation={[0.5, 0, 0]}>
+                <mesh>
+                  <coneGeometry args={[0.03, 0.075, 3]} />
+                  <meshStandardMaterial 
+                    color="#e8e8e8"
+                    roughness={0.3}
+                    metalness={0.4}
+                  />
+                </mesh>
+              </group>
+            ))}
           </group>
 
-          {/* Lower teeth */}
+          {/* Lower teeth row */}
           <group position={[0, -0.18, 0.2]}>
-            <TeethInstances isUpper={false} />
+            {[-0.06, -0.02, 0.02, 0.06].map((offset, i) => (
+              <group key={i} position={[offset, 0, 0]} rotation={[2.5, 0, 0]}>
+                <mesh>
+                  <coneGeometry args={[0.01, 0.08, 3]} />
+                  <meshStandardMaterial 
+                    color="#e8e8e8"
+                    roughness={0.3}
+                    metalness={0.4}
+                  />
+                </mesh>
+              </group>
+            ))}
           </group>
         </group>
 
@@ -610,9 +561,8 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
             {/* Point light for dynamic glow */}
             <pointLight 
               color="#FF4C4C"
-              intensity={0.75}
-              position={[0, 0, 0]}
-              distance={1.5}
+              intensity={0.5}
+              distance={1}
               decay={2}
             />
           </group>
@@ -651,10 +601,9 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
             {/* Point light for dynamic glow */}
             <pointLight 
               color="#FF4C4C"
-              intensity={0.75}
-              position={[0, 0, 0]}
-              distance={1.5}
-              decay={2}
+              intensity={0.5}
+              distance={1}
+              decay={1}
             />
           </group>
         </group>

@@ -299,8 +299,8 @@ export default function Whirlwind({
         
         // Scale hit interval based on rotation speed (faster rotation = faster hits)
         // Start at 550ms at speed 0, decrease to 150ms at max speed (25), with slower progression
-        const minInterval = 150; // Minimum interval in ms
-        const maxInterval = 550; // Maximum interval in ms
+        const minInterval = 175; // Minimum interval in ms
+        const maxInterval = 500; // Maximum interval in ms
         const speedRatio = Math.pow(rotationSpeed.current / 25, 2); // Square the ratio to make progression slower
         const currentInterval = maxInterval - (maxInterval - minInterval) * speedRatio;
 
@@ -309,7 +309,7 @@ export default function Whirlwind({
         if (now - lastHit < currentInterval) return;
 
         const distance = whirlwindRef.current!.position.distanceTo(enemy.position);
-        const maxRange = 4.8; // Spear range
+        const maxRange = 4.6; // Spear range
         
         if (distance <= maxRange) {
           // Sweet spot check (80-100% of max range)

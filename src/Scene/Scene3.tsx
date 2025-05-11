@@ -419,7 +419,7 @@ export default function Scene3({
 
         // Define specific spawn points for abominations
         const shouldSpawnAbomination = 
-          (killCount >= 36 && abominationsSpawned === 0) ||
+          (killCount >= 35 && abominationsSpawned === 0) ||
           (killCount >= 38 && abominationsSpawned === 1);
 
         if (shouldSpawnAbomination && abominationsSpawned < 2) {

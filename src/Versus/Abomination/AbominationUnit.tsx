@@ -53,18 +53,18 @@ export default function AbominationUnit({
   const lastUpdateTime = useRef(Date.now());
 
   const ATTACK_RANGE = 3.15;
-  const ATTACK_COOLDOWN = 2100;
-  const MOVEMENT_SPEED = 0.045;
-  const POSITION_UPDATE_THRESHOLD = 0.1;
-  const MINIMUM_UPDATE_INTERVAL = 50;
+  const ATTACK_COOLDOWN = 2400;
+  const MOVEMENT_SPEED = 0.0475;
+  const POSITION_UPDATE_THRESHOLD = 0.125;
+  const MINIMUM_UPDATE_INTERVAL = 20;
   const ATTACK_DAMAGE = 9;
-  const SEPARATION_RADIUS = 4;
+  const SEPARATION_RADIUS = 3;
   const SEPARATION_FORCE = 0.15;
-  const ARM_DELAY = 150;
+  const ARM_DELAY = 200;
   const TOTAL_ARMS = 6;
-  const ACCELERATION = 5.0;
-  const DECELERATION = 7.0;
-  const ROTATION_SPEED = 7.0;
+  const ACCELERATION = 6.0;
+  const DECELERATION = 6.0;
+  const ROTATION_SPEED = 6.0;
 
   const wanderTarget = useRef<Vector3 | null>(null);
   const wanderStartTime = useRef<number>(Date.now());

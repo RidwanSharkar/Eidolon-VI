@@ -14,7 +14,7 @@ interface MeteorProps {
 const DAMAGE_RADIUS = 2.99;
 const IMPACT_DURATION = 1.25;
 const METEOR_SPEED = 27.75;
-const METEOR_DAMAGE = 76;
+const METEOR_DAMAGE = 84;
 const WARNING_RING_SEGMENTS = 32; // Reduced from 64
 const FIRE_PARTICLES_COUNT = 12;  // Reduced from 15
 

@@ -96,8 +96,8 @@ export default function Scene({
       position: spawnPosition.clone(),
       initialPosition: spawnPosition.clone(),
       rotation: 0,
-      health: 196,
-      maxHealth: 196,
+      health: 225,
+      maxHealth: 225,
       ref: { current: group }
     };
   }, [groupPool]);

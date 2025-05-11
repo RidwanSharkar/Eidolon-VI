@@ -66,12 +66,12 @@ export default function EnemyUnit({
 
   const ATTACK_RANGE = 2.5;
   const ATTACK_COOLDOWN = 2500;
-  const MOVEMENT_SPEED = 0.059;
+  const MOVEMENT_SPEED = 0.0625;
   const POSITION_UPDATE_THRESHOLD = 0.125;
   const MINIMUM_UPDATE_INTERVAL = 20;
   const ATTACK_DAMAGE = 10;
-  const SEPARATION_RADIUS = 1.25;
-  const SEPARATION_FORCE = 0.155;
+  const SEPARATION_RADIUS = 1.5;
+  const SEPARATION_FORCE = 0.15;
   const ACCELERATION = 3.0;
   const DECELERATION = 4.0;
   const ROTATION_SPEED = 5.0;
@@ -320,7 +320,7 @@ export default function EnemyUnit({
           // 3. Enemy hasn't moved too far from attack start position
           if (currentHealth.current > 0 && 
               finalDistanceToPlayer <= ATTACK_RANGE && 
-              attackStartPosition.distanceTo(currentPosition.current) < 0.55) { // leeway distance 
+              attackStartPosition.distanceTo(currentPosition.current) < 0.65) { // leeway distance 
             onAttackPlayer(ATTACK_DAMAGE);
           }
         }, 1250); // REACTION TIME 
