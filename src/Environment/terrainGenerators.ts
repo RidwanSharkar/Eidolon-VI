@@ -10,7 +10,7 @@ export interface GeneratedTree {
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 34;
+  const numberOfMountains = 32;
   const radius = 51;
   
   // Create evenly spaced mountains around the perimeter
@@ -47,36 +47,36 @@ export const generateMountains = (): Array<{ position: Vector3; scale: number }>
 export const generateTrees = (): GeneratedTree[] => {
   return [
     // Dense cluster 1 (left side)
-    { position: new Vector3(-15, 0, -5), scale: 1.3, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[0]).multiplyScalar(2.5) },
+    { position: new Vector3(-15, 0, -5), scale: 1.3, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[2]).multiplyScalar(2.5) },
     { position: new Vector3(-12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[0]).multiplyScalar(3.5) },
     { position: new Vector3(-12, 0, -13.5), scale: 0.8, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(2.5) },
-    { position: new Vector3(16, 0, -10), scale: 1, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(3.5) },
-    { position: new Vector3(12, 0, 8), scale: 1.25, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(1.5) },
-    { position: new Vector3(-11, 0, 5), scale: 1.3, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(3.5) },
+    { position: new Vector3(16, 0, -10), scale: 1, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(3) },
+    { position: new Vector3(12, 0, 8), scale: 1.25, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(2) },
+    { position: new Vector3(-11, 0, 5), scale: 1.3, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(2.75) },
     { position: new Vector3(12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(2.5) },
 
     // Dense cluster 2 (right side)
-    { position: new Vector3(18, 0, -8), scale: 1.1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[0]).multiplyScalar(1.5) },
+    { position: new Vector3(18, 0, -8), scale: 1.1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[0]).multiplyScalar(3.25) },
     { position: new Vector3(17.5, 0, -10), scale: 0.9, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]).multiplyScalar(3.25) },
     { position: new Vector3(15, 0, -11.5), scale: 1.1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]).multiplyScalar(3.5) },
-    { position: new Vector3(16.5, 0, -6.5), scale: 1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]).multiplyScalar(2.5) },
+    { position: new Vector3(16.5, 0, -6.5), scale: 1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[1]).multiplyScalar(2.5) },
 
     // Scattered individual trees
-    { position: new Vector3(-12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]).multiplyScalar(3.5) },
-    { position: new Vector3(12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[0]).multiplyScalar(2.5) },
+    { position: new Vector3(-12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[1]).multiplyScalar(2.5) },
+    { position: new Vector3(12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[2]).multiplyScalar(3) },
     { position: new Vector3(-5, 0, -15), scale: 0.85, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(2.5) },
-    { position: new Vector3(5, 0, -18), scale: 0.85, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]).multiplyScalar(1.5) },
+    { position: new Vector3(5, 0, -18), scale: 0.85, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[1]).multiplyScalar(2) },
   ];
 };
 
-export const generateMushrooms = (): Array<{ position: Vector3; scale: number; variant: 'pink' | 'green' | 'blue' }> => {
-  const mushrooms: Array<{ position: Vector3; scale: number; variant: 'pink' | 'green' | 'blue' }> = [];
-  const numberOfMushrooms = 30;
+export const generateMushrooms = (): Array<{ position: Vector3; scale: number; variant: 'pink' | 'green' | 'blue' | 'orange' }> => {
+  const mushrooms: Array<{ position: Vector3; scale: number; variant: 'pink' | 'green' | 'blue' | 'orange' }> = [];
+  const numberOfMushrooms = 45;
   const trees = generateTrees(); // Get tree positions for reference
 
   for (let i = 0; i < numberOfMushrooms; i++) {
     let x: number, z: number;
-    const scale = 0.375 + Math.random() * 0.175;
+    const scale = 0.325 + Math.random() * 0.375;
 
     // 70% chance to spawn near trees, 30% chance for random placement
     if (Math.random() < 0.7 && trees.length > 0) {
@@ -96,15 +96,17 @@ export const generateMushrooms = (): Array<{ position: Vector3; scale: number; v
       z = distance * Math.sin(angle);
     }
 
-    // Even distribution of variants (33:33:33)
-    let variant: 'pink' | 'green' | 'blue';
+    // Even distribution of variants (50% orange, ~16.67% each for others)
+    let variant: 'pink' | 'green' | 'blue' | 'orange';
     const random = Math.random() * 100;
-    if (random < 33.33) {
-      variant = 'pink';
-    } else if (random < 66.66) {
+    if (random < 50) {
+      variant = 'orange';
+    } else if (random < 66.67) {
       variant = 'green';
-    } else {
+    } else if (random < 83.34) {
       variant = 'blue';
+    } else {
+      variant = 'pink';
     }
 
     mushrooms.push({

@@ -94,7 +94,7 @@ export default function PyroclastMissile({
 
   // Calculate scale and intensity based on chargeTime
   const normalizedCharge = Math.min(chargeTime / 4, 1.0);
-  const scale = 0.4 + (normalizedCharge * 0.75);
+  const scale = 0.5 + (normalizedCharge * 0.75);
   const intensity = 1.25 + (normalizedCharge * 2.5);
 
   return (
@@ -102,20 +102,15 @@ export default function PyroclastMissile({
       {!hasCollided.current && (
         <group ref={missileRef} position={position.toArray()}>
           {/* Core missile */}
-          <group>
-            <mesh 
-              rotation={[0, 0, 0]}
-              onUpdate={(self) => {
-                // Calculate quaternion to align with direction
-                const alignAxis = new THREE.Vector3(0, 1, 0);
-                const targetQuaternion = new THREE.Quaternion().setFromUnitVectors(
-                  alignAxis, 
-                  direction.clone().normalize()
-                );
-                self.quaternion.copy(targetQuaternion);
-              }}
-            >
-              <cylinderGeometry args={[0.2 * scale, 0.4 * scale, 2 * scale, 6]} />
+          <group
+            rotation={[
+              0,
+              Math.atan2(direction.x, direction.z),
+              0
+            ]}
+          >
+            <mesh rotation={[Math.PI/2, 0, 0]}>
+              <cylinderGeometry args={[0.3 * scale, 0.4 * scale, 2 * scale, 6]} />
               <meshStandardMaterial
                 color="#FF2200"
                 emissive="#FF2200"
@@ -124,34 +119,33 @@ export default function PyroclastMissile({
                 opacity={0.9}
               />
             </mesh>
+
+            {/* Flame trail */}
+            {[...Array(5)].map((_, i) => (
+              <mesh
+                key={i}
+                position={[0, 0, -i * 0.45 +1]}
+              >
+                <torusGeometry args={[0.4 * scale + (i * 0.1), 0.1, 6, 12]} />
+                <meshStandardMaterial
+                  color="#FF2200"
+                  emissive="#FF2200"
+                  emissiveIntensity={intensity * (1 - i * 0.2)}
+                  transparent
+                  opacity={0.7 - (i * 0.15)}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
+            ))}
+
+            {/* Light source */}
+            <pointLight
+              color="#FF544E"
+              intensity={intensity * 1}
+              distance={5}
+              decay={2}
+            />
           </group>
-
-          {/* Flame trail */}
-          {[...Array(4)].map((_, i) => (
-            <mesh
-              key={i}
-              position={[0, 0, -i * 0.45 + 0.5]}
-              rotation={[0, 0, 0]}
-            >
-              <torusGeometry args={[0.4 * scale + (i * 0.1), 0.1, 6, 12]} />
-              <meshStandardMaterial
-                color="#FF2200"
-                emissive="#FF2200"
-                emissiveIntensity={intensity * (1 - i * 0.2)}
-                transparent
-                opacity={0.7 - (i * 0.15)}
-                blending={THREE.AdditiveBlending}
-              />
-            </mesh>
-          ))}
-
-          {/* Light source */}
-          <pointLight
-            color="#FF544E"
-            intensity={intensity * 1}
-            distance={5}
-            decay={2}
-          />
         </group>
       )}
 

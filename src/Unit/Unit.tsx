@@ -169,6 +169,48 @@ export default function Unit({
   // BEFORE usePyroclast initialization
   const reigniteRef = useRef<ReigniteRef>(null);
 
+  // Add this memoized function before usePyroclast
+  const pyroclastCheckForSpearKillAndProcessReignite = useCallback((
+    targetId: string, 
+    damageFn: (id: string, damage: number) => void, 
+    damage: number, 
+    bypassWeaponCheck: boolean
+  ) => {
+    // For Pyroclast, we need to bypass weapon checks when bypassWeaponCheck is true
+    // The only check we need is to ensure reigniteRef.current exists
+    if (reigniteRef.current) {
+      // Get the target and store its health before damage
+      const target = enemyData.find(e => e.id === targetId);
+      if (!target) {
+        damageFn(targetId, damage);
+        return;
+      }
+      
+      const previousHealth = target.health;
+      
+      // Apply the damage
+      damageFn(targetId, damage);
+      
+      // Need to find the target again to get updated health
+      const updatedTarget = enemyData.find(e => e.id === targetId);
+      if (!updatedTarget) {
+        return;
+      }
+      
+      // Check if the enemy was killed by this hit
+      if (previousHealth > 0 && updatedTarget.health <= 0) {
+        // Pass a fresh clone of the position
+        const killPosition = updatedTarget.position.clone();
+        console.log(`[${bypassWeaponCheck ? 'Pyroclast' : 'SpearKill'}] Kill detected! Processing Reignite at position:`, killPosition);
+        reigniteRef.current.processKill(killPosition);
+      }
+    } else {
+      // Just apply damage if reigniteRef is not available
+      console.log(`[${bypassWeaponCheck ? 'Pyroclast' : 'SpearKill'}] reigniteRef is not available, just applying damage`);
+      damageFn(targetId, damage);
+    }
+  }, [enemyData, reigniteRef]);
+
   const {
     isCharging: isPyroclastActive,
     chargeStartTime,
@@ -199,41 +241,8 @@ export default function Unit({
     charges: fireballCharges,
     setCharges: setFireballCharges,
     reigniteRef: reigniteRef,
-    checkForSpearKillAndProcessReignite: (targetId: string, damageFn: (id: string, damage: number) => void, damage: number, bypassWeaponCheck: boolean) => {
-      // For Pyroclast, we need to bypass weapon checks when bypassWeaponCheck is true
-      // The only check we need is to ensure reigniteRef.current exists
-      if (reigniteRef.current) {
-        // Get the target and store its health before damage
-        const target = enemyData.find(e => e.id === targetId);
-        if (!target) {
-          damageFn(targetId, damage);
-          return;
-        }
-        
-        const previousHealth = target.health;
-        
-        // Apply the damage
-        damageFn(targetId, damage);
-        
-        // Need to find the target again to get updated health
-        const updatedTarget = enemyData.find(e => e.id === targetId);
-        if (!updatedTarget) {
-          return;
-        }
-        
-        // Check if the enemy was killed by this hit
-        if (previousHealth > 0 && updatedTarget.health <= 0) {
-          // Pass a fresh clone of the position
-          const killPosition = updatedTarget.position.clone();
-          console.log(`[${bypassWeaponCheck ? 'Pyroclast' : 'SpearKill'}] Kill detected! Processing Reignite at position:`, killPosition);
-          reigniteRef.current.processKill(killPosition);
-        }
-      } else {
-        // Just apply damage if reigniteRef is not available
-        console.log(`[${bypassWeaponCheck ? 'Pyroclast' : 'SpearKill'}] reigniteRef is not available, just applying damage`);
-        damageFn(targetId, damage);
-      }
-    }
+    // Use the memoized function instead of an inline function
+    checkForSpearKillAndProcessReignite: pyroclastCheckForSpearKillAndProcessReignite
   });
 
   const { keys: movementKeys } = useUnitControls({
@@ -1282,17 +1291,16 @@ export default function Unit({
       
       // Add bonus damage from Elemental Shots (active ability) if it's unlocked
       if (abilities[WeaponType.BOW].active.isUnlocked) {
-        // Random damage between 80-200 instead of fixed 100
         const randomBonus = Math.floor(Math.random() * 121) + 120; // 80-200 range
         baseDamage += randomBonus;
       }
     } else {
       // Minimum damage of 41, scaling up with charge
-      baseDamage = 47 + Math.floor((projectile.power * 108));
+      baseDamage = 36 + Math.floor((projectile.power * 108));
       
       // Add bonus damage from Elemental Shots for non-fully charged shots
       if (abilities[WeaponType.BOW].active.isUnlocked) {
-        baseDamage += 67; // Add 27 bonus damage to non-fully charged shots
+        baseDamage += Math.floor(Math.random() * (111 - 59 + 1)) + 59; // Add random bonus damage (59-111) to non-fully charged shots
         
         // Create lightning strike effect
         createLightningStrike(projectilePosition);
@@ -1346,7 +1354,7 @@ export default function Unit({
     const enemy = enemyData.find(e => e.id === targetId);
     if (!enemy) return;
 
-    const { damage, isCritical } = calculateDamage(59); // Fixed fireball damage
+    const { damage, isCritical } = calculateDamage(61); // Fixed fireball damage
     
     onHit(targetId, damage);
 

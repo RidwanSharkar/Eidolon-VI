@@ -52,7 +52,7 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SCYTHE]: {
     normal: 23,
-    range: 4.65,
+    range: 4.75,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
@@ -74,9 +74,9 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
 
 export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
-    q: { type: 'q', key: 'q', cooldown: 0.685, currentCooldown: 0, icon: 'icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.65, currentCooldown: 0, icon: 'icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 2.05, currentCooldown: 0, icon: 'icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
+    q: { type: 'q', key: 'q', cooldown: 0.70, currentCooldown: 0, icon: 'icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 0.69, currentCooldown: 0, icon: 'icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 2.15, currentCooldown: 0, icon: 'icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: 'icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
     active: { type: 'active',  key: '2', cooldown: 4.5, currentCooldown: 0,  icon: 'icons/a1.svg', maxCooldown: 4.5, name: 'Summon Skeleton', isUnlocked: false}
   }, 
@@ -90,8 +90,8 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   },
   
   [WeaponType.SABRES]: {
-    q: { type: 'q', key: 'q', cooldown: 0.6125, currentCooldown: 0, icon: 'icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 5.25, currentCooldown: 0, icon: 'icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
+    q: { type: 'q', key: 'q', cooldown: 0.60, currentCooldown: 0, icon: 'icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 5.15, currentCooldown: 0, icon: 'icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 9.5, currentCooldown: 0, icon: 'icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
@@ -99,7 +99,7 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
 
   [WeaponType.SPEAR]: {
     q: { type: 'q', key: 'q', cooldown: 0.625, currentCooldown: 0, icon: 'icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 4.5, currentCooldown: 0, icon: 'icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
+    e: { type: 'e', key: 'e', cooldown: 5.15, currentCooldown: 0, icon: 'icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: .5, currentCooldown: 0, icon: 'icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p4.svg', maxCooldown: 0, name: 'Reignite', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 2, currentCooldown: 0, icon: 'icons/a4.svg', maxCooldown: 8, name: 'Breach', isUnlocked: false }
@@ -107,8 +107,8 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
 
   [WeaponType.BOW]: {
     q: { type: 'q', key: 'q', cooldown: 0.25, currentCooldown: 0, icon: 'icons/q5.svg', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 1, currentCooldown: 0, icon: 'icons/e5.svg', maxCooldown: 1, name: 'Power Shot', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 3.65, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: false },
+    e: { type: 'e', key: 'e', cooldown: 0.875, currentCooldown: 0, icon: 'icons/e5.svg', maxCooldown: 1, name: 'Power Shot', isUnlocked: true },
+    r: { type: 'r', key: 'r', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p5.svg', maxCooldown: 0, name: 'Venom Shots', isUnlocked: false },
     active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: 'icons/a5.svg', maxCooldown: 5, name: 'Elemental Shots', isUnlocked: false }
   },
@@ -248,7 +248,7 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     },
     active: {
       title: "Elemental Shots",
-      description: "Fully charged shots deal an additional 100-200 fire damage. Non-fully charged shots deal 30 additional lightning damage to the target. Movement speed while charging the Power-Shot is increased 1000%",
+      description: "Fully charged shots deal an additional 100-200 fire damage. Non-fully charged shots deal 70 additional lightning damage to the target. Movement speed while charging the Power-Shot is increased 1000%",
     }
   },
 }; 

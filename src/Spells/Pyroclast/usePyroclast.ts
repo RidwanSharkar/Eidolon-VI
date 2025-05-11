@@ -229,11 +229,20 @@ export function usePyroclast({
         
         // Check if enemy was killed by this hit
         if (previousHealth > 0 && enemy.health <= 0) {
-          console.log(`[Pyroclast] Enemy ${enemy.id} was killed! Calling Reignite`);
+          console.log(`[Pyroclast] Enemy ${enemy.id} was killed! Processing Reignite`);
           
-          // Directly call Reignite like Breach does
-          if (reigniteRef && reigniteRef.current) {
-            console.log(`[Pyroclast] Triggering Reignite effect at position:`, enemyPosition);
+          // Use the checkForSpearKillAndProcessReignite function instead of direct call
+          if (checkForSpearKillAndProcessReignite) {
+            checkForSpearKillAndProcessReignite(
+              enemy.id,
+              onHit,
+              damage,
+              true // bypass weapon check since we're in Pyroclast already
+            );
+          }
+          // Fallback to direct call if function not provided
+          else if (reigniteRef && reigniteRef.current) {
+            console.log(`[Pyroclast] Fallback: directly calling Reignite effect at position:`, enemyPosition);
             reigniteRef.current.processKill(enemyPosition);
           }
         }
@@ -281,11 +290,20 @@ export function usePyroclast({
             
             // Check if enemy was killed by this hit
             if (previousHealth > 0 && enemy.health <= 0) {
-              console.log(`[Pyroclast] Enemy ${enemy.id} was killed! Calling Reignite`);
+              console.log(`[Pyroclast] Enemy ${enemy.id} was killed! Processing Reignite`);
               
-              // Directly call Reignite like Breach does
-              if (reigniteRef && reigniteRef.current) {
-                console.log(`[Pyroclast] Triggering Reignite effect at position:`, enemyPosition);
+              // Use the checkForSpearKillAndProcessReignite function instead of direct call
+              if (checkForSpearKillAndProcessReignite) {
+                checkForSpearKillAndProcessReignite(
+                  enemy.id,
+                  onHit,
+                  damage,
+                  true // bypass weapon check since we're in Pyroclast already
+                );
+              }
+              // Fallback to direct call if function not provided
+              else if (reigniteRef && reigniteRef.current) {
+                console.log(`[Pyroclast] Fallback: directly calling Reignite effect at position:`, enemyPosition);
                 reigniteRef.current.processKill(enemyPosition);
               }
             }
@@ -314,7 +332,7 @@ export function usePyroclast({
     }
 
     return collisionOccurred;
-  }, [reigniteRef,activeMissiles, enemyData, setDamageNumbers, nextDamageNumberId, onHit]);
+  }, [reigniteRef, activeMissiles, enemyData, setDamageNumbers, nextDamageNumberId, onHit, checkForSpearKillAndProcessReignite]);
 
   const consumeCharge = useCallback(() => {
     const now = Date.now();

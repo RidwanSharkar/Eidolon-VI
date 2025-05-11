@@ -4,7 +4,7 @@ import * as THREE from 'three';
 interface MushroomData {
   position: THREE.Vector3;
   scale: number;
-  variant: 'pink' | 'green' | 'blue';
+  variant: 'pink' | 'green' | 'blue' | 'orange';
 }
 
 interface InstancedMushroomsProps {
@@ -18,16 +18,20 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
 
   const variantColors = useMemo(() => ({
     pink: {
-      main: new THREE.Color("#FAA9C5").multiplyScalar(4.5),
-      spots: new THREE.Color("#FAA9C5").multiplyScalar(4.5)
+      main: new THREE.Color("#FAA9C5").multiplyScalar(5.5),
+      spots: new THREE.Color("#FAA9C5").multiplyScalar(1.5)
     },
     green: {
-      main: new THREE.Color("#FF8DC6").multiplyScalar(2.5),
-      spots: new THREE.Color("#92E2FF").multiplyScalar(2.5)
+      main: new THREE.Color("#FF8DC6").multiplyScalar(3.5),
+      spots: new THREE.Color("#92E2FF").multiplyScalar(1.5)
     },
     blue: {
-      main: new THREE.Color("#92E2FF").multiplyScalar(2.5),
-      spots: new THREE.Color("#92E2FF").multiplyScalar(2.5)
+      main: new THREE.Color("#92E2FF").multiplyScalar(3.5),
+      spots: new THREE.Color("#92E2FF").multiplyScalar(1.5)
+    },
+    orange: {
+      main: new THREE.Color("#FF9F56").multiplyScalar(5.5),
+      spots: new THREE.Color("#FF8F00").multiplyScalar(3)
     }
   }), []);
 
@@ -44,9 +48,9 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
         mushroom.position.z
       );
       matrix.scale(new THREE.Vector3(
-        mushroom.scale * 0.8,
-        mushroom.scale * 0.8,
-        mushroom.scale * 0.8
+        mushroom.scale * 0.825,
+        mushroom.scale * 0.825,
+        mushroom.scale * 0.825
       ));
       stemRef.current?.setMatrixAt(i, matrix);
       stemRef.current?.setColorAt(i, variantColors[mushroom.variant].main.clone().multiplyScalar(0.9));
