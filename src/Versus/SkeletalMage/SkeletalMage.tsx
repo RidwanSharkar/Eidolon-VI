@@ -84,9 +84,9 @@ export default function SkeletalMage({
   const SEPARATION_FORCE = 0.125;
   const FIREBALL_COOLDOWN = 3750;
   const FIREBALL_DAMAGE = 22;
-  const ACCELERATION = 6.0;
-  const DECELERATION = 7.0;
-  const ROTATION_SPEED = 7.0;
+  const ACCELERATION = 4.0;
+  const DECELERATION = 6.0;
+  const ROTATION_SPEED = 4.0;
 
   // Add these constants near the other ones (after line 89)
   const WANDER_DURATION = 4500;
@@ -318,6 +318,23 @@ export default function SkeletalMage({
         currentPosition.current.add(velocity.current);
         enemyRef.current.position.copy(currentPosition.current);
       }
+      
+      // Make sure mage is facing the player when within attack range
+      const lookTarget = new Vector3()
+        .copy(playerPosition)
+        .setY(currentPosition.current.y);
+      const targetRotation = Math.atan2(
+        lookTarget.x - currentPosition.current.x,
+        lookTarget.z - currentPosition.current.z
+      );
+
+      // Interpolate rotation smoothly
+      const currentRotationY = enemyRef.current.rotation.y;
+      let rotationDiff = targetRotation - currentRotationY;
+      while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+      while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+      
+      enemyRef.current.rotation.y += rotationDiff * Math.min(1, ROTATION_SPEED * delta);
     }
 
     // Check if we should cast fireball

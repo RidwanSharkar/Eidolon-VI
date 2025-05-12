@@ -65,11 +65,11 @@ export default function EnemyUnit({
   const targetRotation = useRef(0);
 
   const ATTACK_RANGE = 2.5;
-  const ATTACK_COOLDOWN = 2500;
-  const MOVEMENT_SPEED = 0.0625;
+  const ATTACK_COOLDOWN = 2250;
+  const MOVEMENT_SPEED = 0.0725;
   const POSITION_UPDATE_THRESHOLD = 0.125;
   const MINIMUM_UPDATE_INTERVAL = 20;
-  const ATTACK_DAMAGE = 10;
+  const ATTACK_DAMAGE = 8;
   const SEPARATION_RADIUS = 1.5;
   const SEPARATION_FORCE = 0.15;
   const ACCELERATION = 3.0;

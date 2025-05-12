@@ -62,7 +62,7 @@ export default function AbominationUnit({
   const SEPARATION_FORCE = 0.15;
   const ARM_DELAY = 200;
   const TOTAL_ARMS = 6;
-  const ACCELERATION = 6.0;
+  const ACCELERATION = 4.0;
   const DECELERATION = 6.0;
   const ROTATION_SPEED = 6.0;
 
