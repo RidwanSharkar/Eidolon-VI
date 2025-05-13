@@ -53,7 +53,7 @@ export default function AbominationUnit({
   const lastUpdateTime = useRef(Date.now());
 
   const ATTACK_RANGE = 3.15;
-  const ATTACK_COOLDOWN = 2400;
+  const ATTACK_COOLDOWN = 2000;
   const MOVEMENT_SPEED = 0.0475;
   const POSITION_UPDATE_THRESHOLD = 0.125;
   const MINIMUM_UPDATE_INTERVAL = 20;
@@ -62,7 +62,7 @@ export default function AbominationUnit({
   const SEPARATION_FORCE = 0.15;
   const ARM_DELAY = 200;
   const TOTAL_ARMS = 6;
-  const ACCELERATION = 4.0;
+  const ACCELERATION = 3.5;
   const DECELERATION = 6.0;
   const ROTATION_SPEED = 6.0;
 
