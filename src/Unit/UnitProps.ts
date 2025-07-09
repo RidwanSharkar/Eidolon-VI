@@ -6,8 +6,8 @@ import { Enemy } from '../Versus/enemy';
 import { RefObject } from 'react';
 
 export interface AbilityButton {
-  type: 'q' | 'e' | 'r' | 'passive' | 'active';
-  key: 'q' | 'e' | 'r' | '1' | '2';
+  type: 'q' | 'e' | 'r' | 'passive' | 'active' | 'vault' | 'vaultNorth' | 'vaultEast' | 'vaultWest';
+  key: 'q' | 'e' | 'r' | '1' | '2' | 's' | 'w' | 'd' | 'a';
   cooldown: number;
   currentCooldown: number;
   icon: string;
@@ -22,6 +22,10 @@ export interface WeaponAbilities {
   r: AbilityButton;
   passive: AbilityButton;
   active: AbilityButton;
+  vault: AbilityButton;
+  vaultNorth: AbilityButton;
+  vaultEast: AbilityButton;
+  vaultWest: AbilityButton;
 }
 
 export type WeaponInfo = Record<WeaponType, WeaponAbilities>;

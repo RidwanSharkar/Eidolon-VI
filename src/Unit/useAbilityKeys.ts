@@ -62,6 +62,12 @@ interface UseAbilityKeysProps {
   shootQuickShot: () => void;
   setIsVaulting: (value: boolean) => void;
   isVaulting: boolean;
+  setIsVaultingNorth: (value: boolean) => void;
+  isVaultingNorth: boolean;
+  setIsVaultingEast: (value: boolean) => void;
+  isVaultingEast: boolean;
+  setIsVaultingWest: (value: boolean) => void;
+  isVaultingWest: boolean;
   startPyroclastCharge: () => void;
   releasePyroclastCharge: () => void;
   isPyroclastActive: boolean;
@@ -106,6 +112,12 @@ export function useAbilityKeys({
   shootQuickShot,
   setIsVaulting,
   isVaulting,
+  setIsVaultingNorth,
+  isVaultingNorth,
+  setIsVaultingEast,
+  isVaultingEast,
+  setIsVaultingWest,
+  isVaultingWest,
   isPyroclastActive,
   startPyroclastCharge,
   releasePyroclastCharge,
@@ -118,6 +130,28 @@ export function useAbilityKeys({
 
   // Ref to track if game is over
   const isGameOver = useRef(false);
+
+  // Double-tap S detection for vault
+  const lastSKeyPressTime = useRef(0);
+  const lastSKeyReleaseTime = useRef(0);
+  const sKeyWasReleased = useRef(true); // Track if 's' was released since last press
+  
+  // Double-tap W detection for vaultNorth
+  const lastWKeyPressTime = useRef(0);
+  const lastWKeyReleaseTime = useRef(0);
+  const wKeyWasReleased = useRef(true); // Track if 'w' was released since last press
+  
+  // Double-tap D detection for vaultEast
+  const lastDKeyPressTime = useRef(0);
+  const lastDKeyReleaseTime = useRef(0);
+  const dKeyWasReleased = useRef(true); // Track if 'd' was released since last press
+  
+  // Double-tap A detection for vaultWest
+  const lastAKeyPressTime = useRef(0);
+  const lastAKeyReleaseTime = useRef(0);
+  const aKeyWasReleased = useRef(true); // Track if 'a' was released since last press
+  
+  const DOUBLE_TAP_THRESHOLD = 300; // 300ms window for double-tap
 
   // DEBOUNCE
   const lastAttackTime = useRef(0);
@@ -144,6 +178,46 @@ export function useAbilityKeys({
     return false;
   }, [abilities, currentWeapon, isSwinging, onAbilityUse, setIsSwinging, ATTACK_DEBOUNCE, isWhirlwinding]);
 
+  // Function to handle vault activation
+  const handleVaultActivation = useCallback(() => {
+    const vaultAbility = abilities[currentWeapon].vault;
+    
+    if (vaultAbility.currentCooldown <= 0 && !isVaulting) {
+      setIsVaulting(true);
+      onAbilityUse(currentWeapon, 'vault');
+    }
+  }, [abilities, currentWeapon, isVaulting, setIsVaulting, onAbilityUse]);
+
+  // Function to handle vaultNorth activation
+  const handleVaultNorthActivation = useCallback(() => {
+    const vaultNorthAbility = abilities[currentWeapon].vaultNorth;
+    
+    if (vaultNorthAbility.currentCooldown <= 0 && !isVaultingNorth) {
+      setIsVaultingNorth(true);
+      onAbilityUse(currentWeapon, 'vaultNorth');
+    }
+  }, [abilities, currentWeapon, isVaultingNorth, setIsVaultingNorth, onAbilityUse]);
+
+  // Function to handle vaultEast activation
+  const handleVaultEastActivation = useCallback(() => {
+    const vaultEastAbility = abilities[currentWeapon].vaultEast;
+    
+    if (vaultEastAbility.currentCooldown <= 0 && !isVaultingEast) {
+      setIsVaultingEast(true);
+      onAbilityUse(currentWeapon, 'vaultEast');
+    }
+  }, [abilities, currentWeapon, isVaultingEast, setIsVaultingEast, onAbilityUse]);
+
+  // Function to handle vaultWest activation
+  const handleVaultWestActivation = useCallback(() => {
+    const vaultWestAbility = abilities[currentWeapon].vaultWest;
+    
+    if (vaultWestAbility.currentCooldown <= 0 && !isVaultingWest) {
+      setIsVaultingWest(true);
+      onAbilityUse(currentWeapon, 'vaultWest');
+    }
+  }, [abilities, currentWeapon, isVaultingWest, setIsVaultingWest, onAbilityUse]);
+
   // Update isGameOver when health reaches 0
   useEffect(() => {
     if (health <= 0) {
@@ -158,6 +232,122 @@ export function useAbilityKeys({
       if (isGameOver.current) return;
       
       const key = e.key.toLowerCase();
+
+      // Handle double-tap S for vault BEFORE early return check
+      if (key === 's') {
+        const now = Date.now();
+        
+        // Only consider this a valid tap if the key was released since last press
+        if (!sKeyWasReleased.current) {
+          return; // Ignore key repeats from holding down
+        }
+        
+        const timeSinceLastS = now - lastSKeyPressTime.current;
+        const timeSinceLastRelease = now - lastSKeyReleaseTime.current;
+        
+        // Require both: quick succession AND key was actually released
+        if (timeSinceLastS <= DOUBLE_TAP_THRESHOLD && 
+            timeSinceLastRelease <= DOUBLE_TAP_THRESHOLD && 
+            lastSKeyPressTime.current > 0) {
+          // Double-tap detected - trigger vault
+          handleVaultActivation();
+          lastSKeyPressTime.current = 0; // Reset to prevent triple-tap issues
+          lastSKeyReleaseTime.current = 0;
+          sKeyWasReleased.current = true;
+          return; // Return early to prevent movement from being affected
+        } else {
+          // Single tap - record the time
+          lastSKeyPressTime.current = now;
+          sKeyWasReleased.current = false; // Mark that key is now pressed
+        }
+      }
+
+      // Handle double-tap W for vaultNorth BEFORE early return check
+      if (key === 'w') {
+        const now = Date.now();
+        
+        // Only consider this a valid tap if the key was released since last press
+        if (!wKeyWasReleased.current) {
+          return; // Ignore key repeats from holding down
+        }
+        
+        const timeSinceLastW = now - lastWKeyPressTime.current;
+        const timeSinceLastRelease = now - lastWKeyReleaseTime.current;
+        
+        // Require both: quick succession AND key was actually released
+        if (timeSinceLastW <= DOUBLE_TAP_THRESHOLD && 
+            timeSinceLastRelease <= DOUBLE_TAP_THRESHOLD && 
+            lastWKeyPressTime.current > 0) {
+          // Double-tap detected - trigger vaultNorth
+          handleVaultNorthActivation();
+          lastWKeyPressTime.current = 0; // Reset to prevent triple-tap issues
+          lastWKeyReleaseTime.current = 0;
+          wKeyWasReleased.current = true;
+          return; // Return early to prevent movement from being affected
+        } else {
+          // Single tap - record the time
+          lastWKeyPressTime.current = now;
+          wKeyWasReleased.current = false; // Mark that key is now pressed
+        }
+      }
+
+      // Handle double-tap D for vaultEast BEFORE early return check
+      if (key === 'd') {
+        const now = Date.now();
+        
+        // Only consider this a valid tap if the key was released since last press
+        if (!dKeyWasReleased.current) {
+          return; // Ignore key repeats from holding down
+        }
+        
+        const timeSinceLastD = now - lastDKeyPressTime.current;
+        const timeSinceLastRelease = now - lastDKeyReleaseTime.current;
+        
+        // Require both: quick succession AND key was actually released
+        if (timeSinceLastD <= DOUBLE_TAP_THRESHOLD && 
+            timeSinceLastRelease <= DOUBLE_TAP_THRESHOLD && 
+            lastDKeyPressTime.current > 0) {
+          // Double-tap detected - trigger vaultEast
+          handleVaultEastActivation();
+          lastDKeyPressTime.current = 0; // Reset to prevent triple-tap issues
+          lastDKeyReleaseTime.current = 0;
+          dKeyWasReleased.current = true;
+          return; // Return early to prevent movement from being affected
+        } else {
+          // Single tap - record the time
+          lastDKeyPressTime.current = now;
+          dKeyWasReleased.current = false; // Mark that key is now pressed
+        }
+      }
+
+      // Handle double-tap A for vaultWest BEFORE early return check
+      if (key === 'a') {
+        const now = Date.now();
+        
+        // Only consider this a valid tap if the key was released since last press
+        if (!aKeyWasReleased.current) {
+          return; // Ignore key repeats from holding down
+        }
+        
+        const timeSinceLastA = now - lastAKeyPressTime.current;
+        const timeSinceLastRelease = now - lastAKeyReleaseTime.current;
+        
+        // Require both: quick succession AND key was actually released
+        if (timeSinceLastA <= DOUBLE_TAP_THRESHOLD && 
+            timeSinceLastRelease <= DOUBLE_TAP_THRESHOLD && 
+            lastAKeyPressTime.current > 0) {
+          // Double-tap detected - trigger vaultWest
+          handleVaultWestActivation();
+          lastAKeyPressTime.current = 0; // Reset to prevent triple-tap issues
+          lastAKeyReleaseTime.current = 0;
+          aKeyWasReleased.current = true;
+          return; // Return early to prevent movement from being affected
+        } else {
+          // Single tap - record the time
+          lastAKeyPressTime.current = now;
+          aKeyWasReleased.current = false; // Mark that key is now pressed
+        }
+      }
 
       if (key in keys.current && keys.current[key]) return;
 
@@ -317,12 +507,6 @@ export function useAbilityKeys({
               }]);
               onAbilityUse(currentWeapon, 'r');
               break;
-            case WeaponType.BOW:
-              if (!isVaulting) {
-                setIsVaulting(true);
-                onAbilityUse(currentWeapon, 'r');
-              }
-              break;
             case WeaponType.SPEAR:
               if (!isPyroclastActive) {
                 // Check if we have at least 2 available charges before starting
@@ -332,6 +516,7 @@ export function useAbilityKeys({
                 }
               }
               break;
+            // Removed BOW case - vault is now handled by double-tap S
           }
         }
       }
@@ -348,6 +533,30 @@ export function useAbilityKeys({
       if (isGameOver.current) return;
       
       const key = e.key.toLowerCase();
+
+      // Track 's' key release for double-tap detection
+      if (key === 's') {
+        lastSKeyReleaseTime.current = Date.now();
+        sKeyWasReleased.current = true;
+      }
+
+      // Track 'w' key release for double-tap detection
+      if (key === 'w') {
+        lastWKeyReleaseTime.current = Date.now();
+        wKeyWasReleased.current = true;
+      }
+
+      // Track 'd' key release for double-tap detection
+      if (key === 'd') {
+        lastDKeyReleaseTime.current = Date.now();
+        dKeyWasReleased.current = true;
+      }
+
+      // Track 'a' key release for double-tap detection
+      if (key === 'a') {
+        lastAKeyReleaseTime.current = Date.now();
+        aKeyWasReleased.current = true;
+      }
 
       if (key in keys.current) {
         keys.current[key as keyof typeof keys.current] = false;
@@ -379,7 +588,14 @@ export function useAbilityKeys({
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [
+    handleVaultActivation,
+    handleVaultNorthActivation,
+    handleVaultEastActivation,
+    handleVaultWestActivation,
     isVaulting,
+    isVaultingNorth,
+    isVaultingEast,
+    isVaultingWest,
     keys,
     tryAttack,
     groupRef,

@@ -3,6 +3,8 @@ import { Vector3, Group } from 'three';
 import Terrain from '../Environment/Terrain';
 import Unit from '../Unit/Unit';
 import { MemoizedEnemyUnit } from '../Versus/MemoizedEnemyUnit';
+import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMage';
+import { MemoizedAbominationUnit } from '../Versus/Abomination/MemoizedAbomination';
 import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
@@ -19,12 +21,7 @@ import { initializeSharedResources, sharedGeometries, sharedMaterials, disposeSh
 
 
 interface SceneProps extends SceneType {
-  onLevelComplete: () => void;
-  spawnInterval?: number;
-  maxSkeletons?: number;
   initialSkeletons?: number;
-  spawnCount?: number;
-  killCount: number;
 }
 
 // Add ObjectPool class
@@ -67,11 +64,7 @@ class ObjectPool<T> {
 
 export default function Scene({
   unitProps: { controlsRef, ...unitProps },
-  onLevelComplete,
-  spawnInterval = 2000,
-  maxSkeletons = 13,
   initialSkeletons = 4,
-  killCount,
 }: SceneProps) {
   // TERRAIN
   const mountainData = useMemo(() => generateMountains(), []);
@@ -81,8 +74,8 @@ export default function Scene({
   // Add group pool
   const [groupPool] = useState(() => new ObjectPool<Group>(
     () => new Group(),
-    maxSkeletons,
-    maxSkeletons + 5
+    20, // Initial pool size
+    30  // Max pool size
   ));
 
   // Modify enemy creation to use pool
@@ -220,47 +213,86 @@ export default function Scene({
     onSmiteDamage: unitProps.onSmiteDamage
   };
 
-  // State to track spawn waves
-  const [currentWave, setCurrentWave] = useState(0);
-  
-  // Update spawning logic
+  // Spawning logic with separate timers for different enemy types
   useEffect(() => {
-    if (totalSpawned >= maxSkeletons) return;
-
-    const spawnTimer = setInterval(() => {
-      if ((killCount < 2 && currentWave === 0) || 
-          (killCount < 5 && currentWave === 1) || 
-          (killCount < 8 && currentWave === 2)) {
-        return;
-      }
-
+    // Timer for regular skeletons: 3 every 5 seconds
+    const skeletonTimer = setInterval(() => {
       setEnemies(prev => {
-        const remainingSpawns = maxSkeletons - totalSpawned;
-        if (remainingSpawns <= 0) return prev;
+        const newSkeletons = Array.from({ length: 3 }, (_, index) => {
+          const spawnPosition = generateRandomPosition();
+          spawnPosition.y = 0;
+          const group = groupPool.acquire();
+          return {
+            id: `skeleton-${totalSpawned + index}`,
+            position: spawnPosition.clone(),
+            initialPosition: spawnPosition.clone(),
+            rotation: 0,
+            health: 225,
+            maxHealth: 225,
+            type: 'regular' as const,
+            ref: { current: group }
+          };
+        });
 
-        const spawnAmount = Math.min(3, remainingSpawns);
-        const newEnemies = Array.from({ length: spawnAmount }, (_, index) => 
-          createEnemy(`skeleton-${totalSpawned + index}`)
-        );
-
-        setTotalSpawned(prev => prev + spawnAmount);
-        setCurrentWave(prev => prev + 1);
-        return [...prev, ...newEnemies];
+        setTotalSpawned(prev => prev + 3);
+        return [...prev, ...newSkeletons];
       });
-    }, spawnInterval);
+    }, 10000); // 10 seconds
 
-    return () => clearInterval(spawnTimer);
-  }, [totalSpawned, maxSkeletons, spawnInterval, currentWave, killCount, createEnemy]);
+    // Timer for skeletal mages: 1 every 30 seconds
+    const mageTimer = setInterval(() => {
+      setEnemies(prev => {
+        const spawnPosition = generateRandomPosition();
+        spawnPosition.y = 0;
+        const group = groupPool.acquire();
+        
+        const newMage = {
+          id: `mage-${Date.now()}`,
+          position: spawnPosition.clone(),
+          initialPosition: spawnPosition.clone(),
+          rotation: 0,
+          health: 289,
+          maxHealth: 289,
+          type: 'mage' as const,
+          ref: { current: group }
+        };
 
-  // Check for level completion
-  useEffect(() => {
-    const allEnemiesDefeated = enemies.every(enemy => enemy.health <= 0);
-    const spawnComplete = totalSpawned >= maxSkeletons;
-    
-    if (allEnemiesDefeated && spawnComplete) {
-      onLevelComplete();
-    }
-  }, [enemies, totalSpawned, maxSkeletons, onLevelComplete]);
+        setTotalSpawned(prev => prev + 1);
+        return [...prev, newMage];
+      });
+    }, 30000); // 30 seconds
+
+    // Timer for abominations: 1 every 60 seconds
+    const abominationTimer = setInterval(() => {
+      setEnemies(prev => {
+        const spawnPosition = generateRandomPosition();
+        spawnPosition.y = 0;
+        const group = groupPool.acquire();
+        
+        const newAbomination = {
+          id: `abomination-${Date.now()}`,
+          position: spawnPosition.clone(),
+          initialPosition: spawnPosition.clone(),
+          rotation: 0,
+          health: 841,
+          maxHealth: 841,
+          type: 'abomination' as const,
+          ref: { current: group }
+        };
+
+        setTotalSpawned(prev => prev + 1);
+        return [...prev, newAbomination];
+      });
+    }, 60000); // 60 seconds
+
+    return () => {
+      clearInterval(skeletonTimer);
+      clearInterval(mageTimer);
+      clearInterval(abominationTimer);
+    };
+  }, [groupPool, totalSpawned]);
+
+  // No level completion needed for continuous gameplay
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -372,22 +404,57 @@ export default function Scene({
         <group ref={playerRef}>
           <Unit {...unitComponentProps} />
         </group>
-        {enemies.map((enemy) => (
-          <MemoizedEnemyUnit
-            key={enemy.id}
-            id={enemy.id}
-            initialPosition={enemy.initialPosition}
-            position={enemy.position}
-            health={enemy.health}
-            maxHealth={enemy.maxHealth}
-            isDying={enemy.isDying}
-            onTakeDamage={handleTakeDamage}
-            onPositionUpdate={handleEnemyPositionUpdate}
-            playerPosition={playerPosition}
-            onAttackPlayer={handlePlayerDamage}
-            weaponType={unitProps.currentWeapon}
-          />
-        ))}
+        {enemies.map((enemy) => {
+          if (enemy.type === 'abomination') {
+            return (
+              <MemoizedAbominationUnit
+                key={enemy.id}
+                id={enemy.id}
+                initialPosition={enemy.initialPosition}
+                position={enemy.position}
+                health={enemy.health}
+                maxHealth={enemy.maxHealth}
+                onTakeDamage={handleTakeDamage}
+                onPositionUpdate={handleEnemyPositionUpdate}
+                playerPosition={playerPosition}
+                onAttackPlayer={handlePlayerDamage}
+                weaponType={unitProps.currentWeapon}
+              />
+            );
+          } else if (enemy.type === 'mage') {
+            return (
+              <MemoizedSkeletalMage
+                key={enemy.id}
+                id={enemy.id}
+                initialPosition={enemy.initialPosition}
+                position={enemy.position}
+                health={enemy.health}
+                maxHealth={enemy.maxHealth}
+                onTakeDamage={handleTakeDamage}
+                onPositionUpdate={handleEnemyPositionUpdate}
+                playerPosition={playerPosition}
+                onAttackPlayer={handlePlayerDamage}
+                weaponType={unitProps.currentWeapon}
+              />
+            );
+          }
+          return (
+            <MemoizedEnemyUnit
+              key={enemy.id}
+              id={enemy.id}
+              initialPosition={enemy.initialPosition}
+              position={enemy.position}
+              health={enemy.health}
+              maxHealth={enemy.maxHealth}
+              isDying={enemy.isDying}
+              onTakeDamage={handleTakeDamage}
+              onPositionUpdate={handleEnemyPositionUpdate}
+              playerPosition={playerPosition}
+              onAttackPlayer={handlePlayerDamage}
+              weaponType={unitProps.currentWeapon}
+            />
+          );
+        })}
       </group>
     </>
   );

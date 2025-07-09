@@ -8,7 +8,6 @@ import * as THREE from 'three';
 import { AbilityType, WeaponType } from '@/Weapons/weapons';
 import { WeaponInfo } from '../Unit/UnitProps';
 import WeaponSelectionPanel from '../Interface/WeaponSelectionPanel';
-import LevelCompletionPanel from '../Interface/LevelCompletionPanel';
 import Behavior from '@/Scene/Behavior';
 import { GameStateProvider } from '@/Scene/GameStateContext';
 
@@ -36,9 +35,6 @@ export default function GameWrapper({
   onAbilityUnlock
 }: GameWrapperProps) {
   const [gameStarted, setGameStarted] = useState(false);
-  const [showLevelPanel, setShowLevelPanel] = useState(false);
-  const [selectedIcon, setSelectedIcon] = useState<number | null>(null);
-  const [currentLevel, setCurrentLevel] = useState(1);
 
   const handleStart = () => {
     if (currentWeapon) {
@@ -46,25 +42,8 @@ export default function GameWrapper({
     }
   };
 
-  const handleLevelTransition = useCallback((level: number, showPanel: boolean) => {
-    if (showPanel) {
-      setShowLevelPanel(true);
-    } else {
-      setCurrentLevel(prev => prev + 1);
-    }
-  }, []);
-
-  const handleContinue = useCallback(() => {
-    setShowLevelPanel(false);
-    setSelectedIcon(null);
-    setCurrentLevel(prev => prev + 1);
-  }, []);
-
   const handleReset = useCallback(() => {
     setGameStarted(false);
-    setCurrentLevel(1);
-    setShowLevelPanel(false);
-    setSelectedIcon(null);
     onReset();
   }, [onReset]);
 
@@ -116,8 +95,8 @@ export default function GameWrapper({
                     onReset: handleReset
                   }}
                   onAbilityUnlock={onAbilityUnlock}
-                  onLevelTransition={handleLevelTransition}
-                  currentLevel={currentLevel}
+                  onLevelTransition={() => {}}
+                  currentLevel={1}
                 />
               </Suspense>
             )}
@@ -157,7 +136,7 @@ export default function GameWrapper({
           left: 0, 
           width: '100%', 
           height: '100%', 
-          pointerEvents: (!gameStarted || showLevelPanel) ? 'auto' : 'none',
+          pointerEvents: !gameStarted ? 'auto' : 'none',
           zIndex: 1000
         }}>
           {!gameStarted ? (
@@ -165,15 +144,6 @@ export default function GameWrapper({
               onWeaponSelect={onWeaponSelect}
               selectedWeapon={currentWeapon}
               onStart={handleStart}
-            />
-          ) : showLevelPanel ? (
-            <LevelCompletionPanel 
-              onContinue={handleContinue}
-              onSelectIcon={setSelectedIcon}
-              selectedIcon={selectedIcon}
-              currentWeapon={currentWeapon}
-              onAbilityUnlock={onAbilityUnlock}
-              abilities={abilities}
             />
           ) : (
             <Panel 

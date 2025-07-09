@@ -49,6 +49,9 @@ import StealthStrikeEffect from '@/Spells/Stealth/StealthStrikeEffect';
 import { useQuickShot } from '../Spells/QuickShot/QuickShot';
 import BoneArrow from '@/Spells/QuickShot/BoneArrow';
 import Vault from '@/Spells/Vault/Vault';
+import VaultNorth from '@/Spells/Vault/VaultNorth';
+import VaultEast from '@/Spells/Vault/VaultEast';
+import VaultWest from '@/Spells/Vault/VaultWest';
 import { usePyroclast } from '../Spells/Pyroclast/usePyroclast';
 import PyroclastMissile from '../Spells/Pyroclast/PyroclastMissile';
 import Reignite, { ReigniteRef } from '../Spells/Reignite/Reignite';
@@ -1192,6 +1195,9 @@ export default function Unit({
   });
 
   const [isVaulting, setIsVaulting] = useState(false);
+  const [isVaultingNorth, setIsVaultingNorth] = useState(false);
+  const [isVaultingEast, setIsVaultingEast] = useState(false);
+  const [isVaultingWest, setIsVaultingWest] = useState(false);
   // Add isBreaching state before useAbilityKeys call
   const [isBreaching, setIsBreaching] = useState(false);
 
@@ -1246,6 +1252,12 @@ export default function Unit({
     shootQuickShot,
     setIsVaulting,
     isVaulting,
+    setIsVaultingNorth,
+    isVaultingNorth,
+    setIsVaultingEast,
+    isVaultingEast,
+    setIsVaultingWest,
+    isVaultingWest,
     startPyroclastCharge,
     releasePyroclastCharge,
     isPyroclastActive,
@@ -2402,16 +2414,45 @@ export default function Unit({
         />
       ))}
 
-      {currentWeapon === WeaponType.BOW && (
-        <Vault
-          parentRef={groupRef}
-          isActive={isVaulting}
-          onComplete={() => {
-            setIsVaulting(false);
-            onAbilityUse(WeaponType.BOW, 'r');
-          }}
-        />
-      )}
+      {/* Vault is now available for all weapons */}
+      <Vault
+        parentRef={groupRef}
+        isActive={isVaulting}
+        onComplete={() => {
+          setIsVaulting(false);
+          onAbilityUse(currentWeapon, 'vault');
+        }}
+      />
+
+      {/* VaultNorth is now available for all weapons */}
+      <VaultNorth
+        parentRef={groupRef}
+        isActive={isVaultingNorth}
+        onComplete={() => {
+          setIsVaultingNorth(false);
+          onAbilityUse(currentWeapon, 'vaultNorth');
+        }}
+      />
+
+      {/* VaultEast is now available for all weapons */}
+      <VaultEast
+        parentRef={groupRef}
+        isActive={isVaultingEast}
+        onComplete={() => {
+          setIsVaultingEast(false);
+          onAbilityUse(currentWeapon, 'vaultEast');
+        }}
+      />
+
+      {/* VaultWest is now available for all weapons */}
+      <VaultWest
+        parentRef={groupRef}
+        isActive={isVaultingWest}
+        onComplete={() => {
+          setIsVaultingWest(false);
+          onAbilityUse(currentWeapon, 'vaultWest');
+        }}
+      />
 
       {currentWeapon === WeaponType.SPEAR && isPyroclastActive && (
         <PyrochargeEffect

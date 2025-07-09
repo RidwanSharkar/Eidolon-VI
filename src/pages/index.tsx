@@ -47,8 +47,8 @@ export default function HomePage() {
       setAbilities((prev: WeaponInfo) => {
         const newAbilities = { ...prev };
         (Object.keys(newAbilities) as WeaponType[]).forEach(weapon => {
-          ['q', 'e', 'r', 'passive', 'active'].forEach(ability => {
-            const key = ability as 'q' | 'e' | 'r' | 'passive' | 'active';
+          ['q', 'e', 'r', 'passive', 'active', 'vault', 'vaultNorth', 'vaultEast', 'vaultWest'].forEach(ability => {
+            const key = ability as 'q' | 'e' | 'r' | 'passive' | 'active' | 'vault' | 'vaultNorth' | 'vaultEast' | 'vaultWest';
             if (newAbilities[weapon][key].currentCooldown > 0) {
               newAbilities[weapon][key].currentCooldown -= 0.15;
             }
@@ -87,8 +87,8 @@ export default function HomePage() {
     setAbilities(prev => {
       const newAbilities = { ...prev };
       Object.keys(newAbilities).forEach(weapon => {
-        ['q', 'e'].forEach(ability => {
-          newAbilities[weapon as WeaponType][ability as 'q' | 'e'].currentCooldown = 0;
+        ['q', 'e', 'vault', 'vaultNorth', 'vaultEast', 'vaultWest'].forEach(ability => {
+          newAbilities[weapon as WeaponType][ability as 'q' | 'e' | 'vault' | 'vaultNorth' | 'vaultEast' | 'vaultWest'].currentCooldown = 0;
         });
       });
       return newAbilities;

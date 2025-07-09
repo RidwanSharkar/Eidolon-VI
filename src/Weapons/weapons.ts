@@ -1,7 +1,7 @@
 // src/weapons/weapons.ts
 
-export type AbilityType = 'q' | 'e' | 'r' | 'passive' | 'active';
-export type AbilityHotkey = 'q' | 'e' | 'r' | '1' | '2';
+export type AbilityType = 'q' | 'e' | 'r' | 'passive' | 'active' | 'vault' | 'vaultNorth' | 'vaultEast' | 'vaultWest';
+export type AbilityHotkey = 'q' | 'e' | 'r' | '1' | '2' | 's' | 'w' | 'd' | 'a';
 
 export enum WeaponType {
   SCYTHE = 'scythe',
@@ -34,6 +34,10 @@ export interface WeaponAbilities {
   r: AbilityInfo;
   passive: AbilityInfo;
   active: AbilityInfo;
+  vault: AbilityInfo;
+  vaultNorth: AbilityInfo;
+  vaultEast: AbilityInfo;
+  vaultWest: AbilityInfo;
 }
 
 export interface Weapon {
@@ -76,41 +80,61 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
   [WeaponType.SCYTHE]: {
     q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: 'icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 0.69, currentCooldown: 0, icon: 'icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 2.15, currentCooldown: 0, icon: 'icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: 'icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: false },
-    active: { type: 'active',  key: '2', cooldown: 4.5, currentCooldown: 0,  icon: 'icons/a1.svg', maxCooldown: 4.5, name: 'Summon Skeleton', isUnlocked: false}
+    r: { type: 'r', key: 'r', cooldown: 2.15, currentCooldown: 0, icon: 'icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: true },
+    passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: 'icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: true },
+    active: { type: 'active',  key: '2', cooldown: 4.5, currentCooldown: 0,  icon: 'icons/a1.svg', maxCooldown: 4.5, name: 'Summon Skeleton', isUnlocked: true},
+    vault: { type: 'vault', key: 's', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
+    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
+    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
+    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
   }, 
 
   [WeaponType.SWORD]: {
     q: { type: 'q', key: 'q', cooldown: 1.1, currentCooldown: 0, icon: 'icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 3.85, currentCooldown: 0, icon: 'icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: 'icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false },
-    passive: {  type: 'passive', key: '1',  cooldown: 0,  currentCooldown: 0,  icon: 'icons/p2.svg', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a2.svg', maxCooldown: 0, name: 'Sword Active', isUnlocked: false }
+    r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: 'icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: true },
+    passive: {  type: 'passive', key: '1',  cooldown: 0,  currentCooldown: 0,  icon: 'icons/p2.svg', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: true },
+    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a2.svg', maxCooldown: 0, name: 'Sword Active', isUnlocked: true },
+    vault: { type: 'vault', key: 's', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
+    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
+    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
+    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
   },
   
   [WeaponType.SABRES]: {
     q: { type: 'q', key: 'q', cooldown: 0.60, currentCooldown: 0, icon: 'icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 5.15, currentCooldown: 0, icon: 'icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 9.5, currentCooldown: 0, icon: 'icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: false }
+    r: { type: 'r', key: 'r', cooldown: 9.5, currentCooldown: 0, icon: 'icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: true },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: true },
+    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: true },
+    vault: { type: 'vault', key: 's', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
+    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
+    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
+    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
   },
 
   [WeaponType.SPEAR]: {
     q: { type: 'q', key: 'q', cooldown: 0.625, currentCooldown: 0, icon: 'icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 5.15, currentCooldown: 0, icon: 'icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: .5, currentCooldown: 0, icon: 'icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p4.svg', maxCooldown: 0, name: 'Reignite', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 2, currentCooldown: 0, icon: 'icons/a4.svg', maxCooldown: 8, name: 'Breach', isUnlocked: false }
+    r: { type: 'r', key: 'r', cooldown: .5, currentCooldown: 0, icon: 'icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: true },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p4.svg', maxCooldown: 0, name: 'Reignite', isUnlocked: true },
+    active: { type: 'active', key: '2', cooldown: 2, currentCooldown: 0, icon: 'icons/a4.svg', maxCooldown: 8, name: 'Breach', isUnlocked: true },
+    vault: { type: 'vault', key: 's', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
+    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
+    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
+    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
   },
 
   [WeaponType.BOW]: {
     q: { type: 'q', key: 'q', cooldown: 0.25, currentCooldown: 0, icon: 'icons/q5.svg', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true },
     e: { type: 'e', key: 'e', cooldown: 0.875, currentCooldown: 0, icon: 'icons/e5.svg', maxCooldown: 1, name: 'Power Shot', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p5.svg', maxCooldown: 0, name: 'Venom Shots', isUnlocked: false },
-    active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: 'icons/a5.svg', maxCooldown: 5, name: 'Elemental Shots', isUnlocked: false }
+    r: { type: 'r', key: 'r', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Bow R', isUnlocked: false },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p5.svg', maxCooldown: 0, name: 'Venom Shots', isUnlocked: true },
+    active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: 'icons/a5.svg', maxCooldown: 5, name: 'Elemental Shots', isUnlocked: true },
+    vault: { type: 'vault', key: 's', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
+    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
+    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
+    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
   },
 }; 
 
@@ -157,6 +181,22 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     active: {
       title: "Chaos Totem",
       description: "Active: Summons a totem that fights by your side for 12 seconds, shooting rapid bolts at enemies within range - 5 second cooldown.",
+    },
+    vault: {
+      title: "Vault",
+      description: "Quickly dash backwards to escape danger or obtain better positioning - Double-tap S to activate."
+    },
+    vaultNorth: {
+      title: "Vault North",
+      description: "Quickly dash forwards to close distance or pursue enemies - Double-tap W to activate."
+    },
+    vaultEast: {
+      title: "Vault East",
+      description: "Quickly dash to the right for tactical repositioning - Double-tap D to activate."
+    },
+    vaultWest: {
+      title: "Vault West",
+      description: "Quickly dash to the left for tactical repositioning - Double-tap A to activate."
     }
   },
 // =====================================================================================================================
@@ -180,6 +220,22 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     active: {
       title: "Static Discharge",
       description: "Passive: Sword attacks conduct electricity, bouncing lightning damage to nearby enemies in a chain-reaction."
+    },
+    vault: {
+      title: "Vault",
+      description: "Quickly dash backwards to escape danger or obtain better positioning - Double-tap S to activate."
+    },
+    vaultNorth: {
+      title: "Vault North",
+      description: "Quickly dash forwards to close distance or pursue enemies - Double-tap W to activate."
+    },
+    vaultEast: {
+      title: "Vault East",
+      description: "Quickly dash to the right for tactical repositioning - Double-tap D to activate."
+    },
+    vaultWest: {
+      title: "Vault West",
+      description: "Quickly dash to the left for tactical repositioning - Double-tap A to activate."
     }
   },
  // =====================================================================================================================
@@ -203,6 +259,22 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     active: {
       title: "Avalanche",
       description: "Passive: Melee attacks passively consume orb charges to deal extra frost damage scaling with the number of charges available."
+    },
+    vault: {
+      title: "Vault",
+      description: "Quickly dash backwards to escape danger or obtain better positioning - Double-tap S to activate."
+    },
+    vaultNorth: {
+      title: "Vault North",
+      description: "Quickly dash forwards to close distance or pursue enemies - Double-tap W to activate."
+    },
+    vaultEast: {
+      title: "Vault East",
+      description: "Quickly dash to the right for tactical repositioning - Double-tap D to activate."
+    },
+    vaultWest: {
+      title: "Vault West",
+      description: "Quickly dash to the left for tactical repositioning - Double-tap A to activate."
     }
   },
 // =====================================================================================================================
@@ -226,6 +298,22 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     active: {
       title: "Breach",
       description: "Active: Consumes 2 orbs to quickly dash forward with the spear, dealing damage to enemies caught in the path.",
+    },
+    vault: {
+      title: "Vault",
+      description: "Quickly dash backwards to escape danger or obtain better positioning - Double-tap S to activate."
+    },
+    vaultNorth: {
+      title: "Vault North",
+      description: "Quickly dash forwards to close distance or pursue enemies - Double-tap W to activate."
+    },
+    vaultEast: {
+      title: "Vault East",
+      description: "Quickly dash to the right for tactical repositioning - Double-tap D to activate."
+    },
+    vaultWest: {
+      title: "Vault West",
+      description: "Quickly dash to the left for tactical repositioning - Double-tap A to activate."
     }
   },
 // =====================================================================================================================
@@ -249,6 +337,22 @@ export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbil
     active: {
       title: "Elemental Shots",
       description: "Fully charged shots deal an additional 100-200 fire damage. Non-fully charged shots deal 70 additional lightning damage to the target. Movement speed while charging the Power-Shot is increased 1000%",
+    },
+    vault: {
+      title: "Vault",
+      description: "Quickly dash backwards to escape danger or obtain better positioning - Double-tap S to activate."
+    },
+    vaultNorth: {
+      title: "Vault North",
+      description: "Quickly dash forwards to close distance or pursue enemies - Double-tap W to activate."
+    },
+    vaultEast: {
+      title: "Vault East",
+      description: "Quickly dash to the right for tactical repositioning - Double-tap D to activate."
+    },
+    vaultWest: {
+      title: "Vault West",
+      description: "Quickly dash to the left for tactical repositioning - Double-tap A to activate."
     }
   },
 }; 
