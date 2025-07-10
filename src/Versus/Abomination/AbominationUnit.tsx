@@ -57,7 +57,7 @@ export default function AbominationUnit({
   const MOVEMENT_SPEED = 0.0625;
   const POSITION_UPDATE_THRESHOLD = 0.125;
   const MINIMUM_UPDATE_INTERVAL = 20;
-  const ATTACK_DAMAGE = 14;
+  const ATTACK_DAMAGE = 12;
   const SEPARATION_RADIUS = 3;
   const SEPARATION_FORCE = 0.25;
   const ARM_DELAY = 200;

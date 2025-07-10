@@ -77,7 +77,7 @@ export default function ReaperUnit({
   const ATTACK_COOLDOWN_ENRAGED = 1500;
   const RE_EMERGE_COOLDOWN = 8000; // 8 second cooldown for Re-emerge
   const POST_EMERGE_AGGRESSIVE_DURATION = 3000; // 3 seconds of aggressive behavior after re-emerging
-  const MOVEMENT_SPEED = 0.0225;
+  const MOVEMENT_SPEED = 0.025;
   const ATTACK_DAMAGE = 36;
   const REAPER_HIT_HEIGHT = 1.5;       
   const REAPER_HIT_RADIUS = 3.0;
@@ -526,15 +526,17 @@ export default function ReaperUnit({
       }
     }
 
-    // Within range => attempt attack if cooldown is up
-    // During aggressive mode, attack more frequently
-    const effectiveAttackCooldown = isPostEmergeAggressive 
-      ? currentAttackCooldown.current * 0.6 
-      : currentAttackCooldown.current;
-    
-    if (Date.now() - lastAttackTime.current >= effectiveAttackCooldown && !isBackstabInProgress) {
-      startAttack();
-      lastAttackTime.current = Date.now();
+    // Attack logic - only attempt attack if within range
+    if (distanceToPlayer <= ATTACK_RANGE && health > 0) {
+      // During aggressive mode, attack more frequently
+      const effectiveAttackCooldown = isPostEmergeAggressive 
+        ? currentAttackCooldown.current * 0.6 
+        : currentAttackCooldown.current;
+      
+      if (Date.now() - lastAttackTime.current >= effectiveAttackCooldown && !isBackstabInProgress) {
+        startAttack();
+        lastAttackTime.current = Date.now();
+      }
     }
   });
 

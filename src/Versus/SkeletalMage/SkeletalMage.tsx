@@ -83,7 +83,7 @@ export default function SkeletalMage({
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.125;
   const FIREBALL_COOLDOWN = 3750;
-  const FIREBALL_DAMAGE = 28;
+  const FIREBALL_DAMAGE = 26;
   const ACCELERATION = 4.0;
   const DECELERATION = 6.0;
   const ROTATION_SPEED = 4.0;
