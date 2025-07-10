@@ -82,11 +82,11 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
     e: { type: 'e', key: 'e', cooldown: 0.69, currentCooldown: 0, icon: 'icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
     r: { type: 'r', key: 'r', cooldown: 2.15, currentCooldown: 0, icon: 'icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: true },
     passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: 'icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: true },
-    active: { type: 'active',  key: '2', cooldown: 4.5, currentCooldown: 0,  icon: 'icons/a1.svg', maxCooldown: 4.5, name: 'Summon Skeleton', isUnlocked: true},
-    vault: { type: 'vault', key: 's', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
-    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
-    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
-    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
+    active: { type: 'active',  key: '2', cooldown: 5.0, currentCooldown: 0,  icon: 'icons/a1.svg', maxCooldown: 4.5, name: 'Summon Skeleton', isUnlocked: true},
+    vault: { type: 'vault', key: 's', cooldown: 5.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
+    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 5.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
+    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 5.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
+    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 5.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
   }, 
 
   [WeaponType.SWORD]: {
@@ -95,10 +95,10 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
     r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: 'icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: true },
     passive: {  type: 'passive', key: '1',  cooldown: 0,  currentCooldown: 0,  icon: 'icons/p2.svg', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: true },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a2.svg', maxCooldown: 0, name: 'Sword Active', isUnlocked: true },
-    vault: { type: 'vault', key: 's', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
-    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
-    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
-    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
+    vault: { type: 'vault', key: 's', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
+    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
+    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
+    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
   },
   
   [WeaponType.SABRES]: {
@@ -107,10 +107,10 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
     r: { type: 'r', key: 'r', cooldown: 9.5, currentCooldown: 0, icon: 'icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: true },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: true },
     active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: true },
-    vault: { type: 'vault', key: 's', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
-    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
-    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
-    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
+    vault: { type: 'vault', key: 's', cooldown: 4.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
+    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 4.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
+    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 4.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
+    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 4.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
   },
 
   [WeaponType.SPEAR]: {
@@ -119,10 +119,10 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
     r: { type: 'r', key: 'r', cooldown: .5, currentCooldown: 0, icon: 'icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: true },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p4.svg', maxCooldown: 0, name: 'Reignite', isUnlocked: true },
     active: { type: 'active', key: '2', cooldown: 2, currentCooldown: 0, icon: 'icons/a4.svg', maxCooldown: 8, name: 'Breach', isUnlocked: true },
-    vault: { type: 'vault', key: 's', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
-    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
-    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
-    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
+    vault: { type: 'vault', key: 's', cooldown: 5.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
+    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 5.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
+    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 5.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
+    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 5.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
   },
 
   [WeaponType.BOW]: {
@@ -131,10 +131,10 @@ export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
     r: { type: 'r', key: 'r', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Bow R', isUnlocked: false },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p5.svg', maxCooldown: 0, name: 'Venom Shots', isUnlocked: true },
     active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: 'icons/a5.svg', maxCooldown: 5, name: 'Elemental Shots', isUnlocked: true },
-    vault: { type: 'vault', key: 's', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
-    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
-    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
-    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 3.75, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
+    vault: { type: 'vault', key: 's', cooldown: 4.5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
+    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 4.5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
+    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 4.5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
+    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 4.5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
   },
 }; 
 

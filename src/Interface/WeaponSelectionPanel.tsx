@@ -84,7 +84,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src={`/E-VI-TestRealm/icons/1.svg`}
+                src="/E-VI-TestRealm/icons/1.svg"
                 alt="Sword"
                 width={240}
                 height={280}
@@ -99,7 +99,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src={`/E-VI-TestRealm/icons/q2.svg`}
+                src="/E-VI-TestRealm/icons/q2.svg"
                 alt="Q Ability"
                 width={80}
                 height={100}
@@ -113,7 +113,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src={`/E-VI-TestRealm/icons/e2.svg`}
+                src="/E-VI-TestRealm/icons/e2.svg"
                 alt="E Ability"
                 width={80}
                 height={100}
@@ -131,7 +131,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src={`/E-VI-TestRealm/icons/3.svg`}
+                src="/E-VI-TestRealm/icons/3.svg"
                 alt="Scythe"
                 width={240}
                 height={280}
@@ -146,7 +146,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src={`/E-VI-TestRealm/icons/q1.svg`}
+                src="/E-VI-TestRealm/icons/q1.svg"
                 alt="Q Ability"
                 width={80}
                 height={100}
@@ -160,7 +160,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src={`/E-VI-TestRealm/icons/e1.svg`}
+                src="/E-VI-TestRealm/icons/e1.svg"
                 alt="E Ability"
                 width={80}
                 height={100}
@@ -178,7 +178,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src={`/E-VI-TestRealm/icons/2.svg`}
+                src="/E-VI-TestRealm/icons/2.svg"
                 alt="Sabres"
                 width={240}
                 height={280}
@@ -193,7 +193,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src={`/E-VI-TestRealm/icons/q3.svg`}
+                src="/E-VI-TestRealm/icons/q3.svg"
                 alt="Q Ability"
                 width={80}
                 height={100}
@@ -207,7 +207,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src={`/E-VI-TestRealm/icons/e3.svg`}
+                src="/E-VI-TestRealm/icons/e3.svg"
                 alt="E Ability"
                 width={80}
                 height={100}
@@ -225,7 +225,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src={`/E-VI-TestRealm/icons/4.svg`}
+                src="/E-VI-TestRealm/icons/4.svg"
                 alt="Spear"
                 width={240}
                 height={280}
@@ -240,7 +240,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src={`/E-VI-TestRealm/icons/q4.svg`}
+                src="/E-VI-TestRealm/icons/q4.svg"
                 alt="Q Ability"
                 width={80}
                 height={100}
@@ -254,7 +254,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src={`/E-VI-TestRealm/icons/e4.svg`}
+                src="/E-VI-TestRealm/icons/e4.svg"
                 alt="E Ability"
                 width={80}
                 height={100}
@@ -272,7 +272,7 @@ export default function WeaponSelectionPanel({
           >
             <div className={styles.iconContent}>
               <Image 
-                src={`/E-VI-TestRealm/icons/5.svg`}
+                src="/E-VI-TestRealm/icons/5.svg"
                 alt="Bow"
                 width={240}
                 height={280}
@@ -287,7 +287,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src={`/E-VI-TestRealm/icons/q5.svg`}
+                src="/E-VI-TestRealm/icons/q5.svg"
                 alt="Q Ability"
                 width={80}
                 height={100}
@@ -301,7 +301,7 @@ export default function WeaponSelectionPanel({
               onMouseLeave={handleAbilityLeave}
             >
               <Image 
-                src={`/E-VI-TestRealm/icons/e5.svg`}
+                src="/E-VI-TestRealm/icons/e5.svg"
                 alt="E Ability"
                 width={80}
                 height={100}
