@@ -27,7 +27,7 @@ jobs:
         
       - name: Build
         env:
-          NEXT_PUBLIC_BASE_PATH: /Eidolon
+          NEXT_PUBLIC_BASE_PATH: /E-VI-TestRealm
         run: npm run build
         
       - name: Deploy
