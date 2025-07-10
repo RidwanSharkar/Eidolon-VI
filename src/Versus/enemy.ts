@@ -4,7 +4,7 @@ import { Vector3 } from 'three';
 import { RefObject } from 'react';
 import { Group } from 'three';
 
-export type EnemyType = 'regular' | 'mage' | 'abomination';
+export type EnemyType = 'regular' | 'mage' | 'abomination' | 'reaper';
 
 export interface Enemy {
   id: string;

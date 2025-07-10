@@ -54,12 +54,12 @@ export default function AbominationUnit({
 
   const ATTACK_RANGE = 3.15;
   const ATTACK_COOLDOWN = 2000;
-  const MOVEMENT_SPEED = 0.0475;
+  const MOVEMENT_SPEED = 0.0625;
   const POSITION_UPDATE_THRESHOLD = 0.125;
   const MINIMUM_UPDATE_INTERVAL = 20;
-  const ATTACK_DAMAGE = 9;
+  const ATTACK_DAMAGE = 14;
   const SEPARATION_RADIUS = 3;
-  const SEPARATION_FORCE = 0.15;
+  const SEPARATION_FORCE = 0.25;
   const ARM_DELAY = 200;
   const TOTAL_ARMS = 6;
   const ACCELERATION = 3.5;
@@ -71,7 +71,7 @@ export default function AbominationUnit({
 
   const WANDER_DURATION = 4500;
   const WANDER_RADIUS = 6;
-  const WANDER_ROTATION_SPEED = 3.5;
+  const WANDER_ROTATION_SPEED = 1.5;
   const WANDER_MOVEMENT_SPEED = 0.030;
 
   // Sync health changes
@@ -287,7 +287,7 @@ export default function AbominationUnit({
                 attackStartPosition.distanceTo(currentPosition.current) < 0.65) {
               onAttackPlayer(ATTACK_DAMAGE);
             }
-          }, 450 + (i * ARM_DELAY));
+          }, 150 + (i * ARM_DELAY));
         }
         
         lastAttackTime.current = currentTime;

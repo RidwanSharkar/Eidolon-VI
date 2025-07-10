@@ -417,7 +417,7 @@ export default function Spear({
         
         <group position={[0, 0.75, 0.35]}>
           <group rotation={[0, 0, 0]}>
-            <group rotation={[0, 0, 0.7]} scale={[0.55, 0.55, -0.55]}>
+            <group rotation={[0, 0, 0.7]} scale={[0.4, 0.4, -0.4]}>
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                 <meshStandardMaterial 
@@ -435,7 +435,7 @@ export default function Spear({
           </group>
 
           <group rotation={[0, (2 * Math.PI) / 3, Math.PI/2]}>
-            <group rotation={[0, 0., 5.33]} scale={[0.55, 0.55, -0.55]}>
+            <group rotation={[0, 0., 5.33]} scale={[0.4, 0.4, -0.4]}>
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                 <meshStandardMaterial 
@@ -453,7 +453,7 @@ export default function Spear({
           </group>
 
           <group rotation={[0, (4 * Math.PI) / 3, Math.PI/2]}>
-            <group rotation={[0, 0, 5.33]} scale={[0.55, 0.55, -0.55]}>
+            <group rotation={[0, 0, 5.33]} scale={[0.4, 0.4, -0.4]}>
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                 <meshStandardMaterial 

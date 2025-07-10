@@ -5,6 +5,7 @@ import Unit from '../Unit/Unit';
 import { MemoizedEnemyUnit } from '../Versus/MemoizedEnemyUnit';
 import { MemoizedSkeletalMage } from '../Versus/SkeletalMage/MemoizedSkeletalMage';
 import { MemoizedAbominationUnit } from '../Versus/Abomination/MemoizedAbomination';
+import ReaperUnit from '../Versus/Reaper/ReaperUnit';
 import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
@@ -64,7 +65,7 @@ class ObjectPool<T> {
 
 export default function Scene({
   unitProps: { controlsRef, ...unitProps },
-  initialSkeletons = 4,
+  initialSkeletons = 3,
 }: SceneProps) {
   // TERRAIN
   const mountainData = useMemo(() => generateMountains(), []);
@@ -89,8 +90,8 @@ export default function Scene({
       position: spawnPosition.clone(),
       initialPosition: spawnPosition.clone(),
       rotation: 0,
-      health: 225,
-      maxHealth: 225,
+      health: 484,
+      maxHealth: 484,
       ref: { current: group }
     };
   }, [groupPool]);
@@ -111,7 +112,7 @@ export default function Scene({
     )
   );
 
-  const [totalSpawned, setTotalSpawned] = useState(initialSkeletons);
+  const totalSpawnedRef = useRef(initialSkeletons);
   const [playerHealth, setPlayerHealth] = useState<number>(unitProps.health);
   const playerRef = useRef<Group>(null);
   const [playerPosition, setPlayerPosition] = useState<Vector3>(new Vector3(0, 0, 0));
@@ -215,82 +216,127 @@ export default function Scene({
 
   // Spawning logic with separate timers for different enemy types
   useEffect(() => {
-    // Timer for regular skeletons: 3 every 5 seconds
+    const MAX_ENEMIES = 12; // Hard cap on total enemies on screen
+
+    // Timer for regular skeletons: 3 every 75 seconds
     const skeletonTimer = setInterval(() => {
       setEnemies(prev => {
-        const newSkeletons = Array.from({ length: 3 }, (_, index) => {
+        // Check if we can spawn more enemies
+        const availableSlots = MAX_ENEMIES - prev.length;
+        if (availableSlots <= 0) return prev;
+
+        // Spawn up to 3 skeletons or fill remaining slots
+        const spawnCount = Math.min(3, availableSlots);
+        const newSkeletons = Array.from({ length: spawnCount }, (_, index) => {
           const spawnPosition = generateRandomPosition();
           spawnPosition.y = 0;
           const group = groupPool.acquire();
+          group.visible = true;
           return {
-            id: `skeleton-${totalSpawned + index}`,
+            id: `skeleton-${totalSpawnedRef.current + index}`,
             position: spawnPosition.clone(),
             initialPosition: spawnPosition.clone(),
             rotation: 0,
-            health: 225,
-            maxHealth: 225,
+            health: 484,
+            maxHealth: 484,
             type: 'regular' as const,
             ref: { current: group }
           };
         });
 
-        setTotalSpawned(prev => prev + 3);
+        totalSpawnedRef.current += spawnCount;
         return [...prev, ...newSkeletons];
       });
-    }, 10000); // 10 seconds
+    }, 30000);
 
-    // Timer for skeletal mages: 1 every 30 seconds
+    // Timer for skeletal mages: 1 every 100 seconds
     const mageTimer = setInterval(() => {
       setEnemies(prev => {
+        // Check if we can spawn more enemies
+        if (prev.length >= MAX_ENEMIES) return prev;
+
         const spawnPosition = generateRandomPosition();
         spawnPosition.y = 0;
         const group = groupPool.acquire();
+        group.visible = true;
         
         const newMage = {
           id: `mage-${Date.now()}`,
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
           rotation: 0,
-          health: 289,
-          maxHealth: 289,
+          health: 324,
+          maxHealth: 324,
           type: 'mage' as const,
           ref: { current: group }
         };
 
-        setTotalSpawned(prev => prev + 1);
+        totalSpawnedRef.current += 1;
         return [...prev, newMage];
       });
-    }, 30000); // 30 seconds
+    }, 45000);
 
-    // Timer for abominations: 1 every 60 seconds
+    // Timer for abominations: 1 every 150 seconds
     const abominationTimer = setInterval(() => {
       setEnemies(prev => {
+        // Check if we can spawn more enemies
+        if (prev.length >= MAX_ENEMIES) return prev;
+
         const spawnPosition = generateRandomPosition();
         spawnPosition.y = 0;
         const group = groupPool.acquire();
+        group.visible = true;
         
         const newAbomination = {
           id: `abomination-${Date.now()}`,
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
           rotation: 0,
-          health: 841,
-          maxHealth: 841,
+          health: 1936,
+          maxHealth: 1936,
           type: 'abomination' as const,
           ref: { current: group }
         };
 
-        setTotalSpawned(prev => prev + 1);
+        totalSpawnedRef.current += 1;
         return [...prev, newAbomination];
       });
-    }, 60000); // 60 seconds
+    }, 90000);
+
+    // Timer for reapers: 1 every 25 seconds
+    const reaperTimer = setInterval(() => {
+      setEnemies(prev => {
+        // Check if we can spawn more enemies
+        if (prev.length >= MAX_ENEMIES) return prev;
+
+        const spawnPosition = generateRandomPosition();
+        spawnPosition.y = 0;
+        const group = groupPool.acquire();
+        group.visible = true;
+        
+        const newReaper = {
+          id: `reaper-${Date.now()}`,
+          position: spawnPosition.clone(),
+          initialPosition: spawnPosition.clone(),
+          rotation: 0,
+          health: 961,
+          maxHealth: 961,
+          type: 'reaper' as const,
+          ref: { current: group }
+        };
+
+        totalSpawnedRef.current += 1;
+        return [...prev, newReaper];
+      });
+    }, 47500);
 
     return () => {
       clearInterval(skeletonTimer);
       clearInterval(mageTimer);
       clearInterval(abominationTimer);
+      clearInterval(reaperTimer);
     };
-  }, [groupPool, totalSpawned]);
+  }, [groupPool]);
 
   // No level completion needed for continuous gameplay
 
@@ -331,7 +377,7 @@ export default function Scene({
       }
       // Reset any scene-specific state
       setPlayerPosition(new Vector3(0, 0, 0));
-      setTotalSpawned(initialSkeletons);
+      totalSpawnedRef.current = initialSkeletons;
     };
   }, [initialSkeletons]);
 
@@ -435,6 +481,21 @@ export default function Scene({
                 playerPosition={playerPosition}
                 onAttackPlayer={handlePlayerDamage}
                 weaponType={unitProps.currentWeapon}
+              />
+            );
+          } else if (enemy.type === 'reaper') {
+            return (
+              <ReaperUnit
+                key={enemy.id}
+                id={enemy.id}
+                initialPosition={enemy.initialPosition}
+                position={enemy.position}
+                health={enemy.health}
+                maxHealth={enemy.maxHealth}
+                onTakeDamage={handleTakeDamage}
+                onPositionUpdate={handleEnemyPositionUpdate}
+                playerPosition={playerPosition}
+                onAttackPlayer={handlePlayerDamage}
               />
             );
           }

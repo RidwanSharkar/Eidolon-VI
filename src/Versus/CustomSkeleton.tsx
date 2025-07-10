@@ -446,9 +446,9 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
   }, []);
 
   return (
-    <group ref={groupRef} position={[position[0], position[1] + 1, position[2]]}>
+    <group ref={groupRef} position={[position[0], position[1] + 1, position[2]]} scale={[0.8, 0.8, 0.8]}>
       
-      <group name="Body" position={[0, 1.05, 0]} scale={[0.95, 0.8, 0.8]} rotation={[-0.2, 0, 0]}>
+      <group name="Body" position={[0, 1.05, 0]} scale={[0.85, 0.8, 0.8]} rotation={[-0.2, 0, 0]}>
         <BonePlate />
       </group>
 
