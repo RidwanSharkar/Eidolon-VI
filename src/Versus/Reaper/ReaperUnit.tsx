@@ -73,12 +73,12 @@ export default function ReaperUnit({
 
   // Reaper-specific constants (smaller and faster than boss)
   const ATTACK_RANGE = 3.0;
-  const ATTACK_COOLDOWN_NORMAL = 2500;
+  const ATTACK_COOLDOWN_NORMAL = 2750;
   const ATTACK_COOLDOWN_ENRAGED = 1500;
   const RE_EMERGE_COOLDOWN = 8000; // 8 second cooldown for Re-emerge
   const POST_EMERGE_AGGRESSIVE_DURATION = 3000; // 3 seconds of aggressive behavior after re-emerging
   const MOVEMENT_SPEED = 0.025;
-  const ATTACK_DAMAGE = 36;
+  const ATTACK_DAMAGE = 32;
   const REAPER_HIT_HEIGHT = 1.5;       
   const REAPER_HIT_RADIUS = 3.0;
   const REAPER_HIT_HEIGHT_RANGE = 3.0;
@@ -289,7 +289,7 @@ export default function ReaperUnit({
 
     // Add blood vortex at original position
     const originalPosition = currentPosition.current.clone();
-    originalPosition.y = 0; // Ensure blood vortex is on ground level
+    originalPosition.y = 0.15; // Ensure blood vortex is on ground level
     const sinkPoolId = `sink-${Date.now()}`;
     setBloodPools(prev => [...prev, {
       id: sinkPoolId,
@@ -299,7 +299,7 @@ export default function ReaperUnit({
 
     // Phase 1: Sink into ground (800ms)
     const startY = reaperRef.current?.position.y || 0;
-    const sinkDuration = 400;
+    const sinkDuration = 500;
     const sinkStartTime = Date.now();
     const sinkDepth = 5; // y submersion
     

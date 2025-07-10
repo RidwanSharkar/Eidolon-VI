@@ -247,7 +247,7 @@ export default function Scene({
         totalSpawnedRef.current += spawnCount;
         return [...prev, ...newSkeletons];
       });
-    }, 17500);
+    }, 22500);
 
     // Timer for skeletal mages: 1 every 100 seconds
     const mageTimer = setInterval(() => {
@@ -274,7 +274,7 @@ export default function Scene({
         totalSpawnedRef.current += 1;
         return [...prev, newMage];
       });
-    }, 30000);
+    }, 40000);
 
     // Timer for abominations: 1 every 150 seconds
     const abominationTimer = setInterval(() => {
@@ -328,7 +328,7 @@ export default function Scene({
         totalSpawnedRef.current += 1;
         return [...prev, newReaper];
       });
-    }, 40000);
+    }, 35000);
 
     return () => {
       clearInterval(skeletonTimer);

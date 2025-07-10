@@ -11,7 +11,7 @@ interface ReaperBloodVortexProps {
 
 export default function ReaperBloodVortex({ 
   position, 
-  duration = 3000, 
+  duration = 6000, // Increased from 3000ms to 6000ms
   onComplete 
 }: ReaperBloodVortexProps) {
   const groupRef = useRef<Group>(null);
@@ -31,20 +31,20 @@ export default function ReaperBloodVortex({
     const rotationSpeed = 2 + progress * 5; // Speed up over time
     groupRef.current.rotation.y += delta * rotationSpeed;
 
-    if (progress < 0.1) {
-      // Quick fade in (first 10% - about 0.8 seconds for 8s duration)
-      const fadeProgress = progress / 0.1;
+    if (progress < 0.05) {
+      // Quick fade in (first 5% - shorter fade in)
+      const fadeProgress = progress / 0.05;
       setOpacity(fadeProgress);
-      setScale(2.0 + fadeProgress * 0.5); // Grow slightly while fading in
-    } else if (progress < 0.85) {
-      // Stay at full visibility for most of the duration (10%-85% = 75% of time)
+      setScale(3.0 + fadeProgress * 0.5); // Grow slightly while fading in
+    } else if (progress < 0.9) {
+      // Stay at full visibility for most of the duration (5%-90% = 85% of time)
       setOpacity(1.0);
-      setScale(2.5); // end scake
+      setScale(3.5); // end scale
     } else {
-      // Slow fade out (last 15% of duration)
-      const fadeProgress = (progress - 0.85) / 0.15;
+      // Slow fade out (last 10% of duration)
+      const fadeProgress = (progress - 0.9) / 0.1;
       setOpacity(1.0 - fadeProgress);
-      setScale(2.5 + fadeProgress * 0.5); // Grow slightly while fading out
+      setScale(3.5 + fadeProgress * 0.5); // Grow slightly while fading out
     }
 
     if (progress >= 1 && !isCompleted.current) {
@@ -100,24 +100,24 @@ export default function ReaperBloodVortex({
       </mesh>
 
       <mesh 
-        position={[0, -0.3, 0]}
+        position={[0, 0.15, 0]}
         rotation={[-Math.PI / 6, 0, 0]}
       >
         <torusGeometry args={[scale * 0.6, scale * 0.08, 6, 10]} />
         <meshBasicMaterial 
           color="#990000"
           transparent 
-          opacity={opacity * 0.7}
+          opacity={opacity * 0.85}
         />
       </mesh>
 
       {/* Ground blood splatter */}
-      <mesh position={[0, -0.8, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, 0.15, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[scale * 1.2, 16]} />
         <meshBasicMaterial 
           color="#660000"
           transparent 
-          opacity={opacity * 0.5}
+          opacity={opacity * 0.7}
         />
       </mesh>
 
@@ -127,7 +127,7 @@ export default function ReaperBloodVortex({
         <meshBasicMaterial 
           color="#440000"
           transparent 
-          opacity={opacity * 0.3}
+          opacity={opacity * 0.5}
           wireframe={true}
         />
       </mesh>
