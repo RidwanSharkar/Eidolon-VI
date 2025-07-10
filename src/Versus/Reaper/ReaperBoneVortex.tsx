@@ -91,8 +91,8 @@ export default function ReaperBoneVortex({ parentRef }: ReaperBoneVortexProps) {
       
       <pointLight 
         color="#ff0000"
-        intensity={8}
-        distance={12}
+        intensity={0.5}
+        distance={2}
         decay={2}
         position={[0, 0.4, 0]}
       />

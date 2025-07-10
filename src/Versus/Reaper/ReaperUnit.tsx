@@ -73,11 +73,11 @@ export default function ReaperUnit({
 
   // Reaper-specific constants (smaller and faster than boss)
   const ATTACK_RANGE = 3.0;
-  const ATTACK_COOLDOWN_NORMAL = 2750;
-  const ATTACK_COOLDOWN_ENRAGED = 1500;
+  const ATTACK_COOLDOWN_NORMAL = 3000;
+  const ATTACK_COOLDOWN_ENRAGED = 2250;
   const RE_EMERGE_COOLDOWN = 8000; // 8 second cooldown for Re-emerge
   const POST_EMERGE_AGGRESSIVE_DURATION = 3000; // 3 seconds of aggressive behavior after re-emerging
-  const MOVEMENT_SPEED = 0.025;
+  const MOVEMENT_SPEED = 0.0225;
   const ATTACK_DAMAGE = 32;
   const REAPER_HIT_HEIGHT = 1.5;       
   const REAPER_HIT_RADIUS = 3.0;
@@ -247,9 +247,8 @@ export default function ReaperUnit({
     const playerPos = playerPosRef.current.clone();
     
     // Calculate a position directly behind the player
-    // We'll place the Reaper 2.5 units behind the player in world coordinates
     // This ensures the Reaper is within attack range immediately after emerging
-    const behindDistance = 0.95;
+    const behindDistance = 1.0;
     
     // Try to determine where "behind" the player is by looking at their recent movement
     // For simplicity, we'll use a fixed offset that places the Reaper directly behind

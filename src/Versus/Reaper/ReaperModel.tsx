@@ -116,13 +116,6 @@ export default function ReaperModel({ isAttacking }: ReaperModelProps) {
         <ReaperBoneAura parentRef={groupRef} />
       </group>
 
-      <pointLight
-        position={[0, 0.08, 0]}
-        color="#ff0000"
-        intensity={1}
-        distance={10}
-        decay={2}
-      />
 
       <group position={[0, 0, 0]}>
       </group>

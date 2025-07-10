@@ -1198,6 +1198,8 @@ export default function Unit({
   const [isVaultingNorth, setIsVaultingNorth] = useState(false);
   const [isVaultingEast, setIsVaultingEast] = useState(false);
   const [isVaultingWest, setIsVaultingWest] = useState(false);
+  // Add global vault state to prevent concurrent vault abilities
+  const [isAnyVaultActive, setIsAnyVaultActive] = useState(false);
   // Add isBreaching state before useAbilityKeys call
   const [isBreaching, setIsBreaching] = useState(false);
 
@@ -1263,7 +1265,9 @@ export default function Unit({
     isPyroclastActive,
     isBreaching,
     setIsBreaching,
-    activateBreach  // Add this new prop
+    activateBreach,  // Add this new prop
+    isAnyVaultActive,
+    setIsAnyVaultActive
   });
 
   //=====================================================================================================
@@ -2420,6 +2424,7 @@ export default function Unit({
         isActive={isVaulting}
         onComplete={() => {
           setIsVaulting(false);
+          setIsAnyVaultActive(false);
           onAbilityUse(currentWeapon, 'vault');
         }}
       />
@@ -2430,6 +2435,7 @@ export default function Unit({
         isActive={isVaultingNorth}
         onComplete={() => {
           setIsVaultingNorth(false);
+          setIsAnyVaultActive(false);
           onAbilityUse(currentWeapon, 'vaultNorth');
         }}
       />
@@ -2440,6 +2446,7 @@ export default function Unit({
         isActive={isVaultingEast}
         onComplete={() => {
           setIsVaultingEast(false);
+          setIsAnyVaultActive(false);
           onAbilityUse(currentWeapon, 'vaultEast');
         }}
       />
@@ -2450,6 +2457,7 @@ export default function Unit({
         isActive={isVaultingWest}
         onComplete={() => {
           setIsVaultingWest(false);
+          setIsAnyVaultActive(false);
           onAbilityUse(currentWeapon, 'vaultWest');
         }}
       />

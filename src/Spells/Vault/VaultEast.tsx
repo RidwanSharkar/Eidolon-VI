@@ -10,6 +10,7 @@ interface VaultEastProps {
 
 const VAULT_DISTANCE = 3.5; // Distance in units to vault to the right
 const VAULT_DURATION = 0.25; // Duration in seconds
+const MAX_VAULT_BOUNDS = 25; // Maximum distance from origin
 
 export default function VaultEast({ parentRef, isActive, onComplete }: VaultEastProps) {
   const startPosition = useRef<Vector3 | null>(null);
@@ -31,15 +32,33 @@ export default function VaultEast({ parentRef, isActive, onComplete }: VaultEast
     // Calculate movement using easing function
     const easeOutQuad = 1 - Math.pow(1 - progress, 2);
     
+    // Safety check: Ensure we have valid start position and parent ref
+    if (!startPosition.current || !parentRef.current) {
+      onComplete();
+      startTime.current = null;
+      startPosition.current = null;
+      return;
+    }
+    
     // Get right direction based on current rotation
     const rightDirection = new Vector3(-1, 0, 0)
       .applyQuaternion(parentRef.current.quaternion)
       .normalize();
 
     // Calculate new position
-    const newPosition = startPosition.current!.clone().add(
+    const newPosition = startPosition.current.clone().add(
       rightDirection.multiplyScalar(VAULT_DISTANCE * easeOutQuad)
     );
+
+    // Bounds checking: Ensure position is within reasonable limits
+    const distanceFromOrigin = newPosition.length();
+    if (distanceFromOrigin > MAX_VAULT_BOUNDS) {
+      // Cancel vault if it would move too far from origin
+      onComplete();
+      startTime.current = null;
+      startPosition.current = null;
+      return;
+    }
 
     // Update position
     parentRef.current.position.copy(newPosition);

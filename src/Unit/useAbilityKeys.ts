@@ -74,6 +74,8 @@ interface UseAbilityKeysProps {
   isBreaching: boolean;
   setIsBreaching: (value: boolean) => void;
   activateBreach: () => boolean;
+  isAnyVaultActive: boolean;
+  setIsAnyVaultActive: (value: boolean) => void;
 }
 
 export function useAbilityKeys({
@@ -124,6 +126,8 @@ export function useAbilityKeys({
   isBreaching,
   setIsBreaching,
   activateBreach,
+  isAnyVaultActive,
+  setIsAnyVaultActive,
 }: UseAbilityKeysProps) {
   // Ref to track the last Q usage time
   const lastQUsageTime = useRef(0);
@@ -182,41 +186,45 @@ export function useAbilityKeys({
   const handleVaultActivation = useCallback(() => {
     const vaultAbility = abilities[currentWeapon].vault;
     
-    if (vaultAbility.currentCooldown <= 0 && !isVaulting) {
+    if (vaultAbility.currentCooldown <= 0 && !isVaulting && !isAnyVaultActive) {
       setIsVaulting(true);
+      setIsAnyVaultActive(true);
       onAbilityUse(currentWeapon, 'vault');
     }
-  }, [abilities, currentWeapon, isVaulting, setIsVaulting, onAbilityUse]);
+  }, [abilities, currentWeapon, isVaulting, setIsVaulting, onAbilityUse, isAnyVaultActive, setIsAnyVaultActive]);
 
   // Function to handle vaultNorth activation
   const handleVaultNorthActivation = useCallback(() => {
     const vaultNorthAbility = abilities[currentWeapon].vaultNorth;
     
-    if (vaultNorthAbility.currentCooldown <= 0 && !isVaultingNorth) {
+    if (vaultNorthAbility.currentCooldown <= 0 && !isVaultingNorth && !isAnyVaultActive) {
       setIsVaultingNorth(true);
+      setIsAnyVaultActive(true);
       onAbilityUse(currentWeapon, 'vaultNorth');
     }
-  }, [abilities, currentWeapon, isVaultingNorth, setIsVaultingNorth, onAbilityUse]);
+  }, [abilities, currentWeapon, isVaultingNorth, setIsVaultingNorth, onAbilityUse, isAnyVaultActive, setIsAnyVaultActive]);
 
   // Function to handle vaultEast activation
   const handleVaultEastActivation = useCallback(() => {
     const vaultEastAbility = abilities[currentWeapon].vaultEast;
     
-    if (vaultEastAbility.currentCooldown <= 0 && !isVaultingEast) {
+    if (vaultEastAbility.currentCooldown <= 0 && !isVaultingEast && !isAnyVaultActive) {
       setIsVaultingEast(true);
+      setIsAnyVaultActive(true);
       onAbilityUse(currentWeapon, 'vaultEast');
     }
-  }, [abilities, currentWeapon, isVaultingEast, setIsVaultingEast, onAbilityUse]);
+  }, [abilities, currentWeapon, isVaultingEast, setIsVaultingEast, onAbilityUse, isAnyVaultActive, setIsAnyVaultActive]);
 
   // Function to handle vaultWest activation
   const handleVaultWestActivation = useCallback(() => {
     const vaultWestAbility = abilities[currentWeapon].vaultWest;
     
-    if (vaultWestAbility.currentCooldown <= 0 && !isVaultingWest) {
+    if (vaultWestAbility.currentCooldown <= 0 && !isVaultingWest && !isAnyVaultActive) {
       setIsVaultingWest(true);
+      setIsAnyVaultActive(true);
       onAbilityUse(currentWeapon, 'vaultWest');
     }
-  }, [abilities, currentWeapon, isVaultingWest, setIsVaultingWest, onAbilityUse]);
+  }, [abilities, currentWeapon, isVaultingWest, setIsVaultingWest, onAbilityUse, isAnyVaultActive, setIsAnyVaultActive]);
 
   // Update isGameOver when health reaches 0
   useEffect(() => {

@@ -309,7 +309,7 @@ export default function Whirlwind({
         if (now - lastHit < currentInterval) return;
 
         const distance = whirlwindRef.current!.position.distanceTo(enemy.position);
-        const maxRange = 4.6; // Spear range
+        const maxRange = 4.4; // Spear range
         
         if (distance <= maxRange) {
           // Sweet spot check (80-100% of max range)

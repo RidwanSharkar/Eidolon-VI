@@ -216,7 +216,7 @@ export default function Scene({
 
   // Spawning logic with separate timers for different enemy types
   useEffect(() => {
-    const MAX_ENEMIES = 10; // Hard cap on total enemies on screen
+    const MAX_ENEMIES = 7; // Hard cap on total enemies on screen
 
     // Timer for regular skeletons: 3 every 75 seconds
     const skeletonTimer = setInterval(() => {
