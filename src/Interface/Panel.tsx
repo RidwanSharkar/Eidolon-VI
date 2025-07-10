@@ -114,9 +114,11 @@ export default function Panel({
   };
 
   const getLevel = (kills: number) => {
-    if (kills < 13) return 1;      // Level 1: 0-12 kills
-    if (kills < 30) return 2;      // Level 2: 13-29 kills
-    return 3;                      // Level 3: 30+ kills
+    if (kills < 10) return 1;      // Level 1: 0-12 kills
+     if (kills < 25) return 2;      // Level 2: 13-29 kills
+    if (kills < 45) return 3;      // Level 3: 30-49 kills
+    if (kills < 70) return 4;      // Level 4: 50-99 kills
+    return 5;                      // Level 5: 100+ kills
   };
 
   const getExpProgress = (kills: number) => {
@@ -196,55 +198,172 @@ export default function Panel({
 
       {/* Bottom Panel */}
       <div className={styles.bottomPanel}>
-        {/* Abilities Section - Moved up */}
+        {/* Abilities Section - Movement Keys First */}
         {abilities[currentWeapon] && (
-          <div className={styles.abilitiesSection}>
-            {Object.entries(abilities[currentWeapon]).map(([key, ability]) => (
-              <div 
-                key={key}
-                className={`${styles.ability} ${!ability.isUnlocked ? styles.locked : ''}`}
-                onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
-                onMouseLeave={handleAbilityLeave}
-              >
-                <div className={styles.keyBind}>{ability.key.toUpperCase()}</div>
-                <Image 
-                  src={ability.icon} 
-                  alt={`${key} ability`} 
-                  width={40}
-                  height={40}
-                  className={styles.abilityIcon}
-                />
-                {key === 'active' && 
-                 currentWeapon === WeaponType.SCYTHE && 
-                 abilities[WeaponType.SCYTHE].active.isUnlocked &&
-                 activeEffects?.some(effect => effect.type === 'summon') ? (
-                  <div className={styles.activeOverlay}>
-                    <RoundedSquareProgress
-                      size={50}
-                      strokeWidth={4}
-                      percentage={100}
-                      borderRadius={8}
-                      isActive={true}
-                    />
-                  </div>
-                ) : (key === 'active' && currentWeapon === WeaponType.BOW) ? (
-                  // No cooldown overlay for Bow's passive ability
-                  null
-                ) : ability.currentCooldown > 0 && (
-                  <div className={styles.cooldownOverlay}>
-                    <RoundedSquareProgress
-                      size={50}
-                      strokeWidth={4}
-                      percentage={(ability.currentCooldown / ability.cooldown) * 100}
-                      borderRadius={8}
-                    />
-                    <span className={styles.cooldownText}>
-                      {Math.ceil(ability.currentCooldown)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            ))}
+          <div className={styles.abilitiesContainer}>
+            {/* Top Row: W */}
+            <div className={styles.abilitiesRowTop}>
+              {Object.entries(abilities[currentWeapon])
+                .filter(([, ability]) => ['W'].includes(ability.key.toUpperCase()))
+                .map(([key, ability]) => (
+                <div 
+                  key={key}
+                  className={`${styles.abilityMovement} ${!ability.isUnlocked ? styles.locked : ''}`}
+                  onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
+                  onMouseLeave={handleAbilityLeave}
+                >
+                  <div className={styles.keyBind}>{ability.key.toUpperCase()}</div>
+                  <Image 
+                    src={ability.icon} 
+                    alt={`${key} ability`} 
+                    width={28}
+                    height={28}
+                    className={styles.abilityMovementIcon}
+                  />
+                  {key === 'active' && 
+                   currentWeapon === WeaponType.SCYTHE && 
+                   abilities[WeaponType.SCYTHE].active.isUnlocked &&
+                   activeEffects?.some(effect => effect.type === 'summon') ? (
+                    <div className={styles.activeOverlay}>
+                      <RoundedSquareProgress
+                        size={35}
+                        strokeWidth={3}
+                        percentage={100}
+                        borderRadius={6}
+                        isActive={true}
+                      />
+                    </div>
+                  ) : (key === 'active' && currentWeapon === WeaponType.BOW) ? (
+                    // No cooldown overlay for Bow's passive ability
+                    null
+                  ) : ability.currentCooldown > 0 && (
+                    <div className={styles.cooldownOverlay}>
+                      <RoundedSquareProgress
+                        size={35}
+                        strokeWidth={3}
+                        percentage={(ability.currentCooldown / ability.cooldown) * 100}
+                        borderRadius={6}
+                      />
+                      <span className={styles.cooldownText}>
+                        {Math.ceil(ability.currentCooldown)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {/* Middle Row: A, S, D */}
+            <div className={styles.abilitiesRowMiddle}>
+              {Object.entries(abilities[currentWeapon])
+                .filter(([, ability]) => ['A', 'S', 'D'].includes(ability.key.toUpperCase()))
+                .sort((a, b) => {
+                  const order = ['A', 'S', 'D'];
+                  return order.indexOf(a[1].key.toUpperCase()) - order.indexOf(b[1].key.toUpperCase());
+                })
+                .map(([key, ability]) => (
+                <div 
+                  key={key}
+                  className={`${styles.abilityMovement} ${!ability.isUnlocked ? styles.locked : ''}`}
+                  onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
+                  onMouseLeave={handleAbilityLeave}
+                >
+                  <div className={styles.keyBind}>{ability.key.toUpperCase()}</div>
+                  <Image 
+                    src={ability.icon} 
+                    alt={`${key} ability`} 
+                    width={28}
+                    height={28}
+                    className={styles.abilityMovementIcon}
+                  />
+                  {key === 'active' && 
+                   currentWeapon === WeaponType.SCYTHE && 
+                   abilities[WeaponType.SCYTHE].active.isUnlocked &&
+                   activeEffects?.some(effect => effect.type === 'summon') ? (
+                    <div className={styles.activeOverlay}>
+                      <RoundedSquareProgress
+                        size={35}
+                        strokeWidth={3}
+                        percentage={100}
+                        borderRadius={6}
+                        isActive={true}
+                      />
+                    </div>
+                  ) : (key === 'active' && currentWeapon === WeaponType.BOW) ? (
+                    // No cooldown overlay for Bow's passive ability
+                    null
+                  ) : ability.currentCooldown > 0 && (
+                    <div className={styles.cooldownOverlay}>
+                      <RoundedSquareProgress
+                        size={35}
+                        strokeWidth={3}
+                        percentage={(ability.currentCooldown / ability.cooldown) * 100}
+                        borderRadius={6}
+                      />
+                      <span className={styles.cooldownText}>
+                        {Math.ceil(ability.currentCooldown)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {/* Bottom Row: Q, E, R, T, 1, 2 */}
+            <div className={styles.abilitiesRowBottom}>
+              {Object.entries(abilities[currentWeapon])
+                .filter(([, ability]) => ['Q', 'E', 'R', 'T', '1', '2'].includes(ability.key.toUpperCase()))
+                .sort((a, b) => {
+                  const order = ['Q', 'E', 'R', 'T', '1', '2'];
+                  return order.indexOf(a[1].key.toUpperCase()) - order.indexOf(b[1].key.toUpperCase());
+                })
+                .map(([key, ability]) => (
+                <div 
+                  key={key}
+                  className={`${styles.ability} ${!ability.isUnlocked ? styles.locked : ''}`}
+                  onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
+                  onMouseLeave={handleAbilityLeave}
+                >
+                  <div className={styles.keyBind}>{ability.key.toUpperCase()}</div>
+                  <Image 
+                    src={ability.icon} 
+                    alt={`${key} ability`} 
+                    width={40}
+                    height={40}
+                    className={styles.abilityIcon}
+                  />
+                  {key === 'active' && 
+                   currentWeapon === WeaponType.SCYTHE && 
+                   abilities[WeaponType.SCYTHE].active.isUnlocked &&
+                   activeEffects?.some(effect => effect.type === 'summon') ? (
+                    <div className={styles.activeOverlay}>
+                      <RoundedSquareProgress
+                        size={50}
+                        strokeWidth={4}
+                        percentage={100}
+                        borderRadius={8}
+                        isActive={true}
+                      />
+                    </div>
+                  ) : (key === 'active' && currentWeapon === WeaponType.BOW) ? (
+                    // No cooldown overlay for Bow's passive ability
+                    null
+                  ) : ability.currentCooldown > 0 && (
+                    <div className={styles.cooldownOverlay}>
+                      <RoundedSquareProgress
+                        size={50}
+                        strokeWidth={4}
+                        percentage={(ability.currentCooldown / ability.cooldown) * 100}
+                        borderRadius={8}
+                      />
+                      <span className={styles.cooldownText}>
+                        {Math.ceil(ability.currentCooldown)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

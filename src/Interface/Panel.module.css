@@ -95,12 +95,7 @@
   border: 1px solid rgba(57,255,20,0.3);
 }
 
-.abilitiesSection {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-  margin-bottom: 12px;
-}
+
 
 .ability {
   position: relative;
@@ -374,6 +369,13 @@
   overflow: visible;
 }
 
+.abilityMovement .cooldownOverlay {
+  top: -0.5px;
+  left: -0.5px;
+  width: 35px;
+  height: 35px;
+}
+
 .cooldownText {
   position: absolute;
   color: #39ff14;
@@ -384,6 +386,10 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.abilityMovement .cooldownText {
+  font-size: 18px;
 }
 
 .roundedSquareProgress {
@@ -467,10 +473,30 @@
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
 }
 
-.abilitiesSection {
+.abilitiesContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.abilitiesRowTop {
   display: flex;
   gap: 12px;
-  margin-bottom: 6px;
+  justify-content: center;
+}
+
+.abilitiesRowMiddle {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.abilitiesRowBottom {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
 }
 
 .ability {
@@ -478,6 +504,14 @@
   width: 48.5px;
   height: 48.5px;
   border-radius: 12px;
+  overflow: visible;
+}
+
+.abilityMovement {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   overflow: visible;
 }
 
@@ -527,6 +561,14 @@
   object-fit: cover;
   border: 2.5px solid rgba(255,255,255,0.2);
   border-radius: 8px;
+}
+
+.abilityMovementIcon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
 }
 
 .weaponIcon {
