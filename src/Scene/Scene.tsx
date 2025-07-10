@@ -65,7 +65,7 @@ class ObjectPool<T> {
 
 export default function Scene({
   unitProps: { controlsRef, ...unitProps },
-  initialSkeletons = 3,
+  initialSkeletons = 4,
 }: SceneProps) {
   // TERRAIN
   const mountainData = useMemo(() => generateMountains(), []);
@@ -216,7 +216,7 @@ export default function Scene({
 
   // Spawning logic with separate timers for different enemy types
   useEffect(() => {
-    const MAX_ENEMIES = 12; // Hard cap on total enemies on screen
+    const MAX_ENEMIES = 10; // Hard cap on total enemies on screen
 
     // Timer for regular skeletons: 3 every 75 seconds
     const skeletonTimer = setInterval(() => {
@@ -247,7 +247,7 @@ export default function Scene({
         totalSpawnedRef.current += spawnCount;
         return [...prev, ...newSkeletons];
       });
-    }, 30000);
+    }, 17500);
 
     // Timer for skeletal mages: 1 every 100 seconds
     const mageTimer = setInterval(() => {
@@ -274,7 +274,7 @@ export default function Scene({
         totalSpawnedRef.current += 1;
         return [...prev, newMage];
       });
-    }, 45000);
+    }, 30000);
 
     // Timer for abominations: 1 every 150 seconds
     const abominationTimer = setInterval(() => {
@@ -301,7 +301,7 @@ export default function Scene({
         totalSpawnedRef.current += 1;
         return [...prev, newAbomination];
       });
-    }, 90000);
+    }, 80000);
 
     // Timer for reapers: 1 every 25 seconds
     const reaperTimer = setInterval(() => {
@@ -328,7 +328,7 @@ export default function Scene({
         totalSpawnedRef.current += 1;
         return [...prev, newReaper];
       });
-    }, 47500);
+    }, 40000);
 
     return () => {
       clearInterval(skeletonTimer);

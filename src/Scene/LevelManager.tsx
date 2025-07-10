@@ -34,9 +34,9 @@ export default function LevelManager({
       {...sceneProps} 
       onLevelComplete={() => {}} // No level completion needed
       onAbilityUnlock={onAbilityUnlock}
-      spawnInterval={10000} // 10 seconds for regular spawns
-      maxSkeletons={20} // Effectively unlimited
-      initialSkeletons={3} // Start with 3 skeletons
+      spawnInterval={10000} // ignored
+      maxSkeletons={10} 
+      initialSkeletons={4} 
     />
   );
 }

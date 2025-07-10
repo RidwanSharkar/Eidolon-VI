@@ -571,6 +571,23 @@
   border-radius: 6px;
 }
 
+/* Movement key icon rotations */
+.rotateA {
+  transform: rotate(0deg);
+}
+
+.rotateW {
+  transform: rotate(90deg);
+}
+
+.rotateS {
+  transform: rotate(270deg);
+}
+
+.rotateD {
+  transform: rotate(180deg);
+}
+
 .weaponIcon {
   width: 100%;
   height: 100%;

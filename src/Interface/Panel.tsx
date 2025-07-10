@@ -153,48 +153,7 @@ export default function Panel({
 
   return (
     <>
-      {/* Left Panel */}
-      <div className={styles.leftPanel}>
-        <div className={styles.controlsSection}>
 
-
-
-
-          <div className={styles.controlGroup}>
-            <div className={styles.controlKey}>W</div>
-            <div className={styles.controlKey}>A</div>
-            <div className={styles.controlKey}>S</div>
-            <div className={styles.controlKey}>D</div>
-            <div className={styles.controlLabel}>Move</div>
-          </div>
-
-          <div className={styles.controlDivider} />
-          
-          <div className={styles.controlGroup}>
-            <div className={styles.controlLabel}>Zoom</div>
-            <div className={styles.controlKey}>Scroll Wheel</div>
-          </div>
-
-        </div>
-
-
-
-        {/* Mouse Controls Row */}
-        <div className={styles.controlsSection}>
-          <div className={styles.controlGroup}>
-            <div className={styles.controlKey}>L-Click Hold</div>
-            <div className={styles.controlLabel}>Auto Attack</div>
-          </div>
-
-          <div className={styles.controlDivider} />
-
-          <div className={styles.controlGroup}>
-
-            <div className={styles.controlLabel}>Camera</div>
-            <div className={styles.controlKey}>R-Click Hold</div>
-          </div>
-        </div>
-      </div>
 
       {/* Bottom Panel */}
       <div className={styles.bottomPanel}>
@@ -218,7 +177,7 @@ export default function Panel({
                     alt={`${key} ability`} 
                     width={28}
                     height={28}
-                    className={styles.abilityMovementIcon}
+                    className={`${styles.abilityMovementIcon} ${styles[`rotate${ability.key.toUpperCase()}`] || ''}`}
                   />
                   {key === 'active' && 
                    currentWeapon === WeaponType.SCYTHE && 
@@ -274,7 +233,7 @@ export default function Panel({
                     alt={`${key} ability`} 
                     width={28}
                     height={28}
-                    className={styles.abilityMovementIcon}
+                    className={`${styles.abilityMovementIcon} ${styles[`rotate${ability.key.toUpperCase()}`] || ''}`}
                   />
                   {key === 'active' && 
                    currentWeapon === WeaponType.SCYTHE && 

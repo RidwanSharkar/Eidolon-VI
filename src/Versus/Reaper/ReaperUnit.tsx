@@ -249,7 +249,7 @@ export default function ReaperUnit({
     // Calculate a position directly behind the player
     // We'll place the Reaper 2.5 units behind the player in world coordinates
     // This ensures the Reaper is within attack range immediately after emerging
-    const behindDistance = 2.0;
+    const behindDistance = 0.95;
     
     // Try to determine where "behind" the player is by looking at their recent movement
     // For simplicity, we'll use a fixed offset that places the Reaper directly behind
@@ -283,7 +283,6 @@ export default function ReaperUnit({
       return;
     }
 
-    console.log('🩸 Reaper re-emerging!');
     setIsReEmerging(true);
     setReEmergePhase('sinking');
     lastReEmergeTime.current = Date.now();
@@ -295,14 +294,14 @@ export default function ReaperUnit({
     setBloodPools(prev => [...prev, {
       id: sinkPoolId,
       position: originalPosition,
-      duration: 8000 // Much longer duration - 8 seconds
+      duration: 8000 
     }]);
 
     // Phase 1: Sink into ground (800ms)
     const startY = reaperRef.current?.position.y || 0;
     const sinkDuration = 400;
     const sinkStartTime = Date.now();
-    const sinkDepth = 5; // Much deeper submersion
+    const sinkDepth = 5; // y submersion
     
     const animateSink = () => {
       const elapsed = Date.now() - sinkStartTime;
@@ -363,7 +362,7 @@ export default function ReaperUnit({
               setBloodPools(prev => [...prev, {
                 id: emergePoolId,
                 position: emergePosition,
-                duration: 10000 // Even longer for emergence - 10 seconds
+                duration: 10000 
               }]);
               
               // Start aggressive behavior after re-emerging
@@ -436,7 +435,7 @@ export default function ReaperUnit({
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosRef.current);
 
     // Check if we should use Re-emerge ability (priority over other actions)
-    // Use Re-emerge every 8 seconds regardless of distance for tactical surprise
+    // Use Re-emerge every 8 seconds regardless of distance
     if (Date.now() - lastReEmergeTime.current >= RE_EMERGE_COOLDOWN && !isAttacking && !isAttackOnCooldown) {
       startReEmerge();
       return;
@@ -567,12 +566,12 @@ export default function ReaperUnit({
           {currentHealth.current > 0 && (
             <>
               <mesh position={[0, 0, 0]}>
-                <planeGeometry args={[2.5, 0.3]} />  {/* Smaller health bar */}
+                <planeGeometry args={[2.0, 0.25]} />
                 <meshBasicMaterial color="#333333" opacity={0.8} transparent />
               </mesh>
-              <mesh position={[-1.6 + (currentHealth.current / maxHealth) * 1.6, 0, 0.001]}>
-                <planeGeometry args={[(currentHealth.current / maxHealth) * 3.2, 0.3]} />
-                <meshBasicMaterial color="#ff0000" opacity={0.9} transparent />
+              <mesh position={[-1.0 + (currentHealth.current / maxHealth), 0, 0.001]}>
+                <planeGeometry args={[(currentHealth.current / maxHealth) * 2.0, 0.23]} />
+                <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
               </mesh>
               <Text
                 position={[0, 0, 0.002]}
