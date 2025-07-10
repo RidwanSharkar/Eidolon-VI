@@ -202,9 +202,9 @@ export default function ReaperUnit({
         setShowAttackIndicator(false);
         setIsAttacking(true);
 
-        // 2) Attack hits ~240ms after the reaper transitions to animation (faster than boss)
+        // 2) Attack hits ~150ms after the reaper transitions to animation (more reactive timing)
         setTimeout(() => {
-          // READ LATEST positions from refs at the moment of impact
+          // READ LATEST positions from refs at the precise moment of impact
           const reaperGroundPos = currentPosition.current.clone();
           reaperGroundPos.y = 0;
 
@@ -213,11 +213,14 @@ export default function ReaperUnit({
 
           const distanceToPlayer = reaperGroundPos.distanceTo(playerGroundPos);
 
-          // Only deal damage if STILL within range at impact
-          if (distanceToPlayer <= ATTACK_RANGE) {
+          // More precise range check - slightly reduced range for more skill-based dodging
+          const actualAttackRange = ATTACK_RANGE * 0.9; // 10% smaller hit range for more precise dodging
+          
+          // Only deal damage if STILL within range at the precise impact moment
+          if (distanceToPlayer <= actualAttackRange) {
             onAttackPlayer(ATTACK_DAMAGE);
           }
-        }, 240);
+        }, 150);
 
         // 3) Attack animation ends ~480ms after it starts (faster than boss)
         setTimeout(() => {
@@ -379,10 +382,19 @@ export default function ReaperUnit({
                   setShowAttackIndicator(false);
                   setIsAttacking(true);
 
-                  // Immediate damage since we're positioned behind player
+                  // Check if player is still within range for backstab damage
                   setTimeout(() => {
-                    onAttackPlayer(ATTACK_DAMAGE);
-                  }, 100); // Much faster backstab
+                    const reaperGroundPos = currentPosition.current.clone();
+                    reaperGroundPos.y = 0;
+                    const playerGroundPos = playerPosRef.current.clone();
+                    playerGroundPos.y = 0;
+                    const distanceToPlayer = reaperGroundPos.distanceTo(playerGroundPos);
+                    
+                    // Backstab has slightly larger range but still requires range check
+                    if (distanceToPlayer <= ATTACK_RANGE * 1.1) {
+                      onAttackPlayer(ATTACK_DAMAGE);
+                    }
+                  }, 80); // Very fast but still reactive backstab
 
                   // Attack animation ends
                   setTimeout(() => {
