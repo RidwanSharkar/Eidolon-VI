@@ -104,7 +104,7 @@ export default function Scythe({ isSwinging, onSwingComplete, }: ScytheProps) {
       ref={scytheRef} 
       position={[basePosition[0], basePosition[1], basePosition[2]]}
       rotation={[0, 0, Math.PI]}
-      scale={[1, 1, 1.]}
+      scale={[0.8, 0.8, 0.8]}
     >
       {/* Handle   */}
       <group position={[0, -0.4, 0]} rotation={[0, 0, Math.PI + 0.3]}>

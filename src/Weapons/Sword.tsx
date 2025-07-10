@@ -110,7 +110,7 @@ export default function Sword({
     }
 
     if (isSwinging) {
-      swingProgress.current += delta * 4.5;
+      swingProgress.current += delta * 6.75;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
       // Complete swing earlier to prevent extra rotation
@@ -274,7 +274,7 @@ export default function Sword({
         {hasChainLightning && (
           <>
             {/* Electrical aura around blade */}
-            <group position={[0, 1, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]} scale={[1.0625, 1.25, 1.05]}>
+            <group position={[0, 1, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]} scale={[0.95, 1.10, 0.95]}>
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), { ...bladeExtrudeSettings, depth: 0.07 }]} />
                 <meshStandardMaterial

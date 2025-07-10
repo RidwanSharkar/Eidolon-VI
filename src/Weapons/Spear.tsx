@@ -312,7 +312,7 @@ export default function Spear({
     <group 
       position={[0, -0.4, 0.6]}
       rotation={[-0.55, 0.15, 0]}
-      scale={[0.875, 0.8, 0.8]}
+      scale={[0.825, 0.75, 0.75]}
     >
       <group 
         ref={spearRef} 

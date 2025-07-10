@@ -312,7 +312,7 @@
         <group 
           position={[0, -0.6, 0.5]} 
           rotation={[-0.55 , 0, 0]}
-          scale={[0.875, 0.8, 0.8]}
+          scale={[0.775, 0.775, 0.775]}
         >
           {/* Left Sabre */}
           <group 
