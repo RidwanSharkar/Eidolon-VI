@@ -30,9 +30,13 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: /E-VI-TestRealm
         run: npm run build
         
+      - name: Add .nojekyll file
+        run: touch out/.nojekyll
+        
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: out
           branch: gh-pages
           token: ${{ secrets.GITHUB_TOKEN }}
+          clean: true
