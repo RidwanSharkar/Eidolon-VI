@@ -8,12 +8,12 @@ interface UseOrbShieldManagerProps {
 
 // DAMAGE SCALING BY ORB COUNT
 const DAMAGE_BY_ORB_COUNT: Record<number, number> = {
-  1: 29,
-  2: 37,
-  3: 41,
-  4: 53,
-  5: 79,
-  6: 97,
+  1: 41,
+  2: 53,
+  3: 61,
+  4: 73,
+  5: 97,
+  6: 117,
 };
 
 export function useOrbShieldManager({

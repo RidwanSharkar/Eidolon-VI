@@ -4,29 +4,17 @@ import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import CustomSkeleton from '@/Versus/CustomSkeleton';
+import SkeletonChargingIndicator from '@/Versus/SkeletonChargingIndicator';
 import BoneVortex2 from '@/color/SpawnAnimation';
 import { Enemy } from '@/Versus/enemy';
 import BoneVortex from '@/color/DeathAnimation';
 import { WeaponType } from '@/Weapons/weapons';
 import { FrostExplosion } from '@/Spells/Avalanche/FrostExplosion';
 import { stealthManager } from '../Spells/Stealth/StealthManager';
-import * as THREE from 'three';
+import { globalAggroSystem, PlayerInfo, TargetInfo, isSummonedUnit } from './AggroSystem';
+import { EnemyUnitProps } from './EnemyUnitProps';
 
-
-interface EnemyUnitProps {
-  id: string;
-  initialPosition: Vector3;
-  position: Vector3;
-  health: number;
-  maxHealth: number;
-  onTakeDamage: (id: string, damage: number) => void;
-  onPositionUpdate: (id: string, position: Vector3, rotation: number) => void;
-  playerPosition: Vector3;
-  onAttackPlayer: (damage: number) => void;
-  weaponType: WeaponType;
-  isDying?: boolean;
-}
-
+// Define DamageSource interface locally since it doesn't exist in the damage module
 interface DamageSource {
   type: WeaponType;
   hasActiveAbility?: boolean;
@@ -43,8 +31,15 @@ export default function EnemyUnit({
   onTakeDamage,
   onPositionUpdate,
   playerPosition,
+  allPlayers,
+  summonedUnits = [],
   onAttackPlayer,
+  onAttackSummonedUnit,
   weaponType,
+  isFrozen = false,
+  isStunned = false,
+  isSlowed = false,
+  knockbackEffect = null,
 }: EnemyUnitProps & Pick<Enemy, 'position'>) {
   const enemyRef = useRef<Group>(null);
   const lastAttackTime = useRef<number>(Date.now() + 2000);
@@ -55,26 +50,56 @@ export default function EnemyUnit({
   const [isMoving, setIsMoving] = useState(false);
   const [showFrostEffect, setShowFrostEffect] = useState(false);
   
+  // Charging state
+  const [isCharging, setIsCharging] = useState(false);
+  const [chargingIndicator, setChargingIndicator] = useState<{
+    id: string;
+    position: Vector3;
+    direction: Vector3;
+  } | null>(null);
+  const chargeStartTime = useRef<number>(0);
+  const chargeTargetPosition = useRef<Vector3 | null>(null);
+  
   // Use refs for position tracking
   const currentPosition = useRef(initialPosition.clone().setY(0));
   const targetPosition = useRef(initialPosition.clone().setY(0));
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
   
-  const velocity = useRef(new Vector3());
   const targetRotation = useRef(0);
 
-  const ATTACK_RANGE = 2.5;
-  const ATTACK_COOLDOWN = 1500;
-  const MOVEMENT_SPEED = 0.0675;
+  // Get the target using aggro system (can be player or summoned unit)
+  const getTargetPlayer = useCallback((): TargetInfo | null => {
+    // Initialize enemy in aggro system
+    globalAggroSystem.initializeEnemy(id);
+    
+    // Convert allPlayers to PlayerInfo format if needed
+    const playersInfo: PlayerInfo[] = allPlayers || (playerPosition ? [{
+      id: 'local-player',
+      position: playerPosition,
+      name: 'Player'
+    }] : []);
+    
+    if (playersInfo.length === 0 && summonedUnits.length === 0) return null;
+    
+    // Get highest aggro target (including summoned units)
+    return globalAggroSystem.getHighestAggroTarget(id, currentPosition.current, playersInfo, summonedUnits);
+  }, [allPlayers, playerPosition, summonedUnits, id]);
+
+  // Store current target for consistent tracking
+  const currentTargetRef = useRef<TargetInfo | null>(null);
+
+  const ATTACK_RANGE = 2.65;
+  const ATTACK_COOLDOWN = 2000;
+  const CHARGE_DURATION = 1000; // 1 second charge time
+  const BASE_MOVEMENT_SPEED = 2.6; // Consistent base speed like player
   const POSITION_UPDATE_THRESHOLD = 0.2;
   const MINIMUM_UPDATE_INTERVAL = 20;
   const ATTACK_DAMAGE = 8;
-  const SEPARATION_RADIUS = 1.5;
-  const SEPARATION_FORCE = 0.175;
-  const ACCELERATION = 3.0;
-  const DECELERATION = 4.0;
-  const ROTATION_SPEED = 5.0;
+  const SEPARATION_RADIUS = 2.5;
+  const SEPARATION_FORCE = 2.75; // Reduced for smoother movement
+  const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement
+  const ROTATION_SPEED = 4.0;
 
   // Add new refs for wandering behavior
   const wanderTarget = useRef<Vector3 | null>(null);
@@ -82,7 +107,6 @@ export default function EnemyUnit({
   const WANDER_DURATION = 4500; 
   const WANDER_RADIUS = 6;
   const WANDER_ROTATION_SPEED = 2.5;
-  const WANDER_MOVEMENT_SPEED = 0.0175;
   
   const getNewWanderTarget = useCallback(() => {
     if (!enemyRef.current) return null;
@@ -123,14 +147,20 @@ export default function EnemyUnit({
     }
   }, [id, onTakeDamage]);
 
-  // Immediately sync with provided position
+  // Improved position synchronization - prevent teleporting
   useEffect(() => {
-    if (position && isSpawning) {
-      currentPosition.current.copy(position);
-      currentPosition.current.y = 0; // Force ground level
-      targetPosition.current.copy(currentPosition.current);
-      if (enemyRef.current) {
-        enemyRef.current.position.copy(currentPosition.current);
+    // Only sync position during initial spawn, not during gameplay
+    if (position && isSpawning && !currentPosition.current.equals(position)) {
+      const distance = currentPosition.current.distanceTo(position);
+      
+      // Only allow position sync if the distance is reasonable (prevents teleporting)
+      if (distance < 5.0) { // Allow small corrections only
+        currentPosition.current.copy(position);
+        currentPosition.current.y = 0; // Force ground level
+        targetPosition.current.copy(currentPosition.current);
+        if (enemyRef.current) {
+          enemyRef.current.position.copy(currentPosition.current);
+        }
       }
     }
   }, [position, isSpawning]);
@@ -142,12 +172,24 @@ export default function EnemyUnit({
   }, [onPositionUpdate]);
 
   useFrame((_, delta) => {
-    if (!enemyRef.current || currentHealth.current <= 0 || !playerPosition) {
+    if (!enemyRef.current || currentHealth.current <= 0 || isFrozen || isStunned) {
+      setIsMoving(false);
+      setIsAttacking(false);
+      return;
+    }
+
+    // Get the current target and always use fresh position
+    const currentTarget = getTargetPlayer();
+    currentTargetRef.current = currentTarget;
+    
+    if (!currentTarget) {
       setIsMoving(false);
       return;
     }
 
-    const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
+    // Always use the most up-to-date target position
+    const targetPlayerPosition = currentTarget.position;
+    const distanceToPlayer = currentPosition.current.distanceTo(targetPlayerPosition);
 
     // Check if player is stealthed
     if (stealthManager.isUnitStealthed()) {
@@ -177,20 +219,22 @@ export default function EnemyUnit({
       if (wanderTarget.current) {
         setIsMoving(true);
         
-        const normalizedSpeed = WANDER_MOVEMENT_SPEED * 60; // Slower wandering speed
-        const currentFrameSpeed = normalizedSpeed * delta;
+        // Use consistent speed calculation like player movement
+        const baseWanderSpeed = BASE_MOVEMENT_SPEED * 0.25; // 30% of normal speed for wandering
+        const normalizedSpeed = isSlowed ? baseWanderSpeed * 0.5 : baseWanderSpeed;
+        const frameSpeed = normalizedSpeed * delta;
         
-        // Calculate direction to wander target with smooth interpolation
+        // Calculate direction to wander target
         const direction = new Vector3()
           .subVectors(wanderTarget.current, currentPosition.current)
           .normalize();
         
-        // Apply movement with gentler acceleration
-        const targetVelocity = direction.multiplyScalar(currentFrameSpeed);
-        velocity.current.lerp(targetVelocity, (ACCELERATION * 0.5) * delta);
+        // Apply direct movement like player (no complex velocity smoothing)
+        const movement = direction.multiplyScalar(frameSpeed);
+        const newPosition = currentPosition.current.clone().add(movement);
         
-        // Update position
-        currentPosition.current.add(velocity.current);
+        // Simple interpolation for smoothness
+        currentPosition.current.lerp(newPosition, MOVEMENT_SMOOTHING);
         currentPosition.current.y = 0;
         enemyRef.current.position.copy(currentPosition.current);
         
@@ -217,19 +261,20 @@ export default function EnemyUnit({
       return;
     }
 
-    if (distanceToPlayer > ATTACK_RANGE && currentHealth.current > 0) {
+    if (distanceToPlayer > ATTACK_RANGE-0.25 && currentHealth.current > 0 && !isCharging) {
       setIsAttacking(false);
       setIsMoving(true);
 
-      const normalizedSpeed = MOVEMENT_SPEED * 60;
-      const currentFrameSpeed = normalizedSpeed * delta;
+      // Use consistent speed calculation like player movement
+      const baseSpeed = isSlowed ? BASE_MOVEMENT_SPEED * 0.5 : BASE_MOVEMENT_SPEED;
+      const frameSpeed = baseSpeed * delta;
 
-      // Calculate direction to player
+      // Calculate direction to target player
       const direction = new Vector3()
-        .subVectors(playerPosition, currentPosition.current)
+        .subVectors(targetPlayerPosition, currentPosition.current)
         .normalize();
 
-      // Calculate separation force
+      // Calculate separation force (simplified)
       const separationForce = new Vector3();
       const otherEnemies = enemyRef.current.parent?.children
         .filter(child => 
@@ -238,35 +283,34 @@ export default function EnemyUnit({
           child.position.distanceTo(currentPosition.current) < SEPARATION_RADIUS
         ) || [];
 
-      otherEnemies.forEach(enemy => {
-        const currentGroundPos = currentPosition.current.clone().setY(0);
-        const enemyGroundPos = enemy.position.clone().setY(0);
-        
-        const diff = new Vector3()
-          .subVectors(currentGroundPos, enemyGroundPos)
-          .normalize()
-          .multiplyScalar(SEPARATION_FORCE / Math.max(0.1, enemyGroundPos.distanceTo(currentGroundPos)));
-        separationForce.add(diff);
-      });
+      if (otherEnemies.length > 0) {
+        otherEnemies.forEach(enemy => {
+          const diff = new Vector3()
+            .subVectors(currentPosition.current, enemy.position)
+            .normalize()
+            .multiplyScalar(SEPARATION_FORCE);
+          separationForce.add(diff);
+        });
+        separationForce.normalize().multiplyScalar(0.3); // Limit separation influence
+      }
 
-      // Combine forces and normalize
+      // Combine direction and separation (like player movement)
       const finalDirection = direction.add(separationForce).normalize();
       finalDirection.y = 0;
 
-      // Add velocity smoothing
-      const currentSpeed = velocity.current.length();
-      const targetSpeed = currentFrameSpeed;
-      const smoothedSpeed = THREE.MathUtils.lerp(currentSpeed, targetSpeed, ACCELERATION * delta);
+      // Apply direct movement calculation (like player)
+      const movement = finalDirection.multiplyScalar(frameSpeed);
+      const newPosition = currentPosition.current.clone().add(movement);
       
-      // Calculate target velocity with smoothed speed
-      const targetVelocity = finalDirection.multiplyScalar(smoothedSpeed);
+      // Apply knockback effect if active
+      if (knockbackEffect && knockbackEffect.isActive) {
+        const knockbackDistance = knockbackEffect.distance * (1 - knockbackEffect.progress);
+        const knockbackMovement = knockbackEffect.direction.clone().multiplyScalar(knockbackDistance * delta * 10);
+        newPosition.add(knockbackMovement);
+      }
       
-      // Add additional position smoothing
-      velocity.current.lerp(targetVelocity, ACCELERATION * delta * 0.5);
-      
-      // Update position with additional smoothing
-      const newPosition = currentPosition.current.clone().add(velocity.current);
-      currentPosition.current.lerp(newPosition, 0.8);
+      // Simple smoothing for natural movement
+      currentPosition.current.lerp(newPosition, MOVEMENT_SMOOTHING);
       currentPosition.current.y = 0;
 
       // Apply position to mesh
@@ -274,7 +318,7 @@ export default function EnemyUnit({
 
       // Smooth rotation
       const lookTarget = new Vector3()
-        .copy(playerPosition)
+        .copy(targetPlayerPosition)
         .setY(currentPosition.current.y);
       targetRotation.current = Math.atan2(
         lookTarget.x - currentPosition.current.x,
@@ -290,46 +334,108 @@ export default function EnemyUnit({
       enemyRef.current.rotation.y += rotationDiff * Math.min(1, ROTATION_SPEED * delta);
 
     } else {
+      // Stop moving when in attack range or when charging
       setIsMoving(false);
-      // Decelerate smoothly
-      velocity.current.multiplyScalar(1 - DECELERATION * delta);
-      
-      if (velocity.current.length() > 0.001) {
-        currentPosition.current.add(velocity.current);
-        enemyRef.current.position.copy(currentPosition.current);
-      }
     }
 
-    // Attack logic
-    if (distanceToPlayer <= ATTACK_RANGE && currentHealth.current > 0) {
+    // Attack logic with charging
+    if (distanceToPlayer <= ATTACK_RANGE && currentHealth.current > 0 && !isFrozen && !isStunned) {
       const currentTime = Date.now();
-      if (currentTime - lastAttackTime.current >= ATTACK_COOLDOWN) {
+      
+      if (!isCharging && !isAttacking && currentTime - lastAttackTime.current >= ATTACK_COOLDOWN) {
+        // Start charging - stop moving during charge
+        setIsCharging(true);
+        setIsMoving(false);
+        chargeStartTime.current = currentTime;
+        chargeTargetPosition.current = targetPlayerPosition.clone();
+        lastAttackTime.current = currentTime;
+        
+        // Calculate attack direction
+        const attackDirection = new Vector3()
+          .subVectors(targetPlayerPosition, currentPosition.current)
+          .normalize();
+        
+        // Show charging indicator
+        setChargingIndicator({
+          id: `charging-${currentTime}`,
+          position: currentPosition.current.clone(),
+          direction: attackDirection
+        });
+      }
+    }
+    
+    // Handle charging completion
+    if (isCharging && !isAttacking) {
+      const chargeElapsed = Date.now() - chargeStartTime.current;
+      if (chargeElapsed >= CHARGE_DURATION) {
+        // Charging complete, start attack animation
+        setIsCharging(false);
+        setChargingIndicator(null);
         setIsAttacking(true);
         
-        // Store the initial attack position
+        // Store the initial attack position and target
         const attackStartPosition = currentPosition.current.clone();
+        const chargedTargetPos = chargeTargetPosition.current;
         
-        // Add delay before dealing damage
+        // Deal damage after attack animation starts (similar to original timing)
         setTimeout(() => {
-          // Get the current positions at time of damage
-          const finalDistanceToPlayer = currentPosition.current.distanceTo(playerPosition);
+          // Use the stored target from when attack started
+          const attackTarget = currentTargetRef.current;
+          if (!attackTarget || !chargedTargetPos) return;
           
-          // ONE SECOND TELEGRAPH
-          // 1. Enemy is still alive
-          // 2. Player is still in range
-          // 3. Enemy hasn't moved too far from attack start position
-          if (currentHealth.current > 0 && 
-              finalDistanceToPlayer <= ATTACK_RANGE && 
-              attackStartPosition.distanceTo(currentPosition.current) < 0.65) { // leeway distance 
-            onAttackPlayer(ATTACK_DAMAGE);
-          }
-        }, 1250); // REACTION TIME 
+          // Check if targets are in the attack area (cone in front of skeleton)
+          const attackDirection = new Vector3()
+            .subVectors(chargedTargetPos, attackStartPosition)
+            .normalize();
+          
+          // Check all potential targets for area damage
+          const playersInfo: PlayerInfo[] = allPlayers || (playerPosition ? [{
+            id: 'local-player',
+            position: playerPosition,
+            name: 'Player'
+          }] : []);
+          
+          const allTargets = [...playersInfo, ...summonedUnits];
+          const attackAngle = Math.PI * 0.6; // 60 degree cone
+          
+          allTargets.forEach(target => {
+            const targetDirection = new Vector3()
+              .subVectors(target.position, currentPosition.current)
+              .normalize();
+            
+            const distanceToTarget = currentPosition.current.distanceTo(target.position);
+            const angleToTarget = attackDirection.angleTo(targetDirection);
+            
+            // Check if target is within attack cone and range
+            if (distanceToTarget <= ATTACK_RANGE && angleToTarget <= attackAngle / 2) {
+              if (isSummonedUnit(target)) {
+                globalAggroSystem.addDamageAggro(id, target.id, ATTACK_DAMAGE, 'summoned');
+                if (onAttackSummonedUnit) {
+                  onAttackSummonedUnit(target.id, ATTACK_DAMAGE);
+                }
+              } else {
+                onAttackPlayer(ATTACK_DAMAGE);
+                globalAggroSystem.addDamageAggro(id, target.id, ATTACK_DAMAGE, 'player');
+              }
+            }
+          });
+        }, 500); // Match original damage timing
         
-        lastAttackTime.current = currentTime;
-
+        // Reset attack state and resume movement
         setTimeout(() => {
           setIsAttacking(false);
-        }, 500);
+          chargeTargetPosition.current = null;
+          // Resume movement after attack completes
+          if (currentHealth.current > 0) {
+            const currentTarget = getTargetPlayer();
+            if (currentTarget) {
+              const distanceToTarget = currentPosition.current.distanceTo(currentTarget.position);
+              if (distanceToTarget > ATTACK_RANGE - 0.25) {
+                setIsMoving(true);
+              }
+            }
+          }
+        }, 1000); // Longer duration for full attack animation
       }
     }
 
@@ -347,11 +453,13 @@ export default function EnemyUnit({
     if (health === 0 && !isDead) {
       setIsDead(true);
       setShowDeathEffect(true);
+      // Remove from aggro system when enemy dies
+      globalAggroSystem.removeEnemy(id);
       if (enemyRef.current) {
         enemyRef.current.visible = true;
       }
     }
-  }, [health, isDead]);
+  }, [health, isDead, id]);
 
   useEffect(() => {
     if (isDead) {
@@ -388,8 +496,8 @@ export default function EnemyUnit({
         }}
       >
         <CustomSkeleton
-          position={[0, 0.795, 0]}
-          isAttacking={isAttacking}
+          position={[0, 0.735, 0]}
+          isAttacking={isAttacking || isCharging}
           isWalking={isMoving && currentHealth.current > 0}
           onHit={(damage) => handleDamage(damage, { type: weaponType })}
         />
@@ -444,6 +552,18 @@ export default function EnemyUnit({
           }}
           isSpawning={false}
           weaponType={weaponType}
+          weaponSubclass={undefined}
+        />
+      )}
+
+      {/* Charging indicator */}
+      {chargingIndicator && (
+        <SkeletonChargingIndicator
+          position={chargingIndicator.position}
+          direction={chargingIndicator.direction}
+          attackRange={ATTACK_RANGE}
+          chargeDuration={CHARGE_DURATION}
+          onComplete={() => setChargingIndicator(null)}
         />
       )}
 

@@ -1,7 +1,8 @@
 
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, RingGeometry, InstancedMesh, Matrix4, Euler, Vector3, Quaternion } from 'three';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, InstancedMesh, Matrix4, Euler, Vector3, Quaternion } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '@/gear/BonePlate';
+import ArchmageCrest from './ArchmageCrest';
 import * as THREE from 'three';
 import { useEffect, useRef, useState } from 'react';
 import { useMemo } from 'react';
@@ -48,10 +49,10 @@ const glowingMaterial = new MeshStandardMaterial({
 });
 
 const robeMaterial = new MeshStandardMaterial({
-  color: "#896BFF",
+  color: "#1E90FF",
   roughness: 0.7,
   transparent: true,
-  opacity: 0.7
+  opacity: 0.875
 });
 
 // Cache geometries that are reused frequently
@@ -59,7 +60,6 @@ const jointGeometry = new SphereGeometry(0.06, 6, 6);
 const smallBoneGeometry = new CylinderGeometry(0.04, 0.032, 1, 4);
 const sphereGeometry = new SphereGeometry(0.02, 8, 8);
 const cylinderGeometry = new CylinderGeometry(0.03, 0.04, 2.8, 8);
-const ringGeometry = new RingGeometry(0.575, 0.7, 24);
 
 const sharedGeometries = {
   tooth: new THREE.ConeGeometry(0.03, 0.075, 3),
@@ -377,7 +377,7 @@ function StaffModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
 
       {/* Staff ornaments */}
       {[0.3, 0.6, 0.9].map((y, i) => (
-        <group key={i} position={[0, y, 0]}>
+        <group key={i} position={[0, y+0.4, 0]}>
           <mesh>
             <torusGeometry args={[0.075, 0.03, 3, 16]} />
             <meshStandardMaterial 
@@ -428,7 +428,7 @@ function MageRobe() {
     <group>
       {/* Main robe body - use cached material */}
       <mesh position={[0, -0.15, 0]}>
-        <cylinderGeometry args={[0.17, 0.45, 1.65, 6]} />
+        <cylinderGeometry args={[0.17, 0.45, 1.85, 6]} />
         <meshStandardMaterial {...robeMaterial} />
       </mesh>
 
@@ -436,7 +436,7 @@ function MageRobe() {
       <mesh position={[0, 0, 0]}>
         <cylinderGeometry args={[0.285, 0.285, 0.135, 8]} />
         <meshStandardMaterial 
-          color="#6b0fb3"
+          color="#00BFFF"
           metalness={0.3}
           roughness={0.6}
         />
@@ -452,7 +452,7 @@ function MageRobe() {
           <mesh>
             <cylinderGeometry args={[0.1, 0.125, 0.3, 6]} />
             <meshStandardMaterial 
-              color="#2a0845"
+              color="#4682B4"
               roughness={0.7}
               transparent
               opacity={0.75}
@@ -623,7 +623,7 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
   }, []);
 
   return (
-    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[0.925, 0.935, 0.8]}>
+    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[0.775, 0.775, 0.775]}>
       <group position={[0, 0.775, 0.025]}>
         <MageRobe />
       </group>
@@ -640,7 +640,7 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
             rotation={[0, (Math.PI * i), 0]}
             position={[0, 1.3, 0]}
           >
-            <mesh geometry={ringGeometry} material={glowingMaterial} />
+
           </group>
         ))}
       </group>
@@ -855,6 +855,11 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
       </group>
       <group name="RightLeg" position={[-0.2, 0.36, 0]}>
         <BoneLegModel />
+      </group>
+
+      {/* Archmage Crest - floating behind the mage */}
+      <group position={[0, 1.4, -0.6]}>
+        <ArchmageCrest scale={0.8} />
       </group>
 
       {/* Neck connection - keep current position */}

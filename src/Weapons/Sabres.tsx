@@ -1,10 +1,9 @@
 // src/weapons/Sabres.tsx
-
-
   import { useRef, useState, useEffect } from 'react';
   import { Group, Shape, Vector3 } from 'three';
   import { useFrame } from '@react-three/fiber';
   import FireballTrail from '../Spells/Fireball/FireballTrail';
+
   import * as THREE from 'three';
 
   const lerp = (start: number, end: number, t: number) => {
@@ -17,13 +16,14 @@
       onLeftSwingStart: () => void;
       onRightSwingStart: () => void;
       isBowCharging: boolean;
+      isFirebeaming?: boolean;
       hasActiveAbility?: boolean;
       leftTargetPosition?: Vector3 | null;
       rightTargetPosition?: Vector3 | null;
     }
   
   
-  export default function Sabre({ isSwinging, onSwingComplete, onLeftSwingStart, onRightSwingStart, isBowCharging, hasActiveAbility = false, leftTargetPosition = null, rightTargetPosition = null }: SabresProps) {
+  export default function Sabre({ isSwinging, onSwingComplete, onLeftSwingStart, onRightSwingStart, isBowCharging, isFirebeaming = false, hasActiveAbility = false, leftTargetPosition = null, rightTargetPosition = null }: SabresProps) {
     // Refs and states for the left sabre
     const leftSabreRef = useRef<Group>(null);
     const leftSwingProgress = useRef(0);
@@ -56,7 +56,7 @@
   
     useFrame((_, delta) => {
       if (leftSabreRef.current && rightSabreRef.current) {
-        if (isBowCharging) {
+        if (isBowCharging || isFirebeaming) {
           // SHEATHING POSITIONS
           const leftSheathPosition = [-0.8, -0.2, 0.5];
           const rightSheathPosition = [0.8, -0.2, 0.5];
@@ -72,12 +72,12 @@
           
           // Full rotation plus a bit more to point downward
           leftSabreRef.current.rotation.x = lerp(leftSabreRef.current.rotation.x*1.05,   Math.PI * 0.37, 0.3);  // ~216 degrees
-          leftSabreRef.current.rotation.z = lerp(leftSabreRef.current.rotation.z,   Math.PI  * 1.70, 0.20);  // Same side angle
+          leftSabreRef.current.rotation.z = lerp(leftSabreRef.current.rotation.z,   Math.PI * 1.65, 0.20);  // Same side angle
           
           rightSabreRef.current.rotation.x = lerp(rightSabreRef.current.rotation.x*1.05,   Math.PI * 0.37, 0.3); // ~216 degrees
-          rightSabreRef.current.rotation.z = lerp(rightSabreRef.current.rotation.z,   -Math.PI * 1.70, 0.2); // Same side angle
+          rightSabreRef.current.rotation.z = lerp(rightSabreRef.current.rotation.z,   -Math.PI * 1.65, 0.2); // Same side angle
 
-          // Reset swing states when charging bow
+          // Reset swing states when channeling icebeam
           leftSwingProgress.current = 0;
           rightSwingProgress.current = 0;
           leftSwingDelay.current = 0;
@@ -92,13 +92,13 @@
           
           // Handle left sabre swing with delay
           if (leftSabreRef.current) {
-            if (leftSwingDelay.current < 0.175) {  // 0.15 seconds delay
+            if (leftSwingDelay.current < 0.15) {  // 0.15 seconds delay
               leftSwingDelay.current += delta;
             } else {
               if (leftSwingProgress.current === 0) {
                 onLeftSwingStart();
               }
-              leftSwingProgress.current += delta * 9;
+              leftSwingProgress.current += delta * 10;
   
               const swingPhase = Math.min(leftSwingProgress.current / Math.PI, 1);
   
@@ -192,6 +192,7 @@
       }
     });
   
+    //===================================================================================================
     // Create custom sabre blade shape (scimitar)
     const createBladeShape = () => {
       const shape = new Shape();

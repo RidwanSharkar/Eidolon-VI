@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { WeaponType } from '../Weapons/weapons';
+import { WeaponType, WeaponSubclass } from '../Weapons/weapons';
 import * as THREE from 'three';
 
 export interface ChargeStatus {
@@ -10,7 +10,7 @@ export interface ChargeStatus {
   cooldownStartTime: number | null;
 }
 
-export const ORBITAL_COOLDOWN = 8250; // ORB CHARGE COOLDOWN
+export const ORBITAL_COOLDOWN = 7500; // ORB CHARGE COOLDOWN - Individual orb regeneration time
 
 interface ChargedOrbitalsProps {
   parentRef: React.RefObject<Group>;
@@ -19,6 +19,7 @@ interface ChargedOrbitalsProps {
   orbitSpeed?: number;
   particleSize?: number;
   weaponType: WeaponType;
+  weaponSubclass?: WeaponSubclass;
 }
 
 export default function ChargedOrbitals({ 
@@ -27,12 +28,48 @@ export default function ChargedOrbitals({
   orbitRadius = 0.55,
   orbitSpeed = 0.8,
   particleSize = 0.08,
-  weaponType
+  weaponType,
+  weaponSubclass
 }: ChargedOrbitalsProps) {
   const particleCount = charges.length;
   const particlesRef = useRef<Group[]>([]);
 
   const getOrbitalColor = () => {
+    if (weaponSubclass) {
+      switch (weaponSubclass) {
+        // Scythe subclasses
+        case WeaponSubclass.CHAOS:
+          return '#00FF37'; // Keep original chaos color
+        case WeaponSubclass.ABYSSAL:
+          return '#17CE54'; // lifegreen
+        
+        // Sword subclasses
+        case WeaponSubclass.DIVINITY:
+          return '#FF5500'; // Keep original divinity color
+        case WeaponSubclass.VENGEANCE:
+          return '#FF831D'; // More orange for vengeance FF831D
+        
+        // Sabres subclasses
+        case WeaponSubclass.FROST:
+          return '#5EFAFF'; // Keep original frost color
+        case WeaponSubclass.ASSASSIN:
+          return '#3A98F7'; // Dark purple for assassin
+        
+        // Spear subclasses
+        case WeaponSubclass.PYRO:
+          return '#C18C4B'; // Keep original pyro color FF544E
+        case WeaponSubclass.STORM:
+          return '#C18C4B'; // Grey for storm
+        
+        // Bow subclasses
+        case WeaponSubclass.ELEMENTAL:
+          return '#FF6F16'; // FF6F16 Keep original elemental color
+        case WeaponSubclass.VENOM:
+          return '#6B8E23'; // Green/purple for venom
+      }
+    }
+    
+    // Fallback to weapon type colors
     switch (weaponType) {
       case WeaponType.SCYTHE:
         return '#00FF37';

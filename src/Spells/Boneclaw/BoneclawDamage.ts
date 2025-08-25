@@ -1,9 +1,16 @@
 import { Vector3 } from 'three';
 import { calculateDamage } from '@/Weapons/damage';
 
-// Cache commonly used values
-const BONECLAW_BASE_DAMAGE = 73;
-const BONECLAW_RANGE = 8.625;
+// Level-based damage scaling for Boneclaw
+const BONECLAW_DAMAGE_BY_LEVEL: Record<number, number> = {
+  1: 167,
+  2: 221,
+  3: 257,
+  4: 311,
+  5: 343
+};
+
+const BONECLAW_RANGE = 9; // 8.625 prior
 const BONECLAW_ARC = Math.PI;
 const BONECLAW_ARC_HALF = BONECLAW_ARC / 2;
 
@@ -25,9 +32,13 @@ export function calculateBoneclawHits(
   position: Vector3,
   direction: Vector3,
   enemies: Array<{ id: string; position: Vector3; health: number; isDying?: boolean }>,
-  hitEnemies: Set<string> // Track already hit enemies
+  hitEnemies: Set<string>, // Track already hit enemies
+  level: number = 1 // Default to level 1 if not specified
 ): BoneclawHitResult[] {
   const hits: BoneclawHitResult[] = [];
+  
+  // Get damage for current level, fallback to level 1 if level not found
+  const baseDamage = BONECLAW_DAMAGE_BY_LEVEL[level] || BONECLAW_DAMAGE_BY_LEVEL[1];
   
   for (let i = 0; i < enemies.length; i++) {
     const enemy = enemies[i];
@@ -43,7 +54,7 @@ export function calculateBoneclawHits(
 
     if (angle > BONECLAW_ARC_HALF) continue;
 
-    const { damage, isCritical } = calculateDamage(BONECLAW_BASE_DAMAGE);
+    const { damage, isCritical } = calculateDamage(baseDamage);
 
     hits.push({
       targetId: enemy.id,

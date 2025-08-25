@@ -38,11 +38,20 @@ export default function Behavior({
   const [gameOverMessage, setGameOverMessage] = useState<GameOverMessage | null>(null);
 
   useEffect(() => {
+    // Additional safety checks for health value
+    if (typeof playerHealth !== 'number' || !isFinite(playerHealth)) {
+      console.error(`[Behavior] ❌ Invalid playerHealth value: ${playerHealth}, ignoring game over check`);
+      return;
+    }
+    
     if (playerHealth <= 0 && !isGameOver) {
       const randomMessage = GAME_OVER_MESSAGES[Math.floor(Math.random() * GAME_OVER_MESSAGES.length)];
       setGameOverMessage(randomMessage);
       setIsGameOver(true);
       window.dispatchEvent(new CustomEvent('gameOver'));
+    } else if (playerHealth > 0 && isGameOver) {
+      setIsGameOver(false);
+      setGameOverMessage(null);
     }
   }, [playerHealth, isGameOver]);
 

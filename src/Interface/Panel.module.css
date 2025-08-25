@@ -253,6 +253,49 @@
   color: #ffd700;
 }
 
+.healthBarShield {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(200, 200, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  border-radius: 0 3px 3px 0;
+  box-shadow: 
+    inset 0 0 10px rgba(255, 255, 255, 0.4),
+    0 0 10px rgba(255, 255, 255, 0.3);
+  z-index: 1;
+  animation: shieldGlow 2s infinite;
+}
+
+.shieldText {
+  color: #ffffff;
+  text-shadow: 
+    0 0 8px rgba(255, 255, 255, 0.8),
+    0 0 16px rgba(200, 200, 255, 0.6);
+}
+
+@keyframes shieldGlow {
+  0% { 
+    box-shadow: 
+      inset 0 0 10px rgba(255, 255, 255, 0.4),
+      0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  50% { 
+    box-shadow: 
+      inset 0 0 20px rgba(255, 255, 255, 0.6),
+      0 0 20px rgba(255, 255, 255, 0.5);
+  }
+  100% { 
+    box-shadow: 
+      inset 0 0 10px rgba(255, 255, 255, 0.4),
+      0 0 10px rgba(255, 255, 255, 0.3);
+  }
+}
+
 @keyframes shine {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
@@ -497,7 +540,34 @@
   display: flex;
   gap: 12px;
   justify-content: center;
+  align-items: center;
 }
+
+.passiveAbilitiesGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.activeAbilitiesGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.abilitySeparator {
+  width: 2px;
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(57, 255, 20, 0.6),
+    transparent
+  );
+  margin: 0 8px;
+  border-radius: 1px;
+}
+
 
 .ability {
   position: relative;
@@ -793,6 +863,41 @@
   pointer-events: none;
 }
 
+.killCountOverlay {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: linear-gradient(135deg, #ff6b6b, #ff4757);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
+  font-weight: bold;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+}
+
+.incinerateEmpowered {
+  background: linear-gradient(135deg, #ff4500, #ff6600) !important;
+  animation: incinerateGlow 1s ease-in-out infinite alternate;
+  box-shadow: 0 2px 12px rgba(255, 102, 0, 0.8) !important;
+}
+
+@keyframes incinerateGlow {
+  0% { 
+    box-shadow: 0 2px 12px rgba(255, 102, 0, 0.8);
+    transform: scale(1);
+  }
+  100% { 
+    box-shadow: 0 2px 16px rgba(255, 69, 0, 1);
+    transform: scale(1.1);
+  }
+}
+
 .activeIndicator {
   position: absolute;
   width: 100%;
@@ -814,5 +919,117 @@
   100% {
     opacity: 0.4;
     transform: scale(0.95);
+  }
+}
+
+/* Eviscerate charge indicators */
+.eviscerateLashesContainer {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  z-index: 15;
+}
+
+.eviscerateLash {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(31, 127, 255, 0.6);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eviscerateLash.available {
+  background: linear-gradient(135deg, #1f7fff, #4a90e2);
+  box-shadow: 0 0 6px rgba(31, 127, 255, 0.8);
+  animation: evisceratePulse 2s infinite;
+}
+
+.eviscerateLash.cooldown {
+  background: rgba(31, 127, 255, 0.2);
+  border-color: rgba(31, 127, 255, 0.3);
+}
+
+.lashCooldownText {
+  position: absolute;
+  color: #1f7fff;
+  font-size: 6px;
+  font-weight: bold;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes evisceratePulse {
+  0% {
+    box-shadow: 0 0 6px rgba(31, 127, 255, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(31, 127, 255, 1);
+  }
+  100% {
+    box-shadow: 0 0 6px rgba(31, 127, 255, 0.8);
+  }
+}
+
+/* Boneclaw charge indicators (green theme) */
+.boneclawChargesContainer {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  z-index: 15;
+}
+
+.boneclawCharge {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(57, 255, 20, 0.6);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.boneclawCharge.available {
+  background: linear-gradient(135deg, #39ff14, #4ade80);
+  box-shadow: 0 0 6px rgba(57, 255, 20, 0.8);
+  animation: boneclawPulse 2s infinite;
+}
+
+.boneclawCharge.cooldown {
+  background: rgba(57, 255, 20, 0.2);
+  border-color: rgba(57, 255, 20, 0.3);
+}
+
+.boneclawCooldownText {
+  position: absolute;
+  color: #39ff14;
+  font-size: 6px;
+  font-weight: bold;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes boneclawPulse {
+  0% {
+    box-shadow: 0 0 6px rgba(57, 255, 20, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(57, 255, 20, 1);
+  }
+  100% {
+    box-shadow: 0 0 6px rgba(57, 255, 20, 0.8);
   }
 }

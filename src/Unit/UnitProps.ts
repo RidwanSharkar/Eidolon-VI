@@ -1,34 +1,30 @@
 // src/unit/UnitProps.ts
-import { Vector3, Group } from 'three';
-import { WeaponType, AbilityType } from '../Weapons/weapons';
-import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { Enemy } from '../Versus/enemy';
 import { RefObject } from 'react';
+import { Vector3, Group } from 'three';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+import { WeaponType, WeaponSubclass, WeaponInfo, AbilityType } from '../Weapons/weapons';
 
-export interface AbilityButton {
-  type: 'q' | 'e' | 'r' | 'passive' | 'active' | 'vault' | 'vaultNorth' | 'vaultEast' | 'vaultWest';
-  key: 'q' | 'e' | 'r' | '1' | '2' | 's' | 'w' | 'd' | 'a';
-  cooldown: number;
-  currentCooldown: number;
-  icon: string;
-  maxCooldown: number;
-  name: string;
-  isUnlocked: boolean;
+
+// Define internal summoned unit interface (separate from AggroSystem)
+export interface AllSummonedUnitInfo {
+  id: string;
+  position: Vector3;
+  health: number;
+  maxHealth: number;
+  type: 'skeleton' | 'elemental' | 'abyssal-abomination';
+  ownerId?: string;
 }
 
-export interface WeaponAbilities {
-  q: AbilityButton;
-  e: AbilityButton;
-  r: AbilityButton;
-  passive: AbilityButton;
-  active: AbilityButton;
-  vault: AbilityButton;
-  vaultNorth: AbilityButton;
-  vaultEast: AbilityButton;
-  vaultWest: AbilityButton;
+export interface Enemy {
+  id: string;
+  position: Vector3;
+  initialPosition: Vector3;
+  rotation: number;
+  health: number;
+  maxHealth: number;
+  isDying?: boolean;
+  deathStartTime?: number;
 }
-
-export type WeaponInfo = Record<WeaponType, WeaponAbilities>;
 
 interface FireballManager {
   shootFireball: () => void;
@@ -40,13 +36,15 @@ export interface UnitProps {
   onHealthChange?: (newHealth: number) => void;
   controlsRef: React.RefObject<OrbitControlsImpl>;
   currentWeapon: WeaponType;
-  onWeaponSelect: (weapon: WeaponType) => void;
+  currentSubclass?: WeaponSubclass;
+  onWeaponSelect: (weapon: WeaponType, subclass?: WeaponSubclass) => void;
   health: number;
   maxHealth: number;
   isPlayer?: boolean;
   abilities: WeaponInfo;
   onAbilityUse: (weapon: WeaponType, abilityType: AbilityType) => void;
-  onPositionUpdate: (position: Vector3, isStealthed?: boolean) => void;
+  onResetAbilityCooldown?: (weapon: WeaponType, abilityType: AbilityType) => void;
+  onPositionUpdate: (position: Vector3, isStealthed?: boolean, rotation?: Vector3, movementDirection?: Vector3) => void;
   enemyData: Enemy[];
   onFireballDamage: (targetId: string, damage: number, isCritical: boolean, position: Vector3) => void;
   onDamage: (damage: number) => void;
@@ -54,4 +52,39 @@ export interface UnitProps {
   fireballManagerRef?: React.MutableRefObject<FireballManager | null>;
   onSmiteDamage: (targetId: string, damage: number, isCritical: boolean, position: Vector3) => void;
   parentRef?: RefObject<Group>;
+  level?: number; // Add level prop for Crossentropy Bolt feature
+  // Aegis-related props
+  isAegisActive?: boolean;
+  onAegisDamageBlock?: (damage: number) => boolean;
+  onAegisStateChange?: (active: boolean) => void;
+  // Deep Freeze related props
+  onFreezeStateCheck?: (enemyId: string) => boolean;
+  onFrozenEnemyIdsUpdate?: (frozenEnemyIds: string[]) => void;
+  // Slow effect related props
+  onApplySlowEffect?: (enemyId: string, duration?: number) => void;
+  // Stun effect related props
+  onApplyStunEffect?: (enemyId: string, duration?: number) => void;
+  // Knockback effect related props
+  onApplyKnockbackEffect?: (enemyId: string, direction: Vector3, distance: number) => void;
+  // Kill count reporting props
+  onStealthKillCountChange?: (count: number) => void;
+  onGlacialShardKillCountChange?: (count: number) => void;
+  // Skeleton count reporting props  
+  onSkeletonCountChange?: (count: number) => void;
+  // Dash charge props
+  canVault?: () => boolean;
+  consumeDashCharge?: () => boolean;
+  // Glacial Shard shield props
+  glacialShardRef?: React.RefObject<{ absorbDamage: (damage: number) => number; hasShield: boolean; shieldAbsorption: number; shootGlacialShard?: () => boolean; getKillCount?: () => number }>;
+  onShieldStateChange?: (hasShield: boolean, shieldAbsorption: number) => void;
+  // Summoned units callback for aggro system
+  onSummonedUnitsUpdate?: (units: AllSummonedUnitInfo[]) => void;
+  // Player stun effect props
+  playerStunRef?: React.MutableRefObject<{ triggerStun: (duration: number) => void } | null>;
+  // Eviscerate charges callback
+  onEviscerateLashesChange?: (charges: Array<{ id: number; available: boolean; cooldownStartTime: number | null }>) => void;
+  // Boneclaw charges callback
+  onBoneclawChargesChange?: (charges: Array<{ id: number; available: boolean; cooldownStartTime: number | null }>) => void;
+  // Incinerate stacks callback for Pyro Spear
+  onIncinerateStacksChange?: (stacks: number) => void;
 }

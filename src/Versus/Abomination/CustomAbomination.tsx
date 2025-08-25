@@ -50,20 +50,20 @@ const SHARED_MATERIALS = {
     metalness: 0.4
   }),
   eyeCore: new MeshStandardMaterial({
-    color: "#2FFF00",
-    emissive: "#2FFF00",
+    color: "#00BFFF",
+    emissive: "#00BFFF",
     emissiveIntensity: 3
   }),
   eyeGlow: new MeshStandardMaterial({
-    color: "#2FFF00",
-    emissive: "#2FFF00",
+    color: "#00BFFF",
+    emissive: "#00BFFF",
     emissiveIntensity: 1,
     transparent: true,
     opacity: 0.75
   }),
   eyeOuterGlow: new MeshStandardMaterial({
-    color: "#2FFF00",
-    emissive: "#2FFF00",
+    color: "#00BFFF",
+    emissive: "#00BFFF",
     emissiveIntensity: 1,
     transparent: true,
     opacity: 0.7
@@ -116,7 +116,7 @@ function EyeSet({ position }: { position: [number, number, number] }) {
       <primitive object={eyeParts.core} />
       <primitive object={eyeParts.innerGlow} />
       <primitive object={eyeParts.outerGlow} />
-      <pointLight color="#FF4C4C" intensity={0.5} distance={1} decay={2} position={position} />
+      <pointLight color="#00BFFF" intensity={0.5} distance={1} decay={2} position={position} />
     </group>
   );
 }
@@ -263,17 +263,17 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
               {createJoint(0.09)}
               
               {/* ULTRALISK BLADES */}
-              <group position={[0, -0.1, 0]}>
+              <group position={[0, 0.1, 0]}>
                 <group 
-                  position={[isLeftHand ? -0 : -0, -0.2, 0.1]} 
+                  position={[isLeftHand ? -0 : -0, -0.2, 0.2]} 
                   rotation={[2 + Math.PI/4, -1, Math.PI*2.675 + 0.85]} 
                   scale={[1.4, 0.55, 1.4]}
                 >
                   <mesh>
                     <extrudeGeometry args={[BLADE_SHAPE, BLADE_EXTRUDE_SETTINGS]} />
                     <meshStandardMaterial 
-                      color="#9c27b0"
-                      emissive="#9c27b0"
+                      color="#4FC3F7"
+                      emissive="#4FC3F7"
                       emissiveIntensity={1.3}
                       metalness={0.8}
                       roughness={0.1}
@@ -284,7 +284,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
                   </mesh>
                   
                   <pointLight
-                    color="#9c27b0"
+                    color="#4FC3F7"
                     intensity={1}
                     distance={2}
                     decay={2}
@@ -317,7 +317,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
 
                 {/* Only render sword if it's the left hand */}
                 {!isLeftHand && (
-                  <group position={[0, -0.2, 0.3]} rotation={[Math.PI/2, 0, 0]} scale={[0.8, 0.8, 0.8]}>
+                  <group position={[0, -0.2, -0.3]} rotation={[Math.PI/2, 0, 0]} scale={[0.8, 0.8, 0.8]}>
       
                   </group>
                 )}
@@ -475,7 +475,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
   const [attackCycle, setAttackCycle] = useState(0);
   const attackAnimationRef = useRef<NodeJS.Timeout>();
 
-  const walkSpeed = 4;
+  const walkSpeed = 7;
   const attackSpeed = 3;
   const ARM_DELAY = 300; // 0.15 seconds between arms
   const TELEGRAPH_TIME = 650; // 850ms telegraph before first hit
@@ -689,7 +689,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
   
 
   return (
-    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[1.425, 1.425, 1.425]}> 
+    <group ref={groupRef} position={[position[0], position[1], position[2]]} scale={[1.1, 1.3, 1.3]}> 
       <group position={[0, 0.15, -0]}>
         <AbominationTrailEffect parentRef={groupRef} />
       </group>

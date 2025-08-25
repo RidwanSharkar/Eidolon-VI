@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
 
@@ -8,9 +8,8 @@ interface FirebeamControllerProps {
 }
 
 export const useFirebeam = ({ parentRef }: FirebeamControllerProps) => {
-  const [isActive, setIsActive] = useState(false);
-
   const activateFirebeam = useCallback(() => {
+
     if (!parentRef.current) return;
 
     const position = parentRef.current.position.clone();
@@ -19,24 +18,23 @@ export const useFirebeam = ({ parentRef }: FirebeamControllerProps) => {
     const direction = new Vector3(0, 0, 1)
       .applyQuaternion(parentRef.current.quaternion);
 
-    setIsActive(true);
+
     
-    const baseDamage = 43; // DAMAGE
+    const baseDamage = 37; // DAMAGE
     
     return {
       position,
       direction,
-      onComplete: () => setIsActive(false),
+      onComplete: () => {},
       damage: baseDamage
     };
   }, [parentRef]);
 
   const deactivateFirebeam = useCallback(() => {
-    setIsActive(false);
+
   }, []);
 
   return {
-    isActive,
     activateFirebeam,
     deactivateFirebeam
   };

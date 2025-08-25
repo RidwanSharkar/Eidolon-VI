@@ -1,0 +1,230 @@
+// src/Spells/SoulReaper/AbyssalSkeletonSword.tsx
+import React from 'react';
+import { Shape } from 'three';
+import * as THREE from 'three';
+
+export default function AbyssalSkeletonSword() {
+  // Create custom sword blade shape - larger version
+  const createBladeShape = () => {
+    const shape = new Shape();
+    
+    // Start at center
+    shape.moveTo(0, 0);
+    
+    // Left side guard
+    shape.lineTo(-0.4, 0.4);  
+    shape.lineTo(-0.24, -0.24); 
+    shape.lineTo(0, 0);
+    
+    // Right side guard
+    shape.lineTo(0.4, 0.4);
+    shape.lineTo(0.24, -0.24);
+    shape.lineTo(0, 0);
+    
+    // Blade shape - scaled up
+    shape.lineTo(0, 0.12);
+    shape.lineTo(0.32, 0.32);
+    shape.quadraticCurveTo(1.28, 0.24, 2.4, 0.29);
+    shape.quadraticCurveTo(3.2, 0.16, 3.52, 0);
+    
+    shape.quadraticCurveTo(3.2, -0.16, 2.4, -0.29);
+    shape.quadraticCurveTo(1.28, -0.24, 0.32, -0.32);
+    shape.lineTo(0, -0.12);
+    shape.lineTo(0, 0);
+    
+    return shape;
+  };
+
+  // Inner blade shape - larger version
+  const createInnerBladeShape = () => {
+    const shape = new Shape();
+    shape.moveTo(0, 0);
+    
+    shape.lineTo(0, 0.096);   
+    shape.lineTo(0.24, 0.24); 
+    shape.quadraticCurveTo(1.92, 0.19, 2.4, 0.24); 
+    shape.quadraticCurveTo(3.2, 0.13, 3.44, 0);    
+    shape.quadraticCurveTo(3.2, -0.13, 2.4, -0.24); 
+    shape.quadraticCurveTo(1.92, -0.19, 0.24, -0.24);
+    shape.lineTo(0, -0.08);  
+    shape.lineTo(0, 0);
+    
+    return shape;
+  };
+
+  const bladeExtrudeSettings = {
+    steps: 2,
+    depth: 0.08,
+    bevelEnabled: true,
+    bevelThickness: 0.022,
+    bevelSize: 0.032,
+    bevelOffset: 0.064,
+    bevelSegments: 2
+  };
+
+  const innerBladeExtrudeSettings = {
+    ...bladeExtrudeSettings,
+    depth: 0.096,
+    bevelThickness: 0.032,
+    bevelSize: 0.032,
+    bevelOffset: 0,
+    bevelSegments: 6
+  };
+
+  return (
+    <group rotation={[-0.575, 0, 0.2]} scale={[1.6, 1.6, 1.6]}>
+      <group 
+        position={[0, 0, 0]}
+        rotation={[0, 0, Math.PI]}
+        scale={[0.7, 0.7, 0.7]} 
+      >
+        {/* Handle - darker green theme */}
+        <group position={[-0.04, -0.88, 0.56]} rotation={[0, 0, -Math.PI]}>
+          <mesh>
+            <cylinderGeometry args={[0.048, 0.064, 1.44, 12]} />
+            <meshStandardMaterial color="#0d2818" roughness={0.8} metalness={0.2} />
+          </mesh>
+          
+          {/* Handle wrappings - darker green */}
+          {[...Array(10)].map((_, i) => (
+            <mesh key={i} position={[0, +0.56 - i * 0.176, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.072, 0.0256, 8, 16]} />
+              <meshStandardMaterial color="#0a1a0f" metalness={0.4} roughness={0.6} />
+            </mesh>
+          ))}
+        </group>
+        
+        {/* CIRCLE CONNECTION POINT - malachite green theme */}
+        <group position={[-0.04, 0.36, 0.56]} rotation={[Math.PI, 1.5, Math.PI]}>
+          {/* Large torus */}
+          <mesh>
+            <torusGeometry args={[0.416, 0.112, 16, 32]} />
+            <meshStandardMaterial 
+              color="#00b359" 
+              metalness={0.7}
+              roughness={0.3}
+            />
+          </mesh>
+          
+          {/* Decorative spikes around torus - malachite green */}
+          {[...Array(8)].map((_, i) => (
+            <mesh 
+              key={`spike-${i}`} 
+              position={[
+                0.4 * Math.cos(i * Math.PI / 4),
+                0.4 * Math.sin(i * Math.PI / 4),
+                0
+              ]}
+              rotation={[0, 0, i * Math.PI / 4 - Math.PI / 2]}
+            >
+              <coneGeometry args={[0.112, 0.88, 3]} />
+              <meshStandardMaterial 
+                color="#0d2818"
+                metalness={0.8}
+                roughness={0.2}
+              />
+            </mesh>
+          ))}
+          
+          {/* CORE ORB - bright malachite green matching Scythe */}
+          <mesh>
+            <sphereGeometry args={[0.248, 16, 16]} />
+            <meshStandardMaterial
+              color={new THREE.Color(0x17CE54)}         // Scythe malachite green
+              emissive={new THREE.Color(0x17CE54)}      // Scythe malachite green emission
+              emissiveIntensity={1.5}
+              transparent
+              opacity={1}
+            />
+          </mesh>
+          
+          {/* Multiple glow layers for depth - Scythe green theme */}
+          <mesh>
+            <sphereGeometry args={[0.16, 16, 16]} />
+            <meshStandardMaterial
+              color={new THREE.Color(0x17CE54)}
+              emissive={new THREE.Color(0x17CE54)}
+              emissiveIntensity={25}
+              transparent
+              opacity={0.8}
+            />
+          </mesh>
+          
+          <mesh>
+            <sphereGeometry args={[0.232, 16, 16]} />
+            <meshStandardMaterial
+              color={new THREE.Color(0x17CE54)}
+              emissive={new THREE.Color(0x17CE54)}
+              emissiveIntensity={20}
+              transparent
+              opacity={0.6}
+            />
+          </mesh>
+          
+          <mesh>
+            <sphereGeometry args={[0.28, 16, 16]} />
+            <meshStandardMaterial
+              color={new THREE.Color(0x17CE54)}
+              emissive={new THREE.Color(0x17CE54)}
+              emissiveIntensity={15}
+              transparent
+              opacity={0.4}
+            />
+          </mesh>
+
+          {/* Bright malachite green point light matching Scythe */}
+          <pointLight 
+            color={new THREE.Color(0x17CE54)}
+            intensity={1.5}
+            distance={1.2}
+            decay={2}
+          />
+        </group>
+        
+        {/* Blade - Scythe malachite green colors */}
+        <group position={[0, 0.8, 0.56]} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+          {/* Base blade */}
+          <mesh>
+            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+            <meshStandardMaterial 
+              color={new THREE.Color(0x0d2818)}  // Very dark green base
+              emissive={new THREE.Color(0x17CE54)} // Scythe malachite green emission
+              emissiveIntensity={1.8}
+              metalness={0.6}
+              roughness={0.2}
+            />
+          </mesh>
+          
+          {/* BLADE Glowing core - bright Scythe malachite */}
+          <mesh>
+            <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
+            <meshStandardMaterial 
+              color={new THREE.Color(0x17CE54)}  // Scythe malachite green
+              emissive={new THREE.Color(0x17CE54)} // Scythe malachite green emission
+              emissiveIntensity={3}
+              metalness={0.4}
+              roughness={0.2}
+              opacity={0.9}
+              transparent
+            />
+          </mesh>
+        </group>
+
+        {/* Scythe malachite green energy aura around the weapon */}
+        <group position={[0, 0.4, 0.56]}>
+          <mesh>
+            <sphereGeometry args={[1.2, 12, 12]} />
+            <meshStandardMaterial
+              color={new THREE.Color(0x0d2818)}
+              emissive={new THREE.Color(0x17CE54)}
+              emissiveIntensity={0.8}
+              transparent
+              opacity={0.1}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        </group>
+      </group>
+    </group>
+  );
+}

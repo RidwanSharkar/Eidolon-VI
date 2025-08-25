@@ -1,16 +1,32 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
+import { Group, Vector3 } from 'three';
 import { ChargeStatus } from '@/color/ChargedOrbitals';
 
 interface UseReigniteManagerProps {
   setCharges: React.Dispatch<React.SetStateAction<Array<ChargeStatus>>>;
+  onHealthChange?: (health: number) => void;
+  setDamageNumbers?: React.Dispatch<React.SetStateAction<Array<{
+    id: number;
+    damage: number;
+    position: Vector3;
+    isCritical: boolean;
+    isHealing?: boolean;
+  }>>>;
+  nextDamageNumberId?: React.MutableRefObject<number>;
+  parentRef?: React.RefObject<Group>;
 }
 
 export function useReigniteManager({
   setCharges,
+  onHealthChange,
+  setDamageNumbers,
+  nextDamageNumberId,
+  parentRef
 }: UseReigniteManagerProps) {
+  const healingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const healingCountRef = useRef(0);
   const restoreCharge = useCallback(() => {
     try {
-      console.log("[Reignite] restoreCharge called");
       
       // We'll only use the function form of setCharges to avoid stale closure issues
       setCharges(currentCharges => {
@@ -28,15 +44,12 @@ export function useReigniteManager({
           .filter(index => index !== -1)
           .slice(0, 3); // Always try to restore exactly 3 charges per kill
         
-        console.log("[Reignite] Found unavailable indices to restore:", unavailableIndices);
         
         if (unavailableIndices.length === 0) {
-          console.log("[Reignite] No unavailable charges found, all charges are already available");
           return currentCharges; // No changes needed
         }
         
         // Log exactly how many orbs we're restoring
-        console.log(`[Reignite] Restoring exactly ${unavailableIndices.length} orbs at indices:`, unavailableIndices);
         
         // Create a new array with the updated charges
         const updatedCharges = currentCharges.map((charge, index) => 
@@ -46,19 +59,8 @@ export function useReigniteManager({
             cooldownStartTime: null
           } : charge
         );
-        
-        // Count how many charges are now available after restoration
-        const availableCount = updatedCharges.filter(charge => charge.available).length;
-        const totalCount = updatedCharges.length;
-        
-        console.log(`[Reignite] After restoration: ${availableCount}/${totalCount} charges are available`);
-        console.log("[Reignite] Updated charges state:", 
-          updatedCharges.map(charge => ({
-            id: charge.id,
-            available: charge.available,
-            cooldownStartTime: charge.cooldownStartTime
-          }))
-        );
+      
+
         
         return updatedCharges;
       });
@@ -67,5 +69,52 @@ export function useReigniteManager({
     }
   }, [setCharges]);
 
-  return { restoreCharge };
+  const startHealing = useCallback(() => {
+    // Clear any existing healing interval
+    if (healingIntervalRef.current) {
+      clearInterval(healingIntervalRef.current);
+    }
+
+    // Reset healing count
+    healingCountRef.current = 0;
+
+    // Start healing over time: 2HP per second for 3 seconds (6 total HP)
+    healingIntervalRef.current = setInterval(() => {
+      healingCountRef.current++;
+      
+      // Heal for 2 HP
+      if (onHealthChange) {
+        onHealthChange(2);
+      }
+
+      // Show healing damage number
+      if (setDamageNumbers && nextDamageNumberId && parentRef?.current) {
+        setDamageNumbers(prev => [...prev, {
+          id: nextDamageNumberId.current++,
+          damage: 2,
+          position: parentRef.current!.position.clone().add(new Vector3(0, 2, 0)),
+          isCritical: false,
+          isHealing: true
+        }]);
+      }
+
+      // Stop after 3 ticks (3 seconds)
+      if (healingCountRef.current >= 3) {
+        if (healingIntervalRef.current) {
+          clearInterval(healingIntervalRef.current);
+          healingIntervalRef.current = null;
+        }
+      }
+    }, 1000); // Every 1 second
+  }, [onHealthChange, setDamageNumbers, nextDamageNumberId, parentRef]);
+
+  const processKill = useCallback(() => {
+    // Restore charge
+    restoreCharge();
+    
+    // Start healing over time
+    startHealing();
+  }, [restoreCharge, startHealing]);
+
+  return { restoreCharge, processKill };
 }

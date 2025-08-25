@@ -47,7 +47,7 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
   const totemRef = useRef<Group>(null);
 
   return (
-    <group ref={totemRef} scale={0.475} position={[0, -0.75, 0]}>
+    <group ref={totemRef} scale={0.40} position={[0, -0.80, 0]}>
       {/* Main tower structure */}
       <mesh position={[0, 2, 0]}>
         <primitive object={SHARED_GEOMETRIES.tower} />

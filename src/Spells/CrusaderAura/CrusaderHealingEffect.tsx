@@ -14,9 +14,9 @@ const CrusaderHealingEffect: React.FC<CrusaderHealingEffectProps> = ({ position,
 
   // Cache geometries
   const geometries = useMemo(() => ({
-    ring: new THREE.TorusGeometry(0.8, 0.05, 16, 32),
-    sphere: new THREE.SphereGeometry(0.5, 32, 32),
-    particle: new THREE.SphereGeometry(0.1, 8, 8)
+    ring: new THREE.TorusGeometry(0.75, 0.05, 16, 32),
+    sphere: new THREE.SphereGeometry(0.45, 32, 32),
+    particle: new THREE.SphereGeometry(0.08, 8, 8)
   }), []);
 
   // Cache materials

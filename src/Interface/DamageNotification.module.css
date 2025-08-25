@@ -1,20 +1,23 @@
 .notification {
-  position: absolute;
+  position: fixed;
   left: 50%;
-  bottom: +430%;
+  top: 65%;
   transform: translateX(-50%);
-  color: #ff3333;
-  font-weight: bold;
-  font-size: 18px;
+  color: #ff4444;
+  font-weight: 900;
+  font-size: 20px;
+  font-family: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
   text-shadow: 
-    0 0 4px rgba(0, 0, 0, 0.8),
-    0 0 2px rgba(0, 0, 0, 0.6);
+    0 0 6px rgba(0, 0, 0, 0.9),
+    0 0 3px rgba(0, 0, 0, 0.8),
+    2px 2px 4px rgba(0, 0, 0, 0.7);
   pointer-events: none;
   transition: 
     opacity 0.3s ease,
     transform 0.3s ease;
-  z-index: 1000;
+  z-index: 1001;
   animation: floatUp 2s ease-out forwards;
+  letter-spacing: 1px;
 }
 
 .visible {
@@ -27,14 +30,19 @@
 
 @keyframes floatUp {
   0% {
-    transform: translate(-50%, 0);
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(-50%, -15px) scale(1.1);
     opacity: 1;
   }
   80% {
+    transform: translate(-50%, -40px) scale(1);
     opacity: 1;
   }
   100% {
-    transform: translate(-50%, -40px);
+    transform: translate(-50%, -80px) scale(0.9);
     opacity: 0;
   }
 } 

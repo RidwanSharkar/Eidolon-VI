@@ -43,35 +43,35 @@ export default function Smite({ position, onComplete }: SmiteProps) {
     inner: new THREE.MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FFD500",
-      emissiveIntensity: 25,
+      emissiveIntensity: 30,
       transparent: true,
       opacity: 0.675
     }),
     outer: new THREE.MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FFD500",
-      emissiveIntensity: 5,
+      emissiveIntensity: 20,
       transparent: true,
       opacity: 0.625
     }),
     glow1: new THREE.MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FFD500",
-      emissiveIntensity: 2.5,
+      emissiveIntensity: 4,
       transparent: true,
       opacity: 0.55
     }),
     glow2: new THREE.MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FF8812",
-      emissiveIntensity: 2.5,
+      emissiveIntensity: 3,
       transparent: true,
       opacity: 0.425
     }),
     outerGlow: new THREE.MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FF8812",
-      emissiveIntensity: 1,
+      emissiveIntensity: 1.5,
       transparent: true,
       opacity: 0.2
     }),

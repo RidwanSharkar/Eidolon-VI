@@ -1,8 +1,11 @@
 // src/versus/CustomSkeleton.tsx
 import React, { useRef, useState, useEffect } from 'react';
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry } from 'three';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../gear/BonePlate';
+import SkullShield from '../Weapons/SkullShield';
+import BoneSabre from '../Weapons/BoneSabre';
+import EnemySlashEffect from './EnemySlashEffect';
 
 interface CustomSkeletonProps {
   position: [number, number, number];
@@ -13,13 +16,13 @@ interface CustomSkeletonProps {
 
 // Reuse Materials
 const standardBoneMaterial = new MeshStandardMaterial({
-  color: "#e8e8e8",
+  color: "#d8e8d8",
   roughness: 0.4,
   metalness: 0.3
 });
 
 const darkBoneMaterial = new MeshStandardMaterial({
-  color: "#d4d4d4",
+  color: "#c4d4c4",
   roughness: 0.3,
   metalness: 0.4
 });
@@ -66,7 +69,7 @@ function BoneLegModel() {
         <group position={[0, -0.35, 0]}>
           <mesh>
             <sphereGeometry args={[0.08, 12, 12]} />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+            <meshStandardMaterial color="#d8e8d8" roughness={0.4} metalness={0.3} />
           </mesh>
           
           {/* Lower leg */}
@@ -82,7 +85,7 @@ function BoneLegModel() {
                 {/* Main foot plate */}
                 <mesh>
                   <boxGeometry args={[0.15, 0.02, 0.4]} />
-                  <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+                  <meshStandardMaterial color="#d8e8d8" roughness={0.4} metalness={0.3} />
                 </mesh>
                 
                 {/* Toe bones */}
@@ -181,10 +184,10 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
                   </group>
                 ))}
 
-                {/* Only render sword if it's the left hand */}
+                {/* Only render sabre if it's the left hand */}
                 {!isLeftHand && (
-                  <group position={[0, -0.2, 0.3]} rotation={[Math.PI/2, 0, 0]} scale={[0.8, 0.8, 0.8]}>
-                    <BoneSwordModel />
+                  <group position={[0, -0.2, 0.3]} rotation={[Math.PI/1.5, 0, -Math.PI/4]} scale={[1.8, 2.5, 1.8]}>
+                    <BoneSabre />
                   </group>
                 )}
               </group>
@@ -197,63 +200,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
 }
 
 
-function BoneSwordModel() {
-  const redMaterial = {
-    color: "#FF4C4C",
-    emissive: "#4ECB7E",
-    emissiveIntensity: 0.5,
-    roughness: 0.4,
-    metalness: 0.6
-  };
 
-  return (
-    <group rotation={[0, -1.05, -Math.PI / 2.5]} position={[+0.3, -0.1, 0.75]} scale={[0.9, 0.9, 1.2]}>
-      {/* Sword Handle */}
-      <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.125, 0.125, 3.35, 8]} />
-        <meshStandardMaterial 
-          color="#8b0000"
-          roughness={0.4}
-          metalness={0.3}
-        />
-      </mesh>
-
-      {/* Handle Guard */}
-      <mesh position={[0, -0.25, 0]} rotation={[Math.PI / 2, -Math.PI / 2, Math.PI / 2]}>
-        <cylinderGeometry args={[0.3, 0.3, .125 ]} />
-        <meshStandardMaterial 
-          color="#4ECB7E"
-          roughness={0.4}
-          metalness={0.5}
-        />
-      </mesh>
-
-      {/* Blade Base */}
-      <mesh position={[0, +1, 0]}>
-        <cylinderGeometry args={[0.325, 0.125, 2.9, 4]} />
-        <meshStandardMaterial 
-          {...redMaterial}
-        />
-      </mesh>
-
-      {/* Blade Tip */}
-      <mesh position={[0, 3.45, 0]}>
-        <coneGeometry args={[0.325, 2, 4]} />
-        <meshStandardMaterial 
-          {...redMaterial}
-        />
-      </mesh>
-
-      {/* Subtle glow effect */}
-      <pointLight 
-        color="#FF4D00"
-        intensity={0.5}
-        distance={2}
-        decay={2}
-      />
-    </group>
-  );
-}
 
 
 function ShoulderPlate() {
@@ -344,9 +291,12 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
   const [walkCycle, setWalkCycle] = useState(0);
   const [attackCycle, setAttackCycle] = useState(0);
   const attackAnimationRef = useRef<NodeJS.Timeout>();
+  const [showSlashEffect, setShowSlashEffect] = useState(false);
+  const [slashPosition, setSlashPosition] = useState<Vector3>(new Vector3());
+  const [slashDirection, setSlashDirection] = useState<Vector3>(new Vector3(0, 0, 1));
 
   const walkSpeed = 4;
-  const attackSpeed = 3;
+  const attackSpeed = 1.35;
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -393,16 +343,21 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
         }
       });
 
-      // Modified arm swing animation for boss claws
+      // Modified arm swing animation for boss claws - adjusted for hunched posture
       ['LeftArm', 'RightArm'].forEach(part => {
         const limb = groupRef.current?.getObjectByName(part) as Mesh;
         if (limb) {
           const isRight = part.includes('Right');
           const phase = isRight ? walkCycle + Math.PI : walkCycle;
           
-          // Simpler rotation for the entire claw structure
-          const armAngle = Math.sin(phase) * 0.1;
-          limb.rotation.x = armAngle;
+          // Hunched arm movement - arms naturally hang forward more
+          const baseHunchedAngle = 0.1; // Base forward lean for hunched posture
+          const armSwing = Math.sin(phase) * 0.08; // Slightly reduced swing
+          limb.rotation.x = baseHunchedAngle + armSwing;
+          
+          // Add slight side-to-side movement for more natural hunched gait
+          const armSway = Math.sin(phase) * 0.03;
+          limb.rotation.z = (isRight ? -0.15 : 0.15) + armSway;
         }
       });
     }
@@ -417,6 +372,36 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
         rightArm.rotation.x = -armAngle;
       }
 
+      // Trigger slash effect when damage is actually dealt (synced with 750ms delay in EnemyUnit)
+      if (attackCycle > Math.PI / 3 && attackCycle < Math.PI / 2.5 && !showSlashEffect) {
+        // Calculate slash position and direction relative to the enemy's position and rotation
+        if (groupRef.current) {
+          // Get enemy's current position and rotation
+          const enemyPosition = new Vector3().copy(groupRef.current.position);
+          const enemyRotation = groupRef.current.rotation.y;
+          
+          // Calculate forward direction based on enemy's rotation
+          const forward = new Vector3(
+            Math.sin(enemyRotation),
+            0,
+            Math.cos(enemyRotation)
+          ).normalize();
+          
+          // Position the slash effect in front of the enemy
+          const slashPos = enemyPosition.clone().add(forward.multiplyScalar(1.2));
+          slashPos.y += 0.65; // Raise it slightly off the ground
+          slashPos.z -= 0.5;
+          
+          setSlashPosition(slashPos);
+          setSlashDirection(forward);
+          
+          // Delay the slash effect by 0.35 seconds
+          setTimeout(() => {
+            setShowSlashEffect(true);
+          }, 150);
+        }
+      }
+
       // Deal damage at the peak of the animation (around halfway through)
       if (attackCycle > Math.PI / 4 && onHit && !attackAnimationRef.current) {
         attackAnimationRef.current = setTimeout(() => {
@@ -426,12 +411,17 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
 
       if (attackCycle > Math.PI / 2) {
         setAttackCycle(0);
+        setShowSlashEffect(false); // Reset slash effect when attack completes
       }
     } else {
       // Clear the timeout if attack is interrupted
       if (attackAnimationRef.current) {
         clearTimeout(attackAnimationRef.current);
         attackAnimationRef.current = undefined;
+      }
+      // Reset slash effect if attack is cancelled
+      if (showSlashEffect) {
+        setShowSlashEffect(false);
       }
     }
   });
@@ -446,38 +436,39 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
   }, []);
 
   return (
-    <group ref={groupRef} position={[position[0], position[1] + 1, position[2]]} scale={[0.8, 0.8, 0.8]}>
-      
-      <group name="Body" position={[0, 1.05, 0]} scale={[0.85, 0.8, 0.8]} rotation={[-0.2, 0, 0]}>
-        <BonePlate />
-      </group>
+    <>
+      <group ref={groupRef} position={[position[0], position[1] + 1, position[2]]} scale={[0.8, 0.8, 0.8]}>
+        
+        <group name="Body" position={[0, 1.05, 0.15]} scale={[0.85, 0.8, 0.8]} rotation={[0.2, 0, 0]}>
+          <BonePlate />
+        </group>
 
 
-      {/* SKULL POSITIONING */}
-      <group name="Head" position={[0, 1.775, 0.1]} scale={[ 0.75, 0.8, 0.8]}>
+      {/* SKULL POSITIONING - adjusted for hunched posture */}
+      <group name="Head" position={[0, 1.7, 0.35]} scale={[ 0.75, 0.8, 0.8]} rotation={[0.15, 0, 0]}>
         {/* Main skull shape */}
         <group>
           {/* Back of cranium */}
           <mesh position={[0, 0, -0.05]}>
             <sphereGeometry args={[0.22, 8, 8]} />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+            <meshStandardMaterial color="#d8e8d8" roughness={0.4} metalness={0.3} />
           </mesh>
           
           {/* Front face plate */}
           <mesh position={[0, -0.02, 0.12]}>
             <boxGeometry args={[0.28, 0.28, 0.1]} />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+            <meshStandardMaterial color="#d8e8d8" roughness={0.4} metalness={0.3} />
           </mesh>
 
           {/* Cheekbones */}
           <group>
             <mesh position={[0.12, -0.08, 0.1]}>
               <boxGeometry args={[0.08, 0.12, 0.15]} />
-              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+              <meshStandardMaterial color="#d8e8d8" roughness={0.4} metalness={0.3} />
             </mesh>
             <mesh position={[-0.12, -0.08, 0.1]}>
               <boxGeometry args={[0.08, 0.12, 0.15]} />
-              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
+              <meshStandardMaterial color="#d8e8d8" roughness={0.4} metalness={0.3} />
             </mesh>
           </group>
 
@@ -527,21 +518,21 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
 
         {/* EYES============================= */}
 
-        {/* Eye sockets with glow effect */}
+        {/* Eye sockets with bright green glow effect */}
         <group position={[0, 0.05, 0.14]}>
           {/* Left eye */}
           <group position={[-0.07, 0, 0]}>
             {/* Core eye */}
             <mesh>
               <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="#2FFF00" emissive="#2FFF00" emissiveIntensity={3} />
+              <meshStandardMaterial color="#00FF00" emissive="#00FF00" emissiveIntensity={3} />
             </mesh>
             {/* Inner glow */}
             <mesh scale={1.2}>
               <sphereGeometry args={[0.035, 8, 8]} />
               <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
+                color="#00FF00"
+                emissive="#00FF00"
                 emissiveIntensity={1}
                 transparent
                 opacity={0.75}
@@ -551,8 +542,8 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
             <mesh scale={1.4}>
               <sphereGeometry args={[0.05, 6.5, 2]} />
               <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
+                color="#00FF00"
+                emissive="#00FF00"
                 emissiveIntensity={1}
                 transparent
                 opacity={0.7}
@@ -560,7 +551,7 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
             </mesh>
             {/* Point light for dynamic glow */}
             <pointLight 
-              color="#FF4C4C"
+              color="#00FF00"
               intensity={0.5}
               distance={1}
               decay={2}
@@ -574,14 +565,14 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
             {/* Core eye */}
             <mesh>
               <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="#2FFF00" emissive="#2FFF00" emissiveIntensity={3} />
+              <meshStandardMaterial color="#00FF00" emissive="#00FF00" emissiveIntensity={3} />
             </mesh>
             {/* Inner glow */}
             <mesh scale={1.2}>
               <sphereGeometry args={[0.035, 8, 8]} />
               <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
+                color="#00FF00"
+                emissive="#00FF00"
                 emissiveIntensity={1}
                 transparent
                 opacity={0.75}
@@ -591,16 +582,16 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
             <mesh scale={1.4}>
               <sphereGeometry args={[0.05, 6.5, 2]} />
               <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
+                color="#00FF00"
+                emissive="#00FF00"
                 emissiveIntensity={1}
                 transparent
-                opacity={.7}
+                opacity={0.7}
               />
             </mesh>
             {/* Point light for dynamic glow */}
             <pointLight 
-              color="#FF4C4C"
+              color="#00FF00"
               intensity={0.5}
               distance={1}
               decay={1}
@@ -609,27 +600,32 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
         </group>
       </group>
 
-      {/* Add shoulder plates just before the arms */}
-      <group position={[-0.34, 1.475, 0]} rotation={[-0.35, -Math.PI - 0.4, -0.35]}>
+      {/* Add shoulder plates just before the arms - adjusted for hunched posture */}
+      <group position={[-0.34, 1.45, 0.12]} rotation={[-0.15, -Math.PI - 0.4, -0.25]}>
         <ShoulderPlate />
       </group>
-      <group position={[0.34, 1.475, 0]} rotation={[-0.35, Math.PI -0.4, 0.35]}>
+      <group position={[0.34, 1.45, 0.12]} rotation={[-0.15, Math.PI -0.4, 0.25]}>
         <ShoulderPlate />
       </group>
 
-      {/* arms with scaled boss claws */}
-      <group name="LeftArm" position={[-0.35, 1.325, 0]} scale={[-0.45, 0.45, 0.45]} rotation={[0, Math.PI/3, 0]}>
+      {/* arms with scaled boss claws - adjusted for hunched posture */}
+      <group name="LeftArm" position={[-0.35, 1.3, 0.08]} scale={[-0.45, 0.45, 0.45]} rotation={[0.1, Math.PI/3, 0.15]}>
         <BossClawModel isLeftHand={true} />
       </group>
-      <group name="RightArm" position={[0.35, 1.525, 0.1]} scale={[0.45, 0.45, 0.45]} rotation={[0, -Math.PI/2.5, 0]}>
+      <group name="RightArm" position={[0.35, 1.5, 0.18]} scale={[0.45, 0.45, 0.45]} rotation={[0.1, -Math.PI/2.5, -0.15]}>
         <BossClawModel isLeftHand={false} />
+      </group>
+
+      {/* Skull Shield attached to left hand area - adjusted for hunched posture */}
+      <group position={[-0.45, 1.22, 0.35]} rotation={[0.1, -Math.PI/3, Math.PI/8]} scale={[0.95, -0.95, 1.175]}>
+        <SkullShield isShieldActive={true} />
       </group>
       {/* Pelvis structure */}
       <group position={[0, 0.6, 0]} scale={[1.4, 1, 0.8]}>
         {/* Main pelvic bowl */}
         <mesh>
           <cylinderGeometry args={[0.21, 0.20, 0.2, 8]} />
-          <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
+          <meshStandardMaterial color="#c4d4c4" roughness={0.5} metalness={0.2} />
         </mesh>
 
    
@@ -640,27 +636,37 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
           <group key={side} position={[0.15 * side, -0.1, 0]}>
             <mesh>
               <sphereGeometry args={[0.075, 8, 8]} />
-              <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
+              <meshStandardMaterial color="#c4d4c4" roughness={0.5} metalness={0.2} />
             </mesh>
           </group>
         ))}
       </group>
 
-      {/* Legs - keep same ground position but connect to higher pelvis */}
-      <group name="LeftLeg" position={[0.2, 0.2725, 0]}>
+      {/* Legs - tilted slightly like Death Knight for hunched stance */}
+      <group name="LeftLeg" position={[0.2, 0.2725, -0.05]} rotation={[0.04, -0.04, 0]}>
         <BoneLegModel />
       </group>
-      <group name="RightLeg" position={[-0.2, 0.2725, 0]}>
+      <group name="RightLeg" position={[-0.2, 0.2725, -0.05]} rotation={[0.04, 0.04, 0]}>
         <BoneLegModel />
       </group>
 
-      {/* Neck connection - keep current position */}
-      <group position={[0, 1.2, 0]}>
-        <mesh>
-          <cylinderGeometry args={[0.04, 0.04, 0.2, 6]} />
-          <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-        </mesh>
+        {/* Neck connection - adjusted for hunched posture */}
+        <group position={[0, 1.25, 0.18]} rotation={[0.2, 0, 0]}>
+          <mesh>
+            <cylinderGeometry args={[0.04, 0.04, 0.2, 6]} />
+            <meshStandardMaterial color="#d8e8d8" roughness={0.4} metalness={0.3} />
+          </mesh>
+        </group>
       </group>
-    </group>
+
+      {/* Slash effect during attack */}
+      {showSlashEffect && (
+        <EnemySlashEffect
+          startPosition={slashPosition}
+          direction={slashDirection}
+          onComplete={() => setShowSlashEffect(false)}
+        />
+      )}
+    </>
   );
 } 

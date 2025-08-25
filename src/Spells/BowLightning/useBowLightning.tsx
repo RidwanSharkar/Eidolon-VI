@@ -9,12 +9,18 @@ interface LightningStrike {
 export function useBowLightning() {
   const [activeStrikes, setActiveStrikes] = useState<LightningStrike[]>([]);
   const nextStrikeId = useRef(1);
+  const [lastLightningTarget, setLastLightningTarget] = useState<string | null>(null);
   
-  const createLightningStrike = useCallback((position: Vector3) => {
+  const createLightningStrike = useCallback((position: Vector3, targetId?: string) => {
     const newStrike = {
       id: nextStrikeId.current++,
       position: position.clone()
     };
+    
+    // Track the target if provided
+    if (targetId) {
+      setLastLightningTarget(targetId);
+    }
     
     setActiveStrikes(prev => [...prev, newStrike]);
     return newStrike.id;
@@ -27,6 +33,7 @@ export function useBowLightning() {
   return {
     activeStrikes,
     createLightningStrike,
-    removeLightningStrike
+    removeLightningStrike,
+    lastLightningTarget
   };
 }

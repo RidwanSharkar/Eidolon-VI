@@ -8,7 +8,7 @@ interface ReaperTrailEffectProps {
 }
 
 const ReaperTrailEffect: React.FC<ReaperTrailEffectProps> = ({ parentRef }) => {
-  const particlesCount = 4; // Fewer particles than boss
+  const particlesCount = 3; // Fewer particles than boss
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -84,7 +84,7 @@ const ReaperTrailEffect: React.FC<ReaperTrailEffectProps> = ({ parentRef }) => {
           void main() {
             float d = length(gl_PointCoord - vec2(0.5));
             float strength = smoothstep(0.5, 0.1, d);
-            vec3 glowColor = mix(vec3(0.8, 0.1, 0.1), vec3(1.0, 0.3, 0.3), 0.4);
+            vec3 glowColor = mix(vec3(0.1, 0.7, 1.0), vec3(0.3, 0.8, 1.0), 0.4);
             gl_FragColor = vec4(glowColor, vOpacity * strength);
           }
         `}

@@ -39,7 +39,7 @@ export default function ReaperAttackIndicator({ position, duration, range }: Rea
       >
         <ringGeometry args={[range - 0.2, range, 64]} />
         <meshBasicMaterial 
-          color="#ff3300"
+          color="#00BBFF"
           transparent 
           opacity={0.35}
           side={THREE.DoubleSide}
@@ -52,7 +52,7 @@ export default function ReaperAttackIndicator({ position, duration, range }: Rea
       >
         <ringGeometry args={[range - 0.65, range - 0.6, 64]} />
         <meshBasicMaterial 
-          color="#ff4400"
+          color="#66D9FF"
           transparent 
           opacity={0.35}
           side={THREE.DoubleSide}

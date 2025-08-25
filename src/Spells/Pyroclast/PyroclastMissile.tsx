@@ -3,6 +3,7 @@ import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import PyroclastExplosion from './PyroclastExplosion';
+import PyroclastTrail from './PyroclastTrail';
 
 interface PyroclastMissileProps {
   id: number;
@@ -27,6 +28,7 @@ export default function PyroclastMissile({
   const [showExplosion, setShowExplosion] = useState(false);
   const [impactPosition, setImpactPosition] = useState<Vector3 | null>(null);
   const [explosionStartTime, setExplosionStartTime] = useState<number | null>(null);
+  const [opacity, setOpacity] = useState(1.0); // Add opacity state for fading
 
   // Initialize position on mount
   useEffect(() => {
@@ -44,18 +46,28 @@ export default function PyroclastMissile({
       direction.clone().multiplyScalar(speed)
     );
 
+    // Calculate distance traveled and fade effect
+    const distanceTraveled = missileRef.current.position.distanceTo(startPosition.current);
+    const maxDistance = 40; // Maximum distance before missile disappears
+    const fadeStartDistance = 30; // Start fading at 30 units
+
+    // Apply fading effect as missile approaches max distance
+    if (distanceTraveled > fadeStartDistance) {
+      const fadeProgress = (distanceTraveled - fadeStartDistance) / (maxDistance - fadeStartDistance);
+      const newOpacity = Math.max(0, 1 - fadeProgress);
+      setOpacity(newOpacity);
+    }
+
     // Check collisions each frame with current position
     if (checkCollisions) {
       // Store previous position before checking collisions
-      const prevPosition = startPosition.current.clone();
+      //const prevPosition = startPosition.current.clone();
       
       // Log both previous and current positions to help track movement
-      console.log(`[PyroclastMissile] Missile ${id} moved from ${prevPosition.x.toFixed(2)}, ${prevPosition.y.toFixed(2)}, ${prevPosition.z.toFixed(2)} to ${missileRef.current.position.x.toFixed(2)}, ${missileRef.current.position.y.toFixed(2)}, ${missileRef.current.position.z.toFixed(2)}`);
       
       const hitSomething = checkCollisions(id, missileRef.current.position.clone());
       
       if (hitSomething) {
-        console.log(`[PyroclastMissile] Missile ${id} hit something, creating explosion`);
         hasCollided.current = true;
         setImpactPosition(missileRef.current.position.clone());
         setExplosionStartTime(Date.now());
@@ -67,10 +79,9 @@ export default function PyroclastMissile({
       }
     }
 
-    // Check max distance (40 units)
-    if (missileRef.current.position.distanceTo(startPosition.current) > 40) {
+    // Check max distance
+    if (distanceTraveled > maxDistance) {
       if (!hasCollided.current) {
-        console.log(`[PyroclastMissile] Missile ${id} reached max distance, creating explosion`);
         hasCollided.current = true;
         setImpactPosition(missileRef.current.position.clone());
         setExplosionStartTime(Date.now());
@@ -100,7 +111,16 @@ export default function PyroclastMissile({
   return (
     <group>
       {!hasCollided.current && (
-        <group ref={missileRef} position={position.toArray()}>
+        <>
+          {/* Pyroclast trail effect - completely outside the moving group to avoid coordinate conflicts */}
+          <PyroclastTrail
+            color={new THREE.Color("#FF2200")} // Deep fire red color
+            size={0.225}
+            meshRef={missileRef}
+            opacity={opacity * 0.9} // Apply dynamic opacity to trail
+          />
+          
+          <group ref={missileRef} position={position.toArray()}>
           {/* Core missile */}
           <group
             rotation={[
@@ -114,9 +134,9 @@ export default function PyroclastMissile({
               <meshStandardMaterial
                 color="#FF2200"
                 emissive="#FF2200"
-                emissiveIntensity={intensity}
+                emissiveIntensity={intensity * opacity}
                 transparent
-                opacity={0.9}
+                opacity={0.9 * opacity}
               />
             </mesh>
 
@@ -130,9 +150,9 @@ export default function PyroclastMissile({
                 <meshStandardMaterial
                   color="#FF2200"
                   emissive="#FF2200"
-                  emissiveIntensity={intensity * (1 - i * 0.2)}
+                  emissiveIntensity={intensity * (1 - i * 0.2) * opacity}
                   transparent
-                  opacity={0.7 - (i * 0.15)}
+                  opacity={(0.7 - (i * 0.15)) * opacity}
                   blending={THREE.AdditiveBlending}
                 />
               </mesh>
@@ -141,12 +161,13 @@ export default function PyroclastMissile({
             {/* Light source */}
             <pointLight
               color="#FF544E"
-              intensity={intensity * 1}
+              intensity={intensity * opacity}
               distance={5}
               decay={2}
             />
           </group>
         </group>
+        </>
       )}
 
       {/* Show explosion effect when missile has collided */}

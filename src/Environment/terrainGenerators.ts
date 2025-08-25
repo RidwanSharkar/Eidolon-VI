@@ -1,5 +1,5 @@
 import { Vector3, Color } from 'three';
-import { trunkColors, leafColors } from '@/Environment/treeColors';
+import { trunkColors } from '@/Environment/treeColors';
 
 export interface GeneratedTree {
   position: Vector3;
@@ -8,9 +8,17 @@ export interface GeneratedTree {
   leafColor: Color;
 }
 
+export interface DetailedTree {
+  position: Vector3;
+  scale: number;
+  trunkColor: Color;
+  height: number;
+  trunkRadius: number;
+}
+
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 32;
+  const numberOfMountains = 26;
   const radius = 51;
   
   // Create evenly spaced mountains around the perimeter
@@ -44,28 +52,28 @@ export const generateMountains = (): Array<{ position: Vector3; scale: number }>
   return mountains;
 };
 
-export const generateTrees = (): GeneratedTree[] => {
+export const generateTrees = (): DetailedTree[] => {
   return [
     // Dense cluster 1 (left side)
-    { position: new Vector3(-15, 0, -5), scale: 1.3, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[2]).multiplyScalar(2.5) },
-    { position: new Vector3(-12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[0]).multiplyScalar(3.5) },
-    { position: new Vector3(-12, 0, -13.5), scale: 0.8, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(2.5) },
-    { position: new Vector3(16, 0, -10), scale: 1, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(3) },
-    { position: new Vector3(12, 0, 8), scale: 1.25, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(2) },
-    { position: new Vector3(-11, 0, 5), scale: 1.3, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(2.75) },
-    { position: new Vector3(12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(2.5) },
+    { position: new Vector3(-15, 0, -5), scale: 1.3, trunkColor: new Color(trunkColors[1]), height: 4.2, trunkRadius: 0.22 },
+    { position: new Vector3(-12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), height: 3.8, trunkRadius: 0.20 },
+    { position: new Vector3(-12, 0, -13.5), scale: 0.8, trunkColor: new Color(trunkColors[1]), height: 3.5, trunkRadius: 0.18 },
+    { position: new Vector3(16, 0, -10), scale: 1, trunkColor: new Color(trunkColors[1]), height: 3.9, trunkRadius: 0.21 },
+    { position: new Vector3(12, 0, 8), scale: 1.25, trunkColor: new Color(trunkColors[1]), height: 4.1, trunkRadius: 0.23 },
+    { position: new Vector3(-11, 0, 5), scale: 1.3, trunkColor: new Color(trunkColors[1]), height: 4.3, trunkRadius: 0.24 },
+    { position: new Vector3(12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), height: 3.7, trunkRadius: 0.19 },
 
     // Dense cluster 2 (right side)
-    { position: new Vector3(18, 0, -8), scale: 1.1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[0]).multiplyScalar(3.25) },
-    { position: new Vector3(17.5, 0, -10), scale: 0.9, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]).multiplyScalar(3.25) },
-    { position: new Vector3(15, 0, -11.5), scale: 1.1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[2]).multiplyScalar(3.5) },
-    { position: new Vector3(16.5, 0, -6.5), scale: 1, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[1]).multiplyScalar(2.5) },
+    { position: new Vector3(18, 0, -8), scale: 1.1, trunkColor: new Color(trunkColors[2]), height: 3.6, trunkRadius: 0.20 },
+    { position: new Vector3(17.5, 0, -10), scale: 0.9, trunkColor: new Color(trunkColors[2]), height: 3.4, trunkRadius: 0.17 },
+    { position: new Vector3(15, 0, -11.5), scale: 1.1, trunkColor: new Color(trunkColors[2]), height: 3.8, trunkRadius: 0.21 },
+    { position: new Vector3(16.5, 0, -6.5), scale: 1, trunkColor: new Color(trunkColors[2]), height: 3.9, trunkRadius: 0.22 },
 
     // Scattered individual trees
-    { position: new Vector3(-12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[1]).multiplyScalar(2.5) },
-    { position: new Vector3(12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[0]), leafColor: new Color(leafColors[2]).multiplyScalar(3) },
-    { position: new Vector3(-5, 0, -15), scale: 0.85, trunkColor: new Color(trunkColors[1]), leafColor: new Color(leafColors[1]).multiplyScalar(2.5) },
-    { position: new Vector3(5, 0, -18), scale: 0.85, trunkColor: new Color(trunkColors[2]), leafColor: new Color(leafColors[1]).multiplyScalar(2) },
+    { position: new Vector3(-12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[2]), height: 3.3, trunkRadius: 0.16 },
+    { position: new Vector3(12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[0]), height: 3.2, trunkRadius: 0.15 },
+    { position: new Vector3(-5, 0, -15), scale: 0.85, trunkColor: new Color(trunkColors[1]), height: 3.6, trunkRadius: 0.18 },
+    { position: new Vector3(5, 0, -18), scale: 0.85, trunkColor: new Color(trunkColors[2]), height: 3.4, trunkRadius: 0.17 },
   ];
 };
 
@@ -96,14 +104,14 @@ export const generateMushrooms = (): Array<{ position: Vector3; scale: number; v
       z = distance * Math.sin(angle);
     }
 
-    // Even distribution of variants (50% orange, ~16.67% each for others)
+    // Even distribution of variants (25% each)
     let variant: 'pink' | 'green' | 'blue' | 'orange';
     const random = Math.random() * 100;
-    if (random < 50) {
+    if (random < 25) {
       variant = 'orange';
-    } else if (random < 66.67) {
+    } else if (random < 50) {
       variant = 'green';
-    } else if (random < 83.34) {
+    } else if (random < 75) {
       variant = 'blue';
     } else {
       variant = 'pink';

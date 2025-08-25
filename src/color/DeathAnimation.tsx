@@ -2,17 +2,53 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, Vector3 } from 'three';
 import * as THREE from 'three';
-import { WeaponType } from '../Weapons/weapons';
+import { WeaponType, WeaponSubclass } from '../Weapons/weapons';
 
 interface BoneVortexProps {
   position: Vector3;
   onComplete?: () => void;
   isSpawning?: boolean;
   weaponType: WeaponType;
+  weaponSubclass?: WeaponSubclass;
   scale?: number;
 }
 
-const getVortexColor = (weaponType: WeaponType) => {
+const getVortexColor = (weaponType: WeaponType, weaponSubclass?: WeaponSubclass) => {
+  if (weaponSubclass) {
+    switch (weaponSubclass) {
+      // Scythe subclasses
+      case WeaponSubclass.CHAOS:
+        return '#00FF4D'; // Keep original chaos color
+      case WeaponSubclass.ABYSSAL:
+        return '#8B00FF'; // Purple for abyssal
+      
+      // Sword subclasses
+      case WeaponSubclass.DIVINITY:
+        return '#FFD700'; // Keep original divinity color
+      case WeaponSubclass.VENGEANCE:
+        return '#FF8C00'; // More orange for vengeance
+      
+      // Sabres subclasses
+      case WeaponSubclass.FROST:
+        return '#00BBFF'; // Keep original frost color
+      case WeaponSubclass.ASSASSIN:
+        return '#4A00AA'; // Dark purple for assassin
+      
+      // Spear subclasses
+      case WeaponSubclass.PYRO:
+        return '#F33FAE'; // Keep original pyro color
+      case WeaponSubclass.STORM:
+        return '#808080'; // Grey for storm
+      
+      // Bow subclasses
+      case WeaponSubclass.ELEMENTAL:
+        return '#3A905E'; // Keep original elemental color
+      case WeaponSubclass.VENOM:
+        return '#17CC93'; // Green/purple for venom
+    }
+  }
+  
+  // Fallback to weapon type colors
   switch (weaponType) {
     case WeaponType.SCYTHE:
       return '#00FF4D'; //  00FF88 FF6B6B FF6AAA
@@ -27,8 +63,8 @@ const getVortexColor = (weaponType: WeaponType) => {
   }
 };
 
-const createVortexSegment = (weaponType: WeaponType) => {
-  const color = getVortexColor(weaponType);
+const createVortexSegment = (weaponType: WeaponType, weaponSubclass?: WeaponSubclass) => {
+  const color = getVortexColor(weaponType, weaponSubclass);
   return (
     <group>
       <mesh>
@@ -45,7 +81,7 @@ const createVortexSegment = (weaponType: WeaponType) => {
   );
 };
 
-export default function BoneVortex({ position, onComplete, isSpawning = false, weaponType }: BoneVortexProps) {
+export default function BoneVortex({ position, onComplete, isSpawning = false, weaponType, weaponSubclass }: BoneVortexProps) {
   const segmentsRef = useRef<Mesh[]>([]);
   const layerCount = 12;
   const segmentsPerLayer = 10;
@@ -111,7 +147,7 @@ export default function BoneVortex({ position, onComplete, isSpawning = false, w
             if (el) segmentsRef.current[i] = el;
           }}
         >
-          {createVortexSegment(weaponType)}
+          {createVortexSegment(weaponType, weaponSubclass)}
         </mesh>
       ))}
     </group>

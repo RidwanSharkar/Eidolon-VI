@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
+import React from 'react';
 
 interface BoneTailProps {
   movementDirection?: Vector3;
@@ -188,7 +189,9 @@ const BoneTail: React.FC<BoneTailProps> = ({ movementDirection = new Vector3() }
       rotation={[-0.1, 0, 0]}
     >
       {[...Array(15)].map((_, index) => (
-        createVertebra(1 - (index * 0.04), index)
+        <React.Fragment key={index}>
+          {createVertebra(1 - (index * 0.04), index)}
+        </React.Fragment>
       ))}
     </group>
   );

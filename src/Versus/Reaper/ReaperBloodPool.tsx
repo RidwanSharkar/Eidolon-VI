@@ -70,7 +70,7 @@ export default function ReaperBloodVortex({
       <mesh>
         <sphereGeometry args={[scale * 0.6, 12, 8]} />
         <meshBasicMaterial 
-          color="#CC0000" // Deep blood red
+          color="#66d9ff" // Light blue
           transparent 
           opacity={opacity * 0.8}
         />
@@ -80,7 +80,7 @@ export default function ReaperBloodVortex({
       <mesh scale={[0.7, 0.7, 0.7]}>
         <sphereGeometry args={[scale * 0.6, 8, 6]} />
         <meshBasicMaterial 
-          color="#880000" // Darker blood red
+          color="#4db8e6" // Darker light blue
           transparent 
           opacity={opacity * 0.9}
         />
@@ -93,7 +93,7 @@ export default function ReaperBloodVortex({
       >
         <torusGeometry args={[scale * 0.8, scale * 0.1, 6, 12]} />
         <meshBasicMaterial 
-          color="#AA0000"
+          color="#80e6ff"
           transparent 
           opacity={opacity * 0.6}
         />
@@ -105,7 +105,7 @@ export default function ReaperBloodVortex({
       >
         <torusGeometry args={[scale * 0.6, scale * 0.08, 6, 10]} />
         <meshBasicMaterial 
-          color="#990000"
+          color="#5cd1ff"
           transparent 
           opacity={opacity * 0.85}
         />
@@ -115,7 +115,7 @@ export default function ReaperBloodVortex({
       <mesh position={[0, 0.15, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[scale * 1.2, 16]} />
         <meshBasicMaterial 
-          color="#660000"
+          color="#33a3cc"
           transparent 
           opacity={opacity * 0.7}
         />
@@ -125,7 +125,7 @@ export default function ReaperBloodVortex({
       <mesh>
         <sphereGeometry args={[scale * 1.2, 8, 6]} />
         <meshBasicMaterial 
-          color="#440000"
+          color="#2e7399"
           transparent 
           opacity={opacity * 0.5}
           wireframe={true}

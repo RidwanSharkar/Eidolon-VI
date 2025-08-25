@@ -5,7 +5,7 @@ import * as THREE from 'three';
 interface MageFireballTrailProps {
   color: THREE.Color;
   size: number;
-  meshRef: React.RefObject<THREE.Mesh>;
+  meshRef: React.RefObject<THREE.Mesh | THREE.Group>;
   opacity?: number;
 }
 
@@ -15,16 +15,26 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
   meshRef,
   opacity = 1
 }) => {
-  const particlesCount = 18;
+  const particlesCount = 14;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const scalesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const isInitialized = useRef(false);
+  
+  // ref to store the last known position for smoother updates
+  const lastKnownPosition = useRef(new THREE.Vector3());
 
+  // Initialize positions only once when mesh is available
   useEffect(() => {
     if (meshRef.current && !isInitialized.current) {
-      const { x, y, z } = meshRef.current.position;
+      // Get world position to handle coordinate space correctly
+      const worldPosition = new THREE.Vector3();
+      meshRef.current.getWorldPosition(worldPosition);
+      const { x, y, z } = worldPosition;
+      lastKnownPosition.current.set(x, y, z);
+      
+      // Initialize all particles at the starting position
       for (let i = 0; i < particlesCount; i++) {
         positionsRef.current[i * 3] = x;
         positionsRef.current[i * 3 + 1] = y;
@@ -39,41 +49,43 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
   useFrame(() => {
     if (!particlesRef.current?.parent || !meshRef.current || !isInitialized.current) return;
 
-    const { x, y, z } = meshRef.current.position;
+    // Get world position to handle coordinate space correctly
+    const worldPosition = new THREE.Vector3();
+    meshRef.current.getWorldPosition(worldPosition);
+    
+    // Only update if position has changed significantly
+    if (worldPosition.distanceToSquared(lastKnownPosition.current) > 0.0001) {
+      lastKnownPosition.current.copy(worldPosition);
 
-    // Update particle positions and properties
-    for (let i = particlesCount - 1; i > 0; i--) {
-      positionsRef.current[i * 3] = positionsRef.current[(i - 1) * 3];
-      positionsRef.current[i * 3 + 1] = positionsRef.current[(i - 1) * 3 + 1];
-      positionsRef.current[i * 3 + 2] = positionsRef.current[(i - 1) * 3 + 2];
+      // Update particle positions by shifting them backward
+      for (let i = particlesCount - 1; i > 0; i--) {
+        positionsRef.current[i * 3] = positionsRef.current[(i - 1) * 3];
+        positionsRef.current[i * 3 + 1] = positionsRef.current[(i - 1) * 3 + 1];
+        positionsRef.current[i * 3 + 2] = positionsRef.current[(i - 1) * 3 + 2];
+      }
 
-      // Adjust opacity and scale for more dramatic comet-like effect
+      // Update lead particle
+      positionsRef.current[0] = worldPosition.x;
+      positionsRef.current[1] = worldPosition.y;
+      positionsRef.current[2] = worldPosition.z;
+
+      // Update geometry attributes
+      if (particlesRef.current) {
+        const geometry = particlesRef.current.geometry;
+        geometry.attributes.position.needsUpdate = true;
+      }
+    }
+
+    // Update opacities and scales with parent opacity
+    for (let i = 0; i < particlesCount; i++) {
       opacitiesRef.current[i] = Math.pow((1 - i / particlesCount), 1.5) * 0.8 * opacity;
       scalesRef.current[i] = size * 0.6 * Math.pow((1 - i / particlesCount), 0.8);
     }
 
-    // Update head of the trail
-    positionsRef.current[0] = x;
-    positionsRef.current[1] = y;
-    positionsRef.current[2] = z;
-    opacitiesRef.current[0] = 0.8 * opacity;
-    scalesRef.current[0] = size * 1.5;
-
-    // Update geometry attributes
     if (particlesRef.current) {
       const geometry = particlesRef.current.geometry;
-      (geometry.attributes.position as THREE.BufferAttribute).array = positionsRef.current;
-      geometry.attributes.position.needsUpdate = true;
-
-      if (geometry.attributes.opacity) {
-        (geometry.attributes.opacity as THREE.BufferAttribute).array = opacitiesRef.current;
-        geometry.attributes.opacity.needsUpdate = true;
-      }
-
-      if (geometry.attributes.scale) {
-        (geometry.attributes.scale as THREE.BufferAttribute).array = scalesRef.current;
-        geometry.attributes.scale.needsUpdate = true;
-      }
+      geometry.attributes.opacity.needsUpdate = true;
+      geometry.attributes.scale.needsUpdate = true;
     }
   });
 
@@ -123,7 +135,7 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
             vOpacity = opacity;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
             gl_Position = projectionMatrix * mvPosition;
-            gl_PointSize = scale * 17.0 * (300.0 / -mvPosition.z);
+            gl_PointSize = scale * 20.0 * (300.0 / -mvPosition.z);
           }
         `}
         fragmentShader={`
@@ -131,8 +143,8 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
           uniform vec3 uColor;
           void main() {
             float d = length(gl_PointCoord - vec2(0.5));
-            float strength = smoothstep(0.4, 0.1, d);
-            vec3 glowColor = mix(uColor, vec3(1.0), 0.3);
+            float strength = smoothstep(0.5, 0.1, d);
+            vec3 glowColor = mix(uColor, vec3(1.0, 0.9, 1.0), 0.3);
             gl_FragColor = vec4(glowColor, vOpacity * strength);
           }
         `}

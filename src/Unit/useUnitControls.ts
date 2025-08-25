@@ -6,7 +6,7 @@ import type { Group } from 'three';
 import type { Camera } from 'three';
 import { OrbitControls } from 'three-stdlib';
 import { stealthManager } from '@/Spells/Stealth/StealthManager';
-import { WeaponType } from '@/Weapons/weapons';
+import { WeaponType, WeaponSubclass } from '@/Weapons/weapons';
 
 interface UseUnitControlsProps {
   groupRef: React.RefObject<Group>;
@@ -18,19 +18,23 @@ interface UseUnitControlsProps {
   isCharging?: boolean;
   onMovementUpdate?: (direction: Vector3) => void;
   currentWeapon: WeaponType;
-  abilities: Record<WeaponType, { active?: { isUnlocked: boolean } }>;
+  currentSubclass?: WeaponSubclass;
+  level?: number;
+  isStunned?: boolean;
 }
 
 const PLAY_AREA_RADIUS = 29 // MAP BOUNDARY
 
 // Base movement speed - this is our reference point
-const BASE_SPEED = 3.7; // MOVEMENT_SPEED
+const BASE_SPEED = 3.65; // MOVEMENT_SPEED
 
 // Direction multipliers
-const BACKWARD_SPEED_MULTIPLIER = 0.60; // 60% speed moving backward
-const STRAFE_SPEED_MULTIPLIER = 0.80;   // 80% speed moving sideways
-const BASE_ABILITY_CHARGING_MULTIPLIER = 0.10; // Default charging speed
+const BACKWARD_SPEED_MULTIPLIER = 0.65; // 60% speed moving backward
+const STRAFE_SPEED_MULTIPLIER = 0.9;   // 80% speed moving sideways
+const BASE_ABILITY_CHARGING_MULTIPLIER = 0.05; // Default charging speed
 const STEALTH_SPEED_MULTIPLIER = 1.75; // 130% speed while stealthed
+const BASE_CAMERA_ROTATE_SPEED = 0.8; // Default camera rotation speed
+const CHARGING_CAMERA_ROTATE_MULTIPLIER = 0.25; // 25% camera rotation speed while charging
 
 export function useUnitControls({
   groupRef,
@@ -42,7 +46,9 @@ export function useUnitControls({
   isCharging = false,
   onMovementUpdate,
   currentWeapon,
-  abilities
+  currentSubclass,
+  level = 1,
+  isStunned = false
 }: UseUnitControlsProps) {
   const keys = useRef({
     w: false,
@@ -56,8 +62,11 @@ export function useUnitControls({
   const movementDirection = useRef(new Vector3());
 
   // Inside the function, calculate the actual multiplier based on parameters
+  // Only Elemental Bow subclass gets enhanced movement speed while charging (at level 1)
+  // Venom Bow subclass should never get this bonus
   const ABILITY_CHARGING_MULTIPLIER = currentWeapon === WeaponType.BOW && 
-    abilities?.[WeaponType.BOW]?.active?.isUnlocked ? 0.60 : BASE_ABILITY_CHARGING_MULTIPLIER;
+    currentSubclass === WeaponSubclass.ELEMENTAL && 
+    level >= 1 ? 0.75 : BASE_ABILITY_CHARGING_MULTIPLIER;
 
   useEffect(() => {
     if (health <= 0) {
@@ -100,7 +109,23 @@ export function useUnitControls({
   }, []);
 
   useFrame((_, delta) => {
-    if (!groupRef.current || isGameOver.current) return;
+    if (!groupRef.current) return;
+    
+    // Update camera rotation speed based on charging state
+    if (controlsRef.current) {
+      const targetRotateSpeed = isCharging 
+        ? BASE_CAMERA_ROTATE_SPEED * CHARGING_CAMERA_ROTATE_MULTIPLIER 
+        : BASE_CAMERA_ROTATE_SPEED;
+      controlsRef.current.rotateSpeed = targetRotateSpeed;
+    }
+    
+    if (isGameOver.current) {
+      return;
+    }
+    
+    if (isStunned) {
+      return;
+    }
     
     const cameraDirection = new Vector3();
     camera.getWorldDirection(cameraDirection);
@@ -201,8 +226,15 @@ export function useUnitControls({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isGameOver.current) return;
       const key = e.key.toLowerCase();
+      
+      if (isGameOver.current) {
+        return;
+      }
+      if (isStunned) {
+        return;
+      }
+      
       if (key === 'shift') {
         keys.current.shift = true;
       } else if (key in keys.current) {
@@ -211,6 +243,7 @@ export function useUnitControls({
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      if (isGameOver.current || isStunned) return;
       const key = e.key.toLowerCase();
       if (key === 'shift') {
         keys.current.shift = false;
@@ -226,7 +259,7 @@ export function useUnitControls({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [isStunned, health]);
 
   return {
     keys

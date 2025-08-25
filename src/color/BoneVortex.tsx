@@ -2,15 +2,51 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, } from 'three';
 import * as THREE from 'three';
-import { WeaponType } from '@/Weapons/weapons';
+import { WeaponType, WeaponSubclass } from '@/Weapons/weapons';
  
 
 interface BoneVortexProps {
   parentRef: React.RefObject<Group>;
   weaponType: WeaponType;
+  weaponSubclass?: WeaponSubclass;
 }
 
-const getVortexColor = (weaponType: WeaponType) => {
+const getVortexColor = (weaponType: WeaponType, weaponSubclass?: WeaponSubclass) => {
+  if (weaponSubclass) {
+    switch (weaponSubclass) {
+      // Scythe subclasses
+      case WeaponSubclass.CHAOS:
+        return '#00FF37'; // Keep original chaos color
+      case WeaponSubclass.ABYSSAL:
+        return '#17CE54'; // lifegreen malachite
+      
+      // Sword subclasses
+      case WeaponSubclass.DIVINITY:
+        return '#FF9748'; // Keep original divinity color
+      case WeaponSubclass.VENGEANCE:
+        return '#FF9748'; // More orange for vengeance
+      
+      // Sabres subclasses
+      case WeaponSubclass.FROST:
+        return '#00AAFF'; // Keep original frost color
+      case WeaponSubclass.ASSASSIN:
+        return '#3A98F7'; // Dark purple for assassin
+      
+      // Spear subclasses
+      case WeaponSubclass.PYRO:
+        return '#FF544E'; // Keep original pyro color
+      case WeaponSubclass.STORM:
+        return '#FF544E'; // Grey for storm
+      
+      // Bow subclasses
+      case WeaponSubclass.ELEMENTAL:
+        return '#FF6F16'; // Keep original elemental color
+      case WeaponSubclass.VENOM:
+        return '#17CC93'; // Green/purple for venom
+    }
+  }
+  
+  // Fallback to weapon type colors
   switch (weaponType) {
     case WeaponType.SCYTHE:
       return '#5EFF00';
@@ -21,14 +57,14 @@ const getVortexColor = (weaponType: WeaponType) => {
     case WeaponType.SPEAR:
       return '#FF544E';
     case WeaponType.BOW:
-      return '#3A905E';
+      return '#17CC93';
     default:
       return '#00ff44';
   }
 };
 
-const createVortexPiece = (weaponType: WeaponType) => {
-  const color = getVortexColor(weaponType);
+const createVortexPiece = (weaponType: WeaponType, weaponSubclass?: WeaponSubclass) => {
+  const color = getVortexColor(weaponType, weaponSubclass);
   return (
     <group>
       {/* Main vortex fragment */}
@@ -58,7 +94,7 @@ const createVortexPiece = (weaponType: WeaponType) => {
   );
 };
 
-export default function BoneVortex({ parentRef, weaponType }: BoneVortexProps) {
+export default function BoneVortex({ parentRef, weaponType, weaponSubclass }: BoneVortexProps) {
   const vortexPiecesRef = useRef<(Group | null)[]>([]);
   const pieceCount = 32;
   const baseRadius = 0.45;
@@ -104,7 +140,7 @@ export default function BoneVortex({ parentRef, weaponType }: BoneVortexProps) {
       <mesh position={[0, -0.40, 0]}>
         <sphereGeometry args={[0.675, 16, 16]} />
         <meshBasicMaterial
-          color={getVortexColor(weaponType)}
+          color={getVortexColor(weaponType, weaponSubclass)}
           transparent
           opacity={0.15}
           blending={THREE.AdditiveBlending}
@@ -116,7 +152,7 @@ export default function BoneVortex({ parentRef, weaponType }: BoneVortexProps) {
       <mesh position={[0, -0.05, 0]}>
         <sphereGeometry args={[0.55, 16, 16]} />
         <meshBasicMaterial
-          color={getVortexColor(weaponType)}
+          color={getVortexColor(weaponType, weaponSubclass)}
           transparent
           opacity={0.06}
           blending={THREE.AdditiveBlending}
@@ -127,14 +163,14 @@ export default function BoneVortex({ parentRef, weaponType }: BoneVortexProps) {
 
       {/* Point lights */}
       <pointLight 
-        color={getVortexColor(weaponType)}
+        color={getVortexColor(weaponType, weaponSubclass)}
         intensity={2}
         distance={1.3}
         position={[0, 0.15, 0]}
       />
       
       <pointLight 
-        color={getVortexColor(weaponType)}
+        color={getVortexColor(weaponType, weaponSubclass)}
         intensity={1}
         distance={2}
         position={[0, 0.1, 0]}
@@ -149,7 +185,7 @@ export default function BoneVortex({ parentRef, weaponType }: BoneVortexProps) {
             if (el) vortexPiecesRef.current[i] = el;
           }}
         >
-          {createVortexPiece(weaponType)}
+          {createVortexPiece(weaponType, weaponSubclass)}
         </group>
       ))}
     </group>

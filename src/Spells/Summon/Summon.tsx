@@ -25,10 +25,10 @@ export default function SummonedHandler({
     hasTriggeredCleanup: false,
     mountId: Date.now(),
     lastTargetSwitchTime: Date.now(),
-    ATTACK_COOLDOWN: 400,
+    ATTACK_COOLDOWN: 8750,
     RANGE: 35,
-    DURATION: 14000,
-    DAMAGE: 47,
+    DURATION: 8000,
+    DAMAGE: 67,
     EFFECT_DURATION: 225,
     TARGET_SWITCH_INTERVAL: 2000
   }).current;

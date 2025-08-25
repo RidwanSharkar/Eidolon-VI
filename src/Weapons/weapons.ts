@@ -1,7 +1,7 @@
 // src/weapons/weapons.ts
 
-export type AbilityType = 'q' | 'e' | 'r' | 'passive' | 'active' | 'vault' | 'vaultNorth' | 'vaultEast' | 'vaultWest';
-export type AbilityHotkey = 'q' | 'e' | 'r' | '1' | '2' | 's' | 'w' | 'd' | 'a';
+export type AbilityType = 'q' | 'e' | 'r' | 'passive' | 'active' | 'special' | 'vault' | 'innate';
+export type AbilityHotkey = 'q' | 'e' | 'r' | '1' | '2' | '3' | 's' | 'w' | 'd' | 'a';
 
 export enum WeaponType {
   SCYTHE = 'scythe',
@@ -10,6 +10,83 @@ export enum WeaponType {
   SPEAR = 'spear',
   BOW = 'bow',
 }
+
+export enum WeaponSubclass {
+  // Sword subclasses
+  VENGEANCE = 'vengeance',
+  DIVINITY = 'divinity',
+  // Scythe subclasses
+  CHAOS = 'chaos',
+  ABYSSAL = 'abyssal',
+  // Sabres subclasses
+  ASSASSIN = 'assassin',
+  FROST = 'frost',
+  // Spear subclasses
+  STORM = 'storm',
+  PYRO = 'pyro',
+  // Bow subclasses
+  ELEMENTAL = 'elemental',
+  VENOM = 'venom',
+}
+
+export interface WeaponSubclassInfo {
+  name: string;
+  description: string;
+  weaponType: WeaponType;
+}
+
+export const WEAPON_SUBCLASSES: Record<WeaponSubclass, WeaponSubclassInfo> = {
+  [WeaponSubclass.VENGEANCE]: {
+    name: 'Vengeance',
+    description: 'Focused on offensive power with inherent Chain Lightning effects on all attacks',
+    weaponType: WeaponType.SWORD
+  },
+  [WeaponSubclass.DIVINITY]: {
+    name: 'Divinity',
+    description: 'Balanced approach with defensive capabilities and healing. Inherent Divine Shield (50 HP, 10s recharge)',
+    weaponType: WeaponType.SWORD
+  },
+  [WeaponSubclass.CHAOS]: {
+    name: 'Chaos',
+    description: 'Aggressive playstyle with draconic claws and summoned totems that provide healing. Dragon Claw killing blows summon additional totems',
+    weaponType: WeaponType.SCYTHE
+  },
+  [WeaponSubclass.ABYSSAL]: {
+    name: 'Abyssal',
+    description: 'Life-stealing abilities with resurrection powers',
+    weaponType: WeaponType.SCYTHE
+  },
+  [WeaponSubclass.ASSASSIN]: {
+    name: 'Assassin',
+    description: 'Stealth-based combat with frost magic',
+    weaponType: WeaponType.SABRES
+  },
+  [WeaponSubclass.FROST]: {
+    name: 'Frost',
+    description: 'Fire and ice combination with beam attacks',
+    weaponType: WeaponType.SABRES
+  },
+  [WeaponSubclass.STORM]: {
+    name: 'Storm',
+    description: 'Whirlwind attacks with Concussive Blow passive that stuns enemies hit by 2 critical hits in one burst attack',
+    weaponType: WeaponType.SPEAR
+  },
+  [WeaponSubclass.PYRO]: {
+    name: 'Pyro',
+    description: 'Explosive pyroclast missiles with breach mobility',
+    weaponType: WeaponType.SPEAR
+  },
+  [WeaponSubclass.ELEMENTAL]: {
+    name: 'Elemental',
+    description: 'Enhanced shots with elemental damage',
+    weaponType: WeaponType.BOW
+  },
+  [WeaponSubclass.VENOM]: {
+    name: 'Venom',
+    description: 'Poison-enhanced arrows with toxic effects',
+    weaponType: WeaponType.BOW
+  }
+};
 
 export interface AbilityInfo {  
   type: AbilityType;
@@ -20,6 +97,7 @@ export interface AbilityInfo {
   maxCooldown: number;
   name: string;
   isUnlocked: boolean;
+  unlockLevel: number; // New field to track when ability unlocks
 }
 
 export interface WeaponDamage {
@@ -34,39 +112,40 @@ export interface WeaponAbilities {
   r: AbilityInfo;
   passive: AbilityInfo;
   active: AbilityInfo;
+  special: AbilityInfo;
   vault: AbilityInfo;
-  vaultNorth: AbilityInfo;
-  vaultEast: AbilityInfo;
-  vaultWest: AbilityInfo;
+  innate: AbilityInfo;
 }
 
 export interface Weapon {
   type: WeaponType;
+  subclass: WeaponSubclass;
   abilities: WeaponAbilities;
   damage: WeaponDamage;
 }
 
 export type WeaponInfo = Record<WeaponType, WeaponAbilities>;
+export type SubclassInfo = Record<WeaponSubclass, WeaponAbilities>;
 
 export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   [WeaponType.SWORD]: {
     normal: 41,
-    range: 5.5,
+    range: 5,
     maxHitsPerSwing: 1
   },
   [WeaponType.SCYTHE]: {
     normal: 29,
-    range: 4.75,
+    range: 4.25,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
-    normal: 17,
-    range: 4,
+    normal: 17, // Base damage - actual damage varies by subclass
+    range: 3.85,
     maxHitsPerSwing: 2
   },
   [WeaponType.SPEAR]: {
     normal: 31,
-    range: 6.05,
+    range: 5.65,
     maxHitsPerSwing: 1
   },
   [WeaponType.BOW]: {
@@ -76,291 +155,323 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
 };
 
-export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
-  [WeaponType.SCYTHE]: {
-    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: 'icons/q1.svg', maxCooldown: 1, name: 'Scythe Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.69, currentCooldown: 0, icon: 'icons/e1.svg', maxCooldown: 0.6675, name: 'Scythe E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 2.15, currentCooldown: 0, icon: 'icons/r1.svg', maxCooldown: 1.8, name: 'Boneclaw', isUnlocked: true },
-    passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: 'icons/p1.svg', maxCooldown: 0, name: 'Reanimate', isUnlocked: true },
-    active: { type: 'active',  key: '2', cooldown: 5.0, currentCooldown: 0,  icon: 'icons/a1.svg', maxCooldown: 4.5, name: 'Summon Skeleton', isUnlocked: true},
-    vault: { type: 'vault', key: 's', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
-    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
-    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
-    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
-  }, 
-
-  [WeaponType.SWORD]: {
-    q: { type: 'q', key: 'q', cooldown: 1.1, currentCooldown: 0, icon: 'icons/q2.svg', maxCooldown: 1.08, name: 'Sword Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 3.85, currentCooldown: 0, icon: 'icons/e2.svg', maxCooldown: 4, name: 'Sword E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: 'icons/r2.svg', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: true },
-    passive: {  type: 'passive', key: '1',  cooldown: 0,  currentCooldown: 0,  icon: 'icons/p2.svg', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: true },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a2.svg', maxCooldown: 0, name: 'Sword Active', isUnlocked: true },
-    vault: { type: 'vault', key: 's', cooldown: 9.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
-    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 5.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
-    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 7.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
-    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 7.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
-  },
+// Get subclass-specific damage for weapons that have different damage values per subclass
+export const getWeaponDamage = (weapon: WeaponType, subclass?: WeaponSubclass, stealthKillCount?: number, isLegionEmpowered?: boolean): number => {
+  const baseDamage = WEAPON_DAMAGES[weapon].normal;
   
-  [WeaponType.SABRES]: {
-    q: { type: 'q', key: 'q', cooldown: 0.60, currentCooldown: 0, icon: 'icons/q3.svg', maxCooldown: 0.9, name: 'Sabres Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 5.15, currentCooldown: 0, icon: 'icons/e3.svg', maxCooldown: 10, name: 'Shadow Strike', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 9.5, currentCooldown: 0, icon: 'icons/r3.svg', maxCooldown: 10, name: 'Blizzard', isUnlocked: true },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p3.svg', maxCooldown: 0, name: 'Frost Lance', isUnlocked: true },
-    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/a3.svg', maxCooldown: 0, name: 'Orb Shield', isUnlocked: true },
-    vault: { type: 'vault', key: 's', cooldown: 4.5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
-    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 4.5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
-    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 4.5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
-    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 4.5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
+  // Legion empowerment for Abyssal Scythe - increases damage from 29 to 47
+  if (weapon === WeaponType.SCYTHE && 
+      subclass === WeaponSubclass.ABYSSAL && 
+      isLegionEmpowered) {
+    return 47; // Empowered damage
+  }
+  
+  // Sabres have different damage based on subclass
+  if (weapon === WeaponType.SABRES && subclass) {
+    switch (subclass) {
+      case WeaponSubclass.FROST:
+        return 17;
+      case WeaponSubclass.ASSASSIN:
+        // Assassin gets +1 damage per stealth kill (permanent bonus)
+        const baseDamageAssassin = 19;
+        const stealthBonus = stealthKillCount ? stealthKillCount : 0;
+        return baseDamageAssassin + stealthBonus;
+      default:
+        return baseDamage;
+    }
+  }
+  
+  // Spear has different damage based on subclass (to balance burst vs single attacks)
+  if (weapon === WeaponType.SPEAR && subclass) {
+    switch (subclass) {
+      case WeaponSubclass.STORM:
+        return 31; //  damage per hit since it hits twice per attack (burst)
+      case WeaponSubclass.PYRO:
+        return 37; //  damage for single attack
+      default:
+        return baseDamage;
+    }
+  }
+  
+  // Other weapons use base damage
+  return baseDamage;
+};
+
+// Add this function to dynamically determine maxHitsPerSwing based on weapon, subclass, and level
+export const getMaxHitsPerSwing = (
+  weapon: WeaponType, 
+  subclass?: WeaponSubclass, 
+  level: number = 1
+): number => {
+  // Base maxHitsPerSwing from WEAPON_DAMAGES
+  const baseMaxHits = WEAPON_DAMAGES[weapon].maxHitsPerSwing || 1;
+  
+  // Special case for Abyssal Scythe at level 2+
+  if (weapon === WeaponType.SCYTHE && 
+      subclass === WeaponSubclass.ABYSSAL && 
+      level >= 2) {
+    return 2;
+  }
+  return baseMaxHits;
+};
+
+// Subclass-based ability definitions with proper unlock levels
+export const SUBCLASS_ABILITIES: SubclassInfo = {
+  // SWORD SUBCLASSES
+  [WeaponSubclass.VENGEANCE]: {
+    q: { type: 'q', key: 'q', cooldown: 0.9, currentCooldown: 0, icon: 'icons/VengeanceSwordQ.png', maxCooldown: 1.08, name: 'Greatsword', isUnlocked: true, unlockLevel: 1 },
+    e: { type: 'e', key: 'e', cooldown: 4, currentCooldown: 0, icon: 'icons/VengeanceSwordE.png', maxCooldown: 4, name: 'Divine Smite', isUnlocked: true, unlockLevel: 1 },
+    r: { type: 'r', key: 'r', cooldown: 3.0, currentCooldown: 0, icon: 'icons/VengeanceSwordR.png', maxCooldown: 3.0, name: 'DivineStorm', isUnlocked: false, unlockLevel: 2 },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/VengeanceSwordPassive.png', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: false, unlockLevel: 3 },
+    active: { type: 'active', key: '2', cooldown: 7.0, currentCooldown: 0, icon: 'icons/VengeanceSword2.png', maxCooldown: 7.0, name: 'Colossus Strike', isUnlocked: false, unlockLevel: 4 },
+    special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/VengeanceSword2.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
+    vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/VengeanceSwordInnate.png', maxCooldown: 0, name: 'Static Discharge', isUnlocked: true, unlockLevel: 1 }
   },
 
-  [WeaponType.SPEAR]: {
-    q: { type: 'q', key: 'q', cooldown: 0.625, currentCooldown: 0, icon: 'icons/q4.svg', maxCooldown: 1, name: 'Spear Q', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 5.15, currentCooldown: 0, icon: 'icons/e4.svg', maxCooldown: 5, name: 'Spear E', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: .5, currentCooldown: 0, icon: 'icons/r4.svg', maxCooldown: 4.5, name: 'Pyroclast', isUnlocked: true },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p4.svg', maxCooldown: 0, name: 'Reignite', isUnlocked: true },
-    active: { type: 'active', key: '2', cooldown: 2, currentCooldown: 0, icon: 'icons/a4.svg', maxCooldown: 8, name: 'Breach', isUnlocked: true },
-    vault: { type: 'vault', key: 's', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
-    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
-    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
-    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 6.0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
+  [WeaponSubclass.DIVINITY]: {
+    q: { type: 'q', key: 'q', cooldown: 0.9, currentCooldown: 0, icon: 'icons/DivinitySwordQ.png', maxCooldown: 1.08, name: 'Greatsword', isUnlocked: true, unlockLevel: 1 },
+    e: { type: 'e', key: 'e', cooldown: 4, currentCooldown: 0, icon: 'icons/DivinitySwordE.png', maxCooldown: 4, name: 'Divine Smite', isUnlocked: true, unlockLevel: 1 },
+    r: { type: 'r', key: 'r', cooldown: 1.275, currentCooldown: 0, icon: 'icons/DivinitySwordR.png', maxCooldown: 1.75, name: 'Oathstrike', isUnlocked: false, unlockLevel: 2 },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/DivinitySwordPassive.png', maxCooldown: 0, name: 'Crusader Aura', isUnlocked: false, unlockLevel: 3 },
+    active: { type: 'active', key: '2', cooldown: 10.0, currentCooldown: 0, icon: 'icons/DivinitySword2.png', maxCooldown: 10.0, name: 'Aegis', isUnlocked: false, unlockLevel: 4 },
+    special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/DivinitySword2.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
+    vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/DivinitySwordInnate.png', maxCooldown: 0, name: 'Guardian Shell', isUnlocked: true, unlockLevel: 1 }
   },
 
-  [WeaponType.BOW]: {
-    q: { type: 'q', key: 'q', cooldown: 0.25, currentCooldown: 0, icon: 'icons/q5.svg', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true },
-    e: { type: 'e', key: 'e', cooldown: 0.875, currentCooldown: 0, icon: 'icons/e5.svg', maxCooldown: 1, name: 'Power Shot', isUnlocked: true },
-    r: { type: 'r', key: 'r', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Bow R', isUnlocked: false },
-    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/p5.svg', maxCooldown: 0, name: 'Venom Shots', isUnlocked: true },
-    active: { type: 'active', key: '2', cooldown: 5, currentCooldown: 0, icon: 'icons/a5.svg', maxCooldown: 5, name: 'Elemental Shots', isUnlocked: true },
-    vault: { type: 'vault', key: 's', cooldown: 4, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault', isUnlocked: true },
-    vaultNorth: { type: 'vaultNorth', key: 'w', cooldown: 7, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault North', isUnlocked: true },
-    vaultEast: { type: 'vaultEast', key: 'd', cooldown: 5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault East', isUnlocked: true },
-    vaultWest: { type: 'vaultWest', key: 'a', cooldown: 5, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 8, name: 'Vault West', isUnlocked: true }
+  // SCYTHE SUBCLASSES
+  [WeaponSubclass.CHAOS]: {
+    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: 'icons/ChaosScytheQ.png', maxCooldown: 1, name: 'Scythe', isUnlocked: true, unlockLevel: 1 },
+    e: { type: 'e', key: 'e', cooldown: 0.6, currentCooldown: 0, icon: 'icons/ChaosScytheE.png', maxCooldown: 0.6675, name: 'Entropic Bolt', isUnlocked: true, unlockLevel: 1 },
+    r: { type: 'r', key: 'r', cooldown: 0, currentCooldown: 0, icon: 'icons/ChaosScytheR.png', maxCooldown: 0, name: 'Dragon Claw', isUnlocked: false, unlockLevel: 3 },
+    passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: 'icons/ChaosScythePassive.png', maxCooldown: 0, name: 'Cross Entropy', isUnlocked: false, unlockLevel: 2 },
+    active: { type: 'active', key: '2', cooldown: 3.0, currentCooldown: 0, icon: 'icons/ChaosScythe2.png', maxCooldown: 3.0, name: 'Dragon Breath', isUnlocked: false, unlockLevel: 4 },
+    special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/ChaosScythePassive.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
+    vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/ChaosScytheInnate.png', maxCooldown: 0, name: 'Momentum Rift', isUnlocked: true, unlockLevel: 1 }
   },
+
+  [WeaponSubclass.ABYSSAL]: {
+    q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: 'icons/AbyssalScytheQ.png', maxCooldown: 1, name: 'Scythe', isUnlocked: true, unlockLevel: 1 },
+    e: { type: 'e', key: 'e', cooldown: 5.0, currentCooldown: 0, icon: 'icons/AbyssalScytheE.png', maxCooldown: 5.0, name: 'Soul Reaper', isUnlocked: true, unlockLevel: 1 },
+    r: { type: 'r', key: 'r', cooldown: 0.725, currentCooldown: 0, icon: 'icons/AbyssalScytheR.png', maxCooldown: 0, name: 'Reanimate', isUnlocked: false, unlockLevel: 3 },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/AbyssalScythePassive.png', maxCooldown: 0, name: 'Grim Scythes', isUnlocked: true, unlockLevel: 2 },
+    active: { type: 'active', key: '2', cooldown: 20.0, currentCooldown: 0, icon: 'icons/AbyssalScythe2.png', maxCooldown: 20.0, name: 'Legion', isUnlocked: false, unlockLevel: 4 },
+    special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/AbyssalScythePassive.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
+    vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/AbyssalScytheInnate.png', maxCooldown: 0, name: 'Void Slash', isUnlocked: true, unlockLevel: 1 }
+  },
+
+  // SABRES SUBCLASSES
+  [WeaponSubclass.ASSASSIN]: {
+    q: { type: 'q', key: 'q', cooldown: 0.5825, currentCooldown: 0, icon: 'icons/AssassinSabresQ.png', maxCooldown: 0.9, name: 'Twin Sabres', isUnlocked: true, unlockLevel: 1 },
+    e: { type: 'e', key: 'e', cooldown: 5, currentCooldown: 0, icon: 'icons/AssassinSabresE.png', maxCooldown: 10, name: 'Blinding Mist', isUnlocked: true, unlockLevel: 1 },
+    r: { type: 'r', key: 'r', cooldown: 10, currentCooldown: 0, icon: 'icons/AssassinSabresR.png', maxCooldown: 10, name: 'Blizzard', isUnlocked: false, unlockLevel: 2 },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/AssassinSabresPassive.png', maxCooldown: 0, name: 'Avalanche', isUnlocked: false, unlockLevel: 3 },
+    active: { type: 'active', key: '2', cooldown: 0, currentCooldown: 0, icon: 'icons/AssassinSabres2.png', maxCooldown: 0, name: 'Eviscerate', isUnlocked: false, unlockLevel: 4 },
+    special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/AssassinSabres2.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
+    vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/AssassinSabresInnate.png', maxCooldown: 0, name: 'Lethality', isUnlocked: true, unlockLevel: 1 }
+  },
+
+  [WeaponSubclass.FROST]: {
+    q: { type: 'q', key: 'q', cooldown: 0.6125, currentCooldown: 0, icon: 'icons/FrostSabresQ.png', maxCooldown: 0.9, name: 'Twin Sabres', isUnlocked: true, unlockLevel: 1 },
+    e: { type: 'e', key: 'e', cooldown: 2, currentCooldown: 0, icon: 'icons/FrostSabresE.png', maxCooldown: 2, name: 'Firebeam', isUnlocked: true, unlockLevel: 1 }, // Uses Firebeam
+    r: { type: 'r', key: 'r', cooldown: 5.0, currentCooldown: 0, icon: 'icons/FrostSabresR.png', maxCooldown: 5.0, name: 'Glacial Shard', isUnlocked: false, unlockLevel: 2 },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/FrostSabresPassive.png', maxCooldown: 0, name: 'Deep Freeze', isUnlocked: false, unlockLevel: 3 },
+    active: { type: 'active', key: '2', cooldown: 20.0, currentCooldown: 0, icon: 'icons/FrostSabres2.png', maxCooldown: 20.0, name: 'Summon Elemental', isUnlocked: false, unlockLevel: 4 },
+    special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/FrostSabres2.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
+    vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/FrostSabresInnate.png', maxCooldown: 0, name: 'Particle Storm', isUnlocked: true, unlockLevel: 1 }
+  },
+
+  // SPEAR SUBCLASSES
+  [WeaponSubclass.STORM]: {
+    q: { type: 'q', key: 'q', cooldown: 0.675, currentCooldown: 0, icon: 'icons/StormSpearQ.png', maxCooldown: 1, name: 'Spear', isUnlocked: true, unlockLevel: 1 },
+    e: { type: 'e', key: 'e', cooldown: 1.2, currentCooldown: 0, icon: 'icons/StormSpearE.png', maxCooldown: 1.2, name: 'Whirlwind', isUnlocked: true, unlockLevel: 1 }, // Uses Whirlwind
+    r: { type: 'r', key: 'r', cooldown: 5.0, currentCooldown: 0, icon: 'icons/StormSpearR.png', maxCooldown: 5.0, name: 'ThrowSpear', isUnlocked: false, unlockLevel: 4 }, // ThrowSpear ability
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/StormSpearPassive.png', maxCooldown: 0, name: 'Reignite', isUnlocked: false, unlockLevel: 3 },
+    active: { type: 'active', key: '2', cooldown: 2, currentCooldown: 0, icon: 'icons/StormSpear2 .png', maxCooldown: 2, name: 'Breach', isUnlocked: false, unlockLevel: 2 }, // Breach moved to '2' key
+    special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/StormSpear2 .png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
+    vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/StormSpearInnate.png', maxCooldown: 0, name: 'Storm Bolt', isUnlocked: true, unlockLevel: 1 }
+  },
+
+  [WeaponSubclass.PYRO]: {
+    q: { type: 'q', key: 'q', cooldown: 0.675, currentCooldown: 0, icon: 'icons/PyroSpearQ.png', maxCooldown: 1, name: 'Spear', isUnlocked: true, unlockLevel: 1 },
+    e: { type: 'e', key: 'e', cooldown: 1.2, currentCooldown: 0, icon: 'icons/PyroSpearE.png', maxCooldown: 1.2, name: 'Pyroclast', isUnlocked: true, unlockLevel: 1 }, // Uses Pyroclast
+    r: { type: 'r', key: 'r', cooldown: 15.0, currentCooldown: 0, icon: 'icons/PyroSpearR.png', maxCooldown: 15.0, name: 'MeteorSwarm', isUnlocked: false, unlockLevel: 4 }, // MeteorSwarm moved to 'r' key
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/PyroSpearPassive.png', maxCooldown: 0, name: 'Reignite', isUnlocked: false, unlockLevel: 3 },
+    active: { type: 'active', key: '2', cooldown: 2, currentCooldown: 0, icon: 'icons/PyroSpear2.png', maxCooldown: 8, name: 'Breach', isUnlocked: false, unlockLevel: 2 }, // Breach moved to '2' key
+    special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/PyroSpear2.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
+    vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/PyroSpearInnate.png', maxCooldown: 0, name: 'Lava Lash', isUnlocked: true, unlockLevel: 1 }
+  },
+
+  // BOW SUBCLASSES
+  [WeaponSubclass.ELEMENTAL]: {
+    q: { type: 'q', key: 'q', cooldown: 0.155, currentCooldown: 0, icon: 'icons/ElementalBowQ.png', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true, unlockLevel: 1 },
+    e: { type: 'e', key: 'e', cooldown: 0.875, currentCooldown: 0, icon: 'icons/ElementalBowE.png', maxCooldown: 1, name: 'Power Shot', isUnlocked: true, unlockLevel: 1 },
+    r: { type: 'r', key: 'r', cooldown: 5, currentCooldown: 0, icon: 'icons/ElementalBowR.png', maxCooldown: 5, name: 'Barrage', isUnlocked: false, unlockLevel: 2 },
+    passive: { type: 'passive', key: '1', cooldown: 5, currentCooldown: 0, icon: 'icons/ElementalBowPassive.png', maxCooldown: 5, name: 'Elemental Shots', isUnlocked: false, unlockLevel: 3 },
+    active: { type: 'active', key: '2', cooldown: 8, currentCooldown: 0, icon: 'icons/ElementalBow2.png', maxCooldown: 8, name: 'Guided Bolts', isUnlocked: false, unlockLevel: 4 },
+    special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/ElementalBow2.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
+    vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/ElementalBowInnate.png', maxCooldown: 0, name: 'Hunter\'s Mark', isUnlocked: true, unlockLevel: 1 }
+  },
+
+  [WeaponSubclass.VENOM]: {
+    q: { type: 'q', key: 'q', cooldown: 0.155, currentCooldown: 0, icon: 'icons/VenomBowQ.png', maxCooldown: 1, name: 'Quick Shot', isUnlocked: true, unlockLevel: 1 },
+    e: { type: 'e', key: 'e', cooldown: 0.875, currentCooldown: 0, icon: 'icons/VenomBowE.png', maxCooldown: 1, name: 'Power Shot', isUnlocked: true, unlockLevel: 1 },
+    r: { type: 'r', key: 'r', cooldown: 5, currentCooldown: 0, icon: 'icons/VenomBowR.png', maxCooldown: 5, name: 'Barrage', isUnlocked: false, unlockLevel: 3 },
+    passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/VenomBowPassive.png', maxCooldown: 0, name: 'Venom Shots', isUnlocked: false, unlockLevel: 2 },
+    active: { type: 'active', key: '2', cooldown: 7, currentCooldown: 0, icon: 'icons/VenomBow2.png', maxCooldown: 7, name: 'Viper Sting', isUnlocked: false, unlockLevel: 4 },
+    special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/VenomBow2.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
+    vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/VenomBowInnate.png', maxCooldown: 0, name: 'Cobra Shots', isUnlocked: true, unlockLevel: 1 }
+  },
+};
+
+// Legacy support - keep for backward compatibility
+export const DEFAULT_WEAPON_ABILITIES: Record<WeaponType, WeaponAbilities> = {
+  [WeaponType.SCYTHE]: SUBCLASS_ABILITIES[WeaponSubclass.CHAOS],
+  [WeaponType.SWORD]: SUBCLASS_ABILITIES[WeaponSubclass.VENGEANCE],
+  [WeaponType.SABRES]: SUBCLASS_ABILITIES[WeaponSubclass.ASSASSIN],
+  [WeaponType.SPEAR]: SUBCLASS_ABILITIES[WeaponSubclass.STORM],
+  [WeaponType.BOW]: SUBCLASS_ABILITIES[WeaponSubclass.ELEMENTAL],
 }; 
 
-export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbilities, abilities: WeaponInfo): number => {
-  const baseAbility = DEFAULT_WEAPON_ABILITIES[weapon][ability];
+export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbilities, abilities: WeaponInfo, currentSubclass?: WeaponSubclass): number => {
+  // Use the current abilities (which reflect the actual subclass) instead of default abilities
+  const currentAbility = abilities[weapon][ability];
   
   // Check for Crusader Aura passive and modify Sword Q cooldown
   if (weapon === WeaponType.SWORD && 
       ability === 'q' && 
       abilities[WeaponType.SWORD].passive.isUnlocked) {
-    return 0.7125; // ATTACK SPEED BUFF
+    return 0.70; // ATTACK SPEED BUFF
   }
   
-  return baseAbility.cooldown;
-}; 
+  // Abyssal Scythe FrenzyAura no longer provides attack speed bonuses
+  // Removed skeleton count-based cooldown modification
+  
+  // Handle subclass-specific cooldowns for Sabres Q ability
+  if (weapon === WeaponType.SABRES && ability === 'q' && currentSubclass) {
+    switch (currentSubclass) {
+      case WeaponSubclass.FROST:
+        return 0.675; // Frost subclass cooldown
+      case WeaponSubclass.ASSASSIN:
+        return 0.5875; // Assassin subclass cooldown
+      default:
+        return currentAbility.cooldown;
+    }
+  }
+  
+  // Handle subclass-specific cooldowns for Spear Q ability
+  if (weapon === WeaponType.SPEAR && ability === 'q' && currentSubclass) {
+    switch (currentSubclass) {
+      case WeaponSubclass.STORM:
+        return 0.675; // Storm subclass cooldown
+      case WeaponSubclass.PYRO:
+        return 0.675; // Pyro subclass cooldown
+      default:
+        return currentAbility.cooldown;
+    }
+  }
+  
+  // Return the base cooldown for the ability
+  return currentAbility.cooldown;
+};
 
-interface AbilityTooltip {
-  title: string;
+// Tooltip information for abilities
+export interface AbilityTooltip {
+  name: string;
   description: string;
-  cost?: number | string;  
-  range?: number | string;
-  damage?: number | string; 
+  cooldown: string;
+  unlockLevel: number;
 }
 
-// =====================================================================================================================
-export const WEAPON_ABILITY_TOOLTIPS: Record<WeaponType, Record<keyof WeaponAbilities, AbilityTooltip>> = {
-  [WeaponType.SCYTHE]: {
-    q: {
-      title: "Scythe",
-      description: "Swift reaping attack in an arc.",
-    },
-    e: {
-      title: "Entropic Bolt",
-      description: "Consumes 1 orb charge to fire a bolt of necrotic energy at a single target.",
-    },
-    r: {
-      title: "Dragon Claw",
-      description: "Active: Summons a brief draconic claw to swipe down necrotic beams of energy at enemies caught in its path.",
-    },
-    passive: {
-      title: "Reanimate",
-      description: "Active: Consumes 1 Orb Charge to heal the wielder."
-    },
-    active: {
-      title: "Chaos Totem",
-      description: "Active: Summons a totem that fights by your side for 12 seconds, shooting rapid bolts at enemies within range - 5 second cooldown.",
-    },
-    vault: {
-      title: "Vault",
-      description: "Quickly dash backwards to escape danger or obtain better positioning - Double-tap S to activate."
-    },
-    vaultNorth: {
-      title: "Vault North",
-      description: "Quickly dash forwards to close distance or pursue enemies - Double-tap W to activate."
-    },
-    vaultEast: {
-      title: "Vault East",
-      description: "Quickly dash to the right for tactical repositioning - Double-tap D to activate."
-    },
-    vaultWest: {
-      title: "Vault West",
-      description: "Quickly dash to the left for tactical repositioning - Double-tap A to activate."
-    }
+export const ABILITY_TOOLTIPS: Record<keyof WeaponAbilities, AbilityTooltip> = {
+  q: {
+    name: 'Primary Attack',
+    description: 'Basic weapon attack with subclass-specific effects',
+    cooldown: 'Varies by weapon',
+    unlockLevel: 1
   },
-// =====================================================================================================================
-  [WeaponType.SWORD]: {
-    q: {
-      title: "Greatsword",
-      description: "Slow powerful swing in a wide arc.",
-    },
-    e: {
-      title: "Divine Smite",
-      description: "Delivers an extra instant strike that calls down a radiant bolt of energy to deal additional damage to nearby enemies.",
-    },
-    r: {
-      title: "Oathstrike",
-      description: "Active: Consumes 2 Orb Charges to unleash a devastating strike in an arc that heals the wielder if at least one enemy is hit.",
-    },
-    passive: {
-      title: "Crusader Aura",
-      description: "Passive: Increases attack speed by 30% and gives successfulattacks a 20% chance to heal the wielder."
-    },
-    active: {
-      title: "Static Discharge",
-      description: "Passive: Sword attacks conduct electricity, bouncing lightning damage to nearby enemies in a chain-reaction."
-    },
-    vault: {
-      title: "Vault",
-      description: "Quickly dash backwards to escape danger or obtain better positioning - Double-tap S to activate."
-    },
-    vaultNorth: {
-      title: "Vault North",
-      description: "Quickly dash forwards to close distance or pursue enemies - Double-tap W to activate."
-    },
-    vaultEast: {
-      title: "Vault East",
-      description: "Quickly dash to the right for tactical repositioning - Double-tap D to activate."
-    },
-    vaultWest: {
-      title: "Vault West",
-      description: "Quickly dash to the left for tactical repositioning - Double-tap A to activate."
-    }
+  e: {
+    name: 'Special Ability',
+    description: 'Unique subclass ability with special effects',
+    cooldown: 'Varies by subclass',
+    unlockLevel: 1
   },
- // =====================================================================================================================
-  [WeaponType.SABRES]: {
-    q: {
-      title: "Twin Sabres",
-      description: "Fast dual-wielding slashes at close range.",
-    },
-    e: {
-      title: "Blinding Mist - Shadowstrike",
-      description: "Blinds enemies around you, granting invisibility for 5 seconds. Breaking stealth with an attack deals significant bonus damage. If a killing blow is landed this way, health is restored.",
-    },
-    r: {
-      title: "Blizzard",
-      description: "Active: Unleash a devastating ice storm originating at the wielder, dealing frost damage to surrounding enemies.",
-    },
-    passive: {
-      title: "Frost Lance",
-      description: "Active: Consumes 1 Orb Charge to fire a beam of ice that pierces through all enemies in a line."
-    },
-    active: {
-      title: "Avalanche",
-      description: "Passive: Melee attacks passively consume orb charges to deal extra frost damage scaling with the number of charges available."
-    },
-    vault: {
-      title: "Vault",
-      description: "Quickly dash backwards to escape danger or obtain better positioning - Double-tap S to activate."
-    },
-    vaultNorth: {
-      title: "Vault North",
-      description: "Quickly dash forwards to close distance or pursue enemies - Double-tap W to activate."
-    },
-    vaultEast: {
-      title: "Vault East",
-      description: "Quickly dash to the right for tactical repositioning - Double-tap D to activate."
-    },
-    vaultWest: {
-      title: "Vault West",
-      description: "Quickly dash to the left for tactical repositioning - Double-tap A to activate."
-    }
+  r: {
+    name: 'Ultimate Ability',
+    description: 'Powerful ultimate ability unlocked at higher levels',
+    cooldown: 'Varies by subclass',
+    unlockLevel: 2
   },
-// =====================================================================================================================
-  [WeaponType.SPEAR]: {
-    q: {
-      title: "Spear",
-      description: "Long-range piercing attack. Ineffective at close range; however, attacks that land at the tip of the spear are guaranteed to be critical strikes.",
-    },
-    e: {
-      title: "Razorwind",
-      description: "Consumes 1 orb per second to unleashes a fiery bladestorm. Attacks that land at the tip of the spear are guaranteed to be critical strikes.",
-    },
-    r: {
-      title: "Inferno",
-      description: "Active: Consumes 2 orbs per second to charge and release a volcanic missile that deals damage based on the number of orbs consumed.",
-    },
-    passive: {
-      title: "Reignite",
-      description: "Passive: Restores 3 orb charges whenever you kill an enemy."
-    },
-    active: {
-      title: "Breach",
-      description: "Active: Consumes 2 orbs to quickly dash forward with the spear, dealing damage to enemies caught in the path.",
-    },
-    vault: {
-      title: "Vault",
-      description: "Quickly dash backwards to escape danger or obtain better positioning - Double-tap S to activate."
-    },
-    vaultNorth: {
-      title: "Vault North",
-      description: "Quickly dash forwards to close distance or pursue enemies - Double-tap W to activate."
-    },
-    vaultEast: {
-      title: "Vault East",
-      description: "Quickly dash to the right for tactical repositioning - Double-tap D to activate."
-    },
-    vaultWest: {
-      title: "Vault West",
-      description: "Quickly dash to the left for tactical repositioning - Double-tap A to activate."
-    }
+  passive: {
+    name: 'Passive Effect',
+    description: 'Always-active passive ability that provides bonuses',
+    cooldown: 'Always Active',
+    unlockLevel: 3
   },
-// =====================================================================================================================
-  [WeaponType.BOW]: {
-    q: {
-      title: "Quick Shots",
-      description: "Rapidly fire bone arrows, consuming 1 orb per 6 shots.",
-    },
-    e: {
-      title: "Power Shot",
-      description: "Charge a powerful shot that deals increased damage based on charge time. Fully charged shots pierce through all enemies in the arrow's path.",
-    },
-    r: {
-      title: "Vault",
-      description: "Quickly dash backwards to escape danger or obtain better positioning - 4 Second Cooldown.",
-    },
-    passive: {
-      title: "Venom Shots",
-      description: "Passive: Every 3rd shot that hits a target deals an additional 67 damage."
-    },
-    active: {
-      title: "Elemental Shots",
-      description: "Fully charged shots deal an additional 100-200 fire damage. Non-fully charged shots deal 70 additional lightning damage to the target. Movement speed while charging the Power-Shot is increased 1000%",
-    },
-    vault: {
-      title: "Vault",
-      description: "Quickly dash backwards to escape danger or obtain better positioning - Double-tap S to activate."
-    },
-    vaultNorth: {
-      title: "Vault North",
-      description: "Quickly dash forwards to close distance or pursue enemies - Double-tap W to activate."
-    },
-    vaultEast: {
-      title: "Vault East",
-      description: "Quickly dash to the right for tactical repositioning - Double-tap D to activate."
-    },
-    vaultWest: {
-      title: "Vault West",
-      description: "Quickly dash to the left for tactical repositioning - Double-tap A to activate."
-    }
+  active: {
+    name: 'Active Ability',
+    description: 'Powerful active ability with strategic uses',
+    cooldown: 'Varies by subclass',
+    unlockLevel: 4
   },
+  special: {
+    name: 'Special Move',
+    description: 'Unique special ability with specific requirements',
+    cooldown: 'Varies by subclass',
+    unlockLevel: 99
+  },
+  vault: {
+    name: 'Vault',
+    description: 'Directional movement ability using dash charges',
+    cooldown: 'Uses Dash Charges',
+    unlockLevel: 1
+  },
+  innate: {
+    name: 'Innate Ability',
+    description: 'Weapon-specific inherent ability that is always active',
+    cooldown: 'Always Active',
+    unlockLevel: 1
+  }
 }; 
 
 export const WEAPON_ORB_COUNTS: Record<WeaponType, number> = {
   [WeaponType.SCYTHE]: 8,
-  [WeaponType.SWORD]: 4,
+  [WeaponType.SWORD]: 5,
   [WeaponType.SABRES]: 6,
   [WeaponType.SPEAR]: 8,
   [WeaponType.BOW]: 6,
-}; 
+};
+
+// Dash charges system - number of dash charges per weapon type
+export const WEAPON_DASH_CHARGES: Record<WeaponType, number> = {
+  [WeaponType.SWORD]: 1,
+  [WeaponType.SCYTHE]: 1,
+  [WeaponType.SPEAR]: 1,
+  [WeaponType.SABRES]: 3,
+  [WeaponType.BOW]: 2,
+};
+
+// Dash charge interface for tracking individual charges
+export interface DashCharge {
+  isAvailable: boolean;
+  cooldownRemaining: number;
+}
+
+// Dash charges state for a weapon
+export interface DashChargesState {
+  charges: DashCharge[];
+  globalCooldownRemaining: number; // Short cooldown between rapid dashes
+}
+
+// Constants for dash system
+export const DASH_CHARGE_COOLDOWN = 6.0; // 6 seconds per charge
+export const DASH_GLOBAL_COOLDOWN = 0.75; // 0.75 seconds between rapid dashes 

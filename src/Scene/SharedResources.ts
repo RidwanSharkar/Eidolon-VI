@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeEffectPools } from './EffectPools';
 
 // Shared geometries across all scenes
 export const sharedGeometries = {
@@ -47,6 +48,9 @@ export function initializeSharedResources() {
 
 // Cleanup shared resources
 export function disposeSharedResources() {
+  // Dispose effect pools first
+  disposeEffectPools();
+  
   Object.values(sharedGeometries).forEach(geo => geo?.dispose());
   Object.values(sharedMaterials).forEach(mat => mat?.dispose());
 }

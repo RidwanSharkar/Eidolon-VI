@@ -38,6 +38,7 @@ export function useQuickShotManager({
     // If we've reached max shots for this charge, consume it and reset
     if (currentShotsRef.current >= shotsPerCharge) {
       const chargeId = currentChargeRef.current;
+      
       setCharges(prev => prev.map(charge => 
         charge.id === chargeId ? {
           ...charge,

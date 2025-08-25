@@ -8,7 +8,7 @@ import * as THREE from 'three';
 
 export const sharedGeometries = {
   torus: new THREE.TorusGeometry(0.8, 0.075, 8, 32),
-  tetrahedron: new THREE.TetrahedronGeometry(0.0725)
+  tetrahedron: new THREE.TetrahedronGeometry(0.075)
 };
 
 export const sharedMaterials = {
@@ -34,18 +34,20 @@ interface BlizzardProps {
   enemyData?: Array<{ id: string; position: Vector3; health: number }>;
   onHitTarget?: (targetId: string, damage: number, isCritical: boolean, position: Vector3, isBlizzard: boolean) => void;
   parentRef?: React.RefObject<Group>;
+  level?: number; // Player level for damage scaling
 }
 
 export default function Blizzard({ 
   onComplete, 
   enemyData = [], 
   onHitTarget,
-  parentRef 
+  parentRef,
+  level = 2 // Default to level 2 since Blizzard unlocks at level 2
 }: BlizzardProps) {
   const stormRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const lastDamageTime = useRef<number>(0);
-  const duration = 6;
+  const duration = 7;
   const shardsRef = useRef<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
   const aurasRef = useRef<Array<{ id: number }>>([]);
 
@@ -66,9 +68,9 @@ export default function Blizzard({
       return;
     }
 
-    stormRef.current.rotation.y += delta * 4;
+    stormRef.current.rotation.y += delta * 6;
 
-    if (Math.random() < 0.2) { // Reduced from 0.2
+    if (Math.random() < 0.3) { // Reduced from 0.2
       const angle = Math.random() * Math.PI * 2;
       const spawnRadius = Math.random() * ORBITAL_RADIUS / 50;
       
@@ -107,14 +109,13 @@ export default function Blizzard({
         id: Date.now() + Math.random(),
       });
     }
-
-      //BLUE DAMAGE??
+    
     const now = Date.now();
     if (now - lastDamageTime.current >= 1000) {
       lastDamageTime.current = now;
       
       if (enemyData && onHitTarget) {
-        const hits = calculateBlizzardDamage(parentPosition, enemyData);
+        const hits = calculateBlizzardDamage(parentPosition, enemyData, level);
         hits.forEach(hit => {
           onHitTarget(
             hit.targetId, 

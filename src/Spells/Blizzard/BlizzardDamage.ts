@@ -2,8 +2,18 @@
 import { Vector3 } from 'three';
 import { calculateDamage } from '@/Weapons/damage';
 
-const BLIZZARD_BASE_DAMAGE = 37;
 const BLIZZARD_RADIUS = 5.35;
+
+// Level-based damage scaling function for Blizzard
+const getBlizzardDamage = (level: number): number => {
+  switch (level) {
+    case 2: return 37;
+    case 3: return 47;
+    case 4: return 59;
+    case 5: return 71;
+    default: return 37; // Fallback to level 2 damage (Blizzard unlocks at level 2)
+  }
+};
 
 interface BlizzardHitResult {
   targetId: string;
@@ -15,6 +25,7 @@ interface BlizzardHitResult {
 export function calculateBlizzardDamage(
   position: Vector3,
   enemies: Array<{ id: string; position: Vector3; health: number }>,
+  level: number = 2
 ): BlizzardHitResult[] {
   const hits: BlizzardHitResult[] = [];
   
@@ -23,7 +34,8 @@ export function calculateBlizzardDamage(
 
     const distance = enemy.position.distanceTo(position);
     if (distance <= BLIZZARD_RADIUS) {
-      const { damage, isCritical } = calculateDamage(BLIZZARD_BASE_DAMAGE);
+      const baseDamage = getBlizzardDamage(level);
+      const { damage, isCritical } = calculateDamage(baseDamage);
       
       hits.push({
         targetId: enemy.id,

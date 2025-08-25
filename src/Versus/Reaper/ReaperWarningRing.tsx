@@ -37,7 +37,7 @@ export default function ReaperWarningRing({ position, duration }: ReaperWarningR
     >
       <ringGeometry args={[2.2, 2.4, 48]} />  {/* Smaller than boss */}
       <meshBasicMaterial 
-        color="#ff0000" 
+        color="#00BBFF" 
         transparent 
         opacity={0.5}
         side={THREE.DoubleSide}

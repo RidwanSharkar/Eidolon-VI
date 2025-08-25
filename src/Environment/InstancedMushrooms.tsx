@@ -19,15 +19,15 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
   const variantColors = useMemo(() => ({
     pink: {
       main: new THREE.Color("#FAA9C5").multiplyScalar(5.5),
-      spots: new THREE.Color("#FAA9C5").multiplyScalar(1.5)
+      spots: new THREE.Color("#FAA9C5").multiplyScalar(3.5)
     },
     green: {
-      main: new THREE.Color("#FF8DC6").multiplyScalar(3.5),
-      spots: new THREE.Color("#92E2FF").multiplyScalar(1.5)
+      main: new THREE.Color("#FF8DC6").multiplyScalar(5.5),
+      spots: new THREE.Color("#92E2FF").multiplyScalar(3.5)
     },
     blue: {
-      main: new THREE.Color("#92E2FF").multiplyScalar(3.5),
-      spots: new THREE.Color("#92E2FF").multiplyScalar(1.5)
+      main: new THREE.Color("#92E2FF").multiplyScalar(5.5),
+      spots: new THREE.Color("#92E2FF").multiplyScalar(3.5)
     },
     orange: {
       main: new THREE.Color("#FF9F56").multiplyScalar(5.5),

@@ -1,22 +1,19 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { WeaponAbilities, WeaponType } from '@/Weapons/weapons';
-import { WeaponInfo } from '@/Unit/UnitProps';
+import React, { useState } from 'react';
+import { WeaponAbilities, WeaponType, WeaponInfo, WeaponSubclass, DashChargesState } from '@/Weapons/weapons';
 import styles from '@/Interface/Panel.module.css';
 import Image from 'next/image';
-import DamageNotification from '@/Interface/DamageNotification';
-import { WEAPON_ABILITY_TOOLTIPS } from '@/Weapons/weapons';
+import { ABILITY_TOOLTIPS } from '@/Weapons/weapons';
 import Tooltip from '@/Interface/Tooltip';
 import { Vector3 } from 'three';
+import DashCharges from '@/Interface/DashCharges';
 
 
 interface PanelProps {
   currentWeapon: WeaponType;
+  currentSubclass?: WeaponSubclass;
   onWeaponSelect: (weapon: WeaponType) => void;
-  playerHealth: number;
-  maxHealth: number;
   abilities: WeaponInfo;
   onReset: () => void;
-  killCount: number;
   activeEffects?: Array<{
     id: number;
     type: string;
@@ -27,13 +24,15 @@ interface PanelProps {
     summonId?: number;
     targetId?: string;
   }>;
+  stealthKillCount?: number;
+  glacialShardKillCount?: number;
+  dashCharges: DashChargesState;
+  eviscerateLashes?: Array<{ id: number; available: boolean; cooldownStartTime: number | null }>;
+  boneclawCharges?: Array<{ id: number; available: boolean; cooldownStartTime: number | null }>;
+  incinerateStacks?: number; // For Pyro Spear Incinerate stacks
 }
 
-interface DamageNotificationData {
-  id: number;
-  damage: number;
-  timestamp: number;
-}
+
 
 /**
  * RoundedSquareProgress Component
@@ -76,69 +75,38 @@ const RoundedSquareProgress: React.FC<{
 };
 
 export default function Panel({ 
-  currentWeapon, 
-  playerHealth, 
-  maxHealth, 
+  currentWeapon,
+  currentSubclass,
+  onWeaponSelect,
   abilities, 
-  killCount,
-  activeEffects 
+  onReset,
+  activeEffects,
+  stealthKillCount = 0,
+  glacialShardKillCount = 0,
+  dashCharges,
+  eviscerateLashes = [],
+  boneclawCharges = [],
+  incinerateStacks = 0
 }: PanelProps) {
-  const [damageNotifications, setDamageNotifications] = useState<DamageNotificationData[]>([]);
-  const nextNotificationId = useRef(0);
-  const prevHealth = useRef(playerHealth);
+  // onWeaponSelect and onReset are part of the interface but not used in this component
+  void onWeaponSelect;
+  void onReset;
+  
   const [tooltipContent, setTooltipContent] = useState<{
-    title: string;
+    name: string;
     description: string;
   } | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
-
-  useEffect(() => {
-    if (playerHealth < prevHealth.current) {
-      const damage = prevHealth.current - playerHealth;
-      setDamageNotifications(prev => [
-        ...prev,
-        { 
-          id: nextNotificationId.current++, 
-          damage,
-          timestamp: Date.now()
-        }
-      ].slice(-3)); // Keep only the last 3 notifications
-    }
-    
-    prevHealth.current = playerHealth;
-  }, [playerHealth]);
-
-  const handleNotificationComplete = (id: number) => {
-    setDamageNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  const getLevel = (kills: number) => {
-    if (kills < 10) return 1;      // Level 1: 0-12 kills
-     if (kills < 25) return 2;      // Level 2: 13-29 kills
-    if (kills < 45) return 3;      // Level 3: 30-49 kills
-    if (kills < 70) return 4;      // Level 4: 50-99 kills
-    return 5;                      // Level 5: 100+ kills
-  };
-
-  const getExpProgress = (kills: number) => {
-    const level = getLevel(kills);
-    
-    if (level === 1) {
-      return (kills / 13) * 100;  // 13 kills for level 1
-    } else if (level === 2) {
-      return ((kills - 13) / 17) * 100;  // 17 kills for level 2
-    }
-    return ((kills - 30) / 20) * 100;  // 20 kills for level 3 (changed from 23)
-  };
-
+  // Debug logging for incinerate stacks
+  console.log('[Panel] incinerateStacks:', incinerateStacks, 'currentWeapon:', currentWeapon, 'currentSubclass:', currentSubclass);
 
   // Ability Tooltip
   const handleAbilityHover = (
     e: React.MouseEvent,
     abilityKey: keyof WeaponAbilities
   ) => {
-    const tooltip = WEAPON_ABILITY_TOOLTIPS[currentWeapon][abilityKey];
+    const tooltip = ABILITY_TOOLTIPS[abilityKey];
     const rect = e.currentTarget.getBoundingClientRect();
     setTooltipContent(tooltip);
     setTooltipPosition({
@@ -157,129 +125,70 @@ export default function Panel({
 
       {/* Bottom Panel */}
       <div className={styles.bottomPanel}>
-        {/* Abilities Section - Movement Keys First */}
+        {/* Dash Charges Display */}
+        <DashCharges 
+          currentWeapon={currentWeapon}
+          dashCharges={dashCharges}
+        />
+
+        {/* Abilities Section */}
         {abilities[currentWeapon] && (
           <div className={styles.abilitiesContainer}>
-            {/* Top Row: W */}
-            <div className={styles.abilitiesRowTop}>
-              {Object.entries(abilities[currentWeapon])
-                .filter(([, ability]) => ['W'].includes(ability.key.toUpperCase()))
-                .map(([key, ability]) => (
-                <div 
-                  key={key}
-                  className={`${styles.abilityMovement} ${!ability.isUnlocked ? styles.locked : ''}`}
-                  onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
-                  onMouseLeave={handleAbilityLeave}
-                >
-                  <div className={styles.keyBind}>{ability.key.toUpperCase()}</div>
-                  <Image 
-                    src={ability.icon} 
-                    alt={`${key} ability`} 
-                    width={28}
-                    height={28}
-                    className={`${styles.abilityMovementIcon} ${styles[`rotate${ability.key.toUpperCase()}`] || ''}`}
-                  />
-                  {key === 'active' && 
-                   currentWeapon === WeaponType.SCYTHE && 
-                   abilities[WeaponType.SCYTHE].active.isUnlocked &&
-                   activeEffects?.some(effect => effect.type === 'summon') ? (
-                    <div className={styles.activeOverlay}>
-                      <RoundedSquareProgress
-                        size={35}
-                        strokeWidth={3}
-                        percentage={100}
-                        borderRadius={6}
-                        isActive={true}
-                      />
-                    </div>
-                  ) : (key === 'active' && currentWeapon === WeaponType.BOW) ? (
-                    // No cooldown overlay for Bow's passive ability
-                    null
-                  ) : ability.currentCooldown > 0 && (
-                    <div className={styles.cooldownOverlay}>
-                      <RoundedSquareProgress
-                        size={35}
-                        strokeWidth={3}
-                        percentage={(ability.currentCooldown / ability.cooldown) * 100}
-                        borderRadius={6}
-                      />
-                      <span className={styles.cooldownText}>
-                        {Math.ceil(ability.currentCooldown)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
             
-            {/* Middle Row: A, S, D */}
-            <div className={styles.abilitiesRowMiddle}>
-              {Object.entries(abilities[currentWeapon])
-                .filter(([, ability]) => ['A', 'S', 'D'].includes(ability.key.toUpperCase()))
-                .sort((a, b) => {
-                  const order = ['A', 'S', 'D'];
-                  return order.indexOf(a[1].key.toUpperCase()) - order.indexOf(b[1].key.toUpperCase());
-                })
-                .map(([key, ability]) => (
-                <div 
-                  key={key}
-                  className={`${styles.abilityMovement} ${!ability.isUnlocked ? styles.locked : ''}`}
-                  onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
-                  onMouseLeave={handleAbilityLeave}
-                >
-                  <div className={styles.keyBind}>{ability.key.toUpperCase()}</div>
-                  <Image 
-                    src={ability.icon} 
-                    alt={`${key} ability`} 
-                    width={28}
-                    height={28}
-                    className={`${styles.abilityMovementIcon} ${styles[`rotate${ability.key.toUpperCase()}`] || ''}`}
-                  />
-                  {key === 'active' && 
-                   currentWeapon === WeaponType.SCYTHE && 
-                   abilities[WeaponType.SCYTHE].active.isUnlocked &&
-                   activeEffects?.some(effect => effect.type === 'summon') ? (
-                    <div className={styles.activeOverlay}>
-                      <RoundedSquareProgress
-                        size={35}
-                        strokeWidth={3}
-                        percentage={100}
-                        borderRadius={6}
-                        isActive={true}
-                      />
-                    </div>
-                  ) : (key === 'active' && currentWeapon === WeaponType.BOW) ? (
-                    // No cooldown overlay for Bow's passive ability
-                    null
-                  ) : ability.currentCooldown > 0 && (
-                    <div className={styles.cooldownOverlay}>
-                      <RoundedSquareProgress
-                        size={35}
-                        strokeWidth={3}
-                        percentage={(ability.currentCooldown / ability.cooldown) * 100}
-                        borderRadius={6}
-                      />
-                      <span className={styles.cooldownText}>
-                        {Math.ceil(ability.currentCooldown)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            
-            {/* Bottom Row: Q, E, R, T, 1, 2 */}
+            {/* Bottom Row: Innate, Passive (1) | Q, E, R, 2 */}
             <div className={styles.abilitiesRowBottom}>
-              {Object.entries(abilities[currentWeapon])
-                .filter(([, ability]) => ['Q', 'E', 'R', 'T', '1', '2'].includes(ability.key.toUpperCase()))
-                .sort((a, b) => {
-                  const order = ['Q', 'E', 'R', 'T', '1', '2'];
-                  return order.indexOf(a[1].key.toUpperCase()) - order.indexOf(b[1].key.toUpperCase());
-                })
-                .map(([key, ability]) => (
+              {/* Passive abilities group: innate and passive (1) */}
+              <div className={styles.passiveAbilitiesGroup}>
+                {Object.entries(abilities[currentWeapon])
+                  .filter(([, ability]) => ['W', '1'].includes(ability.key.toUpperCase()))
+                  .sort((a, b) => {
+                    const order = ['W', '1']; // innate (W) first, then passive (1)
+                    return order.indexOf(a[1].key.toUpperCase()) - order.indexOf(b[1].key.toUpperCase());
+                  })
+                  .map(([key, ability]) => (
                 <div 
                   key={key}
-                  className={`${styles.ability} ${!ability.isUnlocked ? styles.locked : ''}`}
+                  className={`${styles.ability} ${!ability.isUnlocked ? styles.locked : ''} ${styles.passiveAbility}`}
+                  onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
+                  onMouseLeave={handleAbilityLeave}
+                >
+                  {/* No hotkey indicator for passive abilities */}
+                  <Image 
+                    src={ability.icon} 
+                    alt={`${key} ability`} 
+                    width={40}
+                    height={40}
+                    className={styles.abilityIcon}
+                  />
+                  {/* No cooldown overlay for passive abilities since they're always active */}
+                  
+                  {/* Incinerate stack counter for Pyro Spear Innate ability (key 'W') - always show */}
+                  {(ability.key.toUpperCase() === 'W' && 
+                    currentWeapon === WeaponType.SPEAR && 
+                    currentSubclass === WeaponSubclass.PYRO) && (
+                    <div className={`${styles.killCountOverlay} ${incinerateStacks >= 25 ? styles.incinerateEmpowered : ''}`}>
+                      {incinerateStacks}
+                    </div>
+                  )}
+                </div>
+              ))}
+              </div>
+              
+              {/* Separator */}
+              <div className={styles.abilitySeparator}></div>
+              
+              {/* Active abilities group: Q, E, R, 2 */}
+              <div className={styles.activeAbilitiesGroup}>
+                {Object.entries(abilities[currentWeapon])
+                  .filter(([, ability]) => ['Q', 'E', 'R', '2'].includes(ability.key.toUpperCase()))
+                  .sort((a, b) => {
+                    const order = ['Q', 'E', 'R', '2'];
+                    return order.indexOf(a[1].key.toUpperCase()) - order.indexOf(b[1].key.toUpperCase());
+                  })
+                  .map(([key, ability]) => (
+                <div 
+                  key={key}
+                  className={`${styles.ability} ${!ability.isUnlocked ? styles.locked : ''} ${styles.activeAbility}`}
                   onMouseEnter={(e) => handleAbilityHover(e, key as keyof WeaponAbilities)}
                   onMouseLeave={handleAbilityLeave}
                 >
@@ -304,9 +213,6 @@ export default function Panel({
                         isActive={true}
                       />
                     </div>
-                  ) : (key === 'active' && currentWeapon === WeaponType.BOW) ? (
-                    // No cooldown overlay for Bow's passive ability
-                    null
                   ) : ability.currentCooldown > 0 && (
                     <div className={styles.cooldownOverlay}>
                       <RoundedSquareProgress
@@ -320,66 +226,153 @@ export default function Panel({
                       </span>
                     </div>
                   )}
+                  
+                  {/* Show next charge cooldown for charge-based abilities when all charges are on cooldown */}
+                  {(() => {
+                    // Eviscerate charge cooldown display
+                    if (ability.key.toUpperCase() === '2' && 
+                        currentWeapon === WeaponType.SABRES && 
+                        currentSubclass === WeaponSubclass.ASSASSIN && 
+                        eviscerateLashes.length > 0) {
+                      const availableCharges = eviscerateLashes.filter(c => c.available);
+                      if (availableCharges.length === 0) {
+                        // Find the charge that will be available soonest
+                        const nextCharge = eviscerateLashes
+                          .filter(c => c.cooldownStartTime)
+                          .sort((a, b) => (a.cooldownStartTime! + 10000) - (b.cooldownStartTime! + 10000))[0];
+                        
+                        if (nextCharge && nextCharge.cooldownStartTime) {
+                          const timeRemaining = Math.max(0, 10 - (Date.now() - nextCharge.cooldownStartTime) / 1000);
+                          if (timeRemaining > 0) {
+                            return (
+                              <div className={styles.cooldownOverlay}>
+                                <RoundedSquareProgress
+                                  size={50}
+                                  strokeWidth={4}
+                                  percentage={(timeRemaining / 10) * 100}
+                                  borderRadius={8}
+                                />
+                                <span className={styles.cooldownText}>
+                                  {Math.ceil(timeRemaining)}
+                                </span>
+                              </div>
+                            );
+                          }
+                        }
+                      }
+                    }
+                    
+                    // Boneclaw charge cooldown display
+                    if (ability.key.toUpperCase() === 'R' && 
+                        currentWeapon === WeaponType.SCYTHE && 
+                        currentSubclass === WeaponSubclass.CHAOS && 
+                        boneclawCharges.length > 0) {
+                      const availableCharges = boneclawCharges.filter(c => c.available);
+                      if (availableCharges.length === 0) {
+                        // Find the charge that will be available soonest
+                        const nextCharge = boneclawCharges
+                          .filter(c => c.cooldownStartTime)
+                          .sort((a, b) => (a.cooldownStartTime! + 8000) - (b.cooldownStartTime! + 8000))[0];
+                        
+                        if (nextCharge && nextCharge.cooldownStartTime) {
+                          const timeRemaining = Math.max(0, 8 - (Date.now() - nextCharge.cooldownStartTime) / 1000);
+                          if (timeRemaining > 0) {
+                            return (
+                              <div className={styles.cooldownOverlay}>
+                                <RoundedSquareProgress
+                                  size={50}
+                                  strokeWidth={4}
+                                  percentage={(timeRemaining / 8) * 100}
+                                  borderRadius={8}
+                                />
+                                <span className={styles.cooldownText}>
+                                  {Math.ceil(timeRemaining)}
+                                </span>
+                              </div>
+                            );
+                          }
+                        }
+                      }
+                    }
+                    
+                    return null;
+                  })()}
+                  
+                  {/* Kill count overlays for specific abilities */}
+                  {(ability.key.toUpperCase() === 'E' && 
+                    currentWeapon === WeaponType.SABRES && 
+                    currentSubclass === WeaponSubclass.ASSASSIN && 
+                    stealthKillCount > 0) ? (
+                    <div className={styles.killCountOverlay}>
+                      {stealthKillCount}
+                    </div>
+                  ) : (ability.key.toUpperCase() === 'R' && 
+                       currentWeapon === WeaponType.SABRES && 
+                       currentSubclass === WeaponSubclass.FROST && 
+                       glacialShardKillCount > 0) ? (
+                    <div className={styles.killCountOverlay}>
+                      {glacialShardKillCount}
+                    </div>
+                  ) : null}
+                  
+                  {/* Eviscerate charge indicators for Assassin Sabres active ability (key '2') */}
+                  {(ability.key.toUpperCase() === '2' && 
+                    currentWeapon === WeaponType.SABRES && 
+                    currentSubclass === WeaponSubclass.ASSASSIN && 
+                    eviscerateLashes.length > 0) && (
+                    <div className={styles.eviscerateLashesContainer}>
+                      {eviscerateLashes.map((charge) => (
+                        <div 
+                          key={charge.id}
+                          className={`${styles.eviscerateLash} ${charge.available ? styles.available : styles.cooldown}`}
+                        >
+                          {!charge.available && charge.cooldownStartTime && (
+                            <div className={styles.lashCooldownText}>
+                              {Math.ceil(Math.max(0, 10 - (Date.now() - charge.cooldownStartTime) / 1000))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Boneclaw charge indicators for Chaos Scythe ultimate ability (key 'R') */}
+                  {(ability.key.toUpperCase() === 'R' && 
+                    currentWeapon === WeaponType.SCYTHE && 
+                    currentSubclass === WeaponSubclass.CHAOS && 
+                    boneclawCharges.length > 0) && (
+                    <div className={styles.boneclawChargesContainer}>
+                      {boneclawCharges.map((charge) => (
+                        <div 
+                          key={charge.id}
+                          className={`${styles.boneclawCharge} ${charge.available ? styles.available : styles.cooldown}`}
+                        >
+                          {!charge.available && charge.cooldownStartTime && (
+                            <div className={styles.boneclawCooldownText}>
+                              {Math.ceil(Math.max(0, 8 - (Date.now() - charge.cooldownStartTime) / 1000))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Health Bar Section */}
-        <div className={styles.healthBarSection}>
-          {damageNotifications.map((notification, index) => (
-            <DamageNotification
-              key={notification.id}
-              damage={notification.damage}
-              index={index}
-              timestamp={notification.timestamp}
-              onComplete={() => handleNotificationComplete(notification.id)}
-            />
-          ))}
-          
-          {/* Health Bar */}
-          <div className={styles.healthBarContainer}>
-            <div className={styles.healthBar}>
-              <div className={styles.healthBarBackground} />
-              <div 
-                className={styles.healthBarInner} 
-                style={{ width: `${(playerHealth / maxHealth) * 100}%` }}
-              />
-              <div className={styles.healthBarShine} />
-              <div className={styles.healthBarPulse} />
-            </div>
-            <span className={styles.healthText}>
-              <span className={styles.healthCurrent}>{playerHealth}</span>
-              <span className={styles.healthSeparator}>/</span>
-              <span className={styles.healthMax}>{maxHealth}</span>
-            </span>
-          </div>
 
-          {/* Experience Bar */}
-          <div className={styles.experienceBarContainer}>
-            <div className={styles.experienceBarOrnamentLeft}>
 
-              <span className={styles.levelText}>{getLevel(killCount)}</span>
-            </div>
-            <div className={styles.experienceBar}>
-              <div 
-                className={styles.xpFill} 
-                style={{ width: `${getExpProgress(killCount)}%` }} 
-              />
-            </div>
-            <div className={styles.experienceBarOrnamentRight}>
-              <span className={styles.killCountText}>{killCount}</span>
-            </div>
-          </div>
-        </div>
-
-        <Tooltip 
-          content={tooltipContent!}
-          visible={!!tooltipContent}
-          x={tooltipPosition.x}
-          y={tooltipPosition.y}
-        />
+        {tooltipContent && (
+          <Tooltip 
+            content={{ title: tooltipContent.name, description: tooltipContent.description }}
+            visible={true}
+            x={tooltipPosition.x}
+            y={tooltipPosition.y}
+          />
+        )}
       </div>
     </>
   );

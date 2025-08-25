@@ -1,13 +1,123 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Vector3 } from 'three';
+import { setGlobalCriticalRuneCount, setGlobalCritDamageRuneCount } from '@/Weapons/damage';
+
+interface CriticalRune {
+  id: string;
+  position: Vector3;
+}
+
+interface CritDamageRune {
+  id: string;
+  position: Vector3;
+}
 
 interface GameStateContextType {
   isPaused: boolean;
+  criticalRuneCount: number;
+  critDamageRuneCount: number;
+  criticalChance: number;
+  criticalDamageMultiplier: number;
+  criticalRunes: CriticalRune[];
+  critDamageRunes: CritDamageRune[];
+  addCriticalRune: (position: Vector3) => void;
+  addCritDamageRune: (position: Vector3) => void;
+  pickupCriticalRune: (runeId: string) => void;
+  pickupCritDamageRune: (runeId: string) => void;
+  resetRunes: () => void;
 }
 
-const GameStateContext = createContext<GameStateContextType>({ isPaused: false });
+const GameStateContext = createContext<GameStateContextType>({ 
+  isPaused: false,
+  criticalRuneCount: 0,
+  critDamageRuneCount: 0,
+  criticalChance: 0.11,
+  criticalDamageMultiplier: 2.0,
+  criticalRunes: [],
+  critDamageRunes: [],
+  addCriticalRune: () => {},
+  addCritDamageRune: () => {},
+  pickupCriticalRune: () => {},
+  pickupCritDamageRune: () => {},
+  resetRunes: () => {}
+});
 
 export function GameStateProvider({ children }: { children: React.ReactNode }) {
   const [isPaused, setIsPaused] = useState(false);
+  const [criticalRuneCount, setCriticalRuneCount] = useState(0);
+  const [critDamageRuneCount, setCritDamageRuneCount] = useState(0);
+  const [criticalRunes, setCriticalRunes] = useState<CriticalRune[]>([]);
+  const [critDamageRunes, setCritDamageRunes] = useState<CritDamageRune[]>([]);
+  
+  // Calculate critical chance based on rune count (11% base + 3% per rune)
+  const criticalChance = 0.11 + (criticalRuneCount * 0.03);
+  
+  // Calculate critical damage multiplier based on rune count (2.0x base + 0.2x per rune)
+  const criticalDamageMultiplier = 2.0 + (critDamageRuneCount * 0.15);
+  
+  const addCriticalRune = (position: Vector3) => {
+    const newRune: CriticalRune = {
+      id: `crit-rune-${Date.now()}-${Math.random()}`,
+      position: position.clone()
+    };
+    console.log(`💎 Adding Critical Rune at position: (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}), ID: ${newRune.id}`);
+    setCriticalRunes(prev => {
+      const updated = [...prev, newRune];
+      console.log(`📊 Total critical runes in world: ${updated.length}`);
+      return updated;
+    });
+  };
+  
+  const addCritDamageRune = (position: Vector3) => {
+    const newRune: CritDamageRune = {
+      id: `critdmg-rune-${Date.now()}-${Math.random()}`,
+      position: position.clone()
+    };
+    console.log(`💥 Adding CritDamage Rune at position: (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}), ID: ${newRune.id}`);
+    setCritDamageRunes(prev => {
+      const updated = [...prev, newRune];
+      console.log(`📊 Total crit damage runes in world: ${updated.length}`);
+      return updated;
+    });
+  };
+  
+  const pickupCriticalRune = (runeId: string) => {
+    console.log(`🔮 Picking up Critical Rune: ${runeId}`);
+    setCriticalRunes(prev => prev.filter(rune => rune.id !== runeId));
+    setCriticalRuneCount(prev => {
+      const newCount = prev + 1;
+      const newCritChance = 0.11 + (newCount * 0.03);
+      console.log(`📈 Critical Rune Count: ${newCount}, New Crit Chance: ${(newCritChance * 100).toFixed(1)}%`);
+      return newCount;
+    });
+  };
+  
+  const pickupCritDamageRune = (runeId: string) => {
+    console.log(`💥 Picking up CritDamage Rune: ${runeId}`);
+    setCritDamageRunes(prev => prev.filter(rune => rune.id !== runeId));
+    setCritDamageRuneCount(prev => {
+      const newCount = prev + 1;
+      const newCritDamageMultiplier = 2.0 + (newCount * 0.2);
+      console.log(`📈 CritDamage Rune Count: ${newCount}, New Crit Damage Multiplier: ${newCritDamageMultiplier.toFixed(1)}x`);
+      return newCount;
+    });
+  };
+  
+  const resetRunes = () => {
+    setCriticalRuneCount(0);
+    setCritDamageRuneCount(0);
+    setCriticalRunes([]);
+    setCritDamageRunes([]);
+  };
+  
+  // Update global rune counts whenever local counts change
+  useEffect(() => {
+    setGlobalCriticalRuneCount(criticalRuneCount);
+  }, [criticalRuneCount]);
+  
+  useEffect(() => {
+    setGlobalCritDamageRuneCount(critDamageRuneCount);
+  }, [critDamageRuneCount]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -70,7 +180,20 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <GameStateContext.Provider value={{ isPaused }}>
+        <GameStateContext.Provider value={{
+      isPaused,
+      criticalRuneCount, 
+      critDamageRuneCount,
+      criticalChance,
+      criticalDamageMultiplier,
+      criticalRunes,
+      critDamageRunes,
+      addCriticalRune, 
+      addCritDamageRune,
+      pickupCriticalRune, 
+      pickupCritDamageRune,
+      resetRunes
+    }}>
       {children}
     </GameStateContext.Provider>
   );

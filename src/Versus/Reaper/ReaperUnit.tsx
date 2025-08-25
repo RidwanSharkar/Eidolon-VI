@@ -11,7 +11,9 @@ import { useFrame } from '@react-three/fiber';
 import ReaperModel from './ReaperModel';
 import { Enemy } from '../enemy';
 import ReaperAttackIndicator from './ReaperAttackIndicator';
-import ReaperBloodVortex from './ReaperBloodPool';
+import ReaperSubmergeEffect from './ReaperSubmergeEffect';
+import ReaperMistEffect from './ReaperMistEffect';
+import { globalAggroSystem, PlayerInfo, TargetInfo, isSummonedUnit } from '../AggroSystem';
 
 interface ReaperUnitProps {
   id: string;  
@@ -20,10 +22,18 @@ interface ReaperUnitProps {
   health: number;
   maxHealth: number;
   onTakeDamage: (id: string, damage: number) => void;
-  onPositionUpdate: (id: string, position: Vector3) => void;
+  onPositionUpdate: (id: string, position: Vector3, rotation?: number) => void;
   playerPosition: Vector3;
+  allPlayers?: PlayerInfo[];
+  summonedUnits?: import('../AggroSystem').SummonedUnitInfo[];
   onAttackPlayer: (damage: number) => void;
+  onAttackSummonedUnit?: (summonId: string, damage: number) => void;
   onEnrageSpawn?: () => void;
+  weaponType: import('@/Weapons/weapons').WeaponType;
+  isFrozen?: boolean;
+  isStunned?: boolean;
+  isSlowed?: boolean;
+  knockbackEffect?: { direction: Vector3; distance: number; progress: number; isActive: boolean } | null;
 }
 
 export default function ReaperUnit({
@@ -35,8 +45,16 @@ export default function ReaperUnit({
   onTakeDamage,
   onPositionUpdate,
   playerPosition,
+  allPlayers,
+  summonedUnits = [],
   onAttackPlayer,
+  onAttackSummonedUnit,
   onEnrageSpawn,
+  weaponType, // eslint-disable-line @typescript-eslint/no-unused-vars
+  isFrozen = false,
+  isStunned = false,
+  isSlowed = false,
+  knockbackEffect = null,
 }: ReaperUnitProps & Pick<Enemy, 'position'>) {
   const reaperRef = useRef<Group>(null);
   
@@ -47,6 +65,8 @@ export default function ReaperUnit({
   // Use refs for positions so we can always read the LATEST in setTimeouts
   const currentPosition = useRef<Vector3>(initialPosition.clone());
   const playerPosRef = useRef<Vector3>(playerPosition.clone());
+  const targetPosition = useRef<Vector3>(initialPosition.clone()); // Smooth movement target
+  const isReEmergeBlocked = useRef<boolean>(false); // Prevent re-emerge during movement
 
   // Keep track of current health in a ref as well
   const currentHealth = useRef<number>(health);
@@ -64,8 +84,15 @@ export default function ReaperUnit({
   const [reEmergePhase, setReEmergePhase] = useState<'idle' | 'sinking' | 'teleporting' | 'rising'>('idle');
   const [isPostEmergeAggressive, setIsPostEmergeAggressive] = useState(false);
   
-  // Blood vortex state
-  const [bloodPools, setBloodPools] = useState<{
+  // Submerge effect state
+  const [submergeEffects, setSubmergeEffects] = useState<{
+    id: string;
+    position: Vector3;
+    duration: number;
+  }[]>([]);
+
+  // Mist effect state (separate from submerge effects)
+  const [mistEffects, setMistEffects] = useState<{
     id: string;
     position: Vector3;
     duration: number;
@@ -77,8 +104,8 @@ export default function ReaperUnit({
   const ATTACK_COOLDOWN_ENRAGED = 2250;
   const RE_EMERGE_COOLDOWN = 8000; // 8 second cooldown for Re-emerge
   const POST_EMERGE_AGGRESSIVE_DURATION = 3000; // 3 seconds of aggressive behavior after re-emerging
-  const MOVEMENT_SPEED = 0.0225;
-  const ATTACK_DAMAGE = 32;
+  const BASE_MOVEMENT_SPEED = 1.35; // Consistent base speed like other enemies
+  const ATTACK_DAMAGE = 22;
   const REAPER_HIT_HEIGHT = 1.5;       
   const REAPER_HIT_RADIUS = 3.0;
   const REAPER_HIT_HEIGHT_RANGE = 3.0;
@@ -87,30 +114,61 @@ export default function ReaperUnit({
 
   // Separation constants (prevent stacking with other enemies)
   const SEPARATION_RADIUS = 2.25;
-  const SEPARATION_FORCE = 0.25;
+  const SEPARATION_FORCE = 0.15; // Reduced for smoother movement
+  const MOVEMENT_SMOOTHING = 0.8; // Smoothing factor for movement
   // Current cooldown refs
   const currentAttackCooldown = useRef(ATTACK_COOLDOWN_NORMAL);
-
-  // velocity state
-  const velocity = useRef(new Vector3());
 
   // lastUpdateTime ref
   const lastUpdateTime = useRef(Date.now());
 
+  // Get the target using aggro system (can be player or summoned unit)
+  const getTargetPlayer = useCallback((): TargetInfo | null => {
+    // Initialize enemy in aggro system
+    globalAggroSystem.initializeEnemy(id);
+    
+    // Convert allPlayers to PlayerInfo format if needed
+    const playersInfo: PlayerInfo[] = allPlayers || (playerPosition ? [{
+      id: 'local-player',
+      position: playerPosition,
+      name: 'Player'
+    }] : []);
+    
+    if (playersInfo.length === 0 && summonedUnits.length === 0) return null;
+    
+    // Get highest aggro target (including summoned units)
+    return globalAggroSystem.getHighestAggroTarget(id, currentPosition.current, playersInfo, summonedUnits);
+  }, [allPlayers, playerPosition, summonedUnits, id]);
+
+  // Get the target player position (using aggro system)
+  const getTargetPlayerPosition = useCallback(() => {
+    const targetPlayer = getTargetPlayer();
+    return targetPlayer?.position || currentPosition.current;
+  }, [getTargetPlayer]);
+
   // Keep the player's position ref updated
   useEffect(() => {
-    playerPosRef.current.copy(playerPosition);
-  }, [playerPosition]);
+    const targetPos = getTargetPlayerPosition();
+    playerPosRef.current.copy(targetPos);
+  }, [getTargetPlayerPosition]);
 
-  // Sync reaper's position on mount + whenever `position` changes
+  // Improved position synchronization - prevent teleporting
   useEffect(() => {
-    if (position) {
-      currentPosition.current.copy(position);
-      if (reaperRef.current) {
-        reaperRef.current.position.copy(currentPosition.current);
+    // Only sync position during initial spawn or when distance is reasonable
+    if (position && !currentPosition.current.equals(position)) {
+      const distance = currentPosition.current.distanceTo(position);
+      
+      // Only allow position sync if the distance is reasonable (prevents teleporting)
+      // Allow larger distance for Reaper due to Re-emerge ability
+      if (distance < 10.0 || !reaperRef.current) { // Allow corrections or initial position
+        currentPosition.current.copy(position);
+        targetPosition.current.copy(position); // Sync target as well
+        if (reaperRef.current && !isReEmerging) {
+          reaperRef.current.position.copy(currentPosition.current);
+        }
       }
     }
-  }, [position]);
+  }, [position, isReEmerging]);
 
   // Sync health in the ref
   useEffect(() => {
@@ -142,6 +200,8 @@ export default function ReaperUnit({
   useEffect(() => {
     if (health === 0 && !isDead) {
       setIsDead(true);
+      // Remove from aggro system when enemy dies
+      globalAggroSystem.removeEnemy(id);
     }
   }, [health, id, isDead]);
 
@@ -218,7 +278,18 @@ export default function ReaperUnit({
           
           // Only deal damage if STILL within range at the precise impact moment
           if (distanceToPlayer <= actualAttackRange) {
-            onAttackPlayer(ATTACK_DAMAGE);
+            const currentTarget = getTargetPlayer();
+            if (currentTarget) {
+              if (isSummonedUnit(currentTarget)) {
+                globalAggroSystem.addDamageAggro(id, currentTarget.id, ATTACK_DAMAGE, 'summoned');
+                if (onAttackSummonedUnit) {
+                  onAttackSummonedUnit(currentTarget.id, ATTACK_DAMAGE);
+                }
+              } else {
+                onAttackPlayer(ATTACK_DAMAGE);
+                globalAggroSystem.addDamageAggro(id, currentTarget.id, ATTACK_DAMAGE, 'player');
+              }
+            }
           }
         }, 150);
 
@@ -238,13 +309,17 @@ export default function ReaperUnit({
     isAttackOnCooldown,
     isBackstabInProgress,
     onAttackPlayer,
+    onAttackSummonedUnit,
+    getTargetPlayer,
+    id,
     ATTACK_DAMAGE,
     ATTACK_RANGE
   ]);
 
   // Calculate position behind the player
   const getPositionBehindPlayer = useCallback(() => {
-    const playerPos = playerPosRef.current.clone();
+    const targetPos = getTargetPlayerPosition();
+    const playerPos = targetPos.clone();
     
     // Calculate a position directly behind the player
     // This ensures the Reaper is within attack range immediately after emerging
@@ -268,11 +343,11 @@ export default function ReaperUnit({
     }
     
     return behindPosition;
-  }, []);
+  }, [getTargetPlayerPosition]);
 
   // Re-emerge ability logic
   const startReEmerge = useCallback(() => {
-    if (isReEmerging || reEmergePhase !== 'idle') {
+    if (isReEmerging || reEmergePhase !== 'idle' || isReEmergeBlocked.current) {
       return;
     }
     
@@ -282,18 +357,21 @@ export default function ReaperUnit({
       return;
     }
 
+    // Block further re-emerge attempts during this sequence
+    isReEmergeBlocked.current = true;
     setIsReEmerging(true);
     setReEmergePhase('sinking');
     lastReEmergeTime.current = Date.now();
 
-    // Add blood vortex at original position
+    // Add mist effect at original position (sink location)
     const originalPosition = currentPosition.current.clone();
-    originalPosition.y = 0.15; // Ensure blood vortex is on ground level
-    const sinkPoolId = `sink-${Date.now()}`;
-    setBloodPools(prev => [...prev, {
-      id: sinkPoolId,
+    originalPosition.y = 0; // Ground level for mist effect
+    const sinkMistId = `sink-mist-${Date.now()}`;
+    console.log('🌫️ Adding sink mist effect at position:', originalPosition);
+    setMistEffects(prev => [...prev, {
+      id: sinkMistId,
       position: originalPosition,
-      duration: 8000 
+      duration: 1000 // 1 second mist effect
     }]);
 
     // Phase 1: Sink into ground (800ms)
@@ -319,6 +397,8 @@ export default function ReaperUnit({
         setTimeout(() => {
           const behindPosition = getPositionBehindPlayer();
           currentPosition.current.copy(behindPosition);
+          targetPosition.current.copy(behindPosition); // Sync target position
+          
           if (reaperRef.current) {
             reaperRef.current.position.copy(behindPosition);
             reaperRef.current.position.y = -sinkDepth; // Start at same depth underground
@@ -353,15 +433,17 @@ export default function ReaperUnit({
               }
               setReEmergePhase('idle');
               setIsReEmerging(false);
+              isReEmergeBlocked.current = false; // Unblock re-emerge after completion
               
-              // Add blood vortex at emergence position
-              const emergePoolId = `emerge-${Date.now()}`;
+              // Add mist effect at emergence position
+              const emergeMistId = `emerge-mist-${Date.now()}`;
               const emergePosition = behindPosition.clone();
-              emergePosition.y = 0; // Ensure blood vortex is on ground level
-              setBloodPools(prev => [...prev, {
-                id: emergePoolId,
+              emergePosition.y = 0; // Ground level for mist effect
+              console.log('🌫️ Adding emerge mist effect at position:', emergePosition);
+              setMistEffects(prev => [...prev, {
+                id: emergeMistId,
                 position: emergePosition,
-                duration: 10000 
+                duration: 1000 // 1 second mist effect
               }]);
               
               // Start aggressive behavior after re-emerging
@@ -390,7 +472,18 @@ export default function ReaperUnit({
                     
                     // Backstab has slightly larger range but still requires range check
                     if (distanceToPlayer <= ATTACK_RANGE * 1.1) {
-                      onAttackPlayer(ATTACK_DAMAGE);
+                      const currentTarget = getTargetPlayer();
+                      if (currentTarget) {
+                        if (isSummonedUnit(currentTarget)) {
+                          globalAggroSystem.addDamageAggro(id, currentTarget.id, ATTACK_DAMAGE, 'summoned');
+                          if (onAttackSummonedUnit) {
+                            onAttackSummonedUnit(currentTarget.id, ATTACK_DAMAGE);
+                          }
+                        } else {
+                          onAttackPlayer(ATTACK_DAMAGE);
+                          globalAggroSystem.addDamageAggro(id, currentTarget.id, ATTACK_DAMAGE, 'player');
+                        }
+                      }
                     }
                   }, 80); // Very fast but still reactive backstab
 
@@ -417,25 +510,34 @@ export default function ReaperUnit({
       }
     };
     animateSink();
-  }, [isReEmerging, reEmergePhase, getPositionBehindPlayer, onPositionUpdate, id, onAttackPlayer, ATTACK_DAMAGE, currentAttackCooldown]);
+  }, [isReEmerging, reEmergePhase, getPositionBehindPlayer, onPositionUpdate, id, onAttackPlayer, onAttackSummonedUnit, getTargetPlayer, ATTACK_DAMAGE, currentAttackCooldown]);
 
-  // Helper to remove completed blood vortexes
-  const removeBloodPool = useCallback((poolId: string) => {
-    setBloodPools(prev => prev.filter(pool => pool.id !== poolId));
+  // Helper to remove completed submerge effects
+  const removeSubmergeEffect = useCallback((effectId: string) => {
+    setSubmergeEffects(prev => prev.filter(effect => effect.id !== effectId));
+  }, []);
+
+  // Helper to remove completed mist effects
+  const removeMistEffect = useCallback((effectId: string) => {
+    setMistEffects(prev => prev.filter(effect => effect.id !== effectId));
   }, []);
 
   // Main AI loop: move towards player or attack if in range
   useFrame((_, delta) => {
-    if (!reaperRef.current || health <= 0) return;
+    if (!reaperRef.current || health <= 0 || isFrozen || isStunned) return;
 
     // Don't do anything else if we're in the middle of Re-emerging
     if (isReEmerging) return;
 
-    const distanceToPlayer = currentPosition.current.distanceTo(playerPosRef.current);
+    const targetPlayerPos = getTargetPlayerPosition();
+    const distanceToPlayer = currentPosition.current.distanceTo(targetPlayerPos);
 
     // Check if we should use Re-emerge ability (priority over other actions)
     // Use Re-emerge every 8 seconds regardless of distance
-    if (Date.now() - lastReEmergeTime.current >= RE_EMERGE_COOLDOWN && !isAttacking && !isAttackOnCooldown) {
+    if (Date.now() - lastReEmergeTime.current >= RE_EMERGE_COOLDOWN && 
+        !isAttacking && 
+        !isAttackOnCooldown && 
+        !isReEmergeBlocked.current) {
       startReEmerge();
       return;
     }
@@ -444,16 +546,19 @@ export default function ReaperUnit({
     if (distanceToPlayer > ATTACK_RANGE - 0.5 && health > 0) {
       setIsAttacking(false);
 
-      // Use increased speed if in post-emerge aggressive mode
-      const currentMovementSpeed = isPostEmergeAggressive ? MOVEMENT_SPEED * 1.8 : MOVEMENT_SPEED;
-      const normalizedSpeed = currentMovementSpeed * 60;
-      const currentFrameSpeed = normalizedSpeed * delta;
+      // Smooth target position towards target player
+      targetPosition.current.lerp(targetPlayerPos, 0.02); // Very gradual target adjustment
+
+      // Use consistent speed calculation like player movement
+      const baseSpeed = isPostEmergeAggressive ? BASE_MOVEMENT_SPEED * 1.5 : BASE_MOVEMENT_SPEED;
+      const currentMovementSpeed = isSlowed ? baseSpeed * 0.5 : baseSpeed;
+      const frameSpeed = currentMovementSpeed * delta;
 
       const direction = new Vector3()
-        .subVectors(playerPosRef.current, currentPosition.current)
+        .subVectors(targetPosition.current, currentPosition.current)
         .normalize();
 
-      // Calculate separation force (reduced during aggressive mode)
+      // Calculate separation force (simplified)
       const separationForce = new Vector3();
       if (!isPostEmergeAggressive) {
         const otherEnemies = reaperRef.current.parent?.children
@@ -463,70 +568,74 @@ export default function ReaperUnit({
             child.position.distanceTo(currentPosition.current) < SEPARATION_RADIUS
           ) || [];
 
-        otherEnemies.forEach(enemy => {
-          const currentGroundPos = currentPosition.current.clone().setY(0);
-          const enemyGroundPos = enemy.position.clone().setY(0);
-          
-          const diff = new Vector3()
-            .subVectors(currentGroundPos, enemyGroundPos)
-            .normalize()
-            .multiplyScalar(SEPARATION_FORCE / Math.max(0.1, enemyGroundPos.distanceTo(currentGroundPos)));
-          separationForce.add(diff);
-        });
+        if (otherEnemies.length > 0) {
+          otherEnemies.forEach(enemy => {
+            const diff = new Vector3()
+              .subVectors(currentPosition.current, enemy.position)
+              .normalize()
+              .multiplyScalar(SEPARATION_FORCE);
+            separationForce.add(diff);
+          });
+          separationForce.normalize().multiplyScalar(0.3); // Limit separation influence
+        }
       }
 
-      // Combine forces and normalize
+      // Combine direction and separation (like player movement)
       const finalDirection = direction.add(separationForce).normalize();
       finalDirection.y = 0;
 
-      // Calculate target velocity
-      const targetVelocity = finalDirection.multiplyScalar(currentFrameSpeed);
+      // Apply direct movement calculation (like player)
+      const movement = finalDirection.multiplyScalar(frameSpeed);
+      let newPosition = currentPosition.current.clone().add(movement);
       
-      // Smoothly interpolate current velocity towards target (faster during aggressive mode)
-      const lerpSpeed = isPostEmergeAggressive ? 7.0 * delta : 4.5 * delta;
-      velocity.current.lerp(targetVelocity, lerpSpeed);
+      // Apply knockback effect if active
+      if (knockbackEffect && knockbackEffect.isActive) {
+        const knockbackDistance = knockbackEffect.distance * (1 - knockbackEffect.progress);
+        const knockbackMovement = knockbackEffect.direction.clone().multiplyScalar(knockbackDistance * delta * 10);
+        newPosition = newPosition.add(knockbackMovement);
+      }
       
-      // Update position with smoothed velocity
-      currentPosition.current.add(velocity.current);
+      // Simple smoothing for natural movement
+      currentPosition.current.lerp(newPosition, MOVEMENT_SMOOTHING);
       currentPosition.current.y = 0; // Keep on ground
 
-      // Update reaper mesh
-      reaperRef.current.position.copy(currentPosition.current);
+      // Update reaper mesh position smoothly
+      if (reaperRef.current) {
+        reaperRef.current.position.copy(currentPosition.current);
+        reaperRef.current.position.y = 0; // Ensure Y stays at ground level
+      }
       
-      // Smooth rotation (faster than boss, even faster during aggressive mode)
-      const lookTarget = playerPosRef.current.clone().setY(currentPosition.current.y);
+      // Smooth rotation with consistent speed
+      const lookTarget = targetPlayerPos.clone().setY(currentPosition.current.y);
       const directionToPlayer = new Vector3()
         .subVectors(lookTarget, currentPosition.current)
         .normalize();
       
       const targetRotation = Math.atan2(directionToPlayer.x, directionToPlayer.z);
-      let rotationDiff = targetRotation - reaperRef.current.rotation.y;
+      let rotationDiff = targetRotation - (reaperRef.current?.rotation.y || 0);
       while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
       while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
       
-      const rotationSpeed = isPostEmergeAggressive ? 10.0 * delta : 7.0 * delta;
-      reaperRef.current.rotation.y += rotationDiff * Math.min(1, rotationSpeed);
+      // Consistent rotation speed regardless of mode
+      const rotationSpeed = 5.0 * delta;
+      if (reaperRef.current) {
+        reaperRef.current.rotation.y += rotationDiff * Math.min(1, rotationSpeed);
+      }
 
-      // Update position if changed enough AND enough time has passed
+      // Update position less frequently to reduce network noise
       const now = Date.now();
-      if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL) {
-        if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD) {
+      if (now - lastUpdateTime.current >= MINIMUM_UPDATE_INTERVAL * 2) { // Double the interval
+        if (currentPosition.current.distanceTo(position) > POSITION_UPDATE_THRESHOLD * 1.5) { // Increase threshold
           onPositionUpdate(id, currentPosition.current.clone());
           lastUpdateTime.current = now;
         }
       }
     } else {
-      // Decelerate smoothly when stopping
-      velocity.current.multiplyScalar(1 - 7.0 * delta);
-      
-      if (velocity.current.length() > 0.001) {
-        currentPosition.current.add(velocity.current);
-        reaperRef.current.position.copy(currentPosition.current);
-      }
+      // Simple deceleration - enemies stop when in attack range
     }
 
     // Attack logic - only attempt attack if within range
-    if (distanceToPlayer <= ATTACK_RANGE && health > 0) {
+    if (distanceToPlayer <= ATTACK_RANGE && health > 0 && !isFrozen && !isStunned) {
       // During aggressive mode, attack more frequently
       const effectiveAttackCooldown = isPostEmergeAggressive 
         ? currentAttackCooldown.current * 0.6 
@@ -598,15 +707,28 @@ export default function ReaperUnit({
         />
       )}
       
-      {/* Blood vortexes for Re-emerge ability */}
-      {bloodPools.map(pool => (
-        <ReaperBloodVortex
-          key={pool.id}
-          position={pool.position}
-          duration={pool.duration}
-          onComplete={() => removeBloodPool(pool.id)}
+      {/* Submerge effects for Re-emerge ability */}
+      {submergeEffects.map(effect => (
+        <ReaperSubmergeEffect
+          key={effect.id}
+          position={effect.position}
+          duration={effect.duration}
+          onComplete={() => removeSubmergeEffect(effect.id)}
         />
       ))}
+      
+      {/* Mist effects for Re-emerge ability (rendered independently of Reaper group) */}
+      {mistEffects.map(effect => {
+        console.log('🌫️ Rendering mist effect:', effect.id, 'at position:', effect.position);
+        return (
+          <ReaperMistEffect
+            key={effect.id}
+            position={effect.position}
+            duration={effect.duration}
+            onComplete={() => removeMistEffect(effect.id)}
+          />
+        );
+      })}
     </>
   );
 } 

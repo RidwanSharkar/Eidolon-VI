@@ -119,8 +119,8 @@ export default function ReaperDexScythe({ isSwinging, onSwingComplete }: ReaperS
           <mesh position-y={-0.06} rotation={[Math.PI/2, 0, 0]}>
             <torusGeometry args={[0.115, 0.016, 14, 28]} />
             <meshStandardMaterial
-              color="#ff3300"
-              emissive="#ff3300"
+              color="#33ccff"
+              emissive="#33ccff"
               emissiveIntensity={1.5}
               transparent
               opacity={0.7}
@@ -132,8 +132,8 @@ export default function ReaperDexScythe({ isSwinging, onSwingComplete }: ReaperS
           <mesh position-y={0.024} rotation={[Math.PI/2, 0, 0]}>
             <torusGeometry args={[0.14, 0.016, 14, 28]} />
             <meshStandardMaterial
-              color="#ff0000"
-              emissive="#ff0000"
+              color="#66d9ff"
+              emissive="#66d9ff"
               emissiveIntensity={1.5}
               transparent
               opacity={0.7}
@@ -144,8 +144,8 @@ export default function ReaperDexScythe({ isSwinging, onSwingComplete }: ReaperS
         <mesh>
           <cylinderGeometry args={[0.105, 0.088, 0.26, 8]} />
           <meshStandardMaterial
-            color="#ff1a1a"
-            emissive="#ff1a1a"
+            color="#80e6ff"
+            emissive="#80e6ff"
             emissiveIntensity={1.5}
             transparent
             opacity={0.3}
@@ -158,8 +158,8 @@ export default function ReaperDexScythe({ isSwinging, onSwingComplete }: ReaperS
         <mesh>
           <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.024 }]} />
           <meshStandardMaterial 
-            color="#ff0000"
-            emissive="#ff0000"
+            color="#66d9ff"
+            emissive="#66d9ff"
             emissiveIntensity={1.25}
             metalness={0.8}
             roughness={0.1}

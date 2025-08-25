@@ -13,7 +13,7 @@ interface FireballProps {
 export default function Fireball({ position, direction, onImpact }: FireballProps) {
   const fireballRef = useRef<Mesh>(null);
   const clock = useRef(new Clock());
-  const speed = 0.3;
+  const speed = 0.275;
   const lifespan = 10;
   const currentPosition = useRef(position.clone());
   const { scene } = useThree();
@@ -21,7 +21,6 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
   const color = new Color('#00ff44');
   const impactGroup = useRef<Group>(null);
   const explosionStartTime = useRef<number | null>(null);
-  const explosionRef = useRef<Group>(null);
 
   const checkCollision = (nextPosition: Vector3): boolean => {
     const raycaster = new THREE.Raycaster();
@@ -56,11 +55,8 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
     return false;
   };
 
-  const createExplosionEffect = (position: Vector3) => {
-    if (!explosionRef.current) return;
-    
-    explosionRef.current.position.copy(position);
-    explosionRef.current.visible = true;
+  const createExplosionEffect = () => {
+    // Explosion effect is handled by Unit.tsx handleFireballImpact
     explosionStartTime.current = clock.current.getElapsedTime();
   };
 
@@ -77,7 +73,7 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
 
     if (checkCollision(nextPosition)) {
       if (fireballRef.current) {
-        createExplosionEffect(currentPosition.current);
+        createExplosionEffect();
         fireballRef.current.removeFromParent();
       }
       onImpact();
@@ -109,13 +105,7 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
         meshRef={fireballRef}
         opacity={1}
       />
-
-
-        
-
-
-        <pointLight color={color} intensity={8} distance={4} decay={2} />
-      </group>
+    </group>
 
   );
 }

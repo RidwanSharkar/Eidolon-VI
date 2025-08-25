@@ -14,10 +14,10 @@ const createVortexPiece = () => (
     <mesh>
       <boxGeometry args={[0.045, 0.012, 0.012]} />
       <meshStandardMaterial 
-        color="#ff0000"
+        color="#66d9ff"
         transparent
         opacity={0.35}
-        emissive="#ff0000"
+        emissive="#66d9ff"
         emissiveIntensity={0.4}
       />
     </mesh>
@@ -26,8 +26,8 @@ const createVortexPiece = () => (
     <mesh>
       <sphereGeometry args={[0.023, 6, 6]} />
       <meshStandardMaterial 
-        color="#ff0000"
-        emissive="#ff0000"
+        color="#66d9ff"
+        emissive="#66d9ff"
         emissiveIntensity={0.9}
         transparent
         opacity={0.6}
@@ -90,7 +90,7 @@ export default function ReaperBoneVortex({ parentRef }: ReaperBoneVortexProps) {
       ))}
       
       <pointLight 
-        color="#ff0000"
+        color="#66d9ff"
         intensity={0.5}
         distance={2}
         decay={2}

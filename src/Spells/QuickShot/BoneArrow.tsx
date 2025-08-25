@@ -1,16 +1,26 @@
 import { Vector3 } from 'three';
 import * as THREE from 'three';
+import { WeaponSubclass } from '@/Weapons/weapons';
 
 interface BoneArrowProps {
   position: Vector3;
   direction: Vector3;
   opacity?: number;
+  currentSubclass?: WeaponSubclass;
+  level?: number;
 }
 
-export default function BoneArrow({ position, direction, opacity = 1 }: BoneArrowProps) {
-  // Shared materials
+export default function BoneArrow({ position, direction, opacity = 1, currentSubclass, level = 1 }: BoneArrowProps) {
+  // Determine arrow color based on subclass and level
+  const getArrowColor = () => {
+    if (currentSubclass === WeaponSubclass.VENOM) return "#90ff90"; // Green for Venom
+    if (currentSubclass === WeaponSubclass.ELEMENTAL && level >= 3) return "#80d9ff"; // Icy blue for Elemental level 3+
+    return "#d6cfc7"; // Default bone color
+  };
+  
+  // Shared materials with subclass-specific colors
   const boneMaterial = new THREE.MeshStandardMaterial({
-    color: "#d6cfc7",
+    color: getArrowColor(),
     roughness: 0.9,
     metalness: 0.1,
     transparent: true,
@@ -70,7 +80,11 @@ export default function BoneArrow({ position, direction, opacity = 1 }: BoneArro
 
       {/* Subtle glow effect */}
       <pointLight 
-        color="#a8e6cf"
+        color={
+          currentSubclass === WeaponSubclass.VENOM ? "#80ff80" : 
+          currentSubclass === WeaponSubclass.ELEMENTAL && level >= 3 ? "#60c9ff" : 
+          "#a8e6cf"
+        }
         intensity={0.5 * opacity}
         distance={2}
         decay={2}

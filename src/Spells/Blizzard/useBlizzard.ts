@@ -30,7 +30,7 @@ export function useBlizzard({ onHit, enemyData }: UseBlizzardProps) {
       hits.forEach(hit => {
         onHit(hit.targetId, hit.damage);
       });
-    }, 750); // Damage tick every second
+    }, 500); // Damage tick every second
 
     // Clean up after 20 seconds
     setTimeout(() => {

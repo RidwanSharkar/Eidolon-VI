@@ -2,7 +2,8 @@ import { useImperativeHandle, forwardRef } from 'react';
 import { Group, Vector3 } from 'three';
 import { useChainLightning } from '@/Spells/ChainLightning/useChainLightning';
 import ChainLightningEffect from '@/Spells/ChainLightning/ChainLightningEffect';
-import { Enemy } from '@/Versus/enemy';
+import { Enemy } from '@/Versus/enemy'; 
+import { SynchronizedEffect } from '@/Multiplayer/MultiplayerContext';
 
 interface ChainLightningProps {
   parentRef: React.RefObject<Group>;
@@ -17,6 +18,9 @@ interface ChainLightningProps {
     isChainLightning?: boolean;
   }>>>;
   nextDamageNumberId: React.MutableRefObject<number>;
+  sendEffect?: (effect: Omit<SynchronizedEffect, 'id' | 'startTime'>) => void;
+  isInRoom?: boolean;
+  isPlayer?: boolean;
 }
 
 const ChainLightning = forwardRef<{ processChainLightning: () => void }, ChainLightningProps>(({
@@ -24,14 +28,20 @@ const ChainLightning = forwardRef<{ processChainLightning: () => void }, ChainLi
   enemies,
   onEnemyDamage,
   setDamageNumbers,
-  nextDamageNumberId
+  nextDamageNumberId,
+  sendEffect,
+  isInRoom,
+  isPlayer
 }, ref) => {
   const { processChainLightning, lightningTargets } = useChainLightning({
     parentRef,
     enemies,
     onEnemyDamage,
     setDamageNumbers,
-    nextDamageNumberId
+    nextDamageNumberId,
+    sendEffect,
+    isInRoom,
+    isPlayer
   });
 
   useImperativeHandle(ref, () => ({

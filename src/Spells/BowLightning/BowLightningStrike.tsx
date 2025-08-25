@@ -171,16 +171,17 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
         <mesh
           geometry={geometries.impact}
           material={materials.impact}
-          scale={[1, 1, 1]}
+          scale={[0.25, 0.25, 0.25]}
+          position={[0, 0, 0]}
         />
         
         {/* Impact rings */}
-        {[1, 1.4, 1.8].map((size, i) => (
+        {[0.5, 0.75, 1.0].map((size, i) => (
           <mesh 
             key={i} 
             rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
           >
-            <ringGeometry args={[size, size + 0.2, 32]} />
+            <ringGeometry args={[size, size + 0.125, 32]} />
             <meshBasicMaterial
               color="#80D9FF"
               transparent
@@ -193,7 +194,7 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
         {/* Enhanced lighting */}
         <pointLight
           color="#80D9FF"
-          intensity={25 * (1 - (Date.now() - startTimeRef.current) / (duration * 1000)) * flickerRef.current}
+          intensity={10 * (1 - (Date.now() - startTimeRef.current) / (duration * 1000)) * flickerRef.current}
           distance={8}
           decay={2}
         />

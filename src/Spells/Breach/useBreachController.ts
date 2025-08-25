@@ -26,8 +26,6 @@ export const useBreachController = ({
 }: UseBreachControllerProps) => {
   const [isActive, setIsActive] = useState(false);
 
-  // Log reigniteRef availability when component initializes
-  console.log('[useBreachController] Initialized with reigniteRef:', reigniteRef ? 'available' : 'undefined');
 
   const consumeCharges = useCallback(() => {
     // Find two available charges

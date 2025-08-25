@@ -11,26 +11,18 @@ import { WeaponType } from '@/Weapons/weapons';
 import MageFireball from '@/Versus/SkeletalMage/MageFireball';
 import { stealthManager } from '@/Spells/Stealth/StealthManager';
 import StealthStrikeEffect from '@/Spells/Stealth/StealthStrikeEffect';
+import { globalAggroSystem, PlayerInfo, TargetInfo } from '../AggroSystem';
+import { SkeletalMageProps } from './SkeletalMageProps';
+import MageLightningStrike from './MageLightningStrike';
+import LightningWarningIndicator from './LightningWarningIndicator';
 
-interface SkeletalMageProps {
-  id: string;
-  initialPosition: Vector3;
-  position: Vector3;
-  health: number;
-  maxHealth: number;
-  onTakeDamage: (id: string, damage: number) => void;
-  onPositionUpdate: (id: string, position: Vector3) => void;
-  playerPosition: Vector3;
-  onAttackPlayer: (damage: number) => void;
-  weaponType: WeaponType;
-  isDying?: boolean;
-}
-
-// Add DamageSource interface at the top
+// Define DamageSource interface locally
 interface DamageSource {
   type: WeaponType;
   hasActiveAbility?: boolean;
 }
+
+
 
 export default function SkeletalMage({
   id,
@@ -41,8 +33,16 @@ export default function SkeletalMage({
   onTakeDamage,
   onPositionUpdate,
   playerPosition,
+  allPlayers,
+  summonedUnits = [],
   onAttackPlayer,
   weaponType,
+  isFrozen = false,
+  isStunned = false,
+  isSlowed = false,
+  level = 1,
+  playerStunRef,
+  getCurrentPlayerPosition,
 }: SkeletalMageProps & Pick<Enemy, 'position'>) {
   const enemyRef = useRef<Group>(null);
   const [showDeathEffect, setShowDeathEffect] = useState(false);
@@ -50,11 +50,26 @@ export default function SkeletalMage({
   const [isSpawning, setIsSpawning] = useState(true);
   const [isMoving, setIsMoving] = useState(false);
   const [isCastingFireball, setIsCastingFireball] = useState(false);
+  const [isCastingLightning, setIsCastingLightning] = useState(false);
   const lastFireballTime = useRef<number>(Date.now() + 2000);
+  const lastLightningTime = useRef<number>(Date.now() + 2000);
   const [activeFireballs, setActiveFireballs] = useState<Array<{
     id: number;
     position: Vector3;
     target: Vector3;
+    playerPosition: Vector3;
+    startTime: number;
+  }>>([]);
+  const [activeLightningWarnings, setActiveLightningWarnings] = useState<Array<{
+    id: number;
+    position: Vector3;
+    startTime: number;
+  }>>([]);
+  const [activeLightningStrikes, setActiveLightningStrikes] = useState<Array<{
+    id: number;
+    position: Vector3;
+    startTime: number;
+    onDamageCheck?: () => void;
   }>>([]);
   
   // Add to existing state declarations
@@ -72,27 +87,67 @@ export default function SkeletalMage({
   const targetPosition = useRef(initialPosition.clone());
   const lastUpdateTime = useRef(Date.now());
   const currentHealth = useRef(health);
+  
+  // Store the latest player position in a ref for damage calculations
+  const latestPlayerPosition = useRef(playerPosition?.clone() || currentPosition.current);
+  const latestAllPlayers = useRef(allPlayers);
 
-  // Add this near your other refs
-  const velocity = useRef(new Vector3());
+  // Get the target using aggro system (can be player or summoned unit)
+  const getTargetPlayer = useCallback((): TargetInfo | null => {
+    // Initialize enemy in aggro system
+    globalAggroSystem.initializeEnemy(id);
+    
+    // Convert allPlayers to PlayerInfo format if needed
+    const playersInfo: PlayerInfo[] = allPlayers || (playerPosition ? [{
+      id: 'local-player',
+      position: playerPosition,
+      name: 'Player'
+    }] : []);
+    
+    if (playersInfo.length === 0 && summonedUnits.length === 0) return null;
+    
+    // Get highest aggro target (including summoned units)
+    return globalAggroSystem.getHighestAggroTarget(id, currentPosition.current, playersInfo, summonedUnits);
+  }, [allPlayers, playerPosition, summonedUnits, id]);
+
+  // Get the target player position (using aggro system)
+  const getTargetPlayerPosition = useCallback(() => {
+    const targetPlayer = getTargetPlayer();
+    return targetPlayer?.position || currentPosition.current;
+  }, [getTargetPlayer]);
+
+  // Get the LATEST player position using refs (for damage calculations)
+  const getLatestPlayerPosition = useCallback(() => {
+    // For damage calculations, we want the most current position
+    // First try to use the latest player position from props/refs
+    if (latestPlayerPosition.current) {
+      return latestPlayerPosition.current.clone();
+    }
+    
+    // Fallback to aggro-based targeting if no direct player position
+    const targetPlayer = getTargetPlayer();
+    return targetPlayer?.position || currentPosition.current;
+  }, [getTargetPlayer]);
 
   const ATTACK_RANGE = 20;
-  const MOVEMENT_SPEED = 0.0375;
+  const BASE_MOVEMENT_SPEED = 2.25; // Consistent base speed like other enemies
   const POSITION_UPDATE_THRESHOLD = 0.1;
   const MINIMUM_UPDATE_INTERVAL = 15;
   const SEPARATION_RADIUS = 1.25;
-  const SEPARATION_FORCE = 0.125;
-  const FIREBALL_COOLDOWN = 3750;
-  const FIREBALL_DAMAGE = 26;
-  const ACCELERATION = 4.0;
-  const DECELERATION = 6.0;
+  const SEPARATION_FORCE = 0.1; // Reduced for smoother movement
+  const FIREBALL_COOLDOWN = 8000;
+  const FIREBALL_DAMAGE = 16;
+  const LIGHTNING_COOLDOWN = 15000;
+  const LIGHTNING_DAMAGE = 22;
+  const LIGHTNING_WARNING_DURATION = 2.0; // 2 seconds warning
+  const LIGHTNING_DAMAGE_RADIUS = 2.0;
+  const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement
   const ROTATION_SPEED = 4.0;
 
   // Add these constants near the other ones (after line 89)
   const WANDER_DURATION = 4500;
   const WANDER_RADIUS = 5; // Slightly smaller for the mage
   const WANDER_ROTATION_SPEED = 4.0;
-  const WANDER_MOVEMENT_SPEED = 0.025;
 
   // Add these refs near the other refs
   const wanderTarget = useRef<Vector3 | null>(null);
@@ -103,6 +158,18 @@ export default function SkeletalMage({
     currentHealth.current = health;
   }, [health]);
 
+  // Sync player position changes to ref for fresh damage calculations
+  useEffect(() => {
+    if (playerPosition) {
+      latestPlayerPosition.current = playerPosition.clone();
+    }
+  }, [playerPosition]);
+
+  // Sync allPlayers changes to ref for fresh damage calculations in multiplayer
+  useEffect(() => {
+    latestAllPlayers.current = allPlayers;
+  }, [allPlayers]);
+
   // Handle damage with proper synchronization
   const handleDamage = useCallback((damage: number, source: DamageSource) => {
     if (currentHealth.current <= 0) return;
@@ -112,9 +179,10 @@ export default function SkeletalMage({
     
     // Add stealth strike effect
     if (source.type && stealthManager.hasShadowStrikeBuff()) {
+      const targetPlayerPos = getTargetPlayerPosition();
       const effectDirection = new Vector3().subVectors(
         currentPosition.current,
-        playerPosition
+        targetPlayerPos
       ).normalize();
       
       setActiveEffects(prev => [...prev, {
@@ -131,13 +199,24 @@ export default function SkeletalMage({
       setIsDead(true);
       setShowDeathEffect(true);
     }
-  }, [id, onTakeDamage, playerPosition]);
+  }, [id, onTakeDamage, getTargetPlayerPosition]);
 
-  // Immediately sync with provided position
+  // Improved position synchronization - prevent teleporting
   useEffect(() => {
-    if (position) {
-      targetPosition.current.copy(position);
-      targetPosition.current.y = 0;
+    // Only sync position during initial spawn or when distance is reasonable
+    if (position && !currentPosition.current.equals(position)) {
+      const distance = currentPosition.current.distanceTo(position);
+      
+      // Only allow position sync if the distance is reasonable (prevents teleporting)
+      if (distance < 5.0) { // Allow small corrections only
+        targetPosition.current.copy(position);
+        targetPosition.current.y = 0;
+        // For SkeletalMage, also update current position if it's far off
+        if (distance > 2.0) {
+          currentPosition.current.copy(position);
+          currentPosition.current.y = 0;
+        }
+      }
     }
   }, [position]);
 
@@ -150,12 +229,22 @@ export default function SkeletalMage({
       setTimeout(() => {
         if (enemyRef.current) {
           const startPos = currentPosition.current.clone();
-          startPos.y += 1.5; // Adjust height to match mage's hands
+          startPos.y += 2.25; // Adjust height to match mage's casting position
+          
+          // Get the CURRENT player position at the exact moment of launch
+          const currentTargetPos = getLatestPlayerPosition();
+          // Set target height to match player's center mass
+          const adjustedTargetPos = currentTargetPos.clone();
+          adjustedTargetPos.y = 1.5; // Player's approximate center height
+          
+          console.log(`[Fireball] Launching at ${Date.now()} - From: (${startPos.x.toFixed(2)}, ${startPos.z.toFixed(2)}) to current player pos: (${adjustedTargetPos.x.toFixed(2)}, ${adjustedTargetPos.z.toFixed(2)})`);
           
           setActiveFireballs(prev => [...prev, {
             id: Date.now(),
             position: startPos,
-            target: playerPosition.clone(),
+            target: adjustedTargetPos,
+            playerPosition: currentTargetPos.clone(),
+            startTime: Date.now(),
           }]);
         }
         
@@ -165,7 +254,122 @@ export default function SkeletalMage({
         }, 500);
       }, 1000);
     }
-  }, [isCastingFireball, isDead, playerPosition]);
+  }, [isCastingFireball, isDead, getLatestPlayerPosition]);
+
+  // Cast lightning strike with warning
+  const castLightningStrike = useCallback(() => {
+    if (!isCastingLightning && !isDead) {
+      setIsCastingLightning(true);
+      
+      // Get target player position for the lightning strike
+      const targetPlayerPos = getTargetPlayerPosition();
+      const strikePosition = targetPlayerPos.clone();
+      strikePosition.y = 0; // Strike the ground
+      
+      // Create warning indicator
+      const warningId = Date.now();
+      setActiveLightningWarnings(prev => [...prev, {
+        id: warningId,
+        position: strikePosition,
+        startTime: Date.now()
+      }]);
+      
+      // After warning duration, execute lightning strike
+      setTimeout(() => {
+        // Remove warning
+        setActiveLightningWarnings(prev => prev.filter(w => w.id !== warningId));
+        
+        // Capture the player position at the moment the warning ends (for comparison)
+        let warningEndPlayerPos: Vector3;
+        if (getCurrentPlayerPosition) {
+          // Use the real-time position function if available
+          warningEndPlayerPos = getCurrentPlayerPosition().clone();
+          console.log(`[Lightning Strike] Warning end - using real-time function: (${warningEndPlayerPos.x.toFixed(2)}, ${warningEndPlayerPos.z.toFixed(2)})`);
+        } else if (allPlayers && allPlayers.length > 0) {
+          warningEndPlayerPos = allPlayers[0].position.clone();
+          console.log(`[Lightning Strike] Warning end - using allPlayers: (${warningEndPlayerPos.x.toFixed(2)}, ${warningEndPlayerPos.z.toFixed(2)})`);
+        } else if (playerPosition) {
+          warningEndPlayerPos = playerPosition.clone();
+          console.log(`[Lightning Strike] Warning end - using playerPosition: (${warningEndPlayerPos.x.toFixed(2)}, ${warningEndPlayerPos.z.toFixed(2)})`);
+        } else {
+          warningEndPlayerPos = getLatestPlayerPosition();
+          console.log(`[Lightning Strike] Warning end - using fallback: (${warningEndPlayerPos.x.toFixed(2)}, ${warningEndPlayerPos.z.toFixed(2)})`);
+        }
+        warningEndPlayerPos.y = 0;
+        
+        console.log(`[Lightning Strike] Warning ended at ${Date.now()} - Strike pos: (${strikePosition.x.toFixed(2)}, ${strikePosition.z.toFixed(2)}), Player pos at warning end: (${warningEndPlayerPos.x.toFixed(2)}, ${warningEndPlayerPos.z.toFixed(2)}), Distance: ${strikePosition.distanceTo(warningEndPlayerPos).toFixed(2)}`);
+        
+        // Create lightning strike effect with damage check callback
+        const strikeId = Date.now();
+        let damageProcessed = false; // Prevent multiple damage/stun applications from same strike
+        
+        setActiveLightningStrikes(prev => [...prev, {
+          id: strikeId,
+          position: strikePosition,
+          startTime: Date.now(),
+          onDamageCheck: () => {
+            // Prevent multiple calls to damage check for the same strike
+            if (damageProcessed) {
+              console.log(`[Lightning Strike] Damage already processed for strike ${strikeId}, skipping`);
+              return;
+            }
+            damageProcessed = true;
+            // Get the player position at the exact moment of impact (50ms after strike starts)
+            let impactPlayerPos: Vector3;
+            
+            // Try multiple sources for the most current position, prioritizing real-time function
+            if (getCurrentPlayerPosition) {
+              // Use the real-time position function if available (most accurate)
+              impactPlayerPos = getCurrentPlayerPosition().clone();
+              console.log(`[Lightning Strike] Using real-time position function - got: (${impactPlayerPos.x.toFixed(2)}, ${impactPlayerPos.z.toFixed(2)})`);
+            } else if (allPlayers && allPlayers.length > 0) {
+              // Multiplayer: use the first player's position (should be most current)
+              impactPlayerPos = allPlayers[0].position.clone();
+              console.log(`[Lightning Strike] Using allPlayers position - got: (${impactPlayerPos.x.toFixed(2)}, ${impactPlayerPos.z.toFixed(2)})`);
+            } else if (playerPosition) {
+              // Single player: use the current playerPosition prop
+              impactPlayerPos = playerPosition.clone();
+              console.log(`[Lightning Strike] Using playerPosition prop - got: (${impactPlayerPos.x.toFixed(2)}, ${impactPlayerPos.z.toFixed(2)})`);
+            } else {
+              // Fallback to the ref
+              impactPlayerPos = getLatestPlayerPosition();
+              console.log(`[Lightning Strike] Using fallback ref position - got: (${impactPlayerPos.x.toFixed(2)}, ${impactPlayerPos.z.toFixed(2)})`);
+            }
+            
+            impactPlayerPos.y = 0; // Compare ground positions
+            const distance = strikePosition.distanceTo(impactPlayerPos);
+            
+            console.log(`[Lightning Strike] IMPACT CHECK at ${Date.now()} - Strike pos: (${strikePosition.x.toFixed(2)}, ${strikePosition.z.toFixed(2)}), Player pos at impact: (${impactPlayerPos.x.toFixed(2)}, ${impactPlayerPos.z.toFixed(2)}), Distance: ${distance.toFixed(2)}, Radius: ${LIGHTNING_DAMAGE_RADIUS}`);
+            console.log(`[Lightning Strike] Player moved ${warningEndPlayerPos.distanceTo(impactPlayerPos).toFixed(2)} units since warning ended (${Date.now() - (strikeId - 50)}ms ago)`);
+            
+            if (distance <= LIGHTNING_DAMAGE_RADIUS) {
+              console.log(`[Lightning Strike] ❌ Player is within damage radius - dealing ${LIGHTNING_DAMAGE} damage and applying 2s stun`);
+              console.log(`[Lightning Strike] 🩸 About to call onAttackPlayer with damage: ${LIGHTNING_DAMAGE}`);
+              onAttackPlayer(LIGHTNING_DAMAGE);
+              console.log(`[Lightning Strike] 🩸 onAttackPlayer call completed`);
+              globalAggroSystem.addDamageAggro(id, 'local-player', LIGHTNING_DAMAGE, 'player');
+              
+              // Trigger player stun effect (2 seconds) - only if still in range
+              if (playerStunRef?.current) {
+                console.log(`[Lightning Strike] ⚡ About to apply 2s stun to player`);
+                playerStunRef.current.triggerStun(2000);
+                console.log(`[Lightning Strike] ⚡ Stun application completed`);
+              } else {
+                console.log(`[Lightning Strike] ⚠️ playerStunRef is null, cannot apply stun`);
+              }
+            } else {
+              console.log(`[Lightning Strike] ✅ Player escaped - no damage or stun applied (moved far enough away)`);
+            }
+          }
+        }]);
+        
+        // Reset casting state
+        setTimeout(() => {
+          setIsCastingLightning(false);
+        }, 500);
+      }, LIGHTNING_WARNING_DURATION * 1000);
+    }
+  }, [playerStunRef, isCastingLightning, isDead, getTargetPlayerPosition, getLatestPlayerPosition, onAttackPlayer, id, allPlayers, playerPosition, getCurrentPlayerPosition]);
 
   // Add the getNewWanderTarget function after the constants
   const getNewWanderTarget = useCallback(() => {
@@ -183,10 +387,14 @@ export default function SkeletalMage({
 
   // Update frame logic
   useFrame((_, delta) => {
-    if (!enemyRef.current || currentHealth.current <= 0 || !playerPosition) {
+    if (!enemyRef.current || currentHealth.current <= 0 || isFrozen || isStunned) {
       setIsMoving(false);
+      setIsCastingFireball(false);
       return;
     }
+
+    // Get the target player position
+    const targetPlayerPosition = getTargetPlayerPosition();
 
     // Add stealth check
     if (stealthManager.isUnitStealthed()) {
@@ -215,17 +423,22 @@ export default function SkeletalMage({
       if (wanderTarget.current) {
         setIsMoving(true);
         
-        const normalizedSpeed = WANDER_MOVEMENT_SPEED * 60;
-        const currentFrameSpeed = normalizedSpeed * delta;
+        // Use consistent speed calculation like player movement
+        const baseWanderSpeed = BASE_MOVEMENT_SPEED * 0.3; // 30% of normal speed for wandering
+        const normalizedSpeed = isSlowed ? baseWanderSpeed * 0.5 : baseWanderSpeed;
+        const frameSpeed = normalizedSpeed * delta;
         
+        // Calculate direction to wander target
         const direction = new Vector3()
           .subVectors(wanderTarget.current, currentPosition.current)
           .normalize();
         
-        const targetVelocity = direction.multiplyScalar(currentFrameSpeed);
-        velocity.current.lerp(targetVelocity, (ACCELERATION * 0.5) * delta);
+        // Apply direct movement like player (no complex velocity smoothing)
+        const movement = direction.multiplyScalar(frameSpeed);
+        const newPosition = currentPosition.current.clone().add(movement);
         
-        currentPosition.current.add(velocity.current);
+        // Simple interpolation for smoothness
+        currentPosition.current.lerp(newPosition, MOVEMENT_SMOOTHING);
         currentPosition.current.y = 0;
         enemyRef.current.position.copy(currentPosition.current);
         
@@ -242,20 +455,21 @@ export default function SkeletalMage({
       return;
     }
 
-    const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
+    const distanceToPlayer = currentPosition.current.distanceTo(targetPlayerPosition);
 
     if (distanceToPlayer > ATTACK_RANGE && currentHealth.current > 0) {
       setIsMoving(true);
 
-      const normalizedSpeed = MOVEMENT_SPEED * 60;
-      const currentFrameSpeed = normalizedSpeed * delta;
+      // Use consistent speed calculation like player movement
+      const baseSpeed = isSlowed ? BASE_MOVEMENT_SPEED * 0.5 : BASE_MOVEMENT_SPEED;
+      const frameSpeed = baseSpeed * delta;
 
       // Calculate direction to player
       const direction = new Vector3()
-        .subVectors(playerPosition, currentPosition.current)
+        .subVectors(targetPlayerPosition, currentPosition.current)
         .normalize();
 
-      // Calculate separation force
+      // Calculate separation force (simplified)
       const separationForce = new Vector3();
       const otherEnemies = enemyRef.current.parent?.children
         .filter(child => 
@@ -264,29 +478,27 @@ export default function SkeletalMage({
           child.position.distanceTo(currentPosition.current) < SEPARATION_RADIUS
         ) || [];
 
-      otherEnemies.forEach(enemy => {
-        const currentGroundPos = currentPosition.current.clone().setY(0);
-        const enemyGroundPos = enemy.position.clone().setY(0);
-        
-        const diff = new Vector3()
-          .subVectors(currentGroundPos, enemyGroundPos)
-          .normalize()
-          .multiplyScalar(SEPARATION_FORCE / Math.max(0.1, enemyGroundPos.distanceTo(currentGroundPos)));
-        separationForce.add(diff);
-      });
+      if (otherEnemies.length > 0) {
+        otherEnemies.forEach(enemy => {
+          const diff = new Vector3()
+            .subVectors(currentPosition.current, enemy.position)
+            .normalize()
+            .multiplyScalar(SEPARATION_FORCE);
+          separationForce.add(diff);
+        });
+        separationForce.normalize().multiplyScalar(0.3); // Limit separation influence
+      }
 
-      // Combine forces and normalize
+      // Combine direction and separation (like player movement)
       const finalDirection = direction.add(separationForce).normalize();
       finalDirection.y = 0;
 
-      // Calculate target velocity
-      const targetVelocity = finalDirection.multiplyScalar(currentFrameSpeed);
+      // Apply direct movement calculation (like player)
+      const movement = finalDirection.multiplyScalar(frameSpeed);
+      const newPosition = currentPosition.current.clone().add(movement);
       
-      // Smoothly interpolate current velocity towards target
-      velocity.current.lerp(targetVelocity, ACCELERATION * delta);
-      
-      // Update position with smoothed velocity
-      currentPosition.current.add(velocity.current);
+      // Simple smoothing for natural movement
+      currentPosition.current.lerp(newPosition, MOVEMENT_SMOOTHING);
       currentPosition.current.y = 0;
 
       // Apply position to mesh
@@ -294,7 +506,7 @@ export default function SkeletalMage({
 
       // Smooth rotation
       const lookTarget = new Vector3()
-        .copy(playerPosition)
+        .copy(targetPlayerPosition)
         .setY(currentPosition.current.y);
       const targetRotation = Math.atan2(
         lookTarget.x - currentPosition.current.x,
@@ -311,17 +523,11 @@ export default function SkeletalMage({
 
     } else {
       setIsMoving(false);
-      // Decelerate smoothly
-      velocity.current.multiplyScalar(1 - DECELERATION * delta);
-      
-      if (velocity.current.length() > 0.001) {
-        currentPosition.current.add(velocity.current);
-        enemyRef.current.position.copy(currentPosition.current);
-      }
+      // Simple deceleration - enemies stop when in attack range
       
       // Make sure mage is facing the player when within attack range
       const lookTarget = new Vector3()
-        .copy(playerPosition)
+        .copy(targetPlayerPosition)
         .setY(currentPosition.current.y);
       const targetRotation = Math.atan2(
         lookTarget.x - currentPosition.current.x,
@@ -337,13 +543,47 @@ export default function SkeletalMage({
       enemyRef.current.rotation.y += rotationDiff * Math.min(1, ROTATION_SPEED * delta);
     }
 
-    // Check if we should cast fireball
-    if (Date.now() - lastFireballTime.current >= FIREBALL_COOLDOWN) {
-      if (distanceToPlayer <= ATTACK_RANGE) {
-        castFireball();
-        lastFireballTime.current = Date.now();
+    // Check if we should cast a spell (50% chance for each at level 2+)
+    const currentTime = Date.now();
+    const canCastFireball = currentTime - lastFireballTime.current >= FIREBALL_COOLDOWN;
+    const canCastLightning = level >= 2 && currentTime - lastLightningTime.current >= LIGHTNING_COOLDOWN;
+    
+    if (distanceToPlayer <= ATTACK_RANGE && !isFrozen && !isStunned && !isCastingFireball && !isCastingLightning) {
+      if (level >= 2) {
+        // Level 2+: 50% chance for each spell
+        if (canCastFireball && canCastLightning) {
+          if (Math.random() < 0.5) {
+            castFireball();
+            lastFireballTime.current = currentTime;
+          } else {
+            castLightningStrike();
+            lastLightningTime.current = currentTime;
+          }
+        } else if (canCastFireball) {
+          castFireball();
+          lastFireballTime.current = currentTime;
+        } else if (canCastLightning) {
+          castLightningStrike();
+          lastLightningTime.current = currentTime;
+        }
+      } else {
+        // Level 1: Only fireball
+        if (canCastFireball) {
+          castFireball();
+          lastFireballTime.current = currentTime;
+        }
       }
     }
+
+    // Clean up old fireballs (older than 10 seconds)
+    setActiveFireballs(prev => 
+      prev.filter(fireball => Date.now() - fireball.startTime < 10000)
+    );
+
+    // Clean up old lightning strikes (older than 3 seconds)
+    setActiveLightningStrikes(prev => 
+      prev.filter(strike => Date.now() - strike.startTime < 3000)
+    );
 
     // Update position with rate limiting
     const now = Date.now();
@@ -359,11 +599,13 @@ export default function SkeletalMage({
     if (health === 0 && !isDead) {
       setIsDead(true);
       setShowDeathEffect(true);
+      // Remove from aggro system when enemy dies
+      globalAggroSystem.removeEnemy(id);
       if (enemyRef.current) {
         enemyRef.current.visible = true;
       }
     }
-  }, [health, isDead]);
+  }, [health, isDead, id]);
 
   useEffect(() => {
     if (isDead) {
@@ -400,21 +642,21 @@ export default function SkeletalMage({
         }}
       >
         <CustomSkeletonMage
-          position={[0, 0.76, 0]}
-          isAttacking={isCastingFireball}
+          position={[0, 0.735, 0]}
+          isAttacking={isCastingFireball || isCastingLightning}
           isWalking={isMoving && currentHealth.current > 0}
           onHit={(damage) => handleDamage(damage, { type: weaponType })}
         />
 
         {/* Visual telegraph when casting */}
         {isCastingFireball && (
-          <group position={[0.4, 2.265, 0]}>
+          <group position={[0.4, 1.975, 0]}>
             <mesh>
               <sphereGeometry args={[0.125, 16, 16]} />
               <meshStandardMaterial
-                color="#ff3333"
-                emissive="#ff0000"
-                emissiveIntensity={1}
+                color="#8A2BE2"
+                emissive="#8A2BE2"
+                emissiveIntensity={1.5}
                 transparent
                 opacity={0.8}
               />
@@ -425,13 +667,13 @@ export default function SkeletalMage({
 
                 {/* Visual telegraph when casting */}
                 {isCastingFireball && (
-          <group position={[-.4, 2.265, -0.05]}>
+          <group position={[-.4, 1.975, -0.05]}>
             <mesh>
               <sphereGeometry args={[0.125, 16, 16]} />
               <meshStandardMaterial
-                color="#ff3333"
-                emissive="#ff0000"
-                emissiveIntensity={2}
+                color="#8A2BE2"
+                emissive="#8A2BE2"
+                emissiveIntensity={1.5} 
                 transparent
                 opacity={0.7}
               />
@@ -440,6 +682,41 @@ export default function SkeletalMage({
           </group>
         )}
 
+        {/* Visual telegraph when casting lightning */}
+        {isCastingLightning && (
+          <group position={[0, 2.65, 0]}>
+            <mesh>
+              <sphereGeometry args={[0.15, 16, 16]} />
+              <meshStandardMaterial
+                color="#00bbff"
+                emissive="#0088ff"
+                emissiveIntensity={2}
+                transparent
+                opacity={0.8}
+              />
+            </mesh>
+            <pointLight color="#80D9FF" intensity={3} distance={4} />
+            
+            {/* Electric crackling around mage */}
+            {[...Array(6)].map((_, i) => (
+              <mesh
+                key={i}
+                position={[
+                  Math.sin(Date.now() * 0.01 + i) * 0.5,
+                  Math.sin(Date.now() * 0.008 + i) * 0.3,
+                  Math.cos(Date.now() * 0.01 + i) * 0.5
+                ]}
+              >
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshBasicMaterial
+                  color="#B6EAFF"
+                  transparent
+                  opacity={0.7 + Math.sin(Date.now() * 0.015 + i) * 0.3}
+                />
+              </mesh>
+            ))}
+          </group>
+        )}
 
         <Billboard
           position={[0, 3.5, 0]}
@@ -491,6 +768,7 @@ export default function SkeletalMage({
           }}
           isSpawning={false}
           weaponType={weaponType}
+          weaponSubclass={undefined}
         />
       )}
 
@@ -500,15 +778,25 @@ export default function SkeletalMage({
           key={fireball.id}
           position={fireball.position}
           target={fireball.target}
-          playerPosition={playerPosition}
+          playerPosition={fireball.playerPosition}
+          getCurrentPlayerPosition={getLatestPlayerPosition}
           onHit={(didHitPlayer) => {
-            setActiveFireballs(prev => 
-              prev.filter(f => f.id !== fireball.id)
-            );
+            console.log(`[SkeletalMage] Fireball onHit called - didHitPlayer: ${didHitPlayer}, damage: ${FIREBALL_DAMAGE}`);
             
             if (didHitPlayer) {
+              console.log(`[SkeletalMage] 🔥 Calling onAttackPlayer with ${FIREBALL_DAMAGE} damage`);
               onAttackPlayer(FIREBALL_DAMAGE);
+              console.log(`[SkeletalMage] 🔥 onAttackPlayer call completed`);
+              globalAggroSystem.addDamageAggro(id, 'local-player', FIREBALL_DAMAGE, 'player');
             }
+            
+            // Delay fireball removal to allow explosion animation to complete
+            setTimeout(() => {
+              console.log(`[SkeletalMage] 🗑️ Removing fireball ${fireball.id} after damage dealt`);
+              setActiveFireballs(prev => 
+                prev.filter(f => f.id !== fireball.id)
+              );
+            }, 50); // Minimal delay to ensure damage is processed
           }}
         />
       ))}
@@ -530,6 +818,30 @@ export default function SkeletalMage({
         }
         return null;
       })}
+
+      {/* Render lightning warning indicators */}
+      {activeLightningWarnings.map(warning => (
+        <LightningWarningIndicator
+          key={warning.id}
+          position={warning.position}
+          duration={LIGHTNING_WARNING_DURATION}
+          onComplete={() => {
+            setActiveLightningWarnings(prev => prev.filter(w => w.id !== warning.id));
+          }}
+        />
+      ))}
+
+      {/* Render lightning strikes */}
+      {activeLightningStrikes.map(strike => (
+        <MageLightningStrike
+          key={strike.id}
+          position={strike.position}
+          onDamageCheck={strike.onDamageCheck}
+          onComplete={() => {
+            setActiveLightningStrikes(prev => prev.filter(s => s.id !== strike.id));
+          }}
+        />
+      ))}
     </>
   );
 } 

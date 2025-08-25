@@ -7,7 +7,7 @@ interface AbominationTrailEffectProps {
 }
 
 const AbominationTrailEffect: React.FC<AbominationTrailEffectProps> = ({ parentRef }) => {
-  const particlesCount = 12;
+  const particlesCount = 7;
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -87,7 +87,7 @@ const AbominationTrailEffect: React.FC<AbominationTrailEffectProps> = ({ parentR
           void main() {
             float d = length(gl_PointCoord - vec2(0.5));
             float strength = smoothstep(0.5, 0.1, d);
-            vec3 glowColor = mix(vec3(0.5, 0.0, 0.5), vec3(0.8, 0.0, 0.8), 0.4); // Purple color
+            vec3 glowColor = mix(vec3(0.2, 0.6, 1.0), vec3(0.4, 0.8, 1.0), 0.4); // Slightly different light blue shade
             gl_FragColor = vec4(glowColor, vOpacity * strength);
           }
         `}

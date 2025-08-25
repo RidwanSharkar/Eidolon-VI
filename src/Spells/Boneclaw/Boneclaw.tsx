@@ -13,6 +13,8 @@ interface BoneclawProps {
   onHitTarget?: (targetId: string, damage: number, isCritical: boolean, position: Vector3, isBoneclaw?: boolean) => void;
   enemyData: Array<{ id: string; position: Vector3; health: number }>;
   onSwingComplete?: (position: Vector3, direction: Vector3) => void;
+  onKillingBlow?: (position: Vector3) => void; // New prop to trigger skeleton summoning
+  level?: number; // Add level parameter for damage scaling
 }
 
 const sharedGeometries = {
@@ -40,7 +42,7 @@ const sharedMaterials = {
   })
 };
 
-export default function Boneclaw({ position, direction, onComplete, parentRef, onHitTarget, enemyData, onSwingComplete }: BoneclawProps) {
+export default function Boneclaw({ position, direction, onComplete, parentRef, onHitTarget, enemyData, onSwingComplete, onKillingBlow, level = 1 }: BoneclawProps) {
   const clawRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const hasDealtDamage = useRef(false);
@@ -236,7 +238,8 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
         clawRef.current.position,
         direction,
         enemyData,
-        hitEnemiesRef.current
+        hitEnemiesRef.current,
+        level // Pass the level prop
       );
 
       if (hits.length > 0) {
@@ -244,6 +247,12 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
           hits.forEach(hit => {
             if (!hitEnemiesRef.current.has(hit.targetId)) {
               hitEnemiesRef.current.add(hit.targetId);
+              
+              // Check if this hit will kill the enemy
+              const targetEnemy = enemyData.find(enemy => enemy.id === hit.targetId);
+              const willKill = targetEnemy && targetEnemy.health <= hit.damage;
+              
+              // Trigger the hit
               onHitTarget?.(
                 hit.targetId, 
                 hit.damage, 
@@ -251,6 +260,11 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
                 hit.position,
                 true
               );
+              
+              // If this is a killing blow, trigger skeleton summoning
+              if (willKill && onKillingBlow) {
+                onKillingBlow(hit.position);
+              }
             }
           });
         });

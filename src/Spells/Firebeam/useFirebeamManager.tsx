@@ -1,10 +1,13 @@
 import { useRef, useCallback, useEffect, useMemo } from 'react';
 import { Vector3 } from 'three';
 import { useFirebeam } from '@/Spells/Firebeam/useFirebeam';
+import { useFirebeamPersistentManager } from '@/Spells/Firebeam/useFirebeamPersistentManager';
+import { useDeepFreeze } from '@/Spells/Firebeam/useDeepFreeze';
 import { Enemy } from '@/Versus/enemy';
+import { WeaponSubclass } from '@/Weapons/weapons';
 import * as THREE from 'three';
-import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals'; // @/Color/ChargedOrbitals
 import { DamageNumber } from '../../Unit/useDamageNumbers';
+import { SynchronizedEffect } from '@/Multiplayer/MultiplayerContext';
 
 interface FirebeamManagerProps {
   parentRef: React.RefObject<THREE.Group>;
@@ -15,6 +18,10 @@ interface FirebeamManagerProps {
     type: string;
     position: Vector3;
     direction: Vector3;
+    duration?: number;
+    startTime?: number;
+    parentRef?: React.RefObject<THREE.Group>;
+    enemyId?: string;
   }>>>;
   charges: Array<{
     id: number;
@@ -28,6 +35,14 @@ interface FirebeamManagerProps {
   }>>>;
   setDamageNumbers: React.Dispatch<React.SetStateAction<DamageNumber[]>>;
   nextDamageNumberId: React.MutableRefObject<number>;
+  isFirebeaming: boolean;
+  onFirebeamEnd?: () => void;
+  currentSubclass?: WeaponSubclass;
+  level?: number; // Add level prop for Deep Freeze
+  // Multiplayer props
+  sendEffect?: (effect: Omit<SynchronizedEffect, 'id' | 'startTime'>) => void;
+  isInRoom?: boolean;
+  isPlayer?: boolean;
 }
 
 export const useFirebeamManager = ({
@@ -38,12 +53,36 @@ export const useFirebeamManager = ({
   charges,
   setCharges,
   setDamageNumbers,
-  nextDamageNumberId
+  nextDamageNumberId,
+  isFirebeaming,
+  onFirebeamEnd,
+  currentSubclass,
+  level = 1,
+  // Multiplayer props
+  sendEffect,
+  isInRoom = false,
+  isPlayer = false
 }: FirebeamManagerProps) => {
   const nextEffectId = useRef(0);
   const currentEffectId = useRef<number | null>(null);
-  const lastFireTime = useRef(0);
-  const { isActive, activateFirebeam, deactivateFirebeam } = useFirebeam({ onHit, parentRef });
+  const lastDamageTime = useRef<Record<string, number>>({});
+  const firebeamStartTime = useRef<number | null>(null);
+  const damageInterval = useRef<NodeJS.Timeout | null>(null);
+  // Add ref to track active state independently of React state
+  const isFirebeamingRef = useRef(false);
+  const { activateFirebeam, deactivateFirebeam } = useFirebeam({ onHit, parentRef });
+  
+  // Initialize Deep Freeze system
+  const { handleFirebeamHit, isEnemyFrozen, getFrozenEnemyIds } = useDeepFreeze({
+    currentSubclass,
+    setActiveEffects,
+    enemyData,
+    level,
+    // Multiplayer props
+    sendEffect,
+    isInRoom,
+    isPlayer
+  });
 
   // Cache vector instances to prevent garbage collection
   const beamPos2D = useMemo(() => new Vector3(), []);
@@ -52,62 +91,80 @@ export const useFirebeamManager = ({
   const enemyDirection = useMemo(() => new Vector3(), []);
   const projectedPoint = useMemo(() => new Vector3(), []);
 
+  // Use the persistent manager for charge consumption
+  useFirebeamPersistentManager({
+    parentRef,
+    charges,
+    setCharges,
+    isFirebeaming,
+    onFirebeamEnd
+  });
+
+  // Check for available charges
+  const hasAvailableCharges = charges.some(charge => charge.available);
+
   const stopFirebeam = useCallback(() => {
+
+    isFirebeamingRef.current = false; // Set ref first
+    
     if (currentEffectId.current !== null) {
       setActiveEffects(prev => prev.filter(effect => effect.id !== currentEffectId.current));
       currentEffectId.current = null;
     }
+    
+    if (damageInterval.current) {
+      clearInterval(damageInterval.current);
+      damageInterval.current = null;
+    }
+    
+    firebeamStartTime.current = null;
+    lastDamageTime.current = {};
     deactivateFirebeam();
   }, [deactivateFirebeam, setActiveEffects]);
 
-  const consumeCharge = useCallback(() => {
-    const availableChargeIndex = charges.findIndex(charge => charge.available);
-    if (availableChargeIndex === -1) {
-      return false;
+  const dealDamageToEnemies = useCallback(() => {
+    // Check if firebeam should be active - use ref for immediate state check
+    if (!isFirebeamingRef.current || !parentRef.current) {
+
+      return;
     }
 
-    setCharges(prev => prev.map((charge, index) => 
-      index === availableChargeIndex
-        ? { ...charge, available: false, cooldownStartTime: Date.now() }
-        : charge
-    ));
-
-    setTimeout(() => {
-      setCharges(prev => prev.map((charge, index) => 
-        index === availableChargeIndex
-          ? { ...charge, available: true, cooldownStartTime: null }
-          : charge
-      ));
-    }, ORBITAL_COOLDOWN);
-
-    return true;
-  }, [charges, setCharges]);
 
 
-  const startFirebeam = useCallback(() => {
     const currentTime = Date.now();
-    if (currentTime - lastFireTime.current < 725) return undefined;
-    if (!consumeCharge()) return undefined;
+    const timeActive = firebeamStartTime.current ? (currentTime - firebeamStartTime.current) / 1000 : 0;
+    
+    // Calculate damage scaling - increases every second held
+    const baseDamage = 43;
+    const damageMultiplier = 1 + Math.floor(timeActive) * 0.5; // +50% damage per second held
+    const baseFinalDamage = Math.floor(baseDamage * damageMultiplier);
+    
+    // Apply 2x damage multiplier against frozen enemies (Deep Freeze passive)
+    const freezeMultiplier = currentSubclass === WeaponSubclass.FROST ? 2 : 1;
+    const finalDamage = baseFinalDamage;
 
-    const firebeamData = activateFirebeam();
-    if (!firebeamData) return undefined;
 
-    const { position, direction, damage } = firebeamData;
-    const effectId = nextEffectId.current++;
 
-    currentEffectId.current = effectId;
-    lastFireTime.current = currentTime;
-
-    setActiveEffects(prev => [...prev, {
-      id: effectId,
-      type: 'firebeam',
-      position,
-      direction
-    }]);
+    // Get current beam position and direction from parent
+    const position = parentRef.current.position.clone();
+    position.y += 1;
+    const direction = new Vector3(0, 0, 1).applyQuaternion(parentRef.current.quaternion);
 
     // Optimize enemy hit detection
     enemyData.forEach(enemy => {
-      if (enemy.health <= 0) return;
+      if (enemy.health <= 0 || enemy.isDying) {
+
+        return;
+      }
+      
+      const now = Date.now();
+      const lastHit = lastDamageTime.current[enemy.id] || 0;
+      
+      // Deal damage every 250ms
+      if (now - lastHit < 250) {
+
+        return;
+      }
       
       // Reuse vector instances
       beamPos2D.set(position.x, 0, position.z);
@@ -116,35 +173,114 @@ export const useFirebeamManager = ({
       enemyDirection.copy(enemyPos2D).sub(beamPos2D);
       
       const projectedDistance = enemyDirection.dot(beamDirection2D);
-      if (projectedDistance <= 0 || projectedDistance > 20) return;
+
+
+      if (projectedDistance <= 0 || projectedDistance > 20) {
+
+        return;
+      }
       
       projectedPoint.copy(beamPos2D).add(beamDirection2D.multiplyScalar(projectedDistance));
       const perpendicularDistance = enemyPos2D.distanceTo(projectedPoint);
       
       if (perpendicularDistance < 1.375) {
-        onHit(enemy.id, damage);
+        // Apply freeze damage multiplier for this specific enemy
+        const enemyIsFrozen = isEnemyFrozen(enemy.id);
+        const enemyFinalDamage = enemyIsFrozen ? finalDamage * freezeMultiplier : finalDamage;
+        
+
+        onHit(enemy.id, enemyFinalDamage);
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
-          damage,
+          damage: enemyFinalDamage,
           position: enemy.position.clone(),
-          isCritical: false,
+          isCritical: damageMultiplier > 2 || enemyIsFrozen, // Critical display if 2x+ damage OR frozen
           isFirebeam: true
         }]);
+        
+        // Track Firebeam hit for Deep Freeze system
+        handleFirebeamHit(enemy.id, enemy.position);
+        
+        lastDamageTime.current[enemy.id] = now;
+      } else {
+
       }
     });
 
-    return setTimeout(stopFirebeam, 6000);
-  }, [ nextDamageNumberId, beamPos2D, enemyPos2D, beamDirection2D, enemyDirection, projectedPoint, setDamageNumbers, activateFirebeam, enemyData, onHit, setActiveEffects, consumeCharge, stopFirebeam]);
 
+  }, [currentSubclass, isEnemyFrozen, parentRef, enemyData, onHit, setDamageNumbers, nextDamageNumberId, beamPos2D, enemyPos2D, beamDirection2D, enemyDirection, projectedPoint, handleFirebeamHit]);
+
+  const startFirebeam = useCallback(() => {
+
+    if (!hasAvailableCharges || isFirebeaming) return false;
+
+    // Activate the visual firebeam effect
+    const firebeamData = activateFirebeam();
+
+    if (!firebeamData) {
+
+      return false;
+    }
+
+    const effectId = nextEffectId.current++;
+
+    currentEffectId.current = effectId;
+    firebeamStartTime.current = Date.now();
+    isFirebeamingRef.current = true; // Set ref immediately
+
+
+
+    setActiveEffects(prev => [...prev, {
+      id: effectId,
+      type: 'firebeam',
+      position: new Vector3(), // Dummy values - will be overridden by parentRef
+      direction: new Vector3(0, 0, 1), // Dummy values - will be overridden by parentRef
+      parentRef: parentRef
+    }]);
+
+    // Clear any existing interval
+    if (damageInterval.current) {
+      clearInterval(damageInterval.current);
+      damageInterval.current = null;
+    }
+
+    // Start damage interval immediately and then every 50ms
+    dealDamageToEnemies();
+    damageInterval.current = setInterval(() => {
+      dealDamageToEnemies();
+    }, 50); // Check every 50ms for smooth damage
+
+
+
+    return true;
+  }, [isFirebeaming, hasAvailableCharges, activateFirebeam, setActiveEffects, parentRef, dealDamageToEnemies]);
+
+  // Handle firebeam state changes - stop when charges run out or firebeaming stops
+  useEffect(() => {
+
+    
+    // Sync ref with React state
+    isFirebeamingRef.current = isFirebeaming;
+    
+    // Stop firebeam when isFirebeaming becomes false or no charges available
+    if (!isFirebeaming && damageInterval.current) {
+
+      stopFirebeam();
+    }
+  }, [isFirebeaming, hasAvailableCharges, stopFirebeam]);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
+
       stopFirebeam();
     };
   }, [stopFirebeam]);
 
   return {
-    isActive,
     startFirebeam,
-    stopFirebeam
+    stopFirebeam,
+    isEnemyFrozen,
+    getFrozenEnemyIds
   };
 }; 

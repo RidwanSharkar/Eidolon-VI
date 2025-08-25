@@ -1,0 +1,27 @@
+{
+  "name": "eidolon-vi-multiplayer-backend",
+  "version": "1.0.0",
+  "description": "Multiplayer backend for Eidolon VI",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "build": "echo 'No build step needed'",
+    "test": "echo 'No tests yet'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.8.1",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["multiplayer", "game", "websocket", "realtime"],
+  "author": "Ridwan Sharkar",
+  "license": "MIT"
+} 

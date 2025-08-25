@@ -28,11 +28,11 @@ export default function Terrain() {
       <mesh ref={terrainRef} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         {octagonRef.current && <shapeGeometry args={[octagonRef.current]} />}
         <meshStandardMaterial 
-          color="#365F4A"  // Light off-white base color
+          color="#ACB7BA"  // Light off-white base color
           roughness={0.7}
           metalness={0.1}
-          emissive="#365F4A"  // Subtle blue-ish glow
-          emissiveIntensity={0.45}
+          emissive="#ACB7BA"  // Subtle blue-ish glow
+          emissiveIntensity={0.15}
         />
       </mesh>
 

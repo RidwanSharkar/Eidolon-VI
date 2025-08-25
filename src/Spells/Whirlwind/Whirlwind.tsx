@@ -27,6 +27,7 @@ interface WhirlwindProps {
     isCritical: boolean;
   }>) => void;
   nextDamageNumberId?: { current: number };
+  onCriticalHit?: () => void;
   charges: Array<{
     id: number; 
     available: boolean;
@@ -39,6 +40,7 @@ interface WhirlwindProps {
   }>>>;
   onWhirlwindEnd?: () => void;
   reigniteRef?: React.RefObject<ReigniteRef>;
+  level?: number; // Player level for damage scaling
 }
 
 // WhirlwindFireEffect component
@@ -190,6 +192,18 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
   );
 }
 
+// Level-based damage scaling function
+const getWhirlwindDamage = (level: number): number => {
+  switch (level) {
+    case 1: return 19;
+    case 2: return 23;
+    case 3: return 29;
+    case 4: return 31;
+    case 5: return 37;
+    default: return 19; // Fallback to level 1 damage
+  }
+};
+
 export default function Whirlwind({
   parentRef,
   isActive,
@@ -197,10 +211,12 @@ export default function Whirlwind({
   enemyData,
   setDamageNumbers,
   nextDamageNumberId,
+  onCriticalHit,
   charges,
   setCharges,
   onWhirlwindEnd,
-  reigniteRef
+  reigniteRef,
+  level = 1
 }: WhirlwindProps) {
   const whirlwindRef = useRef<Group>(null);
   const rotationSpeed = useRef(0);
@@ -313,15 +329,18 @@ export default function Whirlwind({
         
         if (distance <= maxRange) {
           // Sweet spot check (80-100% of max range)
-          const isMaxRangeHit = distance >= maxRange * 0.825;
+          const isMaxRangeHit = distance >= maxRange * 0.775;
           
-          const baseDamage = 19; // Base whirlwind damage
+          const baseDamage = getWhirlwindDamage(level); // Level-based whirlwind damage
           let damage, isCritical;
 
           if (isMaxRangeHit) {
             // Guaranteed critical at max range with bonus damage
             damage = baseDamage * 2;
             isCritical = true;
+            
+            // Trigger critical hit callback (for Firestorm)
+            onCriticalHit?.();
           } else {
             damage = baseDamage;
             isCritical = false;
@@ -368,11 +387,11 @@ export default function Whirlwind({
             {/* Whirlwind effect rings - rotated to be parallel to ground */}
             {[0.5, 1, 1.5].map((radius, i) => (
               <mesh key={i} position={[0, -0.25, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[radius * 2, 0.1, 16, 32]} />
+                <torusGeometry args={[radius * 1.75, 0.1, 16, 32]} />
                 <meshStandardMaterial
                   color={new THREE.Color(0xFF0000)}
                   emissive={new THREE.Color(0xFF0000)}
-                  emissiveIntensity={2}
+                  emissiveIntensity={4}
                   transparent
                   opacity={0.6 - i * 0.15}
                   side={THREE.DoubleSide}
@@ -385,13 +404,13 @@ export default function Whirlwind({
               <mesh
                 key={`trail-${i}`}
                 position={[0, -0.25, 0]}
-                rotation={[0, (i / 8) * Math.PI*2, 0]}
+                rotation={[0, (i / 8) * Math.PI*3, 0]}
               >
-                <planeGeometry args={[6, 0.25]} />
+                <planeGeometry args={[5.1, 0.25]} />
                 <meshStandardMaterial
                   color={new THREE.Color(0xFF0000)}
                   emissive={new THREE.Color(0xFF0000)}
-                  emissiveIntensity={1.5}
+                  emissiveIntensity={4}
                   transparent
                   opacity={0.4}
                   side={THREE.DoubleSide}

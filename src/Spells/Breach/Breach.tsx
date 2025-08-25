@@ -3,6 +3,7 @@ import { Vector3, Group } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ReigniteRef } from '../Reignite/Reignite';
+import { calculateDamage } from '@/Weapons/damage';
 
 // Import the constant from useUnitControls or define it here
 const PLAY_AREA_RADIUS = 28.5; // MAP BOUNDARY (same as in useUnitControls)
@@ -17,7 +18,8 @@ interface BreachProps {
     health: number;
   }>;
   onHit?: (targetId: string, damage: number) => void;
-  showDamageNumber?: (targetId: string, damage: number, position: Vector3, isBreach: boolean) => void;
+  showDamageNumber?: (targetId: string, damage: number, position: Vector3, isBreach: boolean, isCritical?: boolean) => void;
+  onCriticalHit?: () => void;
   reigniteRef?: React.RefObject<ReigniteRef>;
 }
 
@@ -25,6 +27,7 @@ const BREACH_DISTANCE = 7.5; // Distance in units to dash forward
 const BREACH_DURATION = 0.35; // Duration in seconds
 const BREACH_DAMAGE = 113; // Base damage for wbreach collision
 const BREACH_COLLISION_RADIUS = 2.0; // collision radius
+const MAX_BREACH_BOUNDS = 25; // Maximum distance from origin (same as Vault)
 
 export default function Breach({ 
   parentRef, 
@@ -33,6 +36,7 @@ export default function Breach({
   enemyData = [], 
   onHit, 
   showDamageNumber,
+  onCriticalHit,
   reigniteRef
 }: BreachProps) {
   const startPosition = useRef<Vector3 | null>(null);
@@ -44,9 +48,8 @@ export default function Breach({
   const nextFireParticleId = useRef(1);
   const enemyHealthTracker = useRef<Record<string, number>>({});
 
-  // Log if reigniteRef is available when the component mounts
+  // Log if reigniteRef is available when the component mounts - removed temp
   useEffect(() => {
-    console.log("[Breach] Component mounted, reigniteRef available:", !!reigniteRef);
   }, [reigniteRef]);
 
   useFrame(() => {
@@ -63,6 +66,16 @@ export default function Breach({
       direction.current = new Vector3(0, 0, 1)
         .applyQuaternion(parentRef.current.quaternion)
         .normalize();
+      
+      // Safety check: ensure we have a valid direction
+      if (!direction.current || direction.current.length() === 0) {
+        console.warn('[Breach] Invalid direction calculated, cancelling breach');
+        onComplete();
+        startTime.current = null;
+        startPosition.current = null;
+        lastPosition.current = null;
+        return;
+      }
       
       // Initialize fire trail
       setFireTrail([]);
@@ -83,17 +96,38 @@ export default function Breach({
     // Calculate movement using easing function
     const easeOutQuad = 1 - Math.pow(1 - progress, 2);
     
+    // Safety checks: Ensure we have valid references (like Vault does)
+    if (!startPosition.current || !direction.current || !parentRef.current) {
+      console.warn('[Breach] Missing critical references, cancelling breach');
+      onComplete();
+      startTime.current = null;
+      startPosition.current = null;
+      lastPosition.current = null;
+      return;
+    }
+    
     // Get forward direction from stored value - clone it to avoid modifying the original
     const forwardDirection = direction.current.clone();
 
     // Calculate new position
-    const newPosition = startPosition.current!.clone().add(
-      forwardDirection.multiplyScalar(BREACH_DISTANCE * easeOutQuad)
-    );
+    const displacement = forwardDirection.multiplyScalar(BREACH_DISTANCE * easeOutQuad);
+    const newPosition = startPosition.current.clone().add(displacement);
 
-    // Check if the new position is within map boundaries
+    // Bounds checking: Ensure position is within reasonable limits (like Vault does)
+    const distanceFromOrigin = newPosition.length();
+    if (distanceFromOrigin > MAX_BREACH_BOUNDS) {
+      // Cancel breach if it would move too far from origin
+      console.warn(`[Breach] Cancelled: would move too far from origin (${distanceFromOrigin.toFixed(2)} > ${MAX_BREACH_BOUNDS})`);
+      onComplete();
+      startTime.current = null;
+      startPosition.current = null;
+      lastPosition.current = null;
+      return;
+    }
+
+    // Additional check for play area boundary
     let adjustedProgress = progress;
-    if (newPosition.length() >= PLAY_AREA_RADIUS) {
+    if (distanceFromOrigin >= PLAY_AREA_RADIUS) {
       // If we'd breach the boundary, clamp the position to stay inside
       newPosition.normalize().multiplyScalar(PLAY_AREA_RADIUS * 0.95);
       
@@ -152,28 +186,34 @@ export default function Breach({
           
           // IMPORTANT: Store previous health before damage is applied
           const previousHealth = enemy.health;
-          console.log(`[Breach] Enemy ${enemy.id} previous health: ${previousHealth}`);
+          
+          // Calculate damage with critical chance
+          const damageResult = calculateDamage(BREACH_DAMAGE);
           
           // Apply damage
-          onHit(enemy.id, BREACH_DAMAGE);
+          onHit(enemy.id, damageResult.damage);
+          
+          // Trigger critical hit callback if it's a critical
+          if (damageResult.isCritical && onCriticalHit) {
+            onCriticalHit();
+          }
           
           // Show damage number if function is provided
           if (showDamageNumber) {
             showDamageNumber(
               enemy.id, 
-              BREACH_DAMAGE, 
+              damageResult.damage, 
               enemy.position.clone(), 
-              true
+              true,
+              damageResult.isCritical
             );
           }
           
           // Check if enemy was killed by this hit
-          if (previousHealth > 0 && previousHealth - BREACH_DAMAGE <= 0) {
-            console.log(`[Breach] Enemy ${enemy.id} was killed! Calling Reignite`);
+          if (previousHealth > 0 && previousHealth - damageResult.damage <= 0) {
             
             // Verify reigniteRef is available before calling
             if (reigniteRef && reigniteRef.current) {
-              console.log(`[Breach] Triggering Reignite effect at position:`, enemy.position);
               reigniteRef.current.processKill(enemy.position.clone());
             } else {
               console.warn(`[Breach] Cannot trigger Reignite: reigniteRef is ${reigniteRef ? 'defined but current is null' : 'undefined'}`);

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Group, Vector3 } from 'three';
 import { Enemy } from '@/Versus/enemy';
+import { SynchronizedEffect } from '@/Multiplayer/MultiplayerContext';
 
 interface ChainLightningProps {
   parentRef: React.RefObject<Group>;
@@ -15,6 +16,9 @@ interface ChainLightningProps {
     isChainLightning?: boolean;
   }>>>;
   nextDamageNumberId: React.MutableRefObject<number>;
+  sendEffect?: (effect: Omit<SynchronizedEffect, 'id' | 'startTime'>) => void;
+  isInRoom?: boolean;
+  isPlayer?: boolean;
 }
 
 export const useChainLightning = ({
@@ -22,11 +26,14 @@ export const useChainLightning = ({
   enemies,
   onEnemyDamage,
   setDamageNumbers,
-  nextDamageNumberId
+  nextDamageNumberId,
+  sendEffect,
+  isInRoom,
+  isPlayer
 }: ChainLightningProps) => {
-  const CHAIN_CHANCE = 0.675;
-  const INITIAL_DAMAGE = 19;
-  const MAX_JUMPS = 5; 
+  const CHAIN_CHANCE = 0.375;
+  const INITIAL_DAMAGE = 23;
+  const MAX_JUMPS = 3; 
   
   const [lightningTargets, setLightningTargets] = useState<Vector3[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -61,7 +68,7 @@ export const useChainLightning = ({
     };
 
     const chainDamage = (jumpIndex: number) => {
-      const damages = [19, 17, 13, 11, 7]; // CUSTOM DAMAGE PRIMES
+      const damages = [19, 17, 13]; // CUSTOM DAMAGE PRIMES
       return damages[jumpIndex];
     };
 
@@ -114,12 +121,24 @@ export const useChainLightning = ({
     
     if (targets.length > 0) {
       setLightningTargets(targets);
+      
+      // Send chain lightning effect to other players in multiplayer
+      if (isInRoom && isPlayer && sendEffect && parentRef.current) {
+        sendEffect({
+          type: 'chainLightning',
+          position: parentRef.current.position.clone(),
+          direction: new Vector3(0, 1, 0), // Upward direction for lightning
+          duration: 500, // 500ms duration
+          chainTargets: targets
+        });
+      }
+      
       setTimeout(() => {
         setLightningTargets([]);
         setIsProcessing(false);
       }, 500);
     }
-  }, [parentRef, enemies, onEnemyDamage, setDamageNumbers, nextDamageNumberId, isProcessing]);
+  }, [parentRef, enemies, onEnemyDamage, setDamageNumbers, nextDamageNumberId, isProcessing, sendEffect, isInRoom, isPlayer]);
 
   return {
     processChainLightning,

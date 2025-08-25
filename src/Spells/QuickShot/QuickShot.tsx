@@ -2,7 +2,7 @@ import { Vector3 } from 'three';
 import { useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { useQuickShotManager } from '../QuickShot/useQuickShotManager';
-import { WeaponType, WEAPON_DAMAGES } from '../../Weapons/weapons';
+import { WeaponType, WeaponSubclass, WEAPON_DAMAGES } from '../../Weapons/weapons';
 import { useEagleEye } from '../EagleEye/useEagleEye';
 import EagleEyeManager from '../EagleEye/EagleEyeManager';
 
@@ -21,12 +21,14 @@ interface QuickShotProps {
     position: Vector3;
     isCritical: boolean;
     isEagleEye?: boolean;
+    isElementalQuickShot?: boolean;
   }>) => Array<{
     id: number;
     damage: number;
     position: Vector3;
     isCritical: boolean;
     isEagleEye?: boolean;
+    isElementalQuickShot?: boolean;
   }>) => void;
   nextDamageNumberId: React.MutableRefObject<number>;
   charges: Array<{
@@ -40,6 +42,14 @@ interface QuickShotProps {
     cooldownStartTime: number | null;
   }>>>;
   isEagleEyeUnlocked: boolean;
+  // Venom Bow consecutive hit tracking
+  currentSubclass?: WeaponSubclass;
+  level?: number;
+  venomConsecutiveHits?: number;
+  setVenomConsecutiveHits?: (count: number) => void;
+  setHasInstantPowershot?: (available: boolean) => void;
+  // Slow effect callback
+  onApplySlowEffect?: (enemyId: string, duration?: number) => void;
 }
 
 interface ProjectileData {
@@ -65,7 +75,13 @@ export const useQuickShot = ({
   nextDamageNumberId,
   charges,
   setCharges,
-  isEagleEyeUnlocked
+  isEagleEyeUnlocked,
+  currentSubclass,
+  level = 1,
+  venomConsecutiveHits = 0,
+  setVenomConsecutiveHits,
+  setHasInstantPowershot,
+  onApplySlowEffect
 }: QuickShotProps) => {
   const projectilePool = useRef<ProjectileData[]>([]);
   const POOL_SIZE = 8;
@@ -89,13 +105,33 @@ export const useQuickShot = ({
     eagleEyeManagerRef
   });
 
+  // Venom Bow consecutive hit tracking
+  const handleVenomHit = useCallback(() => {
+    if (currentSubclass === WeaponSubclass.VENOM && level >= 1 && setVenomConsecutiveHits && setHasInstantPowershot) {
+      const newCount = venomConsecutiveHits + 1;
+      setVenomConsecutiveHits(newCount);
+      
+      // Enable instant powershot after 15 consecutive hits
+      if (newCount >= 15) {
+        setHasInstantPowershot(true);
+        setVenomConsecutiveHits(0); // Reset counter after triggering instant powershot
+      }
+    }
+  }, [currentSubclass, level, venomConsecutiveHits, setVenomConsecutiveHits, setHasInstantPowershot]);
+
+  const handleVenomMiss = useCallback(() => {
+    if (currentSubclass === WeaponSubclass.VENOM && level >= 1 && setVenomConsecutiveHits) {
+      setVenomConsecutiveHits(0); // Reset counter on miss
+    }
+  }, [currentSubclass, level, setVenomConsecutiveHits]);
+
   useEffect(() => {
     projectilePool.current = Array(POOL_SIZE).fill(null).map((_, index) => ({
       id: index,
       position: new Vector3(),
       direction: new Vector3(),
       startPosition: new Vector3(),
-      maxDistance: 40,
+      maxDistance: 20,
       isQuickShot: true,
       power: 1,
       startTime: 0,
@@ -164,6 +200,10 @@ export const useQuickShot = ({
         const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
         
         if (distanceTraveled >= projectile.maxDistance) {
+          // Track miss for Venom Bow (if projectile didn't hit anything)
+          if (!projectile.hasCollided) {
+            handleVenomMiss();
+          }
           projectile.fadeStartTime = now;
           return;
         }
@@ -187,7 +227,11 @@ export const useQuickShot = ({
           );
           
           if (projectilePos2D.distanceTo(enemyPos2D) < 1.3) {
-            const damage = WEAPON_DAMAGES[WeaponType.BOW].normal;
+            // Calculate damage - enhanced for Elemental BOW at level 3+
+            const baseDamage = WEAPON_DAMAGES[WeaponType.BOW].normal;
+            const damage = (currentSubclass === WeaponSubclass.ELEMENTAL && level >= 3) ? 23 : baseDamage;
+            const isElementalQuickShot = currentSubclass === WeaponSubclass.ELEMENTAL && level >= 3;
+            
             onHit(enemy.id, damage);
 
             if (enemy.health - damage > 0) {
@@ -195,11 +239,21 @@ export const useQuickShot = ({
                 id: nextDamageNumberId.current++,
                 damage,
                 position: enemy.position.clone(),
-                isCritical: false
+                isCritical: false,
+                isElementalQuickShot
               }]);
               
-              if (isEagleEyeUnlocked) {
+              // Only trigger EagleEye effects for VENOM subclass
+              if (isEagleEyeUnlocked && currentSubclass === WeaponSubclass.VENOM) {
                 processHit(enemy.id, enemy.position);
+              }
+              
+              // Track consecutive hit for Venom Bow
+              handleVenomHit();
+              
+              // Apply slow effect for Elemental BOW at level 3+
+              if (isElementalQuickShot && onApplySlowEffect) {
+                onApplySlowEffect(enemy.id, 4000); // 4 second slow effect
               }
             }
 
@@ -221,7 +275,7 @@ export const useQuickShot = ({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [enemyData, onHit, setDamageNumbers, nextDamageNumberId, isEagleEyeUnlocked, processHit]);
+  }, [currentSubclass, level, handleVenomHit, handleVenomMiss, enemyData, onHit, setDamageNumbers, nextDamageNumberId, isEagleEyeUnlocked, processHit, onApplySlowEffect]);
 
   return {
     shootQuickShot,

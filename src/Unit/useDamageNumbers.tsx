@@ -21,6 +21,28 @@ export interface DamageNumber {
   isFireball?: boolean;
   isSummon?: boolean;
   isStealthStrike?: boolean;
+  isCrossentropyBolt?: boolean;
+  isPyroclast?: boolean;
+  isEagleEye?: boolean;
+  isBreach?: boolean;
+  isBowLightning?: boolean;
+  isBarrage?: boolean;
+  isGlacialShard?: boolean;
+  isAegis?: boolean;
+  isDivineStorm?: boolean;
+  isHolyBurn?: boolean;
+  isGuidedBolt?: boolean;
+  isColossusStrike?: boolean;
+  isColossusLightning?: boolean;
+  isFirestorm?: boolean;
+  isElementalBowPowershot?: boolean;
+  isElementalQuickShot?: boolean;
+  isPoisonDoT?: boolean;
+  isRaze?: boolean;
+  isSoulReaper?: boolean;
+  isLavaLash?: boolean;
+  isDragonBreath?: boolean;
+  isLegionEmpoweredScythe?: boolean;
 }
 
 export function useDamageNumbers() {

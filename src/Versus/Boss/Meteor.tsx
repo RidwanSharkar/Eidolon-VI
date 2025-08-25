@@ -3,28 +3,33 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import MeteorTrail from './MeteorTrail';
+import { Enemy } from '@/Versus/enemy';
 
 interface MeteorProps {
-  targetPosition: THREE.Vector3;
+  targetId: string;
+  initialTargetPosition: THREE.Vector3;
   onImpact: (damage: number) => void;
   onComplete: () => void;
   playerPosition: THREE.Vector3;
+  enemyData: Enemy[];
+  onHit?: (targetId: string, damage: number, isCritical: boolean, position: THREE.Vector3) => void;
 }
 
 const DAMAGE_RADIUS = 2.99;
 const IMPACT_DURATION = 1.25;
 const METEOR_SPEED = 27.75;
-const METEOR_DAMAGE = 84;
+const METEOR_DAMAGE = 250;
 const WARNING_RING_SEGMENTS = 32; // Reduced from 64
 const FIRE_PARTICLES_COUNT = 12;  // Reduced from 15
 
 // Reusable geometries and materials
-const meteorGeometry = new THREE.SphereGeometry(0.75, 16, 16);
+const meteorGeometry = new THREE.SphereGeometry(0.75, 16, 16); // 20% smaller (0.75 * 0.8)
 const meteorMaterial = new THREE.MeshBasicMaterial({ color: "#ff4400" });
-const warningRingGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
-const pulsingRingGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.8, DAMAGE_RADIUS - 0.6, WARNING_RING_SEGMENTS);
-const outerGlowGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.25, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
-const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+// Warning indicators scaled by half
+const warningRingGeometry = new THREE.RingGeometry((DAMAGE_RADIUS - 0.2) * 0.5, DAMAGE_RADIUS * 0.5, WARNING_RING_SEGMENTS);
+const pulsingRingGeometry = new THREE.RingGeometry((DAMAGE_RADIUS - 0.8) * 0.5, (DAMAGE_RADIUS - 0.6) * 0.5, WARNING_RING_SEGMENTS);
+const outerGlowGeometry = new THREE.RingGeometry((DAMAGE_RADIUS - 0.25) * 0.5, DAMAGE_RADIUS * 0.5, WARNING_RING_SEGMENTS);
+const particleGeometry = new THREE.SphereGeometry(0.05, 8, 8); // Half size for particles (0.1 * 0.5)
 
 // Reusable vectors to avoid allocations
 const tempPlayerGroundPos = new THREE.Vector3();
@@ -103,17 +108,19 @@ const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, on
   );
 };
 
-export default function Meteor({ targetPosition, onImpact, onComplete, playerPosition }: MeteorProps) {
+export default function Meteor({ targetId, initialTargetPosition, onImpact, onComplete, playerPosition, enemyData, onHit }: MeteorProps) {
   const meteorGroupRef = useRef<THREE.Group>(null);
   const meteorMeshRef = useRef<THREE.Mesh>(null);
 
+  // State for tracking current target position
+  const [currentTargetPosition, setCurrentTargetPosition] = useState(initialTargetPosition);
+  
   // useMemo for initial calculations
-  const [initialTargetPos, startPos, trajectory] = React.useMemo(() => {
-    const initTarget = new THREE.Vector3(targetPosition.x, -5, targetPosition.z);
-    const start = new THREE.Vector3(targetPosition.x, 60, targetPosition.z);
-    const traj = new THREE.Vector3().subVectors(initTarget, start).normalize();
-    return [initTarget, start, traj];
-  }, [targetPosition]);
+  const [, startPos] = React.useMemo(() => {
+    const initTarget = new THREE.Vector3(initialTargetPosition.x, -5, initialTargetPosition.z);
+    const start = new THREE.Vector3(initialTargetPosition.x, 60, initialTargetPosition.z);
+    return [initTarget, start];
+  }, [initialTargetPosition]);
 
   // state management
   const [state, setState] = useState({
@@ -131,6 +138,12 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
   }, []);
 
   useFrame((_, delta) => {
+    // Update target tracking - find current enemy position
+    const target = enemyData.find(enemy => enemy.id === targetId && enemy.health > 0 && !enemy.isDying);
+    if (target) {
+      setCurrentTargetPosition(target.position);
+    }
+
     if (!meteorGroupRef.current || !state.showMeteor || state.impactOccurred) {
       if (state.impactOccurred && !state.impactStartTime) {
         setState(prev => ({ ...prev, impactStartTime: Date.now() }));
@@ -139,22 +152,43 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
     }
 
     const currentPos = meteorGroupRef.current.position;
-    const distanceToTarget = currentPos.distanceTo(initialTargetPos);
+    const currentTargetGroundPos = new THREE.Vector3(currentTargetPosition.x, -5, currentTargetPosition.z);
+    const distanceToTarget = currentPos.distanceTo(currentTargetGroundPos);
 
     if (distanceToTarget < DAMAGE_RADIUS || currentPos.y <= 0.1) {
       setState(prev => ({ ...prev, impactOccurred: true, impactStartTime: Date.now() }));
       
-      // distance calculation
+      // Apply damage to all enemies within radius on impact
+      const impactPosition = new THREE.Vector3(currentTargetPosition.x, 0, currentTargetPosition.z);
+      
+      if (onHit) {
+        enemyData.forEach(enemy => {
+          // Only damage living enemies
+          if (enemy.health <= 0 || enemy.isDying) return;
+          
+          const enemyPos = new THREE.Vector3(enemy.position.x, 0, enemy.position.z);
+          const distance = enemyPos.distanceTo(impactPosition);
+          
+          if (distance <= DAMAGE_RADIUS) {
+            onHit(enemy.id, METEOR_DAMAGE, false, impactPosition);
+          }
+        });
+      }
+      
+      // Also check if player is in damage radius
       tempPlayerGroundPos.set(playerPosition.x, 0, playerPosition.z);
-      tempTargetGroundPos.set(initialTargetPos.x, 0, initialTargetPos.z);
+      tempTargetGroundPos.set(currentTargetPosition.x, 0, currentTargetPosition.z);
       
       if (tempPlayerGroundPos.distanceTo(tempTargetGroundPos) <= DAMAGE_RADIUS) {
         onImpact(METEOR_DAMAGE);
       }
+      return;
     }
 
+    // Calculate homing trajectory towards current target position
+    const directionToTarget = currentTargetGroundPos.clone().sub(currentPos).normalize();
     const speed = METEOR_SPEED * delta;
-    currentPos.addScaledVector(trajectory, speed);
+    currentPos.addScaledVector(directionToTarget, speed);
   });
 
   const getPulsingScale = useCallback((): [number, number, number] => {
@@ -164,7 +198,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
 
   return (
      <>
-      <group position={[initialTargetPos.x, 0.1, initialTargetPos.z]}>
+      <group position={[currentTargetPosition.x, 0.1, currentTargetPosition.z]}>
         {/* Warning rings using shared geometries */}
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <primitive object={warningRingGeometry} />
@@ -205,9 +239,9 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
           <mesh
             key={i}
             position={[
-              Math.sin(Date.now() * 0.001 + i) * (DAMAGE_RADIUS - 0.5),
-              Math.sin(Date.now() * 0.002 + i) * 0.5,
-              Math.cos(Date.now() * 0.001 + i) * (DAMAGE_RADIUS - 0.5)
+              Math.sin(Date.now() * 0.001 + i) * (DAMAGE_RADIUS - 0.5) * 0.5, // Half size for particles
+              Math.sin(Date.now() * 0.002 + i) * 0.25, // Half height
+              Math.cos(Date.now() * 0.001 + i) * (DAMAGE_RADIUS - 0.5) * 0.5 // Half size for particles
             ]}
           >
             <primitive object={particleGeometry} />
@@ -231,7 +265,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
             <MeteorTrail 
               meshRef={meteorMeshRef} 
               color={new THREE.Color("#ff4400")}
-              size={0.09}
+              size={0.052}
             />
           </mesh>
         </group>
@@ -239,7 +273,7 @@ export default function Meteor({ targetPosition, onImpact, onComplete, playerPos
 
       {/* Add impact effect */}
       {state.impactStartTime && createMeteorImpactEffect(
-        meteorGroupRef.current?.position || initialTargetPos,
+        meteorGroupRef.current?.position || new THREE.Vector3(currentTargetPosition.x, 0, currentTargetPosition.z),
         state.impactStartTime,
         onComplete
       )}

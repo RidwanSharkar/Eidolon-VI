@@ -1,9 +1,8 @@
 // src/versus/Reaper/ReaperModel.tsx
 import React, { useRef } from 'react';
 import { Group } from 'three';
-import BoneTail from '../../gear/BoneTail';
 import BonePlate from '../../gear/BonePlate';  
-import BoneWings from '../../gear/BoneWings';  
+import ReaperBoneWings from './ReaperBoneWings';  
 import ReaperBoneVortex from './ReaperBoneVortex';  
 import DragonSkull from '../../gear/DragonSkull';  
 import ReaperTrailEffect from './ReaperTrailEffect';
@@ -41,7 +40,7 @@ export default function ReaperModel({ isAttacking }: ReaperModelProps) {
       <group scale={[1.15, 1.0, 1.0]} position={[0, 1.35, 0]}>
         {/* Left Wing */}
         <group rotation={[0, Math.PI / 5, 0]}>
-          <BoneWings 
+          <ReaperBoneWings 
             collectedBones={12} 
             isLeftWing={true}
             parentRef={groupRef} 
@@ -50,7 +49,7 @@ export default function ReaperModel({ isAttacking }: ReaperModelProps) {
         
         {/* Right Wing */}
         <group rotation={[0, -Math.PI / 5, 0]}>
-          <BoneWings 
+          <ReaperBoneWings 
             collectedBones={12} 
             isLeftWing={false}
             parentRef={groupRef} 
@@ -60,10 +59,7 @@ export default function ReaperModel({ isAttacking }: ReaperModelProps) {
 
 
 
-      {/* Scaled Tail - smaller */}
-      <group scale={[1.2, 1.2, 1.2]} position={[0, 1.25, 0.14]}>
-        <BoneTail />
-      </group>
+
 
       {/* Add Glowing Core Effect - smaller */}
       <group position={[0, 1, 0]} scale={[0.65, 0.65, 0.65]}>

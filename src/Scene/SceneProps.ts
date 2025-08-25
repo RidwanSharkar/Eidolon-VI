@@ -1,5 +1,5 @@
 import { Vector3 } from 'three';
-import { WeaponType } from '../Weapons/weapons';
+import { WeaponType, WeaponSubclass } from '../Weapons/weapons';
 import { UnitProps } from '../Unit/UnitProps';
 
 
@@ -15,7 +15,7 @@ export interface SkeletonProps {
 
 export interface SceneProps {
   unitProps: UnitProps;
-  onWeaponSelect: (weapon: WeaponType) => void;
+  onWeaponSelect: (weapon: WeaponType, subclass?: WeaponSubclass) => void;
   onLevelComplete?: () => void;
   onReset: () => void;
   skeletonProps: SkeletonProps[];
@@ -27,6 +27,15 @@ export interface SceneProps {
   initialSkeletons?: number;
   spawnCount?: number;
   bossActive: boolean;
+  onStealthKillCountChange?: (count: number) => void;
+  onGlacialShardKillCountChange?: (count: number) => void;
+  canVault?: () => boolean;
+  consumeDashCharge?: () => boolean;
+  onShieldStateChange?: (hasShield: boolean, shieldAbsorption: number) => void;
+  playerStunRef?: React.MutableRefObject<{ triggerStun: (duration: number) => void } | null>;
+  onEviscerateLashesChange?: (charges: Array<{ id: number; available: boolean; cooldownStartTime: number | null }>) => void;
+  onBoneclawChargesChange?: (charges: Array<{ id: number; available: boolean; cooldownStartTime: number | null }>) => void;
+  onIncinerateStacksChange?: (stacks: number) => void;
 }
 
 export interface ScenePropsWithCallback extends SceneProps {

@@ -5,6 +5,9 @@ import { Group, Shape, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { DamageNumber } from '@/Unit/useDamageNumbers';
+import { WeaponSubclass, getWeaponDamage, WeaponType } from '@/Weapons/weapons';
+import { calculateDamage } from '@/Weapons/damage';
+
 
 interface SpearProps {
   isSwinging: boolean;
@@ -14,7 +17,7 @@ interface SpearProps {
     position: Vector3;
     health: number;
   }>;
-  onHit?: (targetId: string, damage: number) => void;
+  onHit?: (targetId: string, damage: number, isCritical?: boolean) => void;
   setDamageNumbers?: (callback: (prev: DamageNumber[]) => DamageNumber[]) => void;
   nextDamageNumberId?: { current: number };
   isWhirlwinding?: boolean;
@@ -23,6 +26,10 @@ interface SpearProps {
     available: boolean;
     cooldownStartTime: number | null;
   }>;
+  currentSubclass?: WeaponSubclass;
+  isThrowSpearCharging?: boolean;
+  throwSpearChargeProgress?: number;
+  isSpearThrown?: boolean;
 }
 
 export default function Spear({ 
@@ -33,7 +40,11 @@ export default function Spear({
   setDamageNumbers,
   nextDamageNumberId,
   isWhirlwinding = false,
-  fireballCharges = []
+  fireballCharges = [],
+  currentSubclass,
+  isThrowSpearCharging = false,
+  throwSpearChargeProgress = 0,
+  isSpearThrown = false
 }: SpearProps) {
   const spearRef = useRef<Group>(null);
   const swingProgress = useRef(0);
@@ -43,6 +54,12 @@ export default function Spear({
   const whirlwindRotation = useRef(0);
   const whirlwindSpeed = useRef(0);
   const prevWhirlwindState = useRef(false);
+
+
+
+  // Burst attack state for Storm subclass
+  const burstCount = useRef(0); // Track which attack we're on (0, 1) - 2 attacks total
+  const isBurstAttack = currentSubclass === WeaponSubclass.STORM;
 
   // Check if whirlwind should be active based on charges
   const hasAvailableCharges = fireballCharges.some(charge => charge.available);
@@ -144,28 +161,84 @@ export default function Spear({
       return;
     }
 
-    if (isSwinging) {
-      if (swingProgress.current === 0) {
-        hitCountThisSwing.current = {};
-        lastHitDetectionTime.current = {};
+    // Handle ThrowSpear charging animation
+    if (isThrowSpearCharging) {
+      // Charging windup animation - spear pulls back and glows
+      const windupAmount = -0.75 * throwSpearChargeProgress; // Pull back based on charge
+      const heightOffset = 0.5 * throwSpearChargeProgress; // Lift up slightly
+      const tiltAmount = -0.5 * throwSpearChargeProgress; // Tilt back for throwing stance
+      
+      // Smoothly animate to charging position
+      spearRef.current.position.x += (basePosition[0] - spearRef.current.position.x) * 0.1;
+      spearRef.current.position.y += (basePosition[1] + heightOffset - spearRef.current.position.y) * 0.1;
+      spearRef.current.position.z += (basePosition[2] + windupAmount - spearRef.current.position.z) * 0.1;
+      
+      // Tilt the spear back for throwing stance
+      const targetRotationX = -Math.PI/2 + tiltAmount;
+      spearRef.current.rotation.x += (targetRotationX - spearRef.current.rotation.x) * 0.1;
+      spearRef.current.rotation.y += (0 - spearRef.current.rotation.y) * 0.1;
+      spearRef.current.rotation.z += (Math.PI - spearRef.current.rotation.z) * 0.1;
+      
+      // Add slight trembling effect when fully charged
+      if (throwSpearChargeProgress > 0.8) {
+        const trembleAmount = 0.02 * (throwSpearChargeProgress - 0.8) * 5;
+        spearRef.current.position.x += (Math.random() - 0.5) * trembleAmount;
+        spearRef.current.position.y += (Math.random() - 0.5) * trembleAmount;
+        spearRef.current.position.z += (Math.random() - 0.5) * trembleAmount;
       }
       
-      swingProgress.current += delta * 15;
+      return;
+    }
+
+    // Handle spear being thrown (hide the weapon)
+    if (isSpearThrown) {
+      // Move spear off-screen or make it invisible
+      spearRef.current.position.set(1000, 1000, 1000); // Move far away
+      return;
+    }
+
+    if (isSwinging) {
+      if (swingProgress.current === 0) {
+        if (isBurstAttack) {
+          // For burst attacks, only reset hit tracking if we're starting a fresh burst sequence
+          if (burstCount.current === 0) {
+            hitCountThisSwing.current = {};
+            lastHitDetectionTime.current = {};
+          }
+        } else {
+          // For non-burst attacks, always reset hit tracking
+          hitCountThisSwing.current = {};
+          lastHitDetectionTime.current = {};
+        }
+        
+
+      }
+      
+              // Faster swing speed for burst attacks
+        const swingSpeed = isBurstAttack ? 22.5 : 15; // Double speed for Storm burst
+      swingProgress.current += delta * swingSpeed;
       const swingPhase = Math.min(swingProgress.current / Math.PI / 1.5, 1);
       
       if (swingPhase > 0.4 && swingPhase < 0.8 && onHit && setDamageNumbers && nextDamageNumberId) {
         enemyData?.forEach(enemy => {
           const now = Date.now();
-          const lastHitTime = lastHitDetectionTime.current[enemy.id] || 0;
           
-          if (now - lastHitTime < 200) return;
+          // For burst attacks, track hits per burst attack, not per swing
+          const hitKey = isBurstAttack ? `${enemy.id}_burst_${burstCount.current}` : enemy.id;
+          const lastHitTime = lastHitDetectionTime.current[hitKey] || 0;
           
-          if (hitCountThisSwing.current[enemy.id]) return;
+          // Shorter hit detection window for burst attacks
+          const hitCooldown = isBurstAttack ? 75 : 200; // Even shorter for burst attacks
+          if (now - lastHitTime < hitCooldown) return;
+          
+          if (hitCountThisSwing.current[hitKey]) return;
           
           const spearTip = spearRef.current!.localToWorld(new Vector3(0, 1, 0.35));
           
+          // Use player's quaternion instead of spear's for forward direction
+          const parentQuaternion = spearRef.current!.parent?.quaternion || spearRef.current!.quaternion;
           const forward = new Vector3(0, 0, 1)
-            .applyQuaternion(spearRef.current!.quaternion)
+            .applyQuaternion(parentQuaternion)
             .normalize();
           
           const toEnemy = new Vector3()
@@ -182,19 +255,41 @@ export default function Spear({
               .subVectors(enemy.position, closestPoint)
               .length();
             
-            if (distanceFromLine <= 1) {
-              const damage = 29;
-              onHit(enemy.id, damage);
+            if (distanceFromLine <= 1.75) {
+              const baseDamage = getWeaponDamage(WeaponType.SPEAR, currentSubclass, undefined);
+              const spearRange = 5.65; // Maximum spear range
+              
+              // Check if this is a tip hit (80-100% of max range) for guaranteed critical
+              const isTipHit = projection >= spearRange * 0.725;
+              
+              let damage, isCritical;
+              
+              if (isTipHit) {
+                // Guaranteed critical for tip hits
+                damage = baseDamage * 2;
+                isCritical = true;
+                
+                // Critical hit effects are now handled in Unit.tsx
+              } else {
+                // Use standard critical chance calculation for non-tip hits
+                const damageResult = calculateDamage(baseDamage);
+                damage = damageResult.damage;
+                isCritical = damageResult.isCritical;
+                // Critical hit effects are now handled in Unit.tsx
+              }
+              
+              onHit(enemy.id, damage, isCritical);
               
               setDamageNumbers(prev => [...prev, {
                 id: nextDamageNumberId.current++,
                 damage,
                 position: enemy.position.clone(),
-                isCritical: false
+                isCritical
               }]);
               
-              hitCountThisSwing.current[enemy.id] = 1;
-              lastHitDetectionTime.current[enemy.id] = now;
+              // Use the same hitKey system for recording hits
+              hitCountThisSwing.current[hitKey] = 1;
+              lastHitDetectionTime.current[hitKey] = now;
             }
           }
         });
@@ -202,18 +297,38 @@ export default function Spear({
       
       if (swingProgress.current >= Math.PI * 0.75) {
         swingProgress.current = 0;
-        hitCountThisSwing.current = {};
-        lastHitDetectionTime.current = {};
-        spearRef.current.rotation.set(0, 0, Math.PI);
-        spearRef.current.position.set(...basePosition);
-        onSwingComplete?.();
+        
+        // Handle burst attack completion
+        if (isBurstAttack) {
+          burstCount.current++;
+          
+          // Complete after 2 attacks (0 and 1, so when count reaches 2)
+          if (burstCount.current >= 2) {
+            burstCount.current = 0;
+            // Reset position and rotation only when burst sequence is complete
+            spearRef.current.rotation.set(-Math.PI/2, 0, Math.PI);
+            spearRef.current.position.set(...basePosition);
+            // Reset hit tracking when the entire burst sequence is complete
+            hitCountThisSwing.current = {};
+            lastHitDetectionTime.current = {};
+            onSwingComplete?.();
+          }
+          // Continue burst - don't reset position/rotation between burst attacks
+        } else {
+          // Normal single attack completion - reset position, rotation, and hit tracking
+          spearRef.current.rotation.set(-Math.PI/2, 0, Math.PI);
+          spearRef.current.position.set(...basePosition);
+          hitCountThisSwing.current = {};
+          lastHitDetectionTime.current = {};
+          onSwingComplete?.();
+        }
         return;
       }
       
       const thrustPhase = swingPhase;
       
-      const windUpAmount = -0.65;
-      const forwardThrustAmount = 3.350;
+      const windUpAmount = -0.75;
+      const forwardThrustAmount = 2.850;
       
       let thrustZ;
       if (thrustPhase < 0.25) {
@@ -309,11 +424,12 @@ export default function Spear({
   };
 
   return (
-    <group 
-      position={[0, -0.4, 0.6]}
-      rotation={[-0.55, 0.15, 0]}
-      scale={[0.825, 0.75, 0.75]}
-    >
+    <>
+      <group 
+        position={[0, -0.4, 0.6]}
+        rotation={[-0.55, 0.15, 0]}
+        scale={[0.825, 0.75, 0.75]}
+      >
       <group 
         ref={spearRef} 
         position={[basePosition[0], basePosition[1], basePosition[2]]}
@@ -366,8 +482,8 @@ export default function Spear({
           <mesh>
             <sphereGeometry args={[0.155, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFF0000)}         // Pure yellow
-              emissive={new THREE.Color(0xFF0000)}      // Yellow emission
+              color={new THREE.Color(0xFF544E)}         // Spear red to match GhostTrail
+              emissive={new THREE.Color(0xFF544E)}      // Spear red emission
               emissiveIntensity={2}                    // for orange 
               transparent
               opacity={1}
@@ -377,8 +493,8 @@ export default function Spear({
           <mesh>
             <sphereGeometry args={[0.1, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFF0000)}
-              emissive={new THREE.Color(0xFF0000)}
+              color={new THREE.Color(0xFF544E)}
+              emissive={new THREE.Color(0xFF544E)}
               emissiveIntensity={40}
               transparent
               opacity={0.8}
@@ -388,8 +504,8 @@ export default function Spear({
           <mesh>
             <sphereGeometry args={[0.145, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFF0000)}
-              emissive={new THREE.Color(0xFF0000)}
+              color={new THREE.Color(0xFF544E)}
+              emissive={new THREE.Color(0xFF544E)}
               emissiveIntensity={35}
               transparent
               opacity={0.6}
@@ -399,8 +515,8 @@ export default function Spear({
           <mesh>
             <sphereGeometry args={[.175, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFF0000)}
-              emissive={new THREE.Color(0xFF0000)}
+              color={new THREE.Color(0xFF544E)}
+              emissive={new THREE.Color(0xFF544E)}
               emissiveIntensity={30}
               transparent
               opacity={0.4}
@@ -408,7 +524,7 @@ export default function Spear({
           </mesh>
 
           <pointLight 
-            color={new THREE.Color(0xFF0000)}
+            color={new THREE.Color(0xFF544E)}
             intensity={2}
             distance={0.5}
             decay={2}
@@ -421,8 +537,8 @@ export default function Spear({
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                 <meshStandardMaterial 
-                  color={new THREE.Color(0xFF0000)}
-                  emissive={new THREE.Color(0xFF0000)}
+                  color={new THREE.Color(0xFF544E)}
+                  emissive={new THREE.Color(0xFF544E)}
                   emissiveIntensity={1.55}
                   metalness={0.8}
                   roughness={0.1}
@@ -439,8 +555,8 @@ export default function Spear({
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                 <meshStandardMaterial 
-                  color={new THREE.Color(0xFF0000)}
-                  emissive={new THREE.Color(0xFF0000)}
+                  color={new THREE.Color(0xFF544E)}
+                  emissive={new THREE.Color(0xFF544E)}
                   emissiveIntensity={1.55}
                   metalness={0.8}
                   roughness={0.1}
@@ -457,8 +573,8 @@ export default function Spear({
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                 <meshStandardMaterial 
-                  color={new THREE.Color(0xFF0000)}
-                  emissive={new THREE.Color(0xFF0000)}
+                  color={new THREE.Color(0xFF544E)}
+                  emissive={new THREE.Color(0xFF544E)}
                   emissiveIntensity={1.55}
                   metalness={0.8}
                   roughness={0.1}
@@ -475,8 +591,8 @@ export default function Spear({
           <mesh>
             <extrudeGeometry args={[createInnerBladeShape(), bladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xFF0000)}
-              emissive={new THREE.Color(0xFF0000)}
+              color={new THREE.Color(0xFF544E)}
+              emissive={new THREE.Color(0xFF544E)}
               emissiveIntensity={1.5}
               metalness={0.3}
               roughness={0.1}
@@ -486,8 +602,8 @@ export default function Spear({
           <mesh>
             <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xFF0000)}
-              emissive={new THREE.Color(0xFF0000)}
+              color={new THREE.Color(0xFF544E)}
+              emissive={new THREE.Color(0xFF544E)}
               emissiveIntensity={1}
               metalness={0.2}
               roughness={0.1}
@@ -500,5 +616,6 @@ export default function Spear({
 
       </group>
     </group>
+    </>
   );
 }
