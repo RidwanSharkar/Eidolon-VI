@@ -125,7 +125,7 @@ export default function GhostTrail({ parentRef, weaponType, weaponSubclass, targ
             if (el) trailsRef.current[i] = el;
           }}
         >
-          <sphereGeometry args={[0.43, 32, 32]} />
+          <sphereGeometry args={[0.43, 8, 8]} />
           <meshBasicMaterial
             color={new Color(getTrailColor())}
             transparent

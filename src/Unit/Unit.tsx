@@ -22,8 +22,6 @@ import GhostTrail from '@/color/GhostTrail';
 import BoneWings from '@/gear/BoneWings';
 import BoneAura from '@/color/BoneAura';
 import BonePlate from '@/gear/BonePlate';
-import BoneTail from '@/gear/BoneTail';
-import BoneVortex from '@/color/BoneVortex';
 import { UnitProps, AllSummonedUnitInfo } from '@/Unit/UnitProps';
 import { useUnitControls } from '@/Unit/useUnitControls';
 import { calculateDamage } from '@/Weapons/damage';
@@ -73,7 +71,6 @@ import OrbShield from '@/Spells/Avalanche/OrbShield';
 import { FrostExplosion } from '@/Spells/Avalanche/FrostExplosion';
 import FrozenEffect from '@/Spells/Firebeam/FrozenEffect';
 import Raze from '@/Spells/Raze/Raze';
-import { DragonHorns } from '@/gear/DragonHorns';
 import Whirlwind from '@/Spells/Whirlwind/Whirlwind';
 import { useStealthEffect } from '../Spells/Stealth/useStealthEffect';
 import { stealthManager } from '../Spells/Stealth/StealthManager';
@@ -305,13 +302,6 @@ export default function Unit({
     activateEmpowerment: legionEmpowerment.activateEmpowerment
   }), [legionEmpowerment]);
   
-  // Debug: Log when Legion empowerment state changes
-  useEffect(() => {
-    console.log('[Unit] Legion empowerment state changed:', {
-      isEmpowered: legionEmpowerment.isEmpowered,
-      timeRemaining: legionEmpowerment.timeRemaining
-    });
-  }, [legionEmpowerment.isEmpowered, legionEmpowerment.timeRemaining]);
   
   // Update total skeleton count when SoulReaper changes
   useEffect(() => {
@@ -406,40 +396,32 @@ export default function Unit({
 
   // Handle Incinerate stack changes
   const handleIncinerateStackChange = useCallback((stacks: number) => {
-    console.log('[Unit] handleIncinerateStackChange called with stacks:', stacks, 'current internal stacks:', incinerateStacks);
     setIncinerateStacks(stacks);
     setIsIncinerateEmpowered(stacks >= 25);
     // Report to parent component
     if (onIncinerateStacksChange) {
       onIncinerateStacksChange(stacks);
     }
-  }, [onIncinerateStacksChange, incinerateStacks]);
+  }, [onIncinerateStacksChange]);
 
   // Create a ref to hold the reset function that will be available after LavaLash hook
   const resetIncinerateStacksRef = useRef<(() => void) | null>(null);
 
   // Handle empowerment consumption
   const handleIncinerateEmpowermentUsed = useCallback(() => {
-    console.log('[Unit] Empowerment consumed, resetting stacks to 0');
-    console.log('[Unit] Current incinerateStacks before reset:', incinerateStacks);
     setIncinerateStacks(0);
     setIsIncinerateEmpowered(false);
     
     // Reset the LavaLash internal state if available
     if (resetIncinerateStacksRef.current) {
-      console.log('[Unit] Calling resetIncinerateStacks via ref');
       resetIncinerateStacksRef.current();
-    } else {
-      console.log('[Unit] resetIncinerateStacks not available yet');
-    }
+    } 
     
     // Report to parent component
     if (onIncinerateStacksChange) {
-      console.log('[Unit] Calling onIncinerateStacksChange with 0');
       onIncinerateStacksChange(0);
     }
-    console.log('[Unit] Reset complete');
-  }, [onIncinerateStacksChange, incinerateStacks]);
+  }, [onIncinerateStacksChange]);
 
   // Use incinerateStacks to avoid unused variable warning
   void incinerateStacks;
@@ -635,7 +617,6 @@ export default function Unit({
     onKillingBlow: (position: Vector3) => {
       // Trigger totem summoning when BoneClaw gets a killing blow
       if (currentWeapon === WeaponType.SCYTHE && currentSubclass === WeaponSubclass.CHAOS) {
-        console.log('🎯 BoneClaw killing blow detected! Summoning Chaos Totem...');
         
         const summonId = Date.now();
         
@@ -645,12 +626,10 @@ export default function Unit({
           const currentTotems = prev.filter(effect => effect.type === 'summon').length;
           
           if (currentTotems >= maxTotems) {
-            console.log(`⚠️ Maximum totems (${maxTotems}) already exist, not summoning another`);
             return prev;
           }
 
           // Start the healing effect when totem is summoned
-          console.log('🟢 [Chaos Totem] Starting healing: 2HP per second for 8 seconds');
           startTotemHealing();
 
           // Send totem effect to other players in multiplayer
@@ -675,7 +654,6 @@ export default function Unit({
               direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
               onComplete: () => {
                 // Stop healing when totem expires
-                console.log('🛑 [Chaos Totem] Totem expired, stopping healing');
                 stopTotemHealing();
               },
               onStartCooldown: () => {}
@@ -936,7 +914,6 @@ export default function Unit({
   // Listen for reset events to reset stealth kill count and clear damage numbers
   useEffect(() => {
     const handleGameReset = () => {
-      console.log('🔄 Unit reset - clearing all state');
       resetStealthKillCount();
       setDamageNumbers([]); // Clear all damage numbers on reset
       setActiveEffects([]);
@@ -957,7 +934,6 @@ export default function Unit({
       nextFireballId.current = 0;
       nextSmiteId.current = 0;
       
-      console.log('✅ Unit state reset completed');
     };
 
     window.addEventListener('gameReset', handleGameReset);
@@ -2014,12 +1990,10 @@ export default function Unit({
       duration,
       startTime: currentTime
     }]);
-    
-    console.log(`[Player Stun] ⚡ Stun state set to TRUE, will end at ${new Date(currentTime + duration).toLocaleTimeString()}`);
+  
     
     // Clear stun state after duration
     const timeoutId = setTimeout(() => {
-      console.log(`[Player Stun] ⏰ Timeout triggered after ${duration}ms - clearing stun state`);
       setIsPlayerStunned(false);
       stunEndTime.current = 0;
       console.log(`[Player Stun] ✅ Stun ENDED - Player can move and use abilities again (health still: ${health})`);
@@ -2042,7 +2016,6 @@ export default function Unit({
 
   // Debug logging for stun state changes
   useEffect(() => {
-    console.log(`[Player Stun] 🔄 Stun state changed to: ${isPlayerStunned}`);
   }, [isPlayerStunned]);
 
   useFrame((_, delta) => {
@@ -2050,14 +2023,12 @@ export default function Unit({
     
     // Backup stun clearing mechanism - check if stun should have ended
     if (isPlayerStunned && stunEndTime.current > 0 && Date.now() >= stunEndTime.current) {
-      console.log(`[Player Stun] 🔄 Backup stun clear triggered - setTimeout may have failed`);
       setIsPlayerStunned(false);
       stunEndTime.current = 0;
     }
     
     // Failsafe: Clear stun if it's been active for more than 5 seconds (something went wrong)
     if (isPlayerStunned && stunEndTime.current > 0 && Date.now() - stunEndTime.current > 3000) {
-      console.log(`[Player Stun] 🚨 FAILSAFE: Clearing stun that has been active too long`);
       setIsPlayerStunned(false);
       stunEndTime.current = 0;
     }
@@ -2504,22 +2475,15 @@ export default function Unit({
     reigniteRef, // For triggering Reignite on kills
     onCooldownReset: (weapon: string, ability: string) => {
       // Reset ThrowSpear cooldown to 0 when hitting stunned enemies
-      console.log('[Unit] onCooldownReset called with:', weapon, ability);
+
       if (weapon === 'spear' && ability === 'r' && onResetAbilityCooldown) {
-        console.log('[Unit] Resetting ThrowSpear cooldown');
         onResetAbilityCooldown(WeaponType.SPEAR, 'r');
-      } else {
-        console.log('[Unit] Conditions not met for cooldown reset:', { weapon, ability, hasResetFunction: !!onResetAbilityCooldown });
       }
     },
     onAbilityUse: (weapon: string, ability: string) => {
       // Set ThrowSpear cooldown when spear is actually thrown
-      console.log('[Unit] onAbilityUse called with:', weapon, ability);
       if (weapon === 'spear' && ability === 'r' && onAbilityUse) {
-        console.log('[Unit] Setting ThrowSpear cooldown');
         onAbilityUse(WeaponType.SPEAR, 'r');
-      } else {
-        console.log('[Unit] Conditions not met for setting cooldown:', { weapon, ability, hasAbilityUseFunction: !!onAbilityUse });
       }
     }
   });
@@ -2605,19 +2569,16 @@ export default function Unit({
     // First try Divine Shield (highest priority as it's a passive always-on ability)
     if (shieldState.isActive && shieldState.currentShield > 0) {
       remainingDamage = takeShieldDamage(damage);
-      console.log(`[Unit] After Divine Shield: ${remainingDamage} damage remaining`);
     }
     
     // Then try Blizzard shield (higher priority since it's temporary)
     if (remainingDamage > 0 && hasBlizzardShield && blizzardShieldAbsorption > 0) {
       remainingDamage = absorbBlizzardDamage(remainingDamage);
-      console.log(`[Unit] After Blizzard shield: ${remainingDamage} damage remaining`);
     }
     
     // Finally try Glacial Shard shield
     if (remainingDamage > 0 && glacialShardRef.current?.hasShield) {
       remainingDamage = glacialShardRef.current.absorbDamage(remainingDamage);
-      console.log(`[Unit] After Glacial Shard shield: ${remainingDamage} damage remaining`);
     }
     
     return remainingDamage;
@@ -2703,7 +2664,6 @@ export default function Unit({
     if (blizzardEffects.length > prevBlizzardEffects.length && 
         currentWeapon === WeaponType.SABRES && 
         currentSubclass === WeaponSubclass.ASSASSIN) {
-      console.log('[Unit] New Blizzard detected for Assassin Sabres, activating shield...');
       activateBlizzardShield();
     }
     
@@ -3365,13 +3325,10 @@ export default function Unit({
         });
         
         // Log cleanup if we removed any damage numbers
-        if (filtered.length < prev.length) {
-          console.log(`🧹 Cleaned up ${prev.length - filtered.length} stuck damage numbers`);
-        }
-        
+
         return filtered;
       });
-    }, 2000); // Check every 2 seconds
+    }, 3000); // Check every 2 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -3542,10 +3499,6 @@ export default function Unit({
     const fireball = activeFireballsRef.current.find(f => f.id === fireballId);
     const isCrossentropyBolt = fireball?.isCrossentropyBolt;
 
-    // Debug logging for Crossentropy Bolt hits
-    if (isCrossentropyBolt) {
-      console.log('💥 Crossentropy Bolt hit!', { fireballId, targetId, isCrossentropyBolt });
-    }
 
     // Calculate damage - scale with level for Chaos Scythe subclass
     let baseDamage = 73; // Default damage
@@ -3601,16 +3554,9 @@ export default function Unit({
     }
     const { damage, isCritical } = calculateDamage(finalDamage);
     
-    // Debug logging for damage calculation
-    if (isCrossentropyBolt) {
-      console.log('⚡ Crossentropy Bolt damage calculation:', { level, baseDamage, finalDamage, damage, isCritical });
-    } else if (currentWeapon === WeaponType.SCYTHE && currentSubclass === WeaponSubclass.CHAOS) {
-      console.log('🔮 Chaos Scythe Entropic Bolt damage:', { level, baseDamage, finalDamage, damage, isCritical });
-    }
     
     // Passive Chaos Totem summoning on critical Fireball/Entropic Bolt hits
     if (isCritical && currentWeapon === WeaponType.SCYTHE && currentSubclass === WeaponSubclass.CHAOS) {
-      console.log('🎯 Critical hit detected! Summoning Chaos Totem passively...');
       
       const summonId = Date.now();
       
@@ -3620,12 +3566,10 @@ export default function Unit({
         const currentTotems = prev.filter(effect => effect.type === 'summon').length;
         
         if (currentTotems >= maxTotems) {
-          console.log(`⚠️ Maximum totems (${maxTotems}) already exist, not summoning another`);
           return prev;
         }
 
         // Start the healing effect when totem is summoned
-        console.log('🟢 [Chaos Totem] Starting healing: 2HP per second for 8 seconds');
         startTotemHealing();
 
         // Send totem effect to other players in multiplayer
@@ -3650,7 +3594,6 @@ export default function Unit({
             direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
             onComplete: () => {
               // Stop healing when totem expires
-              console.log('🛑 [Chaos Totem] Totem expired, stopping healing');
               stopTotemHealing();
             },
             onStartCooldown: () => {}
@@ -3685,11 +3628,7 @@ export default function Unit({
           reigniteRef.current) {
         // Ensure we pass a fresh clone of the position
         const killPosition = enemy.position.clone();
-        console.log(`[Fireball] Reignite processKill at position:`, {
-          x: killPosition.x.toFixed(3),
-          y: killPosition.y.toFixed(3),
-          z: killPosition.z.toFixed(3)
-        });
+        
         reigniteRef.current.processKill(killPosition);
       }
     }
@@ -3774,19 +3713,16 @@ export default function Unit({
     const aggressiveCleanup = setInterval(() => {
       // Check if we have too many damage numbers
       if (damageNumbers.length > 30) {
-        console.log(`🧹 Aggressive damage number cleanup - ${damageNumbers.length} damage numbers detected`);
         setDamageNumbers(prev => prev.slice(-20)); // Keep only the last 20
       }
       
       // Check if we have too many active effects
       if (activeEffects.length > 50) {
-        console.log(`🧹 Aggressive effect cleanup - ${activeEffects.length} active effects detected`);
         setActiveEffects(prev => prev.slice(-30)); // Keep only the last 30
       }
       
       // Check if we have too many fireballs
       if (fireballs.length > 20) {
-        console.log(`🧹 Aggressive fireball cleanup - ${fireballs.length} fireballs detected`);
         setFireballs(prev => prev.slice(-10)); // Keep only the last 10
       }
     }, 3000); // Check every 3 seconds
@@ -3894,7 +3830,6 @@ export default function Unit({
   ) => {
     // Skip weapon check if ignoreWeaponCheck is true
     if (!ignoreWeaponCheck && (currentWeapon !== WeaponType.SPEAR || !abilities[WeaponType.SPEAR].passive.isUnlocked)) {
-      console.log(`[SpearKill] Not processing Reignite - weapon: ${currentWeapon}, passive unlocked: ${abilities[WeaponType.SPEAR]?.passive?.isUnlocked}, reigniteRef: ${reigniteRef.current ? 'available' : 'null'}`);
       damageFn(targetId, damage);
       return;
     }
@@ -3902,13 +3837,11 @@ export default function Unit({
     // Get the target and store its health before damage
     const target = enemyData.find(e => e.id === targetId);
     if (!target) {
-      console.log(`[SpearKill] Target ${targetId} not found`);
       damageFn(targetId, damage);
       return;
     }
     
     const previousHealth = target.health;
-    console.log(`[SpearKill] Target ${targetId} health before damage: ${previousHealth}, damage: ${damage}`);
     
     // Apply the damage
     damageFn(targetId, damage);
@@ -3916,35 +3849,24 @@ export default function Unit({
     // Need to find the target again to get updated health
     const updatedTarget = enemyData.find(e => e.id === targetId);
     if (!updatedTarget) {
-      console.log(`[SpearKill] Target ${targetId} was removed after damage`);
       return;
     }
     
-    console.log(`[SpearKill] Target ${targetId} health after damage: ${updatedTarget.health}`);
     
     // Check if the enemy was killed by this hit
     if (previousHealth > 0 && updatedTarget.health <= 0) {
-      console.log(`[SpearKill] Kill detected with Spear ability, processing Reignite...`);
       if (reigniteRef.current) {
         // Ensure we pass a fresh clone of the position
         const killPosition = updatedTarget.position.clone();
-        console.log(`[SpearKill] Reignite processKill at position:`, {
-          x: killPosition.x.toFixed(3),
-          y: killPosition.y.toFixed(3),
-          z: killPosition.z.toFixed(3)
-        });
+
         reigniteRef.current.processKill(killPosition);
       } else {
-        console.log(`[SpearKill] ISSUE: reigniteRef.current is null at kill time`);
       }
-    } else {
-      console.log(`[SpearKill] No kill detected - health before: ${previousHealth}, after: ${updatedTarget.health}`);
     }
   }, [currentWeapon, abilities, enemyData, reigniteRef]);
 
   // Function to handle Dragon Breath kills and restore orb charges
   const processDragonBreathKill = useCallback(() => {
-    console.log('[DragonBreath] Kill detected! Processing orb charge restoration...');
     
     // Restore 3 orb charges when Dragon Breath kills an enemy
     setFireballCharges(currentCharges => {
@@ -3963,11 +3885,9 @@ export default function Unit({
         .slice(0, 3); // Restore exactly 3 charges per kill
       
       if (unavailableIndices.length === 0) {
-        console.log('[DragonBreath] No charges to restore - all orbs are already available');
         return currentCharges; // No changes needed
       }
-      
-      console.log(`[DragonBreath] Restoring ${unavailableIndices.length} orb charges`);
+
       
       // Create a new array with the updated charges
       const updatedCharges = currentCharges.map((charge, index) => 
@@ -3987,17 +3907,11 @@ export default function Unit({
       <group ref={groupRef} position={[0, 1, 0]}>
 
         {/* DRAGON HORNS */}
-        <group scale={[0.235, 0.335, 0.235]} position={[-0.05, 0.215, 0.35]} rotation={[+0.15, 0, -5]}>
-          <DragonHorns isLeft={true} />
-        </group>
 
-       <group scale={[0.235, 0.335, 0.235]} position={[0.05, 0.215, 0.35]} rotation={[+0.15, 0, 5]}>
-        <DragonHorns isLeft={false} />
 
-      </group>
         {/* Outer glow SPhere layer */}
         <mesh scale={1.085}>
-          <sphereGeometry args={[0.415, 32, 32]} />
+          <sphereGeometry args={[0.415, 8, 8]} />
           <meshBasicMaterial
             color="#a8e6cf"
             transparent
@@ -4097,9 +4011,7 @@ export default function Unit({
       <group scale={[0.8 , 0.55, 0.8]} position={[0, 0.04, -0.015]} rotation={[0.4, 0, 0]}>
         <BonePlate />
       </group>
-      <group scale={[0.85  , 0.85, 0.85]} position={[0, 0.05, +0.1]}>
-        <BoneTail movementDirection={movementDirection} />
-      </group>
+
         
         {currentWeapon === WeaponType.SABRES ? (
           <Sabres
@@ -4596,7 +4508,6 @@ export default function Unit({
         />
       ))}
 
-      <BoneVortex parentRef={groupRef} weaponType={currentWeapon} weaponSubclass={currentSubclass} />
       <BoneAura parentRef={groupRef} />
 
       {/* Render boneclaw effects from the useBoneclaw hook */}
@@ -4624,7 +4535,6 @@ export default function Unit({
           onKillingBlow={(position) => {
             // Trigger totem summoning when BoneClaw gets a killing blow
                 if (currentWeapon === WeaponType.SCYTHE && currentSubclass === WeaponSubclass.CHAOS) {
-                  console.log('🎯 BoneClaw killing blow detected! Summoning Chaos Totem...');
                   
                   const summonId = Date.now();
                   
@@ -4634,12 +4544,10 @@ export default function Unit({
                     const currentTotems = prev.filter(effect => effect.type === 'summon').length;
                     
                     if (currentTotems >= maxTotems) {
-                      console.log(`⚠️ Maximum totems (${maxTotems}) already exist, not summoning another`);
                       return prev;
                     }
 
                     // Start the healing effect when totem is summoned
-                    console.log('🟢 [Chaos Totem] Starting healing: 2HP per second for 8 seconds');
                     startTotemHealing();
 
                     // Send totem effect to other players in multiplayer
@@ -4664,7 +4572,7 @@ export default function Unit({
                         direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
                         onComplete: () => {
                           // Stop healing when totem expires
-                          console.log('🛑 [Chaos Totem] Totem expired, stopping healing');
+
                           stopTotemHealing();
                         },
                         onStartCooldown: () => {}
@@ -4704,11 +4612,7 @@ export default function Unit({
           );
         } else if (effect.type === 'firestorm') {
           const isFirestormActive = firestormActiveRef.current === effect.id;
-          console.log('[Firestorm Debug] Rendering firestorm effect:', { 
-            effectId: effect.id, 
-            activeId: firestormActiveRef.current, 
-            isActive: isFirestormActive 
-          });
+
           return (
             <Firestorm
               key={effect.id}
@@ -4991,11 +4895,9 @@ export default function Unit({
               const priorityTarget = findHighestPriorityTarget(validEnemies);
               if (priorityTarget) {
                 effect.targetPosition = priorityTarget.position.clone();
-                console.log(`[Legion] Targeting enemy ${priorityTarget.id} at position:`, effect.targetPosition);
               } else {
                 // Fallback to first valid enemy if priority function fails
                 effect.targetPosition = validEnemies[0].position.clone();
-                console.log(`[Legion] Targeting fallback enemy ${validEnemies[0].id} at position:`, effect.targetPosition);
               }
             } else {
               // If no enemies, target a position near the player
@@ -5005,7 +4907,6 @@ export default function Unit({
                 0,
                 (Math.random() - 0.5) * 10
               ));
-              console.log(`[Legion] No enemies found, targeting random position:`, effect.targetPosition);
             }
           }
 
@@ -5025,19 +4926,14 @@ export default function Unit({
               playerPosition={groupRef.current?.position || new Vector3()}
               enemyData={enemyData}
               onHit={(targetId: string, damage: number) => {
-                console.log('[Unit] Legion onHit called:', { targetId, damage });
                 onHit(targetId, damage);
               }}
               setDamageNumbers={setDamageNumbers}
               nextDamageNumberId={nextDamageNumberId}
               onPlayerEmpowerment={() => {
                 // Activate Legion empowerment for 10 seconds
-                console.log('[Unit] Legion empowerment callback received');
                 if (legionEmpowermentRef.current) {
-                  console.log('[Unit] Activating Legion empowerment');
                   legionEmpowermentRef.current.activateEmpowerment();
-                } else {
-                  console.log('[Unit] Legion empowerment ref is null');
                 }
               }}
             />
@@ -5137,9 +5033,9 @@ export default function Unit({
           parentRef={groupRef}
           enemyData={enemyData}
           onDamage={onHit}
-          onTakeDamage={(id, damage) => {
+          onTakeDamage={() => {
             // Handle skeleton taking damage - could be used for damage numbers or effects
-            console.log(`Skeleton ${id} took ${damage} damage`);
+            // console.log(`Skeleton ${id} took ${damage} damage`);
           }}
           setDamageNumbers={setDamageNumbers}
           nextDamageNumberId={nextDamageNumberId}
@@ -5181,13 +5077,11 @@ export default function Unit({
             playerPosition={groupRef.current?.position || new Vector3(0, 0, 0)}
             onDamage={onHit}
             onDeath={(abominationId) => {
-              console.log(`[Unit] AbyssalAbomination ${abominationId} died`);
               setSummonedUnitsData(prev => 
                 prev.filter(unit => unit.id !== abominationId)
               );
             }}
             onTakeDamage={(id, damage) => {
-              console.log(`[Unit] AbyssalAbomination ${id} took ${damage} damage`);
               // Update health in summoned units data
               setSummonedUnitsData(prev => 
                 prev.map(unit => 
@@ -5740,7 +5634,6 @@ export default function Unit({
           onHit={(targetId: string, damage: number, isCritical?: boolean, position?: Vector3) => {
             // Note: Enemy health/death checks are handled in RazeDamage.ts
             // Trust that calculateRazeDamage already filtered out dead/dying enemies
-            console.log(`[Raze Unit] Processing hit for ${targetId}, damage: ${damage}`);
             
             onHit(targetId, damage);
             // Add damage number for visual feedback

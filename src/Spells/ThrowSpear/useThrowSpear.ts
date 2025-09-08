@@ -141,12 +141,8 @@ export function useThrowSpear({
 
   // Function to refresh cooldown when hitting stunned enemies
   const refreshCooldownOnStunnedHit = useCallback(() => {
-    console.log('[ThrowSpear] Attempting to refresh cooldown on stunned hit');
     if (onCooldownReset) {
-      console.log('[ThrowSpear] Calling onCooldownReset');
       onCooldownReset('spear', 'r');
-    } else {
-      console.log('[ThrowSpear] onCooldownReset is not available');
     }
   }, [onCooldownReset]);
 
@@ -288,7 +284,6 @@ export function useThrowSpear({
                   
                   // Check if enemy is stunned BEFORE applying damage (important for timing)
                   const wasEnemyStunned = isEnemyStunned && isEnemyStunned(enemy.id);
-                  console.log('[ThrowSpear] Forward hit - Enemy stunned status before damage:', enemy.id, wasEnemyStunned);
                   
                   // Double damage if enemy is stunned
                   if (wasEnemyStunned) {
@@ -312,10 +307,7 @@ export function useThrowSpear({
 
                   // Refresh cooldown on stunned hit ONLY (use the pre-damage stunned status)
                   if (wasEnemyStunned) {
-                    console.log('[ThrowSpear] Forward hit - Enemy was stunned, refreshing cooldown for enemy:', enemy.id);
                     refreshCooldownOnStunnedHit();
-                  } else {
-                    console.log('[ThrowSpear] Forward hit - Enemy was not stunned:', enemy.id);
                   }
                   
                   // Check if this was a killing blow and trigger Reignite
@@ -374,7 +366,6 @@ export function useThrowSpear({
                   
                   // Check if enemy is stunned BEFORE applying damage (important for timing)
                   const wasEnemyStunned = isEnemyStunned && isEnemyStunned(enemy.id);
-                  console.log('[ThrowSpear] Return hit - Enemy stunned status before damage:', enemy.id, wasEnemyStunned);
                   
                   // Double damage if enemy is stunned
                   if (wasEnemyStunned) {
@@ -398,10 +389,7 @@ export function useThrowSpear({
 
                   // Refresh cooldown on stunned hit ONLY (use the pre-damage stunned status)
                   if (wasEnemyStunned) {
-                    console.log('[ThrowSpear] Return hit - Enemy was stunned, refreshing cooldown for enemy:', enemy.id);
                     refreshCooldownOnStunnedHit();
-                  } else {
-                    console.log('[ThrowSpear] Return hit - Enemy was not stunned:', enemy.id);
                   }
                   
                   // Check if this was a killing blow and trigger Reignite

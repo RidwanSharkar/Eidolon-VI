@@ -45,7 +45,7 @@ interface PerformanceMetrics {
 class PerformanceMonitor {
   private static instance: PerformanceMonitor;
   private metrics: PerformanceMetrics[] = [];
-  private maxMetricsHistory = 100;
+  private maxMetricsHistory = 20;
   private lastFrameTime = 0;
   private frameCount = 0;
   private frameRate = 0;
@@ -82,10 +82,10 @@ class PerformanceMonitor {
     };
     updateFrameRate();
 
-    // Collect metrics every 5 seconds
+    // Collect metrics every 15 seconds
     setInterval(() => {
       this.collectMetrics();
-    }, 5000);
+    }, 15000);
   }
 
   private collectMetrics() {

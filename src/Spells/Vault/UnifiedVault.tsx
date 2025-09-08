@@ -88,7 +88,7 @@ export default function UnifiedVault({
     const distanceFromOrigin = newPosition.length();
     if (distanceFromOrigin > MAX_VAULT_BOUNDS) {
       // Cancel vault if it would move too far from origin
-      console.warn(`Vault cancelled: would move too far from origin (${distanceFromOrigin.toFixed(2)} > ${MAX_VAULT_BOUNDS})`);
+      // console.warn(`Vault cancelled: would move too far from origin (${distanceFromOrigin.toFixed(2)} > ${MAX_VAULT_BOUNDS})`);
       onComplete();
       startTime.current = null;
       startPosition.current = null;

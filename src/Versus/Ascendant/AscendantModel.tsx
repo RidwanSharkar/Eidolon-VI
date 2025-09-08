@@ -2,7 +2,6 @@
 import React, { useRef } from 'react';
 import { Group, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
-import BoneTail from '../../gear/BoneTail';
 import BonePlate from '../../gear/BonePlate';  
 import AscendantBoneWings from './AscendantBoneWings';  
 import AscendantBoneVortex from './AscendantBoneVortex';  
@@ -222,10 +221,7 @@ export default function AscendantModel({
         </group>
       </group>
 
-      {/* Scaled Tail */}
-      <group scale={[1.3, 1.3, 1.3]} position={[0, 1.25, 0.14]}>
-        <BoneTail />
-      </group>
+
 
       {/* Add Glowing Core Effect */}
       <group position={[0, 1, 0]} scale={[0.7, 0.7, 0.7]}>

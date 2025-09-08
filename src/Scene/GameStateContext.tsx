@@ -60,10 +60,8 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       id: `crit-rune-${Date.now()}-${Math.random()}`,
       position: position.clone()
     };
-    console.log(`💎 Adding Critical Rune at position: (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}), ID: ${newRune.id}`);
     setCriticalRunes(prev => {
       const updated = [...prev, newRune];
-      console.log(`📊 Total critical runes in world: ${updated.length}`);
       return updated;
     });
   };
@@ -73,16 +71,13 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       id: `critdmg-rune-${Date.now()}-${Math.random()}`,
       position: position.clone()
     };
-    console.log(`💥 Adding CritDamage Rune at position: (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}), ID: ${newRune.id}`);
     setCritDamageRunes(prev => {
       const updated = [...prev, newRune];
-      console.log(`📊 Total crit damage runes in world: ${updated.length}`);
       return updated;
     });
   };
   
   const pickupCriticalRune = (runeId: string) => {
-    console.log(`🔮 Picking up Critical Rune: ${runeId}`);
     setCriticalRunes(prev => prev.filter(rune => rune.id !== runeId));
     setCriticalRuneCount(prev => {
       const newCount = prev + 1;
@@ -93,7 +88,6 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   };
   
   const pickupCritDamageRune = (runeId: string) => {
-    console.log(`💥 Picking up CritDamage Rune: ${runeId}`);
     setCritDamageRunes(prev => prev.filter(rune => rune.id !== runeId));
     setCritDamageRuneCount(prev => {
       const newCount = prev + 1;

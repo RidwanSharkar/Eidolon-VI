@@ -323,7 +323,6 @@ export function useAbilityKeys({
       
       // Shoot LavaLash for Pyro spear Q ability
       if (currentWeapon === WeaponType.SPEAR && currentSubclass === WeaponSubclass.PYRO && shootLavaLash) {
-        console.log('[useAbilityKeys] Shooting LavaLash for Pyro Spear');
         shootLavaLash();
       }
       

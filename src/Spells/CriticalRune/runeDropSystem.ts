@@ -40,13 +40,7 @@ export function calculateRuneDrops(enemyId: string, enemyPosition: Vector3): Run
   const critDamageRoll = Math.random();
   const shouldDropCritDamage = critDamageRoll < dropRate;
   
-  // Debug logging
-  console.log(`🎲 Rune Drop Check - Enemy: ${enemyId}, Type: ${enemyType}, Rate: ${(dropRate * 100).toFixed(1)}%`);
-  console.log(`  Critical Rune: Roll ${(criticalRoll * 100).toFixed(1)}%, Drop: ${shouldDropCritical ? '✅' : '❌'}`);
-  console.log(`  CritDamage Rune: Roll ${(critDamageRoll * 100).toFixed(1)}%, Drop: ${shouldDropCritDamage ? '✅' : '❌'}`);
-  
   if (shouldDropCritical) {
-    console.log(`💎 CRITICAL RUNE DROPPED! Position: (${enemyPosition.x.toFixed(1)}, ${enemyPosition.y.toFixed(1)}, ${enemyPosition.z.toFixed(1)})`);
     drops.push({
       shouldDrop: true,
       position: enemyPosition.clone(),
@@ -56,7 +50,6 @@ export function calculateRuneDrops(enemyId: string, enemyPosition: Vector3): Run
   }
   
   if (shouldDropCritDamage) {
-    console.log(`💥 CRIT DAMAGE RUNE DROPPED! Position: (${enemyPosition.x.toFixed(1)}, ${enemyPosition.y.toFixed(1)}, ${enemyPosition.z.toFixed(1)})`);
     // Offset position slightly to avoid overlap
     const offsetPosition = enemyPosition.clone();
     offsetPosition.x += 1.5; // Offset by 1.5 units

@@ -29,7 +29,6 @@ export function CritDamageRune({ position, onPickup, playerPosition }: CritDamag
     // Pickup detection
     const distance = position.distanceTo(playerPosition);
     if (distance < 2.5) { // Pickup radius
-      console.log(`💥 CritDamageRune pickup triggered! Distance: ${distance.toFixed(2)}`);
       setIsPickedUp(true);
       onPickup();
       return;

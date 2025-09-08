@@ -29,13 +29,11 @@ export function useBlizzardShield({ currentWeapon, currentSubclass }: UseBlizzar
 
     // Set 2-second delay before shield activation
     activationTimeoutRef.current = setTimeout(() => {
-      console.log('[Blizzard Shield] Activating 15 HP shield');
       setHasShield(true);
       setShieldAbsorption(25);
 
       // Shield expires after 5 seconds
       shieldTimeoutRef.current = setTimeout(() => {
-        console.log('[Blizzard Shield] Shield expired');
         setHasShield(false);
         setShieldAbsorption(0);
       }, 6000);
@@ -60,13 +58,11 @@ export function useBlizzardShield({ currentWeapon, currentSubclass }: UseBlizzar
           clearTimeout(shieldTimeoutRef.current);
         }
       }
-      
-      console.log(`[Blizzard Shield] Absorbed ${damage} damage, ${newAbsorption} shield remaining`);
+
       return 0; // No damage passes through
     } else {
       // Shield absorbs partial damage, rest passes through
       const remainingDamage = damage - shieldAbsorption;
-      console.log(`[Blizzard Shield] Absorbed ${shieldAbsorption} damage, ${remainingDamage} passes through`);
       
       setHasShield(false);
       setShieldAbsorption(0);

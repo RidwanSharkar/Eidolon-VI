@@ -54,12 +54,9 @@ export function useLavaLash({
 
   // Function to increment Incinerate stacks
   const incrementIncinerateStacks = useCallback(() => {
-    console.log('[LavaLash] incrementIncinerateStacks called, onIncinerateStackChange:', !!onIncinerateStackChange);
     setIncinerateStacks(prev => {
       const newStacks = Math.min(25, prev + 1); // Cap at 25 stacks
-      console.log('[LavaLash] Incrementing stacks from', prev, 'to', newStacks);
       if (onIncinerateStackChange) {
-        console.log('[LavaLash] Calling onIncinerateStackChange with', newStacks);
         onIncinerateStackChange(newStacks);
       }
       return newStacks;
@@ -68,10 +65,8 @@ export function useLavaLash({
 
   // Function to reset Incinerate stacks (called when empowered Pyroclast is used)
   const resetIncinerateStacks = useCallback(() => {
-    console.log('[LavaLash] resetIncinerateStacks called');
     setIncinerateStacks(0);
     if (onIncinerateStackChange) {
-      console.log('[LavaLash] Calling onIncinerateStackChange with 0 (reset)');
       onIncinerateStackChange(0);
     }
   }, [onIncinerateStackChange]);

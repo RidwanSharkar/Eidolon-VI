@@ -126,7 +126,7 @@ export default function ChargedOrbitals({
 
             {/* Outer opaque layer */}
             <mesh>
-              <sphereGeometry args={[particleSize*1.225, 32, 32]} />
+              <sphereGeometry args={[particleSize*1.225, 8, 8]} />
               <meshStandardMaterial
                 color={chargeStatus?.available ? activeColor : "#333333"}
                 emissive={chargeStatus?.available ? activeColor : "#333333"}

@@ -176,7 +176,6 @@ export function useGuidedBolts({
           // Ensure we're hitting the correct target ID format
           const hitTargetId = missile.targetId.startsWith('enemy-') ? missile.targetId : `enemy-${missile.targetId}`;
           
-          console.log(`[GuidedBolts] Missile ${missile.id} hit target ${hitTargetId} for ${damage} damage (critical: ${isCritical})`);
           
           onHit(hitTargetId, damage);
           

@@ -67,7 +67,6 @@ export function useConcussiveBlow({
       
       for (const [enemyId] of updatedStunned) {
         if (!aliveEnemyIds.has(enemyId)) {
-          console.log('[ConcussiveBlow] Removing stunned enemy due to death:', enemyId);
           updatedStunned.delete(enemyId);
         }
       }
@@ -86,7 +85,6 @@ export function useConcussiveBlow({
 
   // Stun an enemy
   const stunEnemy = useCallback((enemyId: string, enemyPosition: Vector3, startTime: number) => {
-    console.log('[ConcussiveBlow] Stunning enemy:', enemyId, 'for', STUN_DURATION / 1000, 'seconds');
     
     setStunnedEnemies(prevStunned => {
       const newStunned = new Map(prevStunned);
@@ -137,17 +135,14 @@ export function useConcussiveBlow({
 
   // Start a new burst sequence
   const startBurstSequence = useCallback(() => {
-    console.log('[ConcussiveBlow] startBurstSequence called, isConcussiveBlowActive:', isConcussiveBlowActive);
     
     if (!isConcussiveBlowActive) {
-      console.log('[ConcussiveBlow] Not starting burst - Concussive Blow not active');
       return;
     }
     
     const burstId = `burst_${Date.now()}`;
     currentBurstId.current = burstId;
-    
-    console.log('[ConcussiveBlow] Starting new burst sequence:', burstId);
+  
     
     // Clear old critical hit data for this burst
     criticalHitsPerBurst.current.clear();
@@ -155,16 +150,8 @@ export function useConcussiveBlow({
 
   // Handle critical hit from spear burst attack
   const handleCriticalHit = useCallback((enemyId: string, enemyPosition: Vector3, burstAttackNumber: number) => {
-    console.log('[ConcussiveBlow] handleCriticalHit called with:', {
-      enemyId,
-      burstAttackNumber,
-      isConcussiveBlowActive,
-      currentBurstId: currentBurstId.current,
-      position: { x: enemyPosition.x.toFixed(2), y: enemyPosition.y.toFixed(2), z: enemyPosition.z.toFixed(2) }
-    });
     
     if (!isConcussiveBlowActive || !currentBurstId.current) {
-      console.log('[ConcussiveBlow] Aborting - not active or no burst ID');
       return;
     }
     
@@ -188,12 +175,6 @@ export function useConcussiveBlow({
     validHits.push(newHit);
     criticalHitsPerBurst.current.set(enemyId, validHits);
     
-    console.log('[ConcussiveBlow] Critical hit recorded:', {
-      enemyId,
-      burstAttackNumber,
-      totalCritsInBurst: validHits.length,
-      burstId: currentBurstId.current
-    });
     
     // Check if we have enough crits for stun (2 crits from the same burst)
     if (validHits.length >= REQUIRED_CRITS_FOR_STUN) {
@@ -202,7 +183,6 @@ export function useConcussiveBlow({
       const hasSecondAttackCrit = validHits.some(hit => hit.burstAttackNumber === 1);
       
       if (hasFirstAttackCrit && hasSecondAttackCrit) {
-        console.log('[ConcussiveBlow] Enemy hit by 2/2 crits in burst! Stunning:', enemyId);
         stunEnemy(enemyId, enemyPosition, now);
         
         // Clear hits for this enemy since they're now stunned

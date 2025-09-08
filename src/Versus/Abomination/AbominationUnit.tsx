@@ -188,7 +188,6 @@ export default function AbominationUnit({
     
     // Store the starting position for the leap animation
     leapStartPosition.current.copy(currentPosition.current);
-    console.log(`[Abomination] Starting leap from position: (${leapStartPosition.current.x.toFixed(2)}, ${leapStartPosition.current.z.toFixed(2)})`);
 
     // Phase 1: Charge up (1.25 seconds)
     setTimeout(() => {
@@ -216,7 +215,6 @@ export default function AbominationUnit({
           
           // Get FRESH target position at the moment of landing (like Reaper does)
           const freshTargetPos = getTargetPlayerPosition();
-          console.log(`[Abomination] Getting fresh target position at landing: (${freshTargetPos.x.toFixed(2)}, ${freshTargetPos.z.toFixed(2)})`);
           
           // Calculate landing position behind the CURRENT target position
           const directionToTarget = new Vector3()
@@ -226,7 +224,6 @@ export default function AbominationUnit({
             .add(directionToTarget.multiplyScalar(LEAP_BEHIND_DISTANCE));
           landingPosition.y = 0; // Ensure ground level
           
-          console.log(`[Abomination] Landing at position: (${landingPosition.x.toFixed(2)}, ${landingPosition.z.toFixed(2)})`);
           
           // Update positions
           currentPosition.current.copy(landingPosition);
@@ -256,7 +253,6 @@ export default function AbominationUnit({
             setLeapPhase('idle');
             setIsLeaping(false);
             isLeapBlocked.current = false; // Unblock leap after completion
-            console.log(`[Abomination] Leap sequence completed`);
           }, 500); // Brief landing phase
         }
       };

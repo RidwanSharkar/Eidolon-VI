@@ -124,9 +124,9 @@ export default function EviscerateSlashEffect({
     
     effectRef.current.scale.set(scale, scale, scale);
     
-    // Debug logging for first few frames
+    // Debug logging for first few frames WEIRD ANGLE
     if (progress < 0.1) {
-      console.log(`[EviscerateSlashEffect] progress: ${progress.toFixed(3)}, scale: ${scale.toFixed(3)}, opacity: ${opacity.toFixed(3)}`);
+      // console.log(`[EviscerateSlashEffect] progress: ${progress.toFixed(3)}, scale: ${scale.toFixed(3)}, opacity: ${opacity.toFixed(3)}`);
     }
     
     // Update material opacities
@@ -148,8 +148,6 @@ export default function EviscerateSlashEffect({
     return [Math.PI/4 +Math.PI/4, baseRotation, rotationOffset+Math.PI/4] as [number, number, number];
   }, [direction, rotationOffset]);
 
-  // Debug: Log when component renders
-  console.log(`[EviscerateSlashEffect] Rendering slash effect component`);
 
   return (
     <group

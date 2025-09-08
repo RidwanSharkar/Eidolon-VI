@@ -32,7 +32,6 @@ export function useChaosTotemHealing({
     // Reset healing count
     healingCountRef.current = 0;
 
-    console.log('🟢 [Chaos Totem] Starting healing: 2HP per second for 8 seconds');
 
     // Start healing over time: 2HP per second for 8 seconds (16 total HP)
     healingIntervalRef.current = setInterval(() => {
@@ -54,7 +53,6 @@ export function useChaosTotemHealing({
         }]);
       }
 
-      console.log(`💚 [Chaos Totem] Heal tick ${healingCountRef.current}/8: +2 HP`);
 
       // Stop after 8 ticks (8 seconds)
       if (healingCountRef.current >= 8) {
@@ -62,7 +60,6 @@ export function useChaosTotemHealing({
           clearInterval(healingIntervalRef.current);
           healingIntervalRef.current = null;
         }
-        console.log('✅ [Chaos Totem] Healing complete: 16 total HP restored');
       }
     }, 1000); // Every 1 second
   }, [onHealthChange, setDamageNumbers, nextDamageNumberId, parentRef]);
@@ -71,7 +68,6 @@ export function useChaosTotemHealing({
     if (healingIntervalRef.current) {
       clearInterval(healingIntervalRef.current);
       healingIntervalRef.current = null;
-      console.log('🛑 [Chaos Totem] Healing stopped early');
     }
   }, []);
 

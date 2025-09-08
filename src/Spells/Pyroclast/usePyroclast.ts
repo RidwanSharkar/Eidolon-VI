@@ -141,7 +141,6 @@ export function usePyroclast({
 
     // Consume the empowerment
     if (onIncinerateEmpowermentUsed) {
-      console.log('[Pyroclast] Consuming Incinerate empowerment, calling reset callback');
       onIncinerateEmpowermentUsed();
     }
   }, [parentRef, onIncinerateEmpowermentUsed]);
@@ -149,7 +148,6 @@ export function usePyroclast({
   const startCharging = useCallback(() => {
     // If we have Incinerate empowerment, fire instantly at max damage
     if (isIncinerateEmpowered) {
-      console.log('[Pyroclast] Firing empowered Pyroclast!');
       fireEmpoweredPyroclast();
       return;
     }

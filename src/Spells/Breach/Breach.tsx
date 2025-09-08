@@ -69,7 +69,6 @@ export default function Breach({
       
       // Safety check: ensure we have a valid direction
       if (!direction.current || direction.current.length() === 0) {
-        console.warn('[Breach] Invalid direction calculated, cancelling breach');
         onComplete();
         startTime.current = null;
         startPosition.current = null;
@@ -98,7 +97,6 @@ export default function Breach({
     
     // Safety checks: Ensure we have valid references (like Vault does)
     if (!startPosition.current || !direction.current || !parentRef.current) {
-      console.warn('[Breach] Missing critical references, cancelling breach');
       onComplete();
       startTime.current = null;
       startPosition.current = null;
@@ -117,7 +115,6 @@ export default function Breach({
     const distanceFromOrigin = newPosition.length();
     if (distanceFromOrigin > MAX_BREACH_BOUNDS) {
       // Cancel breach if it would move too far from origin
-      console.warn(`[Breach] Cancelled: would move too far from origin (${distanceFromOrigin.toFixed(2)} > ${MAX_BREACH_BOUNDS})`);
       onComplete();
       startTime.current = null;
       startPosition.current = null;
@@ -215,8 +212,6 @@ export default function Breach({
             // Verify reigniteRef is available before calling
             if (reigniteRef && reigniteRef.current) {
               reigniteRef.current.processKill(enemy.position.clone());
-            } else {
-              console.warn(`[Breach] Cannot trigger Reignite: reigniteRef is ${reigniteRef ? 'defined but current is null' : 'undefined'}`);
             }
           }
         }

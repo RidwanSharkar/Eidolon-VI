@@ -33,7 +33,6 @@ export function calculateRazeDamage(
       );
       
       if (isInStrip) {
-        console.log(`[Raze Hit] Enemy ${enemy.id} at position (${enemy.position.x.toFixed(1)}, ${enemy.position.z.toFixed(1)}) taking ${baseDamage} damage from Raze strip`);
         
         // 5% critical chance for raze damage
         const isCritical = Math.random() < 0.1;

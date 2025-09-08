@@ -85,19 +85,14 @@ function HomePageContent() {
   };
 
   const handleModifyAbilityCooldown = useCallback((weapon: WeaponType, abilityType: AbilityType) => {
-    console.log('[index] handleModifyAbilityCooldown called with:', weapon, abilityType);
     setAbilities(prevAbilities => {
       const newAbilities = { ...prevAbilities };
       const ability = newAbilities[weapon][abilityType];
       
-      console.log('[index] Ability found for cooldown modification:', ability);
       if (ability && ability.isUnlocked) {
         const modifiedCooldown = getModifiedCooldown(weapon, abilityType, prevAbilities, currentSubclass || undefined);
-        console.log('[index] Setting cooldown from', ability.currentCooldown, 'to', modifiedCooldown);
         ability.currentCooldown = modifiedCooldown;
-      } else {
-        console.log('[index] Cannot modify cooldown - ability not found or not unlocked:', { ability, isUnlocked: ability?.isUnlocked });
-      }
+      } 
       
       return newAbilities;
     });
@@ -105,18 +100,13 @@ function HomePageContent() {
 
   // New function to reset ability cooldown to 0
   const handleResetAbilityCooldown = useCallback((weapon: WeaponType, abilityType: AbilityType) => {
-    console.log('[index] handleResetAbilityCooldown called with:', weapon, abilityType);
     setAbilities(prevAbilities => {
       const newAbilities = { ...prevAbilities };
       const ability = newAbilities[weapon][abilityType];
       
-      console.log('[index] Ability found:', ability);
       if (ability && ability.isUnlocked) {
-        console.log('[index] Resetting cooldown from', ability.currentCooldown, 'to 0');
         ability.currentCooldown = 0; // Reset cooldown to 0
-      } else {
-        console.log('[index] Cannot reset cooldown - ability not found or not unlocked:', { ability, isUnlocked: ability?.isUnlocked });
-      }
+      } 
       
       return newAbilities;
     });

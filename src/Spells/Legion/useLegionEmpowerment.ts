@@ -31,7 +31,6 @@ export function useLegionEmpowerment() {
   }, []);
 
   const activateEmpowerment = useCallback(() => {
-    console.log('[useLegionEmpowerment] Activating empowerment for 10 seconds');
     setState({
       isEmpowered: true,
       timeRemaining: EMPOWERMENT_DURATION
@@ -54,7 +53,6 @@ export function useLegionEmpowerment() {
           empowermentIntervalRef.current = null;
         }
         
-        console.log('[useLegionEmpowerment] Empowerment expired');
         return {
           isEmpowered: false,
           timeRemaining: 0

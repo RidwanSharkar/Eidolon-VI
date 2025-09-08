@@ -86,12 +86,8 @@ function GameContent({
   
   // Debug logging for incinerate stacks
   const handleIncinerateStacksChange = useCallback((stacks: number) => {
-    console.log('[GameWrapper] Received incinerate stacks change:', stacks);
     setIncinerateStacks(stacks);
   }, []);
-  
-  // Debug current state
-  console.log('[GameWrapper] Current incinerateStacks state:', incinerateStacks);
 
   // Shield state for Glacial Shard
   const [shieldState, setShieldState] = useState({ hasShield: false, shieldAbsorption: 0 });

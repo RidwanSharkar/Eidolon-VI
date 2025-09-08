@@ -24,7 +24,6 @@ export default function ReaperMistEffect({
   const startTime = useRef(Date.now());
   const isCompleted = useRef(false);
   
-  console.log('🌫️ ReaperMistEffect rendering at position:', position);
   
   // Initialize particle data once
   const [particleData] = useState<ParticleData[]>(() => 

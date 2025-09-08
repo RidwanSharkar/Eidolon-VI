@@ -99,7 +99,6 @@ export default function Panel({
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   // Debug logging for incinerate stacks
-  console.log('[Panel] incinerateStacks:', incinerateStacks, 'currentWeapon:', currentWeapon, 'currentSubclass:', currentSubclass);
 
   // Ability Tooltip
   const handleAbilityHover = (

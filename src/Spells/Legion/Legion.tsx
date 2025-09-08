@@ -137,7 +137,6 @@ export default function Legion({
     const initTarget = new THREE.Vector3(targetPosition.x, -5, targetPosition.z);
     const start = new THREE.Vector3(targetPosition.x, 60, targetPosition.z);
     const traj = new THREE.Vector3().subVectors(initTarget, start).normalize();
-    console.log(`[Legion] Meteor initialized with target position:`, targetPosition);
     return [initTarget, start, traj];
   }, [targetPosition]);
 
@@ -180,7 +179,6 @@ export default function Legion({
         
         // Trigger player empowerment if callback is provided
         if (onPlayerEmpowerment) {
-          console.log('[Legion] Player in impact area - triggering empowerment');
           onPlayerEmpowerment();
         }
       }

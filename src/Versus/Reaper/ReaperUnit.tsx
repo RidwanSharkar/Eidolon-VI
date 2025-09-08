@@ -367,7 +367,6 @@ export default function ReaperUnit({
     const originalPosition = currentPosition.current.clone();
     originalPosition.y = 0; // Ground level for mist effect
     const sinkMistId = `sink-mist-${Date.now()}`;
-    console.log('🌫️ Adding sink mist effect at position:', originalPosition);
     setMistEffects(prev => [...prev, {
       id: sinkMistId,
       position: originalPosition,
@@ -439,7 +438,6 @@ export default function ReaperUnit({
               const emergeMistId = `emerge-mist-${Date.now()}`;
               const emergePosition = behindPosition.clone();
               emergePosition.y = 0; // Ground level for mist effect
-              console.log('🌫️ Adding emerge mist effect at position:', emergePosition);
               setMistEffects(prev => [...prev, {
                 id: emergeMistId,
                 position: emergePosition,
@@ -719,7 +717,6 @@ export default function ReaperUnit({
       
       {/* Mist effects for Re-emerge ability (rendered independently of Reaper group) */}
       {mistEffects.map(effect => {
-        console.log('🌫️ Rendering mist effect:', effect.id, 'at position:', effect.position);
         return (
           <ReaperMistEffect
             key={effect.id}

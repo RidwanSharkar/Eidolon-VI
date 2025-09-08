@@ -40,7 +40,7 @@ export default function Behavior({
   useEffect(() => {
     // Additional safety checks for health value
     if (typeof playerHealth !== 'number' || !isFinite(playerHealth)) {
-      console.error(`[Behavior] ❌ Invalid playerHealth value: ${playerHealth}, ignoring game over check`);
+      // console.error(`[Behavior] ❌ Invalid playerHealth value: ${playerHealth}, ignoring game over check`);
       return;
     }
     

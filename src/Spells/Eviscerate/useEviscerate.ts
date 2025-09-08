@@ -83,7 +83,6 @@ export const useEviscerate = ({
       { id: 1, available: true, cooldownStartTime: null },
       { id: 2, available: true, cooldownStartTime: null }
     ];
-    console.log('[Eviscerate] Initializing charges:', initialCharges);
     return initialCharges;
   });
 
@@ -114,9 +113,6 @@ export const useEviscerate = ({
 
   // Debug logging for charge changes
   useEffect(() => {
-    console.log('[Eviscerate] Charges updated:', charges);
-    console.log('[Eviscerate] Available charges count:', charges.filter(c => c.available).length);
-    console.log('[Eviscerate] ChargesRef.current updated to:', chargesRef.current);
     
     // Additional debugging: log each charge individually
     charges.forEach((charge, index) => {
@@ -130,11 +126,6 @@ export const useEviscerate = ({
     });
   }, [charges]);
 
-  // Log initial charge state when component mounts
-  useEffect(() => {
-    console.log('[Eviscerate] Component mounted, initial charges:', charges);
-    console.log('[Eviscerate] Initial chargesRef.current:', chargesRef.current);
-  }, [charges]);
 
   // Notify parent component when charges change
   useEffect(() => {
@@ -168,7 +159,6 @@ export const useEviscerate = ({
           if (backstabDotProduct > 0.5) {
             finalDamage = BASE_DAMAGE * 2; // Double damage for backstab
             isCritical = true;
-            console.log('[Eviscerate] Backstab detected! Double damage applied.');
           }
           
           onHit(`enemy-${enemy.id}`, finalDamage);
@@ -219,33 +209,24 @@ export const useEviscerate = ({
   }, [enemyData, onHit, setDamageNumbers, nextDamageNumberId, setActiveEffects, onApplyStunEffect]);
 
   const triggerEviscerate = useCallback((playerPosition: Vector3, playerDirection: Vector3) => {
-    console.log('[Eviscerate] triggerEviscerate called with:', { playerPosition, playerDirection });
-    console.log('[Eviscerate] Current charges state:', chargesRef.current);
     
     if (!parentRef.current) return; // Prevent null ref
     
     // Add internal cooldown to prevent spamming (1 second)
     const now = Date.now();
     if (now - lastUsageTime.current < EVISCERATE_INTERNAL_COOLDOWN) {
-      console.log('[Eviscerate] Too soon after last usage, internal cooldown active');
       return;
     }
     
     // Check if we have any available charges
     const availableCharges = chargesRef.current.filter(charge => charge.available);
-    console.log(`[Eviscerate] Available charges: ${availableCharges.length}/${chargesRef.current.length}`, chargesRef.current);
-    console.log(`[Eviscerate] Available charges details:`, availableCharges);
-    console.log(`[Eviscerate] All charges details:`, chargesRef.current.map(c => ({ id: c.id, available: c.available, cooldownStartTime: c.cooldownStartTime })));
-    console.log(`[Eviscerate] ChargesRef state:`, chargesRef.current);
     
     // Additional validation: ensure charges array is properly structured
     if (!chargesRef.current || chargesRef.current.length !== 2) {
-      console.error('[Eviscerate] Invalid charges array structure:', chargesRef.current);
       return;
     }
     
     if (availableCharges.length === 0) {
-      console.log('[Eviscerate] No charges available');
       return;
     }
     
@@ -257,12 +238,8 @@ export const useEviscerate = ({
     
     // Consume one charge
     const chargeToConsume = availableCharges[0];
-    console.log(`[Eviscerate] Consuming charge ${chargeToConsume.id}`);
-    console.log(`[Eviscerate] Before consumption - charges:`, chargesRef.current);
-    console.log(`[Eviscerate] Charge to consume details:`, chargeToConsume);
     
     setCharges(prev => {
-      console.log(`[Eviscerate] setCharges callback - prev state:`, prev);
       const newCharges = prev.map(charge => 
         charge.id === chargeToConsume.id ? {
           ...charge,
@@ -270,9 +247,6 @@ export const useEviscerate = ({
           cooldownStartTime: Date.now()
         } : charge
       );
-      console.log(`[Eviscerate] After consumption - new charges:`, newCharges);
-      console.log(`[Eviscerate] Charge ${chargeToConsume.id} marked as unavailable`);
-      console.log(`[Eviscerate] Remaining available charges:`, newCharges.filter(c => c.available).length);
       
       // Update the ref immediately to ensure the setTimeout callback has the correct state
       chargesRef.current = newCharges;
@@ -280,18 +254,11 @@ export const useEviscerate = ({
       return newCharges;
     });
     
-    // Log the charges state immediately after setCharges (this will show old state due to React's async nature)
-    console.log(`[Eviscerate] Charges state immediately after setCharges (old state):`, chargesRef.current);
-    console.log(`[Eviscerate] ChargesRef state after setCharges:`, chargesRef.current);
-    
     // Start cooldown recovery for this charge using useRef to avoid closure issues
     const chargeId = chargeToConsume.id;
-    console.log(`[Eviscerate] Setting recovery timer for charge ${chargeId} in ${EVISCERATE_CHARGE_COOLDOWN}ms`);
     
     // Store the timer reference to ensure it can be cleared if needed
     const recoveryTimer = setTimeout(() => {
-      console.log(`[Eviscerate] Recovering charge ${chargeId} after cooldown`);
-      console.log(`[Eviscerate] Before recovery - charges:`, chargesRef.current);
       
       setCharges(prev => {
         const newCharges = prev.map(charge => 
@@ -301,8 +268,6 @@ export const useEviscerate = ({
             cooldownStartTime: null
           } : charge
         );
-        console.log(`[Eviscerate] After recovery - new charges:`, newCharges);
-        console.log(`[Eviscerate] Charge ${chargeId} is now available again`);
         
         // Update the ref immediately to ensure consistency
         chargesRef.current = newCharges;
@@ -316,10 +281,6 @@ export const useEviscerate = ({
       clearTimeout(timeoutRef.current);
     }
     timeoutRef.current = recoveryTimer;
-    
-    // Log the timer setup for debugging
-    console.log(`[Eviscerate] Recovery timer ${recoveryTimer} set for charge ${chargeId}`);
-    console.log(`[Eviscerate] Timer will expire at:`, new Date(Date.now() + EVISCERATE_CHARGE_COOLDOWN).toISOString());
     
     setIsActive(true);
     setSlashPhase('first');

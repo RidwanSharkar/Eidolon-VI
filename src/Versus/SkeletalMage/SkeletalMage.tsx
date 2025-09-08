@@ -237,7 +237,6 @@ export default function SkeletalMage({
           const adjustedTargetPos = currentTargetPos.clone();
           adjustedTargetPos.y = 1.5; // Player's approximate center height
           
-          console.log(`[Fireball] Launching at ${Date.now()} - From: (${startPos.x.toFixed(2)}, ${startPos.z.toFixed(2)}) to current player pos: (${adjustedTargetPos.x.toFixed(2)}, ${adjustedTargetPos.z.toFixed(2)})`);
           
           setActiveFireballs(prev => [...prev, {
             id: Date.now(),
@@ -284,20 +283,15 @@ export default function SkeletalMage({
         if (getCurrentPlayerPosition) {
           // Use the real-time position function if available
           warningEndPlayerPos = getCurrentPlayerPosition().clone();
-          console.log(`[Lightning Strike] Warning end - using real-time function: (${warningEndPlayerPos.x.toFixed(2)}, ${warningEndPlayerPos.z.toFixed(2)})`);
         } else if (allPlayers && allPlayers.length > 0) {
           warningEndPlayerPos = allPlayers[0].position.clone();
-          console.log(`[Lightning Strike] Warning end - using allPlayers: (${warningEndPlayerPos.x.toFixed(2)}, ${warningEndPlayerPos.z.toFixed(2)})`);
         } else if (playerPosition) {
           warningEndPlayerPos = playerPosition.clone();
-          console.log(`[Lightning Strike] Warning end - using playerPosition: (${warningEndPlayerPos.x.toFixed(2)}, ${warningEndPlayerPos.z.toFixed(2)})`);
         } else {
           warningEndPlayerPos = getLatestPlayerPosition();
-          console.log(`[Lightning Strike] Warning end - using fallback: (${warningEndPlayerPos.x.toFixed(2)}, ${warningEndPlayerPos.z.toFixed(2)})`);
         }
         warningEndPlayerPos.y = 0;
         
-        console.log(`[Lightning Strike] Warning ended at ${Date.now()} - Strike pos: (${strikePosition.x.toFixed(2)}, ${strikePosition.z.toFixed(2)}), Player pos at warning end: (${warningEndPlayerPos.x.toFixed(2)}, ${warningEndPlayerPos.z.toFixed(2)}), Distance: ${strikePosition.distanceTo(warningEndPlayerPos).toFixed(2)}`);
         
         // Create lightning strike effect with damage check callback
         const strikeId = Date.now();
@@ -321,45 +315,30 @@ export default function SkeletalMage({
             if (getCurrentPlayerPosition) {
               // Use the real-time position function if available (most accurate)
               impactPlayerPos = getCurrentPlayerPosition().clone();
-              console.log(`[Lightning Strike] Using real-time position function - got: (${impactPlayerPos.x.toFixed(2)}, ${impactPlayerPos.z.toFixed(2)})`);
             } else if (allPlayers && allPlayers.length > 0) {
               // Multiplayer: use the first player's position (should be most current)
               impactPlayerPos = allPlayers[0].position.clone();
-              console.log(`[Lightning Strike] Using allPlayers position - got: (${impactPlayerPos.x.toFixed(2)}, ${impactPlayerPos.z.toFixed(2)})`);
             } else if (playerPosition) {
               // Single player: use the current playerPosition prop
               impactPlayerPos = playerPosition.clone();
-              console.log(`[Lightning Strike] Using playerPosition prop - got: (${impactPlayerPos.x.toFixed(2)}, ${impactPlayerPos.z.toFixed(2)})`);
             } else {
               // Fallback to the ref
               impactPlayerPos = getLatestPlayerPosition();
-              console.log(`[Lightning Strike] Using fallback ref position - got: (${impactPlayerPos.x.toFixed(2)}, ${impactPlayerPos.z.toFixed(2)})`);
             }
             
             impactPlayerPos.y = 0; // Compare ground positions
             const distance = strikePosition.distanceTo(impactPlayerPos);
             
-            console.log(`[Lightning Strike] IMPACT CHECK at ${Date.now()} - Strike pos: (${strikePosition.x.toFixed(2)}, ${strikePosition.z.toFixed(2)}), Player pos at impact: (${impactPlayerPos.x.toFixed(2)}, ${impactPlayerPos.z.toFixed(2)}), Distance: ${distance.toFixed(2)}, Radius: ${LIGHTNING_DAMAGE_RADIUS}`);
-            console.log(`[Lightning Strike] Player moved ${warningEndPlayerPos.distanceTo(impactPlayerPos).toFixed(2)} units since warning ended (${Date.now() - (strikeId - 50)}ms ago)`);
-            
             if (distance <= LIGHTNING_DAMAGE_RADIUS) {
-              console.log(`[Lightning Strike] ❌ Player is within damage radius - dealing ${LIGHTNING_DAMAGE} damage and applying 2s stun`);
-              console.log(`[Lightning Strike] 🩸 About to call onAttackPlayer with damage: ${LIGHTNING_DAMAGE}`);
+
               onAttackPlayer(LIGHTNING_DAMAGE);
-              console.log(`[Lightning Strike] 🩸 onAttackPlayer call completed`);
               globalAggroSystem.addDamageAggro(id, 'local-player', LIGHTNING_DAMAGE, 'player');
               
               // Trigger player stun effect (2 seconds) - only if still in range
               if (playerStunRef?.current) {
-                console.log(`[Lightning Strike] ⚡ About to apply 2s stun to player`);
                 playerStunRef.current.triggerStun(2000);
-                console.log(`[Lightning Strike] ⚡ Stun application completed`);
-              } else {
-                console.log(`[Lightning Strike] ⚠️ playerStunRef is null, cannot apply stun`);
               }
-            } else {
-              console.log(`[Lightning Strike] ✅ Player escaped - no damage or stun applied (moved far enough away)`);
-            }
+            } 
           }
         }]);
         
@@ -781,18 +760,14 @@ export default function SkeletalMage({
           playerPosition={fireball.playerPosition}
           getCurrentPlayerPosition={getLatestPlayerPosition}
           onHit={(didHitPlayer) => {
-            console.log(`[SkeletalMage] Fireball onHit called - didHitPlayer: ${didHitPlayer}, damage: ${FIREBALL_DAMAGE}`);
             
             if (didHitPlayer) {
-              console.log(`[SkeletalMage] 🔥 Calling onAttackPlayer with ${FIREBALL_DAMAGE} damage`);
               onAttackPlayer(FIREBALL_DAMAGE);
-              console.log(`[SkeletalMage] 🔥 onAttackPlayer call completed`);
               globalAggroSystem.addDamageAggro(id, 'local-player', FIREBALL_DAMAGE, 'player');
             }
             
             // Delay fireball removal to allow explosion animation to complete
             setTimeout(() => {
-              console.log(`[SkeletalMage] 🗑️ Removing fireball ${fireball.id} after damage dealt`);
               setActiveFireballs(prev => 
                 prev.filter(f => f.id !== fireball.id)
               );

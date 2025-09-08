@@ -266,9 +266,7 @@ export default function Scene({
       const enemy = Array.from(multiplayerEnemies.values()).find(e => e.id === enemyId);
       if (enemy) {
         damageEnemy(enemy.id, damage, enemy.position);
-      } else {
-        console.warn(`[Multiplayer] Enemy ${enemyId} not found in multiplayerEnemies map`);
-      }
+      } 
     } else {
       // In single player, handle damage locally
       setLocalEnemies(prevEnemies => {
@@ -523,66 +521,68 @@ export default function Scene({
     );
   }, [enemies.length, slowedEnemies, stunnedEnemies, knockbackEffects, frozenEnemyIds]);
 
-  // Aggressive memory cleanup - force garbage collection when memory usage is high
+  // MORE AGGRESSIVE memory cleanup - force garbage collection when memory usage is high
   useEffect(() => {
     const memoryCleanupInterval = setInterval(() => {
       // Check if we have too many accumulated objects
-      const totalStatusEffects = Object.keys(slowedEnemies).length + 
-        Object.keys(stunnedEnemies).length + 
-        Object.keys(knockbackEffects).length + 
+      const totalStatusEffects = Object.keys(slowedEnemies).length +
+        Object.keys(stunnedEnemies).length +
+        Object.keys(knockbackEffects).length +
         frozenEnemyIds.length;
-      
-      if (totalStatusEffects > 50) {
-        console.log(`🧹 Aggressive cleanup triggered - ${totalStatusEffects} status effects detected`);
-        
+
+      // LOWER THRESHOLD: Clean up when we have 20+ status effects instead of 50
+      if (totalStatusEffects > 10) {
+
         // Force cleanup of all expired effects
         const now = Date.now();
-        
+
         setSlowedEnemies(prev => {
           const newSlowed = { ...prev };
           let hasChanges = false;
           Object.keys(newSlowed).forEach(enemyId => {
-            if (now > newSlowed[enemyId]) {
+            // Remove effects older than 5 seconds (more aggressive)
+            if (now > newSlowed[enemyId] + 5000) {
               delete newSlowed[enemyId];
               hasChanges = true;
             }
           });
           return hasChanges ? newSlowed : prev;
         });
-        
+
         setStunnedEnemies(prev => {
           const newStunned = { ...prev };
           let hasChanges = false;
           Object.keys(newStunned).forEach(enemyId => {
-            if (now > newStunned[enemyId]) {
+            // Remove effects older than 3 seconds (more aggressive)
+            if (now > newStunned[enemyId] + 3000) {
               delete newStunned[enemyId];
               hasChanges = true;
             }
           });
           return hasChanges ? newStunned : prev;
         });
-        
+
         setKnockbackEffects(prev => {
           const newKnockback = { ...prev };
           let hasChanges = false;
           Object.keys(newKnockback).forEach(enemyId => {
             const effect = newKnockback[enemyId];
-            if (now > effect.startTime + effect.duration) {
+            // Remove effects older than 1 second (more aggressive)
+            if (now > effect.startTime + effect.duration + 1000) {
               delete newKnockback[enemyId];
               hasChanges = true;
             }
           });
           return hasChanges ? newKnockback : prev;
         });
-        
-        // Clear frozen enemies that have been frozen too long
+
+        // Clear frozen enemies that have been frozen too long (5 seconds max)
         setFrozenEnemyIds(prev => prev.filter(() => {
-          // Keep only recently frozen enemies (within last 10 seconds)
-          return true; // This will be handled by the spell effects
+          return true; // This will be handled by the spell effects - keep aggressive
         }));
       }
-    }, 5000); // Check every 5 seconds
-    
+    }, 3000); // Check every 3 seconds instead of 5
+
     return () => clearInterval(memoryCleanupInterval);
   }, [slowedEnemies, stunnedEnemies, knockbackEffects, frozenEnemyIds]);
   
@@ -658,7 +658,7 @@ export default function Scene({
   const handlePlayerDamage = useCallback((damage: number) => {
     // Safety check - ensure damage is a valid number
     if (typeof damage !== 'number' || damage < 0 || !isFinite(damage)) {
-      console.error(`[Scene] ❌ Invalid damage value: ${damage}, ignoring damage`);
+      // console.error(`[Scene] ❌ Invalid damage value: ${damage}, ignoring damage`);
       return;
     }
     
@@ -715,8 +715,6 @@ export default function Scene({
       const skeletonGroup = findSkeletonGroup(playerRef.current);
       if (skeletonGroup) {
         skeletonGroup.takeDamage(damage);
-      } else {
-        console.warn(`[Scene] Could not find skeleton group for ${summonedUnitId}`);
       }
     }
     
@@ -1282,6 +1280,16 @@ export default function Scene({
           previousEnemyStates.current.delete(enemyId);
         }
       }
+
+      // ADDITIONAL CLEANUP: Remove old entries periodically to prevent buildup
+      if (Math.random() < 0.1) { // 10% chance each check (every 2 seconds)
+        for (const [enemyId, state] of previousEnemyStates.current) {
+          // Clean up dead enemies that are no longer in the alive set
+          if (state.health <= 0 && !aliveEnemyIds.has(enemyId)) {
+            previousEnemyStates.current.delete(enemyId);
+          }
+        }
+      }
     };
 
     checkForEnemyDeaths();
@@ -1303,7 +1311,6 @@ export default function Scene({
     setFrozenEnemyIds([]);
     setSummonedUnits([]);
     
-    console.log('🧹 Scene cleanup completed - all state maps cleared');
   }, [removeEnemy, groupPool]);
 
   useEffect(() => {
@@ -1313,7 +1320,6 @@ export default function Scene({
   // Listen for game reset events to trigger cleanup
   useEffect(() => {
     const handleGameReset = () => {
-      console.log('🔄 Game reset detected - triggering Scene cleanup');
       cleanup();
     };
 
