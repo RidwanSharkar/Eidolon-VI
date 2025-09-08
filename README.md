@@ -2,7 +2,6 @@
 
 ![Eidolon Cover 1](https://github.com/user-attachments/assets/1535c3e9-b8fa-4581-aaae-669cecab789e)
 
-
 **GAMEPLAY:** <br>
 - **Vengeance Sword: https://www.youtube.com/watch?v=cwTIyLSqpi4** <br>
 - **Chaos Scythe: https://www.youtube.com/watch?v=usb8Tlarjbg** <br>
@@ -11,8 +10,7 @@
 - **Venom Bow: https://www.youtube.com/watch?v=yt6pAWwUE1c** 
 
 
-
-** Last Eidolon version due to performance bottlenecks, moving to Avernus **
+**Last Eidolon version due to performance bottlenecks, moving to Avernus**
 
 ---
 
