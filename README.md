@@ -2,7 +2,17 @@
 
 ![Eidolon Cover 1](https://github.com/user-attachments/assets/1535c3e9-b8fa-4581-aaae-669cecab789e)
 
-**NOTE: For optimal experience, close unecessary browser tabs, keep the game tab in focus, and use a mouse.**
+
+**GAMEPLAY:** <br>
+- **Vengeance Sword: https://www.youtube.com/watch?v=cwTIyLSqpi4** <br>
+- **Chaos Scythe: https://www.youtube.com/watch?v=usb8Tlarjbg** <br>
+- **Assassin Sabres: https://www.youtube.com/watch?v=0ZwcVTIkejU** <br>
+- **Elemental Bow: https://www.youtube.com/watch?v=KRHCzUpWfw0** <br>
+- **Venom Bow: https://www.youtube.com/watch?v=yt6pAWwUE1c** 
+
+
+
+** Last Eidolon version due to performance bottlenecks, moving to Avernus **
 
 ---
 
