@@ -45,6 +45,8 @@ interface AllSummonedUnitInfo {
   maxHealth: number;
   type: 'skeleton' | 'elemental' | 'abyssal-abomination';
   ownerId?: string;
+  isDead?: boolean;
+  deathTime?: number;
 }
 
 // Interface for skeleton group with takeDamage method
@@ -56,16 +58,18 @@ interface SceneProps extends SceneType {
   initialSkeletons?: number;
 }
 
-// Add ObjectPool class
+// Add ObjectPool class with memory management
 class ObjectPool<T> {
   private pool: T[] = [];
   private create: () => T;
   private maxSize: number;
+  private dispose?: (object: T) => void;
 
-  constructor(createFn: () => T, initialSize: number, maxSize: number) {
+  constructor(createFn: () => T, initialSize: number, maxSize: number, disposeFn?: (object: T) => void) {
     this.create = createFn;
     this.maxSize = maxSize;
-    
+    this.dispose = disposeFn;
+
     // Initialize pool
     for (let i = 0; i < initialSize; i++) {
       this.pool.push(this.create());
@@ -84,13 +88,25 @@ class ObjectPool<T> {
 
   release(object: T) {
     if (this.maxSize > 0 && this.pool.length >= this.maxSize) {
+      // If pool is full, dispose of the object instead of keeping it
+      if (this.dispose) {
+        this.dispose(object);
+      }
       return;
     }
     this.pool.push(object);
   }
 
   clear() {
+    // Dispose of all objects in pool when clearing
+    if (this.dispose) {
+      this.pool.forEach(obj => this.dispose!(obj));
+    }
     this.pool = [];
+  }
+
+  getSize(): number {
+    return this.pool.length;
   }
 }
 
@@ -128,11 +144,29 @@ export default function Scene({
   const treeData = useMemo(() => generateTrees(), []);
   const mushroomData = useMemo(() => generateMushrooms(), []);
 
-  // Add group pool
+  // Add group pool with disposal
   const [groupPool] = useState(() => new ObjectPool<Group>(
     () => new Group(),
     20, // Initial pool size
-    30  // Max pool size
+    30, // Max pool size
+    (group: Group) => {
+      // Dispose function for groups
+      group.traverse((child: THREE.Object3D) => {
+        if (child instanceof THREE.Mesh) {
+          if (child.geometry) {
+            child.geometry.dispose();
+          }
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach((material: THREE.Material) => material.dispose());
+            } else {
+              (child.material as THREE.Material).dispose();
+            }
+          }
+        }
+      });
+      group.clear();
+    }
   ));
 
   // ========================================================================
@@ -202,12 +236,72 @@ export default function Scene({
     };
   }, [groupPool, getEnemyHealth]);
 
-  // Modify enemy cleanup
+  // Modify enemy cleanup with proper Three.js disposal
   const removeEnemy = useCallback((enemy: Enemy) => {
     if (enemy.ref?.current) {
+      // Traverse and dispose of all geometries and materials in the group
+      enemy.ref.current.traverse((child: THREE.Object3D) => {
+        if (child instanceof THREE.Mesh) {
+          if (child.geometry) {
+            child.geometry.dispose();
+          }
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach((material: THREE.Material) => material.dispose());
+            } else {
+              (child.material as THREE.Material).dispose();
+            }
+          }
+        }
+        // Remove from parent to break references
+        if (child.parent) {
+          child.parent.remove(child);
+        }
+      });
+
+      // Clear the group completely
+      enemy.ref.current.clear();
+
       // Reset position before returning to pool
       enemy.ref.current.position.set(0, 0, 0);
+      enemy.ref.current.rotation.set(0, 0, 0);
+      enemy.ref.current.scale.set(1, 1, 1);
+
+      // Return to pool
       groupPool.release(enemy.ref.current);
+    }
+
+    // Additional cleanup for enemies without refs (like multiplayer enemies)
+    // Find and dispose of any remaining Three.js objects in the scene
+    if (playerRef.current) {
+      const disposeEnemyObjects = (object: THREE.Object3D): void => {
+        // Look for objects with enemy IDs in their userData or name
+        if (object.userData?.enemyId === enemy.id || object.name?.includes(enemy.id)) {
+          object.traverse((child: THREE.Object3D) => {
+            if (child instanceof THREE.Mesh) {
+              if (child.geometry) child.geometry.dispose();
+              if (child.material) {
+                if (Array.isArray(child.material)) {
+                  child.material.forEach((material: THREE.Material) => material.dispose());
+                } else {
+                  (child.material as THREE.Material).dispose();
+                }
+              }
+            }
+          });
+          if (object.parent) {
+            object.parent.remove(object);
+          }
+          return;
+        }
+
+        // Continue searching through children
+        if (object.children) {
+          object.children.forEach(disposeEnemyObjects);
+        }
+      };
+
+      disposeEnemyObjects(playerRef.current);
     }
   }, [groupPool]);
 
@@ -510,145 +604,149 @@ export default function Scene({
     };
   }, [knockbackEffects]);
 
-  // Update performance monitoring after all state variables are declared
-  useEffect(() => {
-    performanceMonitor.updateObjectCount('enemies', enemies.length);
-    performanceMonitor.updateObjectCount('statusEffects', 
-      Object.keys(slowedEnemies).length + 
-      Object.keys(stunnedEnemies).length + 
-      Object.keys(knockbackEffects).length + 
-      frozenEnemyIds.length
-    );
-  }, [enemies.length, slowedEnemies, stunnedEnemies, knockbackEffects, frozenEnemyIds]);
 
-  // MORE AGGRESSIVE memory cleanup - force garbage collection when memory usage is high
+  // ULTRA-AGGRESSIVE memory cleanup - run every 1 second to prevent memory buildup
   useEffect(() => {
     const memoryCleanupInterval = setInterval(() => {
-      // Check if we have too many accumulated objects
-      const totalStatusEffects = Object.keys(slowedEnemies).length +
-        Object.keys(stunnedEnemies).length +
-        Object.keys(knockbackEffects).length +
-        frozenEnemyIds.length;
-
-      // LOWER THRESHOLD: Clean up when we have 20+ status effects instead of 50
-      if (totalStatusEffects > 10) {
-
-        // Force cleanup of all expired effects
-        const now = Date.now();
-
-        setSlowedEnemies(prev => {
-          const newSlowed = { ...prev };
-          let hasChanges = false;
-          Object.keys(newSlowed).forEach(enemyId => {
-            // Remove effects older than 5 seconds (more aggressive)
-            if (now > newSlowed[enemyId] + 5000) {
-              delete newSlowed[enemyId];
-              hasChanges = true;
-            }
-          });
-          return hasChanges ? newSlowed : prev;
-        });
-
-        setStunnedEnemies(prev => {
-          const newStunned = { ...prev };
-          let hasChanges = false;
-          Object.keys(newStunned).forEach(enemyId => {
-            // Remove effects older than 3 seconds (more aggressive)
-            if (now > newStunned[enemyId] + 3000) {
-              delete newStunned[enemyId];
-              hasChanges = true;
-            }
-          });
-          return hasChanges ? newStunned : prev;
-        });
-
-        setKnockbackEffects(prev => {
-          const newKnockback = { ...prev };
-          let hasChanges = false;
-          Object.keys(newKnockback).forEach(enemyId => {
-            const effect = newKnockback[enemyId];
-            // Remove effects older than 1 second (more aggressive)
-            if (now > effect.startTime + effect.duration + 1000) {
-              delete newKnockback[enemyId];
-              hasChanges = true;
-            }
-          });
-          return hasChanges ? newKnockback : prev;
-        });
-
-        // Clear frozen enemies that have been frozen too long (5 seconds max)
-        setFrozenEnemyIds(prev => prev.filter(() => {
-          return true; // This will be handled by the spell effects - keep aggressive
-        }));
-      }
-    }, 3000); // Check every 3 seconds instead of 5
-
-    return () => clearInterval(memoryCleanupInterval);
-  }, [slowedEnemies, stunnedEnemies, knockbackEffects, frozenEnemyIds]);
-  
-  // Clean up expired slow effects periodically
-  useEffect(() => {
-    const cleanupInterval = setInterval(() => {
       const now = Date.now();
-      
-      // Get alive enemy IDs for cleanup
-      const aliveEnemyIds = new Set(
-        isInRoom 
-          ? Array.from(multiplayerEnemies.keys())
-          : localEnemies.filter(e => e.health > 0 && !e.isDying).map(e => e.id)
-      );
-      
+
+      // Always clean up expired effects, regardless of count
       setSlowedEnemies(prev => {
         const newSlowed = { ...prev };
         let hasChanges = false;
-        
         Object.keys(newSlowed).forEach(enemyId => {
-          // Remove if expired OR if enemy is dead
-          if (now > newSlowed[enemyId] || !aliveEnemyIds.has(enemyId)) {
+          // Remove effects older than 3 seconds (very aggressive)
+          if (now > newSlowed[enemyId] + 3000) {
             delete newSlowed[enemyId];
             hasChanges = true;
           }
         });
-        
         return hasChanges ? newSlowed : prev;
       });
-      
-      // Also clean up expired stun effects
+
       setStunnedEnemies(prev => {
         const newStunned = { ...prev };
         let hasChanges = false;
-        
         Object.keys(newStunned).forEach(enemyId => {
-          // Remove if expired OR if enemy is dead
-          if (now > newStunned[enemyId] || !aliveEnemyIds.has(enemyId)) {
+          // Remove effects older than 2 seconds (very aggressive)
+          if (now > newStunned[enemyId] + 2000) {
             delete newStunned[enemyId];
             hasChanges = true;
           }
         });
-        
         return hasChanges ? newStunned : prev;
       });
 
-      // Clean up expired knockback effects
       setKnockbackEffects(prev => {
         const newKnockback = { ...prev };
         let hasChanges = false;
-        
         Object.keys(newKnockback).forEach(enemyId => {
           const effect = newKnockback[enemyId];
-          // Remove if expired OR if enemy is dead
-          if (now > effect.startTime + effect.duration || !aliveEnemyIds.has(enemyId)) {
+          // Remove effects immediately after duration + small buffer
+          if (now > effect.startTime + effect.duration + 500) {
             delete newKnockback[enemyId];
             hasChanges = true;
           }
         });
-        
         return hasChanges ? newKnockback : prev;
       });
-    }, 2000); // Check every 2 seconds instead of every second
-    
+
+      // Clean up frozen enemies more aggressively
+      setFrozenEnemyIds(prev => {
+        // Only keep frozen enemies that are still actually frozen (this will be managed by spells)
+        // For now, clear any that might have been orphaned
+        return prev.slice(0, 10); // Hard cap at 10 frozen enemies max
+      });
+
+    }, 1000); // Check every 1 second - much more aggressive
+
+    return () => clearInterval(memoryCleanupInterval);
+  }, []); // Remove dependencies to prevent recreation
+  
+  // Clean up dead enemy effects immediately - MORE AGGRESSIVE CLEANUP
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+
+      // Get alive enemy IDs for cleanup
+      const aliveEnemyIds = new Set(
+        isInRoom
+          ? Array.from(multiplayerEnemies.keys())
+          : localEnemies.filter(e => e.health > 0 && !e.isDying).map(e => e.id)
+      );
+
+      // Clean up effects for dead enemies immediately
+      setSlowedEnemies(prev => {
+        const newSlowed = { ...prev };
+        let hasChanges = false;
+
+        Object.keys(newSlowed).forEach(enemyId => {
+          // Remove if enemy is dead OR expired (more aggressive timing)
+          if (!aliveEnemyIds.has(enemyId) || now > newSlowed[enemyId] + 1000) { // 1 second buffer
+            delete newSlowed[enemyId];
+            hasChanges = true;
+          }
+        });
+
+        return hasChanges ? newSlowed : prev;
+      });
+
+      setStunnedEnemies(prev => {
+        const newStunned = { ...prev };
+        let hasChanges = false;
+
+        Object.keys(newStunned).forEach(enemyId => {
+          // Remove if enemy is dead OR expired (more aggressive timing)
+          if (!aliveEnemyIds.has(enemyId) || now > newStunned[enemyId] + 500) { // 0.5 second buffer
+            delete newStunned[enemyId];
+            hasChanges = true;
+          }
+        });
+
+        return hasChanges ? newStunned : prev;
+      });
+
+      setKnockbackEffects(prev => {
+        const newKnockback = { ...prev };
+        let hasChanges = false;
+
+        Object.keys(newKnockback).forEach(enemyId => {
+          const effect = newKnockback[enemyId];
+          // Remove if enemy is dead OR expired (more aggressive timing)
+          if (!aliveEnemyIds.has(enemyId) || now > effect.startTime + effect.duration + 200) { // 200ms buffer
+            delete newKnockback[enemyId];
+            hasChanges = true;
+          }
+        });
+
+        return hasChanges ? newKnockback : prev;
+      });
+
+      // Clean up frozen enemies for dead enemies
+      setFrozenEnemyIds(prev => {
+        return prev.filter(enemyId => {
+          const normalizedId = enemyId.startsWith('enemy-') ? enemyId.slice(6) : enemyId;
+          return aliveEnemyIds.has(normalizedId);
+        });
+      });
+
+      // AGGRESSIVE DEAD ENEMY CLEANUP - dispose of dead enemies immediately
+      setLocalEnemies(prev => {
+        const cleanedEnemies = prev.filter(enemy => {
+          if (enemy.health <= 0 && enemy.isDying) {
+            // Enemy is dead and dying - dispose immediately
+            removeEnemy(enemy);
+            return false;
+          }
+          return true;
+        });
+        return cleanedEnemies;
+      });
+
+    }, 200); // Check every 200ms for dead enemy cleanup (more aggressive)
+
     return () => clearInterval(cleanupInterval);
-  }, [isInRoom, multiplayerEnemies, localEnemies]);
+  }, [isInRoom, multiplayerEnemies, localEnemies, removeEnemy]);
 
   // Add glacial shard shield state and ref
   const glacialShardRef = useRef<{ absorbDamage: (damage: number) => number; hasShield: boolean; shieldAbsorption: number; shootGlacialShard?: () => boolean; getKillCount?: () => number } | null>(null);
@@ -700,7 +798,7 @@ export default function Scene({
         if ('takeDamage' in object && object.userData?.skeletonId === summonedUnitId) {
           return object as SkeletonGroup;
         }
-        
+
         // Search through children recursively
         if (object.children) {
           for (const child of object.children) {
@@ -708,26 +806,67 @@ export default function Scene({
             if (found) return found;
           }
         }
-        
+
         return null;
       };
-      
+
       const skeletonGroup = findSkeletonGroup(playerRef.current);
       if (skeletonGroup) {
         skeletonGroup.takeDamage(damage);
       }
     }
-    
+
     // Also update the summoned units state for aggro system
     setSummonedUnits(prev => prev.map(unit => {
       if (unit.id === summonedUnitId) {
         const newHealth = Math.max(0, unit.health - damage);
-        
-        // If unit dies, remove it from aggro system
+
+        // If unit dies, remove it from aggro system immediately
         if (newHealth <= 0) {
           globalAggroSystem.removeTarget(summonedUnitId);
+
+          // Schedule cleanup of dead unit after a short delay
+          setTimeout(() => {
+            setSummonedUnits(currentUnits => {
+              const updatedUnits = currentUnits.filter(u => u.id !== summonedUnitId);
+
+              // Dispose of Three.js resources for dead units
+              if (playerRef.current) {
+                const findAndDispose = (object: THREE.Object3D): void => {
+                  if (object.userData?.skeletonId === summonedUnitId) {
+                    object.traverse((child: THREE.Object3D) => {
+                      if (child instanceof THREE.Mesh) {
+                        if (child.geometry) child.geometry.dispose();
+                        if (child.material) {
+                          if (Array.isArray(child.material)) {
+                            child.material.forEach((material: THREE.Material) => material.dispose());
+                          } else {
+                            (child.material as THREE.Material).dispose();
+                          }
+                        }
+                      }
+                    });
+                    if (object.parent) {
+                      object.parent.remove(object);
+                    }
+                    return;
+                  }
+
+                  if (object.children) {
+                    object.children.forEach(findAndDispose);
+                  }
+                };
+
+                findAndDispose(playerRef.current);
+              }
+
+              return updatedUnits;
+            });
+          }, 1000); // Give animation time to complete
+
+          return { ...unit, health: 0, isDead: true, deathTime: Date.now() };
         }
-        
+
         return { ...unit, health: newHealth };
       }
       return unit;
@@ -810,6 +949,68 @@ export default function Scene({
 
   // Track summoned units for aggro system
   const [summonedUnits, setSummonedUnits] = useState<AllSummonedUnitInfo[]>([]);
+
+  // Update performance monitoring after all state variables are declared
+  useEffect(() => {
+    const statusEffectCount = Object.keys(slowedEnemies).length +
+      Object.keys(stunnedEnemies).length +
+      Object.keys(knockbackEffects).length +
+      frozenEnemyIds.length;
+
+    performanceMonitor.updateObjectCount('enemies', enemies.length);
+    performanceMonitor.updateObjectCount('statusEffects', statusEffectCount);
+    // Note: performanceMonitor doesn't have 'summonedUnits' category, using 'activeEffects' for now
+
+    // Log memory usage periodically to identify leaks
+    if (Math.random() < 0.01) { // 1% chance each update
+      console.log('🧠 Memory Monitor:', {
+        enemies: enemies.length,
+        statusEffects: statusEffectCount,
+        summonedUnits: summonedUnits.length,
+        criticalRunes: criticalRunes.length,
+        critDamageRunes: critDamageRunes.length,
+        groupPoolSize: groupPool.getSize(),
+        currentLevel,
+        killCount
+      });
+
+      // Warning if we have too many objects
+      if (enemies.length > 10 || statusEffectCount > 20 || summonedUnits.length > 5) {
+        console.warn('⚠️ High object count detected - potential memory issue');
+      }
+    }
+  }, [enemies.length, slowedEnemies, stunnedEnemies, knockbackEffects, frozenEnemyIds, summonedUnits.length, criticalRunes.length, critDamageRunes.length, groupPool, currentLevel, killCount]);
+
+  // Periodic cleanup of summoned units to prevent memory leaks
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+
+      setSummonedUnits(prev => {
+        const cleanedUnits = prev.filter(unit => {
+          // Remove units that have been dead for more than 2 seconds
+          if (unit.isDead && unit.deathTime && now - unit.deathTime > 2000) {
+            return false;
+          }
+          // Remove units with invalid health
+          if (unit.health < 0) {
+            return false;
+          }
+          return true;
+        });
+
+        // Dispose of resources for removed units
+        const removedUnits = prev.filter(unit => !cleanedUnits.includes(unit));
+        removedUnits.forEach(unit => {
+          globalAggroSystem.removeTarget(unit.id);
+        });
+
+        return cleanedUnits;
+      });
+    }, 2000); // Check every 2 seconds
+
+    return () => clearInterval(cleanupInterval);
+  }, []);
 
   // Damage numbers system for summoned units
   const [, setDamageNumbers] = useState<Array<{

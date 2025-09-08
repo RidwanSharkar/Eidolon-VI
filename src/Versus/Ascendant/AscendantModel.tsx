@@ -33,8 +33,11 @@ const darkBoneMaterial = new MeshStandardMaterial({
 
 // Cache geometries for arm components - scaled to match Boss proportions
 const armJointGeometry = new SphereGeometry(0.06, 6, 6);
+armJointGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
 const armBoneGeometry = new CylinderGeometry(0.06, 0.048, 1, 4);
+armBoneGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
 const clawGeometry = new ConeGeometry(0.03, 0.15, 6);
+clawGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
 
 function AscendantArm({ isRaised = false }: { isRaised?: boolean }) {
   const armRef = useRef<Group>(null);
@@ -173,6 +176,34 @@ export default function AscendantModel({
       attackCycleRef.current = 0;
     }
   });
+
+  // Cleanup Three.js resources on unmount
+  React.useEffect(() => {
+    // Capture the current ref value to use in cleanup
+    const currentGroupRef = groupRef.current;
+
+    return () => {
+      if (currentGroupRef) {
+        currentGroupRef.traverse((child: THREE.Object3D) => {
+          if (child instanceof THREE.Mesh) {
+            // Dispose geometries (but not shared ones)
+            if (child.geometry && !child.geometry.userData?.shared) {
+              child.geometry.dispose();
+            }
+
+            // Dispose materials
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach((material: THREE.Material) => material.dispose());
+              } else {
+                (child.material as THREE.Material).dispose();
+              }
+            }
+          }
+        });
+      }
+    };
+  }, []);
 
   return (
     <group ref={groupRef} scale={[1.275, 1.275, 1.275]}> {/* Slightly larger than Reaper */}

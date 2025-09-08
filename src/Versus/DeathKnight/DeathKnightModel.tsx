@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import BonePlate from '@/gear/BonePlate';
 import DeathKnightSword from './DeathKnightSword';
 import DeathKnightTrailEffect from './DeathKnightTrailEffect';
+import * as THREE from 'three';
 
 interface DeathKnightModelProps {
   position: [number, number, number];
@@ -32,8 +33,11 @@ const darkBoneMaterial = new MeshStandardMaterial({
 
 // Cache geometries that are reused frequently (scaled for death knight)
 const jointGeometry = new SphereGeometry(0.066, 8, 8); // 1.1x larger than skeleton
-const largeBoneGeometry = new CylinderGeometry(0.044, 0.035, 1.1, 6); // 1.1x larger than skeleton  
+jointGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
+const largeBoneGeometry = new CylinderGeometry(0.044, 0.035, 1.1, 6); // 1.1x larger than skeleton
+largeBoneGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
 const clawGeometry = new ConeGeometry(0.022, 0.165, 6); // 1.1x larger than skeleton
+clawGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
 
 // Simplified blade decoration component with light purple
 function BladeDecoration({ scale = 1, position = [0, 0, 0], rotation = [0, 0, 0] }: { 
@@ -781,8 +785,11 @@ export default function DeathKnightModel({
     }
   });
 
-  // Cleanup timeout on unmount
+  // Cleanup timeout and Three.js resources on unmount
   useEffect(() => {
+    // Capture the current ref value to use in cleanup
+    const currentGroupRef = groupRef.current;
+
     return () => {
       if (attackAnimationRef.current) {
         clearTimeout(attackAnimationRef.current);
@@ -792,6 +799,27 @@ export default function DeathKnightModel({
       }
       if (frostStrikeAnimationRef.current) {
         clearTimeout(frostStrikeAnimationRef.current);
+      }
+
+      // Dispose of Three.js resources to prevent memory leaks
+      if (currentGroupRef) {
+        currentGroupRef.traverse((child: THREE.Object3D) => {
+          if (child instanceof THREE.Mesh) {
+            // Dispose geometries (but not shared ones)
+            if (child.geometry && !child.geometry.userData?.shared) {
+              child.geometry.dispose();
+            }
+
+            // Dispose materials
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach((material: THREE.Material) => material.dispose());
+              } else {
+                (child.material as THREE.Material).dispose();
+              }
+            }
+          }
+        });
       }
     };
   }, []);
