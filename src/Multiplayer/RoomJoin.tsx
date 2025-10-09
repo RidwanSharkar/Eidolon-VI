@@ -195,8 +195,7 @@ export default function RoomJoin({ onJoinSuccess, currentWeapon, currentSubclass
 
   return (
     <div className={styles.joinPanel}>
-      <h2>Join Multiplayer Game</h2>
-      <p>Play with up to 5 players per room</p>
+      <h2>Join Co-op Game</h2>
       
       <div className={styles.form}>
         <div className={styles.inputGroup}>
@@ -253,15 +252,7 @@ export default function RoomJoin({ onJoinSuccess, currentWeapon, currentSubclass
           </button>
         </div>
 
-        <div className={styles.helpText}>
-          <p>Tips:</p>
-          <ul>
-            <li>Use the same Room ID to play with friends</li>
-            <li>Maximum 5 players per room</li>
-            <li>All players fight the same enemies together</li>
-            <li>Damage and kills are shared across all players</li>
-          </ul>
-        </div>
+
       </div>
     </div>
   );

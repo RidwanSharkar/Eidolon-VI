@@ -28,7 +28,7 @@ interface GameWrapperProps {
   onAbilityUnlock: (abilityType: AbilityType) => void;
 }
 
-type GameMode = 'menu' | 'gamemode-selection' | 'singleplayer' | 'multiplayer' | 'game';
+type GameMode = 'menu' | 'singleplayer' | 'multiplayer' | 'game';
 
 // Inner component that uses the multiplayer hook
 function GameContent({ 
@@ -44,6 +44,7 @@ function GameContent({
   onAbilityUnlock
 }: GameWrapperProps) {
   const [gameMode, setGameMode] = useState<GameMode>('menu');
+  const [showGameModeSelection, setShowGameModeSelection] = useState(false);
   
   // ✅ Now this works because we're inside the MultiplayerProvider
   const { 
@@ -154,16 +155,21 @@ function GameContent({
   const handleSinglePlayerStart = () => {
     if (currentWeapon && currentSubclass) {
       setGameMode('singleplayer');
+      setShowGameModeSelection(false);
     }
   };
 
   const handleMultiplayerSelect = () => {
-    setGameMode('multiplayer');
+    if (currentWeapon && currentSubclass) {
+      setGameMode('multiplayer');
+      setShowGameModeSelection(false);
+    }
   };
 
   const handleMultiplayerJoinSuccess = () => {
     setGameMode('game');
-    
+    setShowGameModeSelection(false);
+
     // When joining multiplayer, unlock abilities based on current kill count
     if (isInRoom && currentWeapon && currentSubclass) {
       const currentLevel = getLevel(multiplayerKillCount);
@@ -173,12 +179,14 @@ function GameContent({
 
   const handleEnterClick = () => {
     if (currentWeapon && currentSubclass) {
-      setGameMode('gamemode-selection');
+      // Show game mode selection overlay on top of weapon selection
+      setShowGameModeSelection(true);
     }
   };
 
   const handleReset = useCallback(() => {
     setGameMode('menu');
+    setShowGameModeSelection(false);
     // Reset Eviscerate charges to initial state
     setEviscerateLashes([
       { id: 1, available: true, cooldownStartTime: null },
@@ -268,7 +276,23 @@ function GameContent({
             fontWeight: 'bold'
           }}
         >
-          Multiplayer
+          Multiplayer β
+        </button>
+        <button
+          onClick={() => setShowGameModeSelection(false)}
+          style={{
+            padding: '0.75rem 1.5rem',
+            fontSize: '1rem',
+            background: '#666',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            marginTop: '0.5rem'
+          }}
+        >
+          Back
         </button>
       </div>
       {!currentWeapon && (
@@ -353,14 +377,15 @@ function GameContent({
           maxSkeletons={12}
         />
 
-        <div style={{ 
-          position: 'absolute', 
-          top: 0, 
-          left: 0, 
-          width: '100%', 
-          height: '100%', 
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
           pointerEvents: !gameInProgress ? 'auto' : 'none',
-          zIndex: 1000
+          zIndex: 1000,
+          backdropFilter: gameMode === 'menu' && showGameModeSelection ? 'blur(2px)' : 'none'
         }}>
           {gameMode === 'menu' && (
             <WeaponSelectionPanel 
@@ -371,7 +396,7 @@ function GameContent({
             />
           )}
           
-          {gameMode === 'gamemode-selection' && renderMainMenu()}
+          {gameMode === 'menu' && showGameModeSelection && renderMainMenu()}
           
           {gameMode === 'multiplayer' && (
             <RoomJoin 

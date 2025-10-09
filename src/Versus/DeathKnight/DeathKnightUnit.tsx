@@ -1,8 +1,8 @@
 // src/Versus/DeathKnight/DeathKnightUnit.tsx
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, Frustum, Matrix4, Sphere } from 'three';
 import { Billboard, Text } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import DeathKnightModel from './DeathKnightModel';
 import DeathGrasp from './DeathGrasp';
 import FrostStrike from './FrostStrike';
@@ -69,6 +69,8 @@ export default function DeathKnightUnit({
   playerRef
 }: DeathKnightUnitProps) {
   const titanRef = useRef<Group>(null);
+  const { camera } = useThree();
+  const [isVisible, setIsVisible] = useState(true);
   const lastAttackTime = useRef<number>(Date.now() + 3000); // Longer initial delay
   const lastDeathGraspTime = useRef<number>(Date.now() + 5000); // Initial delay for Death Grasp
   const lastFrostStrikeTime = useRef<number>(Date.now() + 2000); // Initial delay for Frost Strike
@@ -304,6 +306,24 @@ export default function DeathKnightUnit({
       setIsMoving(false);
       setIsAttacking(false);
       return;
+    }
+
+    // Frustum culling - check if DeathKnight is in camera view
+    const frustum = new Frustum();
+    frustum.setFromProjectionMatrix(new Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+
+    const sphere = new Sphere(
+      new Vector3(currentPosition.current.x, currentPosition.current.y + 1.5, currentPosition.current.z),
+      3 // Bounding sphere radius for DeathKnight
+    );
+
+    const isInFrustum = frustum.intersectsSphere(sphere);
+    if (!isInFrustum && !isVisible) {
+      return; // Skip all expensive operations if not visible
+    }
+
+    if (isInFrustum !== isVisible) {
+      setIsVisible(isInFrustum);
     }
 
     const targetPlayerPosition = getTargetPlayerPosition();
@@ -676,9 +696,9 @@ export default function DeathKnightUnit({
 
   return (
     <>
-      <group 
-        ref={titanRef} 
-        visible={!isSpawning && currentHealth.current > 0}
+      <group
+        ref={titanRef}
+        visible={!isSpawning && currentHealth.current > 0 && isVisible}
         position={currentPosition.current}
         onClick={(e) => {
           e.stopPropagation();

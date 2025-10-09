@@ -117,6 +117,7 @@ import LavaLashProjectile from '@/Spells/LavaLash/LavaLashProjectile';
 import { IncinerateEmpowerment } from '@/color/IncinerateEmpowerment';
 import { findHighestPriorityTarget } from '@/Versus/enemy';
 import { performanceMonitor } from '@/Scene/PerformanceMonitor';
+import BoneTail from '@/gear/BoneTail';
 
 class ObjectPool<T> {
   private pool: T[] = [];
@@ -4012,7 +4013,10 @@ export default function Unit({
         <BonePlate />
       </group>
 
-        
+      <group scale={[0.85, 0.85, 0.85]} position={[0, 0.05, +0.1]}>
+        <BoneTail movementDirection={movementDirection} />
+      </group>
+
         {currentWeapon === WeaponType.SABRES ? (
           <Sabres
             isSwinging={isSwinging}

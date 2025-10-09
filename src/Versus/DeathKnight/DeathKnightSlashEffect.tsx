@@ -62,10 +62,10 @@ export default function DeathKnightSlashEffect({
     };
   }, [pooledResources]);
 
-  // Create particle positions along the slash arc
-  const particlePositions = useMemo(() => 
-    Array(10).fill(0).map((_, i) => { // More particles for Death Knight
-      const angle = (i / 9) * Math.PI * 0.9 - Math.PI * 0.45; // Arc from -45% to 45% of PI
+  // Create particle positions along the slash arc - reduced count for performance
+  const particlePositions = useMemo(() =>
+    Array(6).fill(0).map((_, i) => { // Reduced from 10 to 6 particles
+      const angle = (i / 5) * Math.PI * 0.9 - Math.PI * 0.45; // Arc from -45% to 45% of PI
       return {
         position: new THREE.Vector3(
           Math.cos(angle) * 1.4,
@@ -74,13 +74,13 @@ export default function DeathKnightSlashEffect({
         ),
         delay: i * 0.04 // Slightly slower stagger
       };
-    }), 
+    }),
   []);
 
-  // Trail positions for sword trail effect
-  const trailPositions = useMemo(() => 
-    Array(8).fill(0).map((_, i) => { // More trail segments
-      const angle = (i / 7) * Math.PI * 0.9 - Math.PI * 0.45;
+  // Trail positions for sword trail effect - reduced for performance
+  const trailPositions = useMemo(() =>
+    Array(5).fill(0).map((_, i) => { // Reduced from 8 to 5 trail segments
+      const angle = (i / 4) * Math.PI * 0.9 - Math.PI * 0.45;
       return {
         position: new THREE.Vector3(
           Math.cos(angle) * 1.0,
@@ -89,7 +89,7 @@ export default function DeathKnightSlashEffect({
         ),
         delay: i * 0.025
       };
-    }), 
+    }),
   []);
 
   useFrame((_, delta) => {

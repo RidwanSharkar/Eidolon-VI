@@ -1,11 +1,10 @@
 // src/versus/CustomSkeleton.tsx
 import React, { useRef, useState, useEffect } from 'react';
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, Vector3 } from 'three';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../gear/BonePlate';
 import SkullShield from '../Weapons/SkullShield';
 import BoneSabre from '../Weapons/BoneSabre';
-import EnemySlashEffect from './EnemySlashEffect';
 
 interface CustomSkeletonProps {
   position: [number, number, number];
@@ -291,9 +290,6 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
   const [walkCycle, setWalkCycle] = useState(0);
   const [attackCycle, setAttackCycle] = useState(0);
   const attackAnimationRef = useRef<NodeJS.Timeout>();
-  const [showSlashEffect, setShowSlashEffect] = useState(false);
-  const [slashPosition, setSlashPosition] = useState<Vector3>(new Vector3());
-  const [slashDirection, setSlashDirection] = useState<Vector3>(new Vector3(0, 0, 1));
 
   const walkSpeed = 4;
   const attackSpeed = 1.35;
@@ -372,35 +368,6 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
         rightArm.rotation.x = -armAngle;
       }
 
-      // Trigger slash effect when damage is actually dealt (synced with 750ms delay in EnemyUnit)
-      if (attackCycle > Math.PI / 3 && attackCycle < Math.PI / 2.5 && !showSlashEffect) {
-        // Calculate slash position and direction relative to the enemy's position and rotation
-        if (groupRef.current) {
-          // Get enemy's current position and rotation
-          const enemyPosition = new Vector3().copy(groupRef.current.position);
-          const enemyRotation = groupRef.current.rotation.y;
-          
-          // Calculate forward direction based on enemy's rotation
-          const forward = new Vector3(
-            Math.sin(enemyRotation),
-            0,
-            Math.cos(enemyRotation)
-          ).normalize();
-          
-          // Position the slash effect in front of the enemy
-          const slashPos = enemyPosition.clone().add(forward.multiplyScalar(1.2));
-          slashPos.y += 0.65; // Raise it slightly off the ground
-          slashPos.z -= 0.5;
-          
-          setSlashPosition(slashPos);
-          setSlashDirection(forward);
-          
-          // Delay the slash effect by 0.35 seconds
-          setTimeout(() => {
-            setShowSlashEffect(true);
-          }, 150);
-        }
-      }
 
       // Deal damage at the peak of the animation (around halfway through)
       if (attackCycle > Math.PI / 4 && onHit && !attackAnimationRef.current) {
@@ -411,17 +378,12 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
 
       if (attackCycle > Math.PI / 2) {
         setAttackCycle(0);
-        setShowSlashEffect(false); // Reset slash effect when attack completes
       }
     } else {
       // Clear the timeout if attack is interrupted
       if (attackAnimationRef.current) {
         clearTimeout(attackAnimationRef.current);
         attackAnimationRef.current = undefined;
-      }
-      // Reset slash effect if attack is cancelled
-      if (showSlashEffect) {
-        setShowSlashEffect(false);
       }
     }
   });
@@ -659,14 +621,6 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
         </group>
       </group>
 
-      {/* Slash effect during attack */}
-      {showSlashEffect && (
-        <EnemySlashEffect
-          startPosition={slashPosition}
-          direction={slashDirection}
-          onComplete={() => setShowSlashEffect(false)}
-        />
-      )}
     </>
   );
 } 

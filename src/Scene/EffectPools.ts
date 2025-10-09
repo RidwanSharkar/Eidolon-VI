@@ -27,6 +27,10 @@ class ObjectPool<T> {
 
   release(object: T) {
     if (this.pool.length >= this.maxSize) {
+      // Dispose of object if pool is full to prevent memory leaks
+      if (object && typeof (object as unknown as { dispose?: () => void }).dispose === 'function') {
+        ((object as unknown) as { dispose: () => void }).dispose();
+      }
       return;
     }
     if (this.reset) {
@@ -36,6 +40,12 @@ class ObjectPool<T> {
   }
 
   clear() {
+    // Dispose of all objects in pool during cleanup
+    this.pool.forEach(item => {
+      if (item && typeof (item as unknown as { dispose?: () => void }).dispose === 'function') {
+        ((item as unknown) as { dispose: () => void }).dispose();
+      }
+    });
     this.pool = [];
   }
 
@@ -167,35 +177,35 @@ class GeometryPools {
       60, 120 // High count since mist creates many particles and is used twice per use
     );
 
-    // DeathKnight effect pools (similar to skeleton but with different styling)
+    // DeathKnight effect pools (optimized for memory usage)
     this.deathKnightSlashTorus = new ObjectPool(
       () => new THREE.TorusGeometry(1.4, 0.18, 8, 32, Math.PI * 0.9),
-      5, 10
+      3, 6 // Reduced from 5,10 to 3,6
     );
 
     this.deathKnightSlashParticle = new ObjectPool(
       () => new THREE.SphereGeometry(0.08, 6, 6),
-      20, 40
+      12, 24 // Reduced from 20,40 to 12,24
     );
 
     this.deathKnightChargingArea = new ObjectPool(
       () => this.createAttackAreaGeometry(),
-      5, 10
+      3, 6 // Reduced from 5,10 to 3,6
     );
 
     this.deathKnightChargingRing = new ObjectPool(
       () => new THREE.RingGeometry(0.7, 0.78, 16),
-      10, 20
+      6, 12 // Reduced from 10,20 to 6,12
     );
 
     this.deathKnightChargingOrb = new ObjectPool(
       () => new THREE.SphereGeometry(0.1, 8, 8),
-      10, 20
+      6, 12 // Reduced from 10,20 to 6,12
     );
 
     this.deathGraspTentacle = new ObjectPool(
       () => new THREE.CylinderGeometry(0.12, 0.08, 2, 8),
-      15, 30
+      8, 16 // Reduced from 15,30 to 8,16
     );
 
     this.frostStrikeShard = new ObjectPool(

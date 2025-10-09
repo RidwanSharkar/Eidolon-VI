@@ -8,31 +8,36 @@ interface DeathKnightTrailEffectProps {
   isLeftShoulder?: boolean;
 }
 
-const DeathKnightTrailEffect: React.FC<DeathKnightTrailEffectProps> = ({ 
-  parentRef, 
-  isLeftShoulder = false 
+const DeathKnightTrailEffect: React.FC<DeathKnightTrailEffectProps> = ({
+  parentRef,
+  isLeftShoulder = false
 }) => {
-  const particlesCount = 2; // More particles than regular reaper for death knight
+  const particlesCount = 1; // Reduced from 2 to 1 for better performance
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const scalesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const timeRef = useRef(0);
+  const updateCounterRef = useRef(0); // For reducing update frequency
 
   useFrame((state, delta) => {
     if (!particlesRef.current?.parent || !parentRef.current) return;
-    
+
+    // Only update every 3rd frame to reduce computational load
+    updateCounterRef.current++;
+    if (updateCounterRef.current % 3 !== 0) return;
+
     timeRef.current += delta;
     const deathKnightPosition = parentRef.current.position;
-    
+
     // Create a more concentrated spiral pattern for death knight
     for (let i = 0; i < particlesCount; i++) {
       const angle = (i / particlesCount) * Math.PI * 2 + timeRef.current * 1.5;
       const radius = 0.06 + Math.sin(timeRef.current * 3 + i * 0.3) * 0.05; // Half the radius
-      
+
       // Offset based on which shoulder (left or right)
       const shoulderOffset = isLeftShoulder ? -0.385 : 0.385;
-      
+
       positionsRef.current[i * 3] = deathKnightPosition.x + shoulderOffset + Math.cos(angle) * radius;
       positionsRef.current[i * 3 + 1] = deathKnightPosition.y + 0.3 + Math.sin(timeRef.current * 2 + i * 0.2) * 0.075; // Half the Y movement
       positionsRef.current[i * 3 + 2] = deathKnightPosition.z + 0.22 + Math.sin(angle) * radius;

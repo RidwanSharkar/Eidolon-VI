@@ -13,10 +13,9 @@ import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
-import { generateRandomPosition, generateMountains, generateTrees, generateMushrooms } from '../Environment/terrainGenerators';
+import { generateRandomPosition, generateMountains, generateMushrooms } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
 import * as THREE from 'three';
-import DetailedTrees from '../Environment/DetailedTrees';
 import InstancedMountains from '../Environment/InstancedMountains';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
 import InstancedVegetation from '../Environment/InstancedVegetation';
@@ -141,7 +140,6 @@ export default function Scene({
 
   // TERRAIN
   const mountainData = useMemo(() => generateMountains(), []);
-  const treeData = useMemo(() => generateTrees(), []);
   const mushroomData = useMemo(() => generateMushrooms(), []);
 
   // Add group pool with disposal
@@ -743,7 +741,7 @@ export default function Scene({
         return cleanedEnemies;
       });
 
-    }, 200); // Check every 200ms for dead enemy cleanup (more aggressive)
+    }, 1000); // Check every 200ms for dead enemy cleanup (more aggressive)
 
     return () => clearInterval(cleanupInterval);
   }, [isInRoom, multiplayerEnemies, localEnemies, removeEnemy]);
@@ -1574,7 +1572,7 @@ export default function Scene({
         <Planet />
         <Terrain />
         <InstancedVegetation />
-        <DetailedTrees trees={treeData} />
+
         <InstancedMountains mountains={mountainData} />
         <InstancedMushrooms mushrooms={mushroomData} />
         {/* Central Pedestal */}

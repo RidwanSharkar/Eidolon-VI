@@ -1,7 +1,7 @@
 // src/Versus/DeathKnight/DeathKnightModel.tsx
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, Shape, ExtrudeGeometry } from 'three';
-import { useFrame } from '@react-three/fiber';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, Shape, ExtrudeGeometry, Vector3 } from 'three';
+import { useFrame, useThree } from '@react-three/fiber';
 import BonePlate from '@/gear/BonePlate';
 import DeathKnightSword from './DeathKnightSword';
 import DeathKnightTrailEffect from './DeathKnightTrailEffect';
@@ -455,10 +455,50 @@ function DeathKnightShoulderPlate({ isLeftShoulder = false }: { isLeftShoulder?:
   );
 }
 
-export default function DeathKnightModel({ 
-  position, 
-  isAttacking, 
-  isWalking, 
+// Shared Materials System for DeathKnight - prevents creating multiple instances
+const sharedMaterials = {
+  boneMaterial: new MeshStandardMaterial({
+    color: "#d0d0d0",
+    roughness: 0.5,
+    metalness: 0.4
+  }),
+
+  darkBoneMaterial: new MeshStandardMaterial({
+    color: "#b8b8b8",
+    roughness: 0.4,
+    metalness: 0.5
+  }),
+
+  purpleMaterial: new MeshStandardMaterial({
+    color: "#DDA0DD",
+    roughness: 0.3,
+    metalness: 0.8
+  }),
+
+  darkPurpleMaterial: new MeshStandardMaterial({
+    color: "#DA70D6",
+    roughness: 0.2,
+    metalness: 0.9
+  }),
+
+  lightPurpleMaterial: new MeshStandardMaterial({
+    color: "#D8BFD8",
+    roughness: 0.1,
+    metalness: 0.95
+  })
+};
+
+// LOD System - Distance thresholds for detail switching
+const LOD_THRESHOLDS = {
+  HIGH_DETAIL_DISTANCE: 15,    // Full detail up to 15 units
+  MEDIUM_DETAIL_DISTANCE: 35,  // Medium detail up to 35 units
+  LOW_DETAIL_DISTANCE: 60      // Low detail up to 60 units
+};
+
+export default function DeathKnightModel({
+  position,
+  isAttacking,
+  isWalking,
   onHit,
   isUsingDeathGrasp = false,
   isUsingFrostStrike = false,
@@ -468,6 +508,8 @@ export default function DeathKnightModel({
   const groupRef = useRef<Group>(null);
   const leftArmRef = useRef<Group>(null);
   const rightArmRef = useRef<Group>(null);
+  const { camera } = useThree();
+  const [currentLOD, setCurrentLOD] = useState<'high' | 'medium' | 'low'>('high');
   const [walkCycle, setWalkCycle] = useState(0);
   const [attackCycle, setAttackCycle] = useState(0);
   const [deathGraspCycle, setDeathGraspCycle] = useState(0);
@@ -478,6 +520,26 @@ export default function DeathKnightModel({
 
   const walkSpeed = 3.25; // Similar to regular skeleton but slightly slower
   const attackSpeed = 2.25; // Faster attack animation for quicker downswing
+
+  // Calculate LOD based on camera distance
+  useFrame(() => {
+    if (!groupRef.current) return;
+
+    const distance = camera.position.distanceTo(
+      new Vector3(position[0], position[1] + 1.0, position[2])
+    );
+
+    let newLOD: 'high' | 'medium' | 'low' = 'high';
+    if (distance > LOD_THRESHOLDS.LOW_DETAIL_DISTANCE) {
+      newLOD = 'low';
+    } else if (distance > LOD_THRESHOLDS.MEDIUM_DETAIL_DISTANCE) {
+      newLOD = 'medium';
+    }
+
+    if (newLOD !== currentLOD) {
+      setCurrentLOD(newLOD);
+    }
+  });
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -824,26 +886,109 @@ export default function DeathKnightModel({
     };
   }, []);
 
+  // Simplified Medium Detail Model - using shared materials
+  const MediumDetailModel = () => (
+    <group>
+      {/* Simplified Body */}
+      <group name="Body" position={[0, 1.176, 0.176]} scale={[0.935, 0.935, 0.935]}>
+        <mesh material={sharedMaterials.boneMaterial}>
+          <boxGeometry args={[0.8, 1.2, 0.4]} />
+        </mesh>
+      </group>
+
+      {/* Simplified Head */}
+      <group name="Head" position={[0, 1.54, 0.44]}>
+        <mesh material={sharedMaterials.boneMaterial}>
+          <sphereGeometry args={[0.3, 8, 8]} />
+        </mesh>
+        {/* Simplified helmet */}
+        <mesh position={[0, 0.1, 0]} material={sharedMaterials.purpleMaterial}>
+          <sphereGeometry args={[0.32, 8, 8, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+        </mesh>
+      </group>
+
+      {/* Simplified Armor Plates */}
+      <group position={[-0.385, 1.496, 0.22]}>
+        <mesh material={sharedMaterials.purpleMaterial}>
+          <sphereGeometry args={[0.2, 8, 8, 0, Math.PI * 2, 0, Math.PI * 0.9]} />
+        </mesh>
+      </group>
+      <group position={[0.385, 1.496, 0.22]}>
+        <mesh material={sharedMaterials.purpleMaterial}>
+          <sphereGeometry args={[0.2, 8, 8, 0, Math.PI * 2, 0, Math.PI * 0.9]} />
+        </mesh>
+      </group>
+
+      {/* Simplified Arms */}
+      <group name="LeftArm" position={[-0.45, 1.45, 0.263]}>
+        <mesh material={sharedMaterials.boneMaterial}>
+          <cylinderGeometry args={[0.08, 0.08, 0.6, 8]} />
+        </mesh>
+      </group>
+      <group name="RightArm" position={[0.45, 1.45, 0.163]}>
+        <mesh material={sharedMaterials.boneMaterial}>
+          <cylinderGeometry args={[0.08, 0.08, 0.6, 8]} />
+        </mesh>
+        {/* Simplified sword */}
+        <mesh position={[0.3, -0.3, 0]} material={sharedMaterials.purpleMaterial}>
+          <boxGeometry args={[0.1, 0.8, 0.05]} />
+        </mesh>
+      </group>
+
+      {/* Simplified Legs */}
+      <group name="LeftLeg" position={[0.154, 0.484, -0.088]}>
+        <mesh material={sharedMaterials.boneMaterial}>
+          <cylinderGeometry args={[0.12, 0.12, 0.8, 8]} />
+        </mesh>
+      </group>
+      <group name="RightLeg" position={[-0.154, 0.484, -0.088]}>
+        <mesh material={sharedMaterials.boneMaterial}>
+          <cylinderGeometry args={[0.12, 0.12, 0.8, 8]} />
+        </mesh>
+      </group>
+    </group>
+  );
+
+  // Ultra-Simplified Low Detail Model (Billboard-like) - using shared materials
+  const LowDetailModel = () => (
+    <group>
+      {/* Simple billboard representation */}
+      <mesh position={[0, 1.5, 0]}>
+        <planeGeometry args={[1.2, 2.0]} />
+        <meshStandardMaterial {...sharedMaterials.purpleMaterial} transparent opacity={0.7} />
+      </mesh>
+
+      {/* Very simple glowing outline */}
+      <mesh position={[0, 1.5, 0.01]}>
+        <planeGeometry args={[1.4, 2.2]} />
+        <meshStandardMaterial {...sharedMaterials.darkPurpleMaterial} transparent opacity={0.3} />
+      </mesh>
+    </group>
+  );
+
   return (
-    <group 
-      ref={groupRef} 
+    <group
+      ref={groupRef}
       position={[position[0], position[1] + 1.0, position[2]]} // Fixed base position
       scale={[0.85, 0.95, 0.85]} // Scaled for death knight size (1.1x skeleton)
     >
-      {/* Body - death knight armor */}
-      <group name="Body" position={[0, 1.176, 0.176]} scale={[0.935, 0.935, 0.935]} rotation={[0.2, 0, 0]}>
-        <BonePlate />
-      </group>
+      {/* Render based on LOD level */}
+      {currentLOD === 'high' && (
+        <>
+          {/* High Detail Model - Full Complex Model */}
+          <group name="Body" position={[0, 1.176, 0.176]} scale={[0.935, 0.935, 0.935]} rotation={[0.2, 0, 0]}>
+            <BonePlate />
+          </group>
 
-      {/* Head - death knight skull with light purple eyes */}
-      <group name="Head" position={[0, 1.54, 0.44]} scale={[0.825, 0.825, 0.825]} rotation={[0.15, 0, 0]}>
-        {/* Main skull shape */}
-        <group>
-          {/* Back of cranium */}
-          <mesh position={[0, 0, -0.05]}>
-            <sphereGeometry args={[0.26, 8, 8]} />
-            <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-          </mesh>
+          {/* Head - death knight skull with light purple eyes */}
+          <group name="Head" position={[0, 1.54, 0.44]} scale={[0.825, 0.825, 0.825]} rotation={[0.15, 0, 0]}>
+            {/* Main skull shape */}
+            <group>
+              {/* Back of cranium */}
+              <mesh position={[0, 0, -0.05]}>
+                <sphereGeometry args={[0.26, 8, 8]} />
+                <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
+              </mesh>
           
           {/* Front face plate */}
           <mesh position={[0, -0.02, 0.12]}>
@@ -1057,13 +1202,28 @@ export default function DeathKnightModel({
         <DeathKnightLegModel />
       </group>
 
-      {/* Neck connection - death knight proportions */}
-      <group position={[0, 1.408, 0.176]}>
-        <mesh>
-          <cylinderGeometry args={[0.066, 0.066, 0.165, 6]} />
-          <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-        </mesh>
-      </group>
+          {/* Neck connection - death knight proportions */}
+          <group position={[0, 1.408, 0.176]}>
+            <mesh>
+              <cylinderGeometry args={[0.066, 0.066, 0.165, 6]} />
+              <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
+            </mesh>
+          </group>
+        </>
+      )}
+
+      {currentLOD === 'medium' && <MediumDetailModel />}
+
+      {currentLOD === 'low' && <LowDetailModel />}
+
+      {/* Trail effects - only show for high detail */}
+      {currentLOD === 'high' && (
+        <>
+          {/* Death Knight Trail Effects at shoulders */}
+          <DeathKnightTrailEffect parentRef={groupRef} isLeftShoulder={true} />
+          <DeathKnightTrailEffect parentRef={groupRef} isLeftShoulder={false} />
+        </>
+      )}
     </group>
   );
 }
