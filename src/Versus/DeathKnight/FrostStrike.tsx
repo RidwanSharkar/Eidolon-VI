@@ -64,23 +64,23 @@ export default function FrostStrike({ position, direction, onComplete, parentRef
     };
   }, [pooledResources]);
 
-  // Pre-calculate particle and ice shard positions
-  const particlePositions = useMemo(() => 
-    Array(15).fill(0).map((_, i) => ({
+  // Simplified particle and ice shard positions for performance
+  const particlePositions = useMemo(() =>
+    Array(8).fill(0).map((_, i) => ({
       position: new THREE.Vector3(
-        Math.cos((i * Math.PI) / 7.5) * 1.8,
-        Math.sin((i * Math.PI) / 7.5) * 1.8,
+        Math.cos((i * Math.PI * 2) / 8) * 1.2, // Reduced count and radius
+        Math.sin((i * Math.PI * 2) / 8) * 1.2,
         0
       ),
       rotation: Math.random() * Math.PI * 2
-    })), 
+    })),
   []);
 
-  const iceShardPositions = useMemo(() => 
-    Array(8).fill(0).map((_, i) => ({
+  const iceShardPositions = useMemo(() =>
+    Array(4).fill(0).map((_, i) => ({
       position: new THREE.Vector3(
-        Math.cos((i * Math.PI * 2) / 8) * 2.5,
-        Math.sin((i * Math.PI * 2) / 8) * 2.5,
+        Math.cos((i * Math.PI * 2) / 4) * 1.8, // Reduced count and radius
+        Math.sin((i * Math.PI * 2) / 4) * 1.8,
         0
       ),
       rotation: [
@@ -88,7 +88,7 @@ export default function FrostStrike({ position, direction, onComplete, parentRef
         Math.random() * Math.PI * 2,
         Math.random() * Math.PI
       ] as [number, number, number]
-    })), 
+    })),
   []);
 
   useEffect(() => {

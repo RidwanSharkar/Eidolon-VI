@@ -82,7 +82,7 @@ class PerformanceMonitor {
     };
     updateFrameRate();
 
-    // Collect metrics every 15 seconds
+    // Collect metrics every 10 seconds for DeathKnight monitoring
     setInterval(() => {
       this.collectMetrics();
     }, 15000);
@@ -170,6 +170,11 @@ class PerformanceMonitor {
 
     if (metric.objectCounts.projectiles > 30) {
       warnings.push(`🚨 Too many projectiles: ${metric.objectCounts.projectiles}`);
+    }
+
+    // DeathKnight-specific warnings
+    if (metric.objectCounts.activeEffects > 20) {
+      warnings.push(`🚨 DeathKnight overload: Too many active effects for DeathKnight performance`);
     }
 
     if (warnings.length > 0) {

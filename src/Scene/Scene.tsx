@@ -603,18 +603,19 @@ export default function Scene({
   }, [knockbackEffects]);
 
 
-  // ULTRA-AGGRESSIVE memory cleanup - run every 1 second to prevent memory buildup
+  // ULTRA-AGGRESSIVE memory cleanup - run every 500ms to prevent memory buildup
   useEffect(() => {
     const memoryCleanupInterval = setInterval(() => {
       const now = Date.now();
 
-      // Always clean up expired effects, regardless of count
+      // DeathKnight-specific: Clean up effects immediately for death-knight enemies
       setSlowedEnemies(prev => {
         const newSlowed = { ...prev };
         let hasChanges = false;
         Object.keys(newSlowed).forEach(enemyId => {
-          // Remove effects older than 3 seconds (very aggressive)
-          if (now > newSlowed[enemyId] + 3000) {
+          // DeathKnight effects expire faster - 1 second instead of 2
+          const expirationTime = enemyId.includes('death-knight') ? 1000 : 2000;
+          if (now > newSlowed[enemyId] + expirationTime) {
             delete newSlowed[enemyId];
             hasChanges = true;
           }
@@ -626,8 +627,9 @@ export default function Scene({
         const newStunned = { ...prev };
         let hasChanges = false;
         Object.keys(newStunned).forEach(enemyId => {
-          // Remove effects older than 2 seconds (very aggressive)
-          if (now > newStunned[enemyId] + 2000) {
+          // DeathKnight effects expire faster - 0.8 seconds instead of 1.5
+          const expirationTime = enemyId.includes('death-knight') ? 800 : 1500;
+          if (now > newStunned[enemyId] + expirationTime) {
             delete newStunned[enemyId];
             hasChanges = true;
           }
@@ -640,8 +642,9 @@ export default function Scene({
         let hasChanges = false;
         Object.keys(newKnockback).forEach(enemyId => {
           const effect = newKnockback[enemyId];
-          // Remove effects immediately after duration + small buffer
-          if (now > effect.startTime + effect.duration + 500) {
+          // DeathKnight effects expire faster - 100ms buffer instead of 200ms
+          const buffer = enemyId.includes('death-knight') ? 100 : 200;
+          if (now > effect.startTime + effect.duration + buffer) {
             delete newKnockback[enemyId];
             hasChanges = true;
           }
@@ -649,19 +652,24 @@ export default function Scene({
         return hasChanges ? newKnockback : prev;
       });
 
-      // Clean up frozen enemies more aggressively
+      // DeathKnight-specific frozen enemy cleanup - much more aggressive
       setFrozenEnemyIds(prev => {
-        // Only keep frozen enemies that are still actually frozen (this will be managed by spells)
-        // For now, clear any that might have been orphaned
-        return prev.slice(0, 10); // Hard cap at 10 frozen enemies max
+        // Prioritize death-knight cleanup - remove immediately, limit others
+        const filtered = prev.filter(id => {
+          if (id.includes('death-knight')) {
+            return false; // Remove all death-knight frozen effects immediately
+          }
+          return true;
+        });
+        return filtered.slice(0, 5); // Reduced cap to 5 frozen enemies max
       });
 
-    }, 1000); // Check every 1 second - much more aggressive
+    }, 500); // Check every 500ms - much more aggressive
 
     return () => clearInterval(memoryCleanupInterval);
   }, []); // Remove dependencies to prevent recreation
   
-  // Clean up dead enemy effects immediately - MORE AGGRESSIVE CLEANUP
+  // Clean up dead enemy effects immediately - EXTREME AGGRESSIVE CLEANUP
   useEffect(() => {
     const cleanupInterval = setInterval(() => {
       const now = Date.now();
@@ -673,14 +681,15 @@ export default function Scene({
           : localEnemies.filter(e => e.health > 0 && !e.isDying).map(e => e.id)
       );
 
-      // Clean up effects for dead enemies immediately
+      // Clean up effects for dead enemies immediately - DeathKnight-specific aggressive cleanup
       setSlowedEnemies(prev => {
         const newSlowed = { ...prev };
         let hasChanges = false;
 
         Object.keys(newSlowed).forEach(enemyId => {
-          // Remove if enemy is dead OR expired (more aggressive timing)
-          if (!aliveEnemyIds.has(enemyId) || now > newSlowed[enemyId] + 1000) { // 1 second buffer
+          // DeathKnight-specific: Remove death-knight effects immediately, others with shorter buffer
+          const bufferTime = enemyId.includes('death-knight') ? 0 : 500; // No buffer for death-knight
+          if (!aliveEnemyIds.has(enemyId) || now > newSlowed[enemyId] + bufferTime) {
             delete newSlowed[enemyId];
             hasChanges = true;
           }
@@ -694,8 +703,9 @@ export default function Scene({
         let hasChanges = false;
 
         Object.keys(newStunned).forEach(enemyId => {
-          // Remove if enemy is dead OR expired (more aggressive timing)
-          if (!aliveEnemyIds.has(enemyId) || now > newStunned[enemyId] + 500) { // 0.5 second buffer
+          // DeathKnight-specific: Remove death-knight effects immediately, others with shorter buffer
+          const bufferTime = enemyId.includes('death-knight') ? 0 : 300; // No buffer for death-knight
+          if (!aliveEnemyIds.has(enemyId) || now > newStunned[enemyId] + bufferTime) {
             delete newStunned[enemyId];
             hasChanges = true;
           }
@@ -710,8 +720,9 @@ export default function Scene({
 
         Object.keys(newKnockback).forEach(enemyId => {
           const effect = newKnockback[enemyId];
-          // Remove if enemy is dead OR expired (more aggressive timing)
-          if (!aliveEnemyIds.has(enemyId) || now > effect.startTime + effect.duration + 200) { // 200ms buffer
+          // DeathKnight-specific: Remove death-knight effects immediately, others with shorter buffer
+          const bufferTime = enemyId.includes('death-knight') ? 0 : 100; // No buffer for death-knight
+          if (!aliveEnemyIds.has(enemyId) || now > effect.startTime + effect.duration + bufferTime) {
             delete newKnockback[enemyId];
             hasChanges = true;
           }
@@ -720,19 +731,21 @@ export default function Scene({
         return hasChanges ? newKnockback : prev;
       });
 
-      // Clean up frozen enemies for dead enemies
+      // Clean up frozen enemies for dead enemies - prioritize DeathKnight cleanup
       setFrozenEnemyIds(prev => {
         return prev.filter(enemyId => {
           const normalizedId = enemyId.startsWith('enemy-') ? enemyId.slice(6) : enemyId;
+          // Prioritize removing death-knight frozen effects first
+          if (enemyId.includes('death-knight')) return false;
           return aliveEnemyIds.has(normalizedId);
-        });
+        }).slice(0, 6); // Further reduced cap to 6 frozen enemies max
       });
 
-      // AGGRESSIVE DEAD ENEMY CLEANUP - dispose of dead enemies immediately
+      // EXTREME AGGRESSIVE DEAD ENEMY CLEANUP - dispose of dead enemies immediately
       setLocalEnemies(prev => {
         const cleanedEnemies = prev.filter(enemy => {
           if (enemy.health <= 0 && enemy.isDying) {
-            // Enemy is dead and dying - dispose immediately
+            // Enemy is dead and dying - dispose immediately, especially DeathKnights
             removeEnemy(enemy);
             return false;
           }
@@ -741,7 +754,7 @@ export default function Scene({
         return cleanedEnemies;
       });
 
-    }, 1000); // Check every 200ms for dead enemy cleanup (more aggressive)
+    }, 200); // Check every 200ms for dead enemy cleanup (extreme aggressive)
 
     return () => clearInterval(cleanupInterval);
   }, [isInRoom, multiplayerEnemies, localEnemies, removeEnemy]);
@@ -948,6 +961,12 @@ export default function Scene({
   // Track summoned units for aggro system
   const [summonedUnits, setSummonedUnits] = useState<AllSummonedUnitInfo[]>([]);
 
+  // Track DeathKnight instances specifically
+  const deathKnightCount = useMemo(() =>
+    enemies.filter(enemy => enemy.type === 'death-knight').length,
+    [enemies]
+  );
+
   // Update performance monitoring after all state variables are declared
   useEffect(() => {
     const statusEffectCount = Object.keys(slowedEnemies).length +
@@ -957,27 +976,36 @@ export default function Scene({
 
     performanceMonitor.updateObjectCount('enemies', enemies.length);
     performanceMonitor.updateObjectCount('statusEffects', statusEffectCount);
-    // Note: performanceMonitor doesn't have 'summonedUnits' category, using 'activeEffects' for now
+    performanceMonitor.updateObjectCount('activeEffects', deathKnightCount); // Track DeathKnights in activeEffects category
 
-    // Log memory usage periodically to identify leaks
-    if (Math.random() < 0.01) { // 1% chance each update
+    // Log memory usage periodically to identify leaks - more frequent for DeathKnight monitoring
+    if (Math.random() < 0.05) { // 5% chance each update for more frequent monitoring
       console.log('🧠 Memory Monitor:', {
         enemies: enemies.length,
+        deathKnights: deathKnightCount,
         statusEffects: statusEffectCount,
         summonedUnits: summonedUnits.length,
         criticalRunes: criticalRunes.length,
         critDamageRunes: critDamageRunes.length,
         groupPoolSize: groupPool.getSize(),
         currentLevel,
-        killCount
+        killCount,
+        memoryUsage: typeof performance !== 'undefined' && 'memory' in performance
+          ? (performance.memory as { usedJSHeapSize?: number }).usedJSHeapSize || 'N/A'
+          : 'N/A'
       });
 
+      // Specific DeathKnight warnings
+      if (deathKnightCount > 2) {
+        console.warn('🚨 CRITICAL: Multiple DeathKnights detected - high memory risk');
+      }
+
       // Warning if we have too many objects
-      if (enemies.length > 10 || statusEffectCount > 20 || summonedUnits.length > 5) {
+      if (enemies.length > 8 || statusEffectCount > 15 || summonedUnits.length > 4 || deathKnightCount > 1) {
         console.warn('⚠️ High object count detected - potential memory issue');
       }
     }
-  }, [enemies.length, slowedEnemies, stunnedEnemies, knockbackEffects, frozenEnemyIds, summonedUnits.length, criticalRunes.length, critDamageRunes.length, groupPool, currentLevel, killCount]);
+  }, [enemies.length, slowedEnemies, stunnedEnemies, knockbackEffects, frozenEnemyIds, summonedUnits.length, criticalRunes.length, critDamageRunes.length, groupPool, currentLevel, killCount, deathKnightCount]);
 
   // Periodic cleanup of summoned units to prevent memory leaks
   useEffect(() => {
@@ -1340,7 +1368,7 @@ export default function Scene({
       });
     }, 35000);
 
-    // Timer for death knights: 1 every 35 seconds
+    // Timer for death knights: 1 every 60 seconds (reduced frequency to prevent memory issues)
     const deathKnightTimer = setInterval(() => {
       setLocalEnemies(prev => {
         // Level-based spawning constraint: Death Knights only spawn at levels 3-5
@@ -1353,7 +1381,7 @@ export default function Scene({
         spawnPosition.y = 0;
         const group = groupPool.acquire();
         group.visible = true;
-        
+
         const newDeathKnight = {
           id: `death-knight-${Date.now()}`,
           position: spawnPosition.clone(),
@@ -1369,7 +1397,7 @@ export default function Scene({
         totalSpawnedRef.current += 1;
         return [...prev, newDeathKnight];
       });
-    }, 17500);
+    }, 60000);
 
     return () => {
       clearInterval(skeletonTimer);

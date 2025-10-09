@@ -149,19 +149,19 @@ export default function DeathKnightUnit({
     return targetPlayer?.position || currentPosition.current;
   }, [getTargetPlayer]);
 
-  // Death Knight specific constants
+  // Death Knight specific constants - optimized for performance
   const ATTACK_RANGE = 3; // Melee attack range
-  const ATTACK_COOLDOWN = 2200; // Basic attack cooldown
-  const CHARGE_DURATION = 1000; // 1 second charge time
-  const DEATH_GRASP_RANGE = 10.0; // Death Grasp range
-  const DEATH_GRASP_COOLDOWN = 10000; // 10 second cooldown for Death Grasp
-  const FROST_STRIKE_RANGE = 3.25; // Frost Strike range (same as melee)
-  const FROST_STRIKE_COOLDOWN = 10000; // 8 second cooldown for Frost Strike
+  const ATTACK_COOLDOWN = 2800; // Increased attack cooldown to reduce frequency
+  const CHARGE_DURATION = 800; // Reduced charge time for faster attacks
+  const DEATH_GRASP_RANGE = 8.0; // Reduced Death Grasp range to limit complexity
+  const DEATH_GRASP_COOLDOWN = 15000; // Increased cooldown to reduce frequency
+  const FROST_STRIKE_RANGE = 3.25; // Reduced Frost Strike range for simplicity
+  const FROST_STRIKE_COOLDOWN = 12000; // Increased cooldown to reduce frequency
   const BASE_MOVEMENT_SPEED = 2.5; // Consistent base speed like other enemies
   const POSITION_UPDATE_THRESHOLD = 0.3;
   const MINIMUM_UPDATE_INTERVAL = 30;
-  const ATTACK_DAMAGE = 12; // Basic attack damage (higher than skeleton)
-  const FROST_STRIKE_DAMAGE = 15; // Frost Strike damage
+  const ATTACK_DAMAGE = 16; // Basic attack damage (higher than skeleton)
+  const FROST_STRIKE_DAMAGE = 19; // Frost Strike damage
   const SEPARATION_RADIUS = 2.5; // Separation distance
   const SEPARATION_FORCE = 0.75; // Reduced for smoother movement
   const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement
@@ -600,7 +600,7 @@ export default function DeathKnightUnit({
               }
             }
           }
-        }, 2000); // Full attack animation duration
+        }, 1500); // Reduced attack animation duration
       }
     }
 
@@ -618,12 +618,12 @@ export default function DeathKnightUnit({
         setIsUsingDeathGrasp(true);
         lastDeathGraspTime.current = currentTime;
 
-        // Reset ability state after duration
+        // Reset ability state after shorter duration
         setTimeout(() => {
           if (!activeDeathGrasp) {
             setIsUsingDeathGrasp(false);
           }
-        }, 2000);
+        }, 1500);
       }
     }
 
@@ -640,12 +640,12 @@ export default function DeathKnightUnit({
         setIsUsingFrostStrike(true);
         lastFrostStrikeTime.current = currentTime;
 
-        // Reset ability state after duration
+        // Reset ability state after shorter duration
         setTimeout(() => {
           if (!activeFrostStrike) {
             setIsUsingFrostStrike(false);
           }
-        }, 1500);
+        }, 1000);
       }
     }
 

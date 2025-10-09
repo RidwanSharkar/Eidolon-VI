@@ -11,11 +11,11 @@
 - **Everything Else: https://www.youtube.com/watch?v=ySSPUj44glw**
 
 **NEW FEATURES:** <br>
-- **2 unique subclasses per weapon choice** <br>
-- **New enemy types, combat mechanics and abilities** <br>
-- **Modified spawning system and leveling progression** <br>
-- **Dash mechanic for all weapons** <br>
-- **Critical rune drop system**
+- **Introduced 2 subclasses per weapon choice with unique playstyles and new innate abilities** <br>
+- **New enemy types, combat mechanics and unlockable abilities** <br>
+- **Modified spawning system and level progression** <br>
+- **Dash is now available to all weapons by double-tapping the direction's key** <br>
+- **Critical runes now have a chance to randomly drop from slain enemies**
 
 ---
 

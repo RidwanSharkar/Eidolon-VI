@@ -62,42 +62,36 @@ export default function DeathGrasp({
     };
   }, [pooledResources]);
 
-  // Pre-calculate 3 spiraling particle streams
+  // Pre-calculate simplified particle streams for performance
   const spiralStreams = useMemo(() => {
     const direction = targetPosition.clone().sub(startPosition);
     const distance = direction.length();
-    const segments = Math.ceil(distance * 4); // More segments for smoother spirals
+    const segments = Math.ceil(distance * 2); // Reduced segments for performance
     const streams = [[], [], []] as Array<Array<{position: Vector3, scale: number}>>;
-    
-    // Create normalized direction vector and perpendicular vectors for spiral calculation
-    const normalizedDirection = direction.clone().normalize();
-    const up = new Vector3(0, 1, 0);
-    const right = new Vector3().crossVectors(normalizedDirection, up).normalize();
-    const forward = new Vector3().crossVectors(right, normalizedDirection).normalize();
-    
-    // Spiral parameters
-    const spiralRadius = 0.15; // Radius of the spiral
-    const spiralTurns = 3; // Number of complete turns along the path
-    
+
+    // Spiral parameters - reduced complexity
+    const spiralRadius = 0.12; // Smaller radius for performance
+    const spiralTurns = 2; // Fewer turns for performance
+
     for (let streamIndex = 0; streamIndex < 3; streamIndex++) {
-      const phaseOffset = (streamIndex * Math.PI * 2) / 3; // 120 degrees apart
-      
+      const phaseOffset = (streamIndex * Math.PI * 2) / 3;
+
       for (let i = 0; i < segments; i++) {
         const progress = i / segments;
         const basePos = startPosition.clone().lerp(targetPosition, progress);
-        
-        // Calculate spiral position
+
+        // Simplified spiral calculation
         const spiralAngle = progress * spiralTurns * Math.PI * 2 + phaseOffset;
-        const currentRadius = spiralRadius * (1 - progress * 0.3); // Taper towards target
-        
-        // Create spiral offset
-        const spiralOffset = right.clone().multiplyScalar(Math.cos(spiralAngle) * currentRadius)
-          .add(forward.clone().multiplyScalar(Math.sin(spiralAngle) * currentRadius));
-        
-        const spiralPos = basePos.clone().add(spiralOffset);
-        
-        // Add some organic variation
-        const variation = 0.02;
+        const currentRadius = spiralRadius * (1 - progress * 0.5); // Simpler taper
+
+        // Simplified spiral offset using basic trig
+        const offsetX = Math.cos(spiralAngle) * currentRadius;
+        const offsetZ = Math.sin(spiralAngle) * currentRadius;
+
+        const spiralPos = basePos.clone().add(new Vector3(offsetX, 0, offsetZ));
+
+        // Reduced variation for performance
+        const variation = 0.01;
         spiralPos.x += (Math.random() - 0.5) * variation;
         spiralPos.y += (Math.random() - 0.5) * variation;
         spiralPos.z += (Math.random() - 0.5) * variation;
