@@ -10,6 +10,14 @@
 - **Venom Bow: https://www.youtube.com/watch?v=yt6pAWwUE1c** <br>
 - **Everything Else: https://www.youtube.com/watch?v=ySSPUj44glw**
 
+**NEW FEATURES:** <br>
+- **2 unique subclasses per weapon choice** <br>
+- **New enemy types, combat mechanics and abilities** <br>
+- **Modified spawning system and leveling progression** <br>
+- **Dash mechanic for all weapons** <br>
+- **Critical rune drop system**
+
+---
 
 **Last Eidolon version due to performance bottlenecks, moving to Avernus**
 
