@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { WeaponAbilities, WeaponType, WeaponInfo, WeaponSubclass, DashChargesState } from '@/Weapons/weapons';
+import { WeaponAbilities, WeaponType, WeaponInfo, WeaponSubclass, DashChargesState, getAbilityTooltip } from '@/Weapons/weapons';
 import styles from '@/Interface/Panel.module.css';
 import Image from 'next/image';
-import { ABILITY_TOOLTIPS } from '@/Weapons/weapons';
 import Tooltip from '@/Interface/Tooltip';
 import { Vector3 } from 'three';
 import DashCharges from '@/Interface/DashCharges';
@@ -105,13 +104,18 @@ export default function Panel({
     e: React.MouseEvent,
     abilityKey: keyof WeaponAbilities
   ) => {
-    const tooltip = ABILITY_TOOLTIPS[abilityKey];
-    const rect = e.currentTarget.getBoundingClientRect();
-    setTooltipContent(tooltip);
-    setTooltipPosition({
-      x: rect.left + rect.width / 2,
-      y: rect.top
-    });
+    if (currentSubclass) {
+      const tooltip = getAbilityTooltip(currentWeapon, currentSubclass, abilityKey);
+      const rect = e.currentTarget.getBoundingClientRect();
+      setTooltipContent({
+        name: tooltip.name,
+        description: tooltip.description
+      });
+      setTooltipPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top
+      });
+    }
   };
 
   const handleAbilityLeave = () => {

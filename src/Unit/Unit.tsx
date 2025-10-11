@@ -3314,24 +3314,22 @@ export default function Unit({
     setDamageNumbers(prev => prev.filter(dn => dn.id !== id));
   };
 
-  // Periodic cleanup for stuck damage numbers (safety measure)
+  // CRITICAL: ULTRA-FAST cleanup for stuck damage numbers - run every 500ms
   useEffect(() => {
-    const interval = setInterval(() => {
+    const ultraFastCleanup = setInterval(() => {
       const now = Date.now();
       setDamageNumbers(prev => {
         const filtered = prev.filter(dn => {
-          // Remove damage numbers older than 3 seconds (normal lifespan is 1.5s)
+          // Remove damage numbers older than 1.5 seconds (was 3 seconds)
           const age = now - (typeof dn.id === 'number' ? dn.id : 0);
-          return age < 3000;
+          return age < 1500; // Reduced from 3000ms to 1500ms
         });
-        
-        // Log cleanup if we removed any damage numbers
 
         return filtered;
       });
-    }, 3000); // Check every 2 seconds
+    }, 500); // Check every 500ms - much more aggressive cleanup
 
-    return () => clearInterval(interval);
+    return () => clearInterval(ultraFastCleanup);
   }, []);
 
   // SABRE DOUBLE HIT
@@ -3709,27 +3707,32 @@ export default function Unit({
     };
   }, [setActiveEffects]);
 
-  // Aggressive cleanup for damage numbers and effects when they accumulate too much
+  // CRITICAL: ULTRA-AGGRESSIVE cleanup for damage numbers and effects - run every 500ms
   useEffect(() => {
-    const aggressiveCleanup = setInterval(() => {
-      // Check if we have too many damage numbers
-      if (damageNumbers.length > 30) {
-        setDamageNumbers(prev => prev.slice(-20)); // Keep only the last 20
+    const ultraAggressiveCleanup = setInterval(() => {
+      // Check if we have too many damage numbers - much more aggressive limits
+      if (damageNumbers.length > 15) {
+        setDamageNumbers(prev => prev.slice(-10)); // Keep only the last 10 (was 20)
       }
-      
-      // Check if we have too many active effects
-      if (activeEffects.length > 50) {
-        setActiveEffects(prev => prev.slice(-30)); // Keep only the last 30
+
+      // Check if we have too many active effects - much more aggressive limits
+      if (activeEffects.length > 25) {
+        setActiveEffects(prev => prev.slice(-15)); // Keep only the last 15 (was 30)
       }
-      
-      // Check if we have too many fireballs
-      if (fireballs.length > 20) {
-        setFireballs(prev => prev.slice(-10)); // Keep only the last 10
+
+      // Check if we have too many fireballs - much more aggressive limits
+      if (fireballs.length > 10) {
+        setFireballs(prev => prev.slice(-5)); // Keep only the last 5 (was 10)
       }
-    }, 3000); // Check every 3 seconds
-    
-    return () => clearInterval(aggressiveCleanup);
-  }, [damageNumbers.length, activeEffects.length, fireballs.length]);
+
+      // Check if we have too many active projectiles - add this check
+      if (activeProjectiles.length > 30) {
+        setActiveProjectiles(prev => prev.slice(-15)); // Keep only the last 15
+      }
+    }, 500); // Check every 500ms - much more aggressive cleanup
+
+    return () => clearInterval(ultraAggressiveCleanup);
+  }, [damageNumbers.length, activeEffects.length, fireballs.length, activeProjectiles.length]);
 
   // Add additional cleanup for unmounting
 

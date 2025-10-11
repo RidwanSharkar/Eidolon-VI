@@ -109,10 +109,10 @@ export default function FallenTitanUnit({
   // Fallen Titan specific constants - slower and more powerful
   const ATTACK_RANGE = 4.0; // Longer reach due to size
   const ATTACK_COOLDOWN = 2500; // Slower attacks
-  const BASE_MOVEMENT_SPEED = 2.1; // Consistent base speed like other enemies but slower
+  const BASE_MOVEMENT_SPEED = 2.15; // Consistent base speed like other enemies but slower
   const POSITION_UPDATE_THRESHOLD = 0.3;
   const MINIMUM_UPDATE_INTERVAL = 30;
-  const ATTACK_DAMAGE = 52; // High damage
+  const ATTACK_DAMAGE = 76; // High damage
   const SEPARATION_RADIUS = 2.5; // Larger separation
   const SEPARATION_FORCE = 0.15; // Reduced for smoother movement
   const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement

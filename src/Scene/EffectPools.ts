@@ -177,35 +177,35 @@ class GeometryPools {
       60, 120 // High count since mist creates many particles and is used twice per use
     );
 
-    // DeathKnight effect pools (optimized for memory usage)
+    // DeathKnight effect pools (CRITICAL memory optimization)
     this.deathKnightSlashTorus = new ObjectPool(
       () => new THREE.TorusGeometry(1.4, 0.18, 8, 32, Math.PI * 0.9),
-      3, 6 // Reduced from 5,10 to 3,6
+      2, 4 // CRITICAL: Reduced from 3,6 to 2,4 - DeathKnights are memory intensive
     );
 
     this.deathKnightSlashParticle = new ObjectPool(
       () => new THREE.SphereGeometry(0.08, 6, 6),
-      12, 24 // Reduced from 20,40 to 12,24
+      8, 16 // CRITICAL: Reduced from 12,24 to 8,16 - Limit particle effects
     );
 
     this.deathKnightChargingArea = new ObjectPool(
       () => this.createAttackAreaGeometry(),
-      3, 6 // Reduced from 5,10 to 3,6
+      2, 4 // CRITICAL: Reduced from 3,6 to 2,4 - DeathKnight charging is expensive
     );
 
     this.deathKnightChargingRing = new ObjectPool(
       () => new THREE.RingGeometry(0.7, 0.78, 16),
-      6, 12 // Reduced from 10,20 to 6,12
+      4, 8 // CRITICAL: Reduced from 6,12 to 4,8 - Limit charging effects
     );
 
     this.deathKnightChargingOrb = new ObjectPool(
       () => new THREE.SphereGeometry(0.1, 8, 8),
-      6, 12 // Reduced from 10,20 to 6,12
+      4, 8 // CRITICAL: Reduced from 6,12 to 4,8 - Limit orb effects
     );
 
     this.deathGraspTentacle = new ObjectPool(
       () => new THREE.CylinderGeometry(0.12, 0.08, 2, 8),
-      8, 16 // Reduced from 15,30 to 8,16
+      5, 10 // CRITICAL: Reduced from 8,16 to 5,10 - DeathGrasp is very expensive
     );
 
     this.frostStrikeShard = new ObjectPool(
@@ -681,7 +681,7 @@ class MaterialPools {
         transparent: true,
         opacity: 0.8
       }),
-      15, 30,
+      8, 16, // CRITICAL: Reduced from 15,30 to 8,16 - DeathGrasp materials are expensive
       (material) => {
         material.opacity = 0.8;
         material.emissiveIntensity = 1.0;
@@ -839,3 +839,8 @@ export const disposeEffectPools = () => {
   geometryPools.dispose();
   materialPools.dispose();
 };
+
+// Make disposeEffectPools available globally for cleanup
+if (typeof window !== 'undefined') {
+  (window as typeof window & { disposeEffectPools?: () => void }).disposeEffectPools = disposeEffectPools;
+}

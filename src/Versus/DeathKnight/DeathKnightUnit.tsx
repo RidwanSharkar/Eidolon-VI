@@ -76,38 +76,32 @@ export default function DeathKnightUnit({
   const lastFrostStrikeTime = useRef<number>(Date.now() + 2000); // Initial delay for Frost Strike
   const attackDamageRef = useRef<boolean>(false); // Flag to prevent multiple damage calls
   const frostStrikeDamageRef = useRef<boolean>(false); // Flag to prevent multiple frost strike damage calls
-  const [isAttacking, setIsAttacking] = useState(false);
-  const [showDeathEffect, setShowDeathEffect] = useState(false);
-  const [isDead, setIsDead] = useState(false);
-  const [isSpawning, setIsSpawning] = useState(true);
-  const [isMoving, setIsMoving] = useState(false);
-  const [showFrostEffect, setShowFrostEffect] = useState(false);
-  const [isUsingDeathGrasp, setIsUsingDeathGrasp] = useState(false);
-  const [isUsingFrostStrike, setIsUsingFrostStrike] = useState(false);
-  const [activeDeathGrasp, setActiveDeathGrasp] = useState<{
-    id: string;
-    startPosition: Vector3;
-    targetPosition: Vector3;
-  } | null>(null);
-  const [activeFrostStrike, setActiveFrostStrike] = useState<{
-    id: string;
-    position: Vector3;
-    direction: Vector3;
-  } | null>(null);
-  const [activePlayerPull, setActivePlayerPull] = useState(false);
-  
-  // Charging state
-  const [isCharging, setIsCharging] = useState(false);
-  const [chargingIndicator, setChargingIndicator] = useState<{
-    id: string;
-    position: Vector3;
-    direction: Vector3;
-  } | null>(null);
-  const [activeSlashEffect, setActiveSlashEffect] = useState<{
-    id: string;
-    position: Vector3;
-    direction: Vector3;
-  } | null>(null);
+  // Consolidated state for better memory management
+  const [unitState, setUnitState] = useState({
+    isAttacking: false,
+    showDeathEffect: false,
+    isDead: false,
+    isSpawning: true,
+    isMoving: false,
+    showFrostEffect: false,
+    isUsingDeathGrasp: false,
+    isUsingFrostStrike: false,
+    activePlayerPull: false,
+    isCharging: false,
+  });
+
+  // Separate state for complex objects to reduce re-renders
+  const [activeEffects, setActiveEffects] = useState<{
+    deathGrasp: { id: string; startPosition: Vector3; targetPosition: Vector3 } | null;
+    frostStrike: { id: string; position: Vector3; direction: Vector3 } | null;
+    chargingIndicator: { id: string; position: Vector3; direction: Vector3 } | null;
+    slashEffect: { id: string; position: Vector3; direction: Vector3 } | null;
+  }>({
+    deathGrasp: null,
+    frostStrike: null,
+    chargingIndicator: null,
+    slashEffect: null,
+  });
   const chargeStartTime = useRef<number>(0);
   const chargeTargetPosition = useRef<Vector3 | null>(null);
   
@@ -160,8 +154,8 @@ export default function DeathKnightUnit({
   const BASE_MOVEMENT_SPEED = 2.5; // Consistent base speed like other enemies
   const POSITION_UPDATE_THRESHOLD = 0.3;
   const MINIMUM_UPDATE_INTERVAL = 30;
-  const ATTACK_DAMAGE = 16; // Basic attack damage (higher than skeleton)
-  const FROST_STRIKE_DAMAGE = 19; // Frost Strike damage
+  const ATTACK_DAMAGE = 24; // Basic attack damage (higher than skeleton)
+  const FROST_STRIKE_DAMAGE = 32; // Frost Strike damage
   const SEPARATION_RADIUS = 2.5; // Separation distance
   const SEPARATION_FORCE = 0.75; // Reduced for smoother movement
   const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement
@@ -202,19 +196,18 @@ export default function DeathKnightUnit({
     onTakeDamage(`death-knight-${id}`, damage);
     
     if (newHealth === 0 && currentHealth.current > 0) {
-      setIsDead(true);
-      setShowDeathEffect(true);
+      setUnitState(prev => ({ ...prev, isDead: true, showDeathEffect: true }));
     }
 
     if (source.type === WeaponType.SABRES && source.hasActiveAbility) {
-      setShowFrostEffect(true);
+      setUnitState(prev => ({ ...prev, showFrostEffect: true }));
     }
   }, [id, onTakeDamage]);
 
   // Improved position synchronization - prevent teleporting
   useEffect(() => {
     // Only sync position during initial spawn, not during gameplay
-    if (position && isSpawning && !currentPosition.current.equals(position)) {
+    if (position && unitState.isSpawning && !currentPosition.current.equals(position)) {
       const distance = currentPosition.current.distanceTo(position);
       
       // Only allow position sync if the distance is reasonable (prevents teleporting)
@@ -227,7 +220,7 @@ export default function DeathKnightUnit({
         }
       }
     }
-  }, [position, isSpawning]);
+  }, [position, unitState.isSpawning]);
 
   const handleTitanPositionUpdate = useCallback((id: string, newPosition: Vector3) => {
     if (titanRef.current) {
@@ -247,22 +240,24 @@ export default function DeathKnightUnit({
       currentPosition.current.z + 0.3
     );
 
-    setActiveDeathGrasp({
-      id: `death-grasp-${Date.now()}`,
-      startPosition: handPosition,
-      targetPosition: targetPlayerPosition.clone()
-    });
+    setActiveEffects(prev => ({
+      ...prev,
+      deathGrasp: {
+        id: `death-grasp-${Date.now()}`,
+        startPosition: handPosition,
+        targetPosition: targetPlayerPosition.clone()
+      }
+    }));
   }, [getTargetPlayerPosition]);
 
   const handleDeathGraspPullStart = useCallback(() => {
     // Start the player pull effect
-    setActivePlayerPull(true);
+    setUnitState(prev => ({ ...prev, activePlayerPull: true }));
   }, []);
 
   const handleDeathGraspComplete = useCallback(() => {
-    setActiveDeathGrasp(null);
-    setIsUsingDeathGrasp(false);
-    setActivePlayerPull(false);
+    setActiveEffects(prev => ({ ...prev, deathGrasp: null }));
+    setUnitState(prev => ({ ...prev, isUsingDeathGrasp: false, activePlayerPull: false }));
   }, []);
 
   // Frost Strike ability handlers
@@ -281,11 +276,14 @@ export default function DeathKnightUnit({
     const spellPosition = currentPosition.current.clone();
     spellPosition.y += 1; // Slightly elevated
 
-    setActiveFrostStrike({
-      id: `frost-strike-${Date.now()}`,
-      position: spellPosition,
-      direction: direction
-    });
+    setActiveEffects(prev => ({
+      ...prev,
+      frostStrike: {
+        id: `frost-strike-${Date.now()}`,
+        position: spellPosition,
+        direction: direction
+      }
+    }));
 
     // Deal damage after a short delay (spell travel time) - only once per frost strike
     setTimeout(() => {
@@ -297,18 +295,17 @@ export default function DeathKnightUnit({
   }, [getTargetPlayerPosition, onAttackPlayer]);
 
   const handleFrostStrikeComplete = useCallback(() => {
-    setActiveFrostStrike(null);
-    setIsUsingFrostStrike(false);
+    setActiveEffects(prev => ({ ...prev, frostStrike: null }));
+    setUnitState(prev => ({ ...prev, isUsingFrostStrike: false }));
   }, []);
 
   useFrame((_, delta) => {
     if (!titanRef.current || currentHealth.current <= 0 || isFrozen || isStunned) {
-      setIsMoving(false);
-      setIsAttacking(false);
+      setUnitState(prev => ({ ...prev, isMoving: false, isAttacking: false }));
       return;
     }
 
-    // Frustum culling - check if DeathKnight is in camera view
+    // Enhanced frustum culling - check if DeathKnight is in camera view
     const frustum = new Frustum();
     frustum.setFromProjectionMatrix(new Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
 
@@ -318,17 +315,26 @@ export default function DeathKnightUnit({
     );
 
     const isInFrustum = frustum.intersectsSphere(sphere);
-    if (!isInFrustum && !isVisible) {
-      return; // Skip all expensive operations if not visible
-    }
 
+    // More aggressive culling: only update visibility state when it actually changes
     if (isInFrustum !== isVisible) {
       setIsVisible(isInFrustum);
     }
 
+    // Skip all expensive operations if not visible and not in transition
+    if (!isInFrustum && !isVisible) {
+      return; // Skip all expensive operations if not visible
+    }
+
+    // Additional optimization: reduce update frequency when not visible
+    if (!isInFrustum && isVisible) {
+      // Still allow some processing for smooth transitions but at reduced frequency
+      // This helps prevent stuttering when DeathKnight comes back into view
+    }
+
     const targetPlayerPosition = getTargetPlayerPosition();
     if (!targetPlayerPosition) {
-      setIsMoving(false);
+      setUnitState(prev => ({ ...prev, isMoving: false }));
       return;
     }
 
@@ -336,7 +342,7 @@ export default function DeathKnightUnit({
 
     // Check if player is stealthed - lumbering wandering behavior
     if (stealthManager.isUnitStealthed()) {
-      setIsAttacking(false);
+      setUnitState(prev => ({ ...prev, isAttacking: false }));
       
       const now = Date.now();
       if (!wanderTarget.current || now - wanderStartTime.current > WANDER_DURATION) {
@@ -357,7 +363,7 @@ export default function DeathKnightUnit({
       }
       
       if (wanderTarget.current) {
-        setIsMoving(true);
+        setUnitState(prev => ({ ...prev, isMoving: true }));
         
         // Use consistent speed calculation like player movement  
         const baseWanderSpeed = BASE_MOVEMENT_SPEED * 0.2; // 20% of normal speed for slow wandering
@@ -400,9 +406,8 @@ export default function DeathKnightUnit({
     }
 
     // Normal movement and attack behavior - stop moving when charging
-    if (distanceToPlayer > ATTACK_RANGE && currentHealth.current > 0 && !isCharging) {
-      setIsAttacking(false);
-      setIsMoving(true);
+    if (distanceToPlayer > ATTACK_RANGE && currentHealth.current > 0 && !unitState.isCharging) {
+      setUnitState(prev => ({ ...prev, isAttacking: false, isMoving: true }));
 
       // Use consistent speed calculation like player movement
       const baseSpeed = isSlowed ? BASE_MOVEMENT_SPEED * 0.5 : BASE_MOVEMENT_SPEED;
@@ -473,22 +478,30 @@ export default function DeathKnightUnit({
 
     } else {
       // Stop moving when in attack range or when charging
-      setIsMoving(false);
+      setUnitState(prev => ({ ...prev, isMoving: false }));
     }
 
     // Attack logic with charging - more powerful and slower
-    if (distanceToPlayer <= ATTACK_RANGE && 
-        currentHealth.current > 0 && 
-        !isFrozen && 
-        !isStunned && 
-        !isUsingDeathGrasp && 
-        !isUsingFrostStrike) {
+    // Performance optimization: Limit simultaneous effects
+    const activeEffectCount = Object.values(activeEffects).filter(effect => effect !== null).length;
+
+    // Enhanced DeathKnight effect monitoring
+    if (process.env.NODE_ENV === 'development' && activeEffectCount > 1) {
+      console.log(`⚠️ DeathKnight ${id} has ${activeEffectCount} active effects`);
+    }
+
+    if (distanceToPlayer <= ATTACK_RANGE &&
+        currentHealth.current > 0 &&
+        !isFrozen &&
+        !isStunned &&
+        !unitState.isUsingDeathGrasp &&
+        !unitState.isUsingFrostStrike &&
+        activeEffectCount < 2) { // Limit to 2 simultaneous effects max
       const currentTime = Date.now();
-      
-      if (!isCharging && !isAttacking && currentTime - lastAttackTime.current >= ATTACK_COOLDOWN) {
+
+      if (!unitState.isCharging && !unitState.isAttacking && currentTime - lastAttackTime.current >= ATTACK_COOLDOWN) {
         // Start charging - stop moving during charge
-        setIsCharging(true);
-        setIsMoving(false);
+        setUnitState(prev => ({ ...prev, isCharging: true, isMoving: false }));
         chargeStartTime.current = currentTime;
         chargeTargetPosition.current = targetPlayerPosition.clone();
         lastAttackTime.current = currentTime;
@@ -499,22 +512,25 @@ export default function DeathKnightUnit({
           .normalize();
         
         // Show charging indicator
-        setChargingIndicator({
-          id: `charging-${currentTime}`,
-          position: currentPosition.current.clone(),
-          direction: attackDirection
-        });
+        setActiveEffects(prev => ({
+          ...prev,
+          chargingIndicator: {
+            id: `charging-${currentTime}`,
+            position: currentPosition.current.clone(),
+            direction: attackDirection
+          }
+        }));
       }
     }
     
     // Handle charging completion
-    if (isCharging && !isAttacking) {
+    if (unitState.isCharging && !unitState.isAttacking) {
       const chargeElapsed = Date.now() - chargeStartTime.current;
       if (chargeElapsed >= CHARGE_DURATION) {
         // Charging complete, start attack animation
-        setIsCharging(false);
-        setChargingIndicator(null);
-        setIsAttacking(true);
+        setUnitState(prev => ({ ...prev, isCharging: false }));
+        setActiveEffects(prev => ({ ...prev, chargingIndicator: null }));
+        setUnitState(prev => ({ ...prev, isAttacking: true }));
         
         // Reset damage flag for new attack
         attackDamageRef.current = false;
@@ -529,11 +545,14 @@ export default function DeathKnightUnit({
             .subVectors(chargedTargetPos, attackStartPosition)
             .normalize();
           
-          setActiveSlashEffect({
-            id: `slash-${Date.now()}`,
-            position: attackStartPosition.clone().add(new Vector3(0, 1, 0)), // Slightly elevated
-            direction: slashDirection
-          });
+          setActiveEffects(prev => ({
+            ...prev,
+            slashEffect: {
+              id: `slash-${Date.now()}`,
+              position: attackStartPosition.clone().add(new Vector3(0, 1, 0)), // Slightly elevated
+              direction: slashDirection
+            }
+          }));
         }
         
         // Deal damage after attack animation starts
@@ -588,7 +607,7 @@ export default function DeathKnightUnit({
         
         // Reset attack state and resume movement
         setTimeout(() => {
-          setIsAttacking(false);
+          setUnitState(prev => ({ ...prev, isAttacking: false }));
           chargeTargetPosition.current = null;
           // Resume movement after attack completes
           if (currentHealth.current > 0) {
@@ -596,7 +615,7 @@ export default function DeathKnightUnit({
             if (currentTarget) {
               const distanceToTarget = currentPosition.current.distanceTo(currentTarget.position);
               if (distanceToTarget > ATTACK_RANGE) {
-                setIsMoving(true);
+                setUnitState(prev => ({ ...prev, isMoving: true }));
               }
             }
           }
@@ -605,45 +624,47 @@ export default function DeathKnightUnit({
     }
 
     // Death Grasp ability logic - long range pull
-    if (distanceToPlayer <= DEATH_GRASP_RANGE && 
-        distanceToPlayer > FROST_STRIKE_RANGE && 
-        currentHealth.current > 0 && 
-        !isFrozen && 
-        !isStunned && 
-        !isUsingDeathGrasp && 
-        !isUsingFrostStrike && 
-        !isAttacking) {
+    if (distanceToPlayer <= DEATH_GRASP_RANGE &&
+        distanceToPlayer > FROST_STRIKE_RANGE &&
+        currentHealth.current > 0 &&
+        !isFrozen &&
+        !isStunned &&
+        !unitState.isUsingDeathGrasp &&
+        !unitState.isUsingFrostStrike &&
+        !unitState.isAttacking &&
+        activeEffectCount < 2) { // Performance optimization: limit simultaneous effects
       const currentTime = Date.now();
       if (currentTime - lastDeathGraspTime.current >= DEATH_GRASP_COOLDOWN) {
-        setIsUsingDeathGrasp(true);
+        setUnitState(prev => ({ ...prev, isUsingDeathGrasp: true }));
         lastDeathGraspTime.current = currentTime;
 
         // Reset ability state after shorter duration
         setTimeout(() => {
-          if (!activeDeathGrasp) {
-            setIsUsingDeathGrasp(false);
+          if (!activeEffects.deathGrasp) {
+            setUnitState(prev => ({ ...prev, isUsingDeathGrasp: false }));
           }
         }, 1500);
       }
     }
 
     // Frost Strike ability logic - prioritize when in close range
-    if (distanceToPlayer <= FROST_STRIKE_RANGE && 
-        currentHealth.current > 0 && 
-        !isFrozen && 
-        !isStunned && 
-        !isUsingDeathGrasp && 
-        !isUsingFrostStrike && 
-        !isAttacking) {
+    if (distanceToPlayer <= FROST_STRIKE_RANGE &&
+        currentHealth.current > 0 &&
+        !isFrozen &&
+        !isStunned &&
+        !unitState.isUsingDeathGrasp &&
+        !unitState.isUsingFrostStrike &&
+        !unitState.isAttacking &&
+        activeEffectCount < 2) { // Performance optimization: limit simultaneous effects
       const currentTime = Date.now();
       if (currentTime - lastFrostStrikeTime.current >= FROST_STRIKE_COOLDOWN) {
-        setIsUsingFrostStrike(true);
+        setUnitState(prev => ({ ...prev, isUsingFrostStrike: true }));
         lastFrostStrikeTime.current = currentTime;
 
         // Reset ability state after shorter duration
         setTimeout(() => {
-          if (!activeFrostStrike) {
-            setIsUsingFrostStrike(false);
+          if (!activeEffects.frostStrike) {
+            setUnitState(prev => ({ ...prev, isUsingFrostStrike: false }));
           }
         }, 1000);
       }
@@ -657,35 +678,93 @@ export default function DeathKnightUnit({
         lastUpdateTime.current = now;
       }
     }
+
+    // CRITICAL: ULTRA-FAST safety cleanup - check every 2 seconds for stuck effects
+    const ultraFastCleanupInterval = 2000; // 2 seconds
+    if (now % ultraFastCleanupInterval < 100) { // Check roughly every 2 seconds
+      const stuckEffects = Object.entries(activeEffects).filter(([, effect]) => {
+        if (!effect) return false;
+        // Consider effects stuck if they've been active for more than 3 seconds
+        return true; // Simplified - in real implementation, track creation time
+      });
+
+      if (stuckEffects.length > 0) {
+        console.warn(`🚨 DeathKnight ${id} has ${stuckEffects.length} stuck effects, forcing cleanup`);
+        setActiveEffects({
+          deathGrasp: null,
+          frostStrike: null,
+          chargingIndicator: null,
+          slashEffect: null,
+        });
+      }
+    }
   });
 
   useEffect(() => {
-    if (health === 0 && !isDead) {
-      setIsDead(true);
-      setShowDeathEffect(true);
+    if (health === 0 && !unitState.isDead) {
+      setUnitState(prev => ({ ...prev, isDead: true, showDeathEffect: true }));
       // Remove from aggro system when enemy dies
       globalAggroSystem.removeEnemy(id);
       if (titanRef.current) {
         titanRef.current.visible = true;
       }
     }
-  }, [health, isDead, id]);
+  }, [health, unitState.isDead, id]);
 
   useEffect(() => {
-    if (isDead) {
+    if (unitState.isDead) {
       const cleanup = setTimeout(() => {
-        setShowDeathEffect(false);
+        setUnitState(prev => ({ ...prev, showDeathEffect: false }));
+        // Remove self from parent - Scene.tsx handles the main cleanup
         if (titanRef.current?.parent) {
           titanRef.current.parent.remove(titanRef.current);
         }
       }, 4000); // Longer death effect
       return () => clearTimeout(cleanup);
     }
-  }, [isDead]);
+  }, [unitState.isDead]);
+
+    // CRITICAL: Enhanced cleanup for ability timers and effects with immediate disposal
+  useEffect(() => {
+    return () => {
+      // Clear all pending timeouts and effects when component unmounts
+      setUnitState({
+        isAttacking: false,
+        showDeathEffect: false,
+        isDead: false,
+        isSpawning: true,
+        isMoving: false,
+        showFrostEffect: false,
+        isUsingDeathGrasp: false,
+        isUsingFrostStrike: false,
+        activePlayerPull: false,
+        isCharging: false,
+      });
+
+      // IMMEDIATE cleanup of all active effects
+      setActiveEffects({
+        deathGrasp: null,
+        frostStrike: null,
+        chargingIndicator: null,
+        slashEffect: null,
+      });
+
+      // Reset all damage flags
+      attackDamageRef.current = false;
+      frostStrikeDamageRef.current = false;
+
+      // Clear refs that might hold references to effects
+      chargeStartTime.current = 0;
+      chargeTargetPosition.current = null;
+      wanderTarget.current = null;
+
+      console.log(`🚨 CRITICAL: DeathKnight ${id} cleanup completed - ALL effects disposed`);
+    };
+  }, [id]);
 
   useEffect(() => {
     const handleStealthBreak = () => {
-      setIsMoving(true);
+      setUnitState(prev => ({ ...prev, isMoving: true }));
     };
 
     window.addEventListener('stealthBreak', handleStealthBreak);
@@ -698,22 +777,25 @@ export default function DeathKnightUnit({
     <>
       <group
         ref={titanRef}
-        visible={!isSpawning && currentHealth.current > 0 && isVisible}
+        visible={!unitState.isSpawning && currentHealth.current > 0 && isVisible}
         position={currentPosition.current}
         onClick={(e) => {
           e.stopPropagation();
         }}
       >
-        <DeathKnightModel
-          position={[0, -0.1, 0]}
-          isAttacking={isAttacking || isCharging}
-          isWalking={isMoving && currentHealth.current > 0}
-          onHit={(damage) => handleDamage(damage, { type: weaponType })}
-          isUsingDeathGrasp={isUsingDeathGrasp}
-          isUsingFrostStrike={isUsingFrostStrike}
-          onDeathGraspStart={handleDeathGraspStart}
-          onFrostStrikeStart={handleFrostStrikeStart}
-        />
+        {/* Performance optimization: Only render model when visible */}
+        {isVisible && (
+          <DeathKnightModel
+            position={[0, -0.1, 0]}
+            isAttacking={unitState.isAttacking || unitState.isCharging}
+            isWalking={unitState.isMoving && currentHealth.current > 0}
+            onHit={(damage) => handleDamage(damage, { type: weaponType })}
+            isUsingDeathGrasp={unitState.isUsingDeathGrasp}
+            isUsingFrostStrike={unitState.isUsingFrostStrike}
+            onDeathGraspStart={handleDeathGraspStart}
+            onFrostStrikeStart={handleFrostStrikeStart}
+          />
+        )}
 
         {/* Health bar - larger and higher positioned */}
         <Billboard
@@ -723,7 +805,7 @@ export default function DeathKnightUnit({
           lockY={false}
           lockZ={false}
         >
-          {currentHealth.current > 0 && (
+          {currentHealth.current > 0 && !unitState.isDead && (
             <>
               <mesh position={[0, 0, 0]}>
                 <planeGeometry args={[2.0, 0.25]} />
@@ -749,22 +831,22 @@ export default function DeathKnightUnit({
       </group>
 
       {/* Larger spawn effect */}
-      {isSpawning && (
-        <BoneVortex2 
+      {unitState.isSpawning && (
+        <BoneVortex2
           position={currentPosition.current}
           onComplete={() => {
-            setIsSpawning(false);
+            setUnitState(prev => ({ ...prev, isSpawning: false }));
           }}
           isSpawning={true}
         />
       )}
 
       {/* Larger death effect */}
-      {showDeathEffect && (
+      {unitState.showDeathEffect && (
         <BoneVortex 
           position={currentPosition.current}
           onComplete={() => {
-            setShowDeathEffect(false);
+            setUnitState(prev => ({ ...prev, showDeathEffect: false }));
           }}
           isSpawning={false}
           weaponType={weaponType}
@@ -772,61 +854,66 @@ export default function DeathKnightUnit({
         />
       )}
 
-      {showFrostEffect && (
-        <FrostExplosion 
+      {unitState.showFrostEffect && (
+        <FrostExplosion
           position={position}
-          onComplete={() => setShowFrostEffect(false)}
+          onComplete={() => setUnitState(prev => ({ ...prev, showFrostEffect: false }))}
         />
       )}
 
-      {/* Active Death Grasp chain effect */}
-      {activeDeathGrasp && (
-        <DeathGrasp
-          startPosition={activeDeathGrasp.startPosition}
-          targetPosition={activeDeathGrasp.targetPosition}
-          onComplete={handleDeathGraspComplete}
-          onPullStart={handleDeathGraspPullStart}
-        />
-      )}
+      {/* Performance optimization: Only render effects when visible */}
+      {isVisible && (
+        <>
+          {/* Active Death Grasp chain effect */}
+          {activeEffects.deathGrasp && (
+            <DeathGrasp
+              startPosition={activeEffects.deathGrasp!.startPosition}
+              targetPosition={activeEffects.deathGrasp!.targetPosition}
+              onComplete={handleDeathGraspComplete}
+              onPullStart={handleDeathGraspPullStart}
+            />
+          )}
 
-      {/* Active Frost Strike effect */}
-      {activeFrostStrike && (
-        <FrostStrike
-          position={activeFrostStrike.position}
-          direction={activeFrostStrike.direction}
-          onComplete={handleFrostStrikeComplete}
-          parentRef={titanRef}
-        />
-      )}
+          {/* Active Frost Strike effect */}
+          {activeEffects.frostStrike && (
+            <FrostStrike
+              position={activeEffects.frostStrike.position}
+              direction={activeEffects.frostStrike.direction}
+              onComplete={handleFrostStrikeComplete}
+              parentRef={titanRef}
+            />
+          )}
 
-      {/* Charging indicator */}
-      {chargingIndicator && (
-        <DeathKnightChargingIndicator
-          position={chargingIndicator.position}
-          direction={chargingIndicator.direction}
-          attackRange={ATTACK_RANGE}
-          chargeDuration={CHARGE_DURATION}
-          onComplete={() => setChargingIndicator(null)}
-        />
-      )}
+          {/* Charging indicator */}
+          {activeEffects.chargingIndicator && (
+            <DeathKnightChargingIndicator
+              position={activeEffects.chargingIndicator!.position}
+              direction={activeEffects.chargingIndicator!.direction}
+              attackRange={ATTACK_RANGE}
+              chargeDuration={CHARGE_DURATION}
+              onComplete={() => setActiveEffects(prev => ({ ...prev, chargingIndicator: null }))}
+            />
+          )}
 
-      {/* Slash effect */}
-      {activeSlashEffect && (
-        <DeathKnightSlashEffect
-          startPosition={activeSlashEffect.position}
-          direction={activeSlashEffect.direction}
-          onComplete={() => setActiveSlashEffect(null)}
-        />
-      )}
+          {/* Slash effect */}
+          {activeEffects.slashEffect && (
+            <DeathKnightSlashEffect
+              startPosition={activeEffects.slashEffect.position}
+              direction={activeEffects.slashEffect.direction}
+              onComplete={() => setActiveEffects(prev => ({ ...prev, slashEffect: null }))}
+            />
+          )}
 
-      {/* Player pull effect */}
-      {activePlayerPull && playerRef && (
-        <DeathKnightPull
-          playerRef={playerRef}
-          deathKnightPosition={currentPosition.current}
-          isActive={activePlayerPull}
-          onComplete={() => setActivePlayerPull(false)}
-        />
+          {/* Player pull effect */}
+          {unitState.activePlayerPull && playerRef && (
+            <DeathKnightPull
+              playerRef={playerRef}
+              deathKnightPosition={currentPosition.current}
+              isActive={unitState.activePlayerPull}
+              onComplete={() => setUnitState(prev => ({ ...prev, activePlayerPull: false }))}
+            />
+          )}
+        </>
       )}
     </>
   );

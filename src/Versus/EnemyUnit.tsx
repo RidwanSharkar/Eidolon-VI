@@ -92,10 +92,10 @@ export default function EnemyUnit({
   const ATTACK_RANGE = 2.65;
   const ATTACK_COOLDOWN = 2000;
   const CHARGE_DURATION = 1000; // 1 second charge time
-  const BASE_MOVEMENT_SPEED = 2.6; // Consistent base speed like player
+  const BASE_MOVEMENT_SPEED = 2.55; // Consistent base speed like player
   const POSITION_UPDATE_THRESHOLD = 0.2;
   const MINIMUM_UPDATE_INTERVAL = 20;
-  const ATTACK_DAMAGE = 8;
+  const ATTACK_DAMAGE = 10;
   const SEPARATION_RADIUS = 2.5;
   const SEPARATION_FORCE = 2.75; // Reduced for smoother movement
   const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement

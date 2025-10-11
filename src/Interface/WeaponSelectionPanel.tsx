@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styles from './WeaponSelectionPanel.module.css';
-import { WeaponType, WeaponSubclass, WEAPON_SUBCLASSES, ABILITY_TOOLTIPS, SUBCLASS_ABILITIES, DEFAULT_WEAPON_ABILITIES } from '@/Weapons/weapons';
+import { WeaponType, WeaponSubclass, WEAPON_SUBCLASSES, getAbilityTooltip, SUBCLASS_ABILITIES } from '@/Weapons/weapons';
 import Image from 'next/image';
 import Tooltip from '@/Interface/Tooltip';
 
@@ -47,45 +47,65 @@ export default function WeaponSelectionPanel({
   };
 
   const handleAbilityHover = (e: React.MouseEvent, weapon: WeaponType, abilityType: 'q' | 'e' | 'innate') => {
-    // Get the ability info from the selected subclass only for the currently selected weapon
-    let abilityInfo;
-    if (selectedWeapon === weapon && selectedSubclass && SUBCLASS_ABILITIES[selectedSubclass]) {
-      abilityInfo = SUBCLASS_ABILITIES[selectedSubclass][abilityType];
+    // Get the tooltip for the specific weapon and subclass combination
+    let tooltip;
+
+    if (selectedWeapon === weapon && selectedSubclass) {
+      // Use subclass-specific tooltip when a subclass is selected
+      tooltip = getAbilityTooltip(weapon, selectedSubclass, abilityType);
+    } else {
+      // Show the default subclass tooltip for this weapon when no subclass is selected
+      // Map weapons to their default subclasses
+      const defaultSubclassMap: Record<WeaponType, WeaponSubclass> = {
+        [WeaponType.SWORD]: WeaponSubclass.VENGEANCE,
+        [WeaponType.SCYTHE]: WeaponSubclass.CHAOS,
+        [WeaponType.SABRES]: WeaponSubclass.ASSASSIN,
+        [WeaponType.SPEAR]: WeaponSubclass.STORM,
+        [WeaponType.BOW]: WeaponSubclass.ELEMENTAL,
+      };
+
+      const defaultSubclass = defaultSubclassMap[weapon];
+      if (defaultSubclass) {
+        tooltip = getAbilityTooltip(weapon, defaultSubclass, abilityType);
+      } else {
+        // Fallback to generic description
+        tooltip = {
+          name: 'Unknown Ability',
+          description: 'Ability description not available',
+          cooldown: 'Unknown',
+          unlockLevel: 1
+        };
+      }
     }
-    
-    const tooltip = abilityInfo ? {
-      name: abilityInfo.name,
-      description: ABILITY_TOOLTIPS[abilityType].description
-    } : ABILITY_TOOLTIPS[abilityType];
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
-    
+
     // Calculate viewport boundaries
     const viewportWidth = window.innerWidth;
-    
+
     // Initial position calculation
     let x = rect.left + rect.width / 2;
     let y = rect.top - 10;
-    
+
     // Ensure tooltip stays within viewport bounds
     // Add some padding from viewport edges
     const VIEWPORT_PADDING = 10;
     const TOOLTIP_WIDTH = 300; // This should match the max-width in CSS
     const TOOLTIP_HEIGHT = 150; // Approximate height, adjust as needed
-    
+
     // Adjust horizontal position if needed
     if (x - TOOLTIP_WIDTH / 2 < VIEWPORT_PADDING) {
       x = VIEWPORT_PADDING + TOOLTIP_WIDTH / 2;
     } else if (x + TOOLTIP_WIDTH / 2 > viewportWidth - VIEWPORT_PADDING) {
       x = viewportWidth - VIEWPORT_PADDING - TOOLTIP_WIDTH / 2;
     }
-    
+
     // Adjust vertical position if needed
     if (y - TOOLTIP_HEIGHT < VIEWPORT_PADDING) {
       // If tooltip would be cut off at top, show it below the element instead
       y = rect.bottom + TOOLTIP_HEIGHT / 2;
     }
-    
+
     setTooltipContent({
       title: tooltip.name,
       description: tooltip.description
@@ -97,19 +117,29 @@ export default function WeaponSelectionPanel({
     setTooltipContent(null);
   };
 
+
   // Get the ability icons for the current weapon/subclass combination
   const getAbilityIcon = (weapon: WeaponType, abilityType: 'q' | 'e' | 'innate'): string => {
     // Only show subclass-specific icons for the currently selected weapon
     if (selectedWeapon === weapon && selectedSubclass && SUBCLASS_ABILITIES[selectedSubclass]) {
       return SUBCLASS_ABILITIES[selectedSubclass][abilityType].icon;
     }
-    
+
     // For all other weapons (or when no subclass is selected), show default subclass icons
-    const defaultAbilities = DEFAULT_WEAPON_ABILITIES[weapon];
-    if (defaultAbilities && defaultAbilities[abilityType]) {
-      return defaultAbilities[abilityType].icon;
+    // Map weapons to their default subclasses for icon display
+    const defaultSubclassMap: Record<WeaponType, WeaponSubclass> = {
+      [WeaponType.SWORD]: WeaponSubclass.VENGEANCE,
+      [WeaponType.SCYTHE]: WeaponSubclass.CHAOS,
+      [WeaponType.SABRES]: WeaponSubclass.ASSASSIN,
+      [WeaponType.SPEAR]: WeaponSubclass.STORM,
+      [WeaponType.BOW]: WeaponSubclass.ELEMENTAL,
+    };
+
+    const defaultSubclass = defaultSubclassMap[weapon];
+    if (defaultSubclass && SUBCLASS_ABILITIES[defaultSubclass]) {
+      return SUBCLASS_ABILITIES[defaultSubclass][abilityType].icon;
     }
-    
+
     // Fallback to generic icons if default abilities not found
     const fallbackIcons = {
       [WeaponType.SWORD]: { q: '/icons/q2.svg', e: '/icons/e2.svg', innate: '/icons/VengeanceSwordInnate.png' },
@@ -118,7 +148,7 @@ export default function WeaponSelectionPanel({
       [WeaponType.SPEAR]: { q: '/icons/q4.svg', e: '/icons/e4.svg', innate: '/icons/StormSpearInnate.png' },
       [WeaponType.BOW]: { q: '/icons/q5.svg', e: '/icons/e5.svg', innate: '/icons/ElementalBowInnate.png' }
     };
-    
+
     return fallbackIcons[weapon][abilityType];
   };
 

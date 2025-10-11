@@ -277,7 +277,7 @@ export const SUBCLASS_ABILITIES: SubclassInfo = {
 
   [WeaponSubclass.FROST]: {
     q: { type: 'q', key: 'q', cooldown: 0.6125, currentCooldown: 0, icon: 'icons/FrostSabresQ.png', maxCooldown: 0.9, name: 'Twin Sabres', isUnlocked: true, unlockLevel: 1 },
-    e: { type: 'e', key: 'e', cooldown: 2, currentCooldown: 0, icon: 'icons/FrostSabresE.png', maxCooldown: 2, name: 'Firebeam', isUnlocked: true, unlockLevel: 1 }, // Uses Firebeam
+    e: { type: 'e', key: 'e', cooldown: 2, currentCooldown: 0, icon: 'icons/FrostSabresE.png', maxCooldown: 2, name: 'Icebeam', isUnlocked: true, unlockLevel: 1 }, // Uses Firebeam
     r: { type: 'r', key: 'r', cooldown: 5.0, currentCooldown: 0, icon: 'icons/FrostSabresR.png', maxCooldown: 5.0, name: 'Glacial Shard', isUnlocked: false, unlockLevel: 2 },
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/FrostSabresPassive.png', maxCooldown: 0, name: 'Deep Freeze', isUnlocked: false, unlockLevel: 3 },
     active: { type: 'active', key: '2', cooldown: 20.0, currentCooldown: 0, icon: 'icons/FrostSabres2.png', maxCooldown: 20.0, name: 'Summon Elemental', isUnlocked: false, unlockLevel: 4 },
@@ -300,7 +300,7 @@ export const SUBCLASS_ABILITIES: SubclassInfo = {
 
   [WeaponSubclass.PYRO]: {
     q: { type: 'q', key: 'q', cooldown: 0.675, currentCooldown: 0, icon: 'icons/PyroSpearQ.png', maxCooldown: 1, name: 'Spear', isUnlocked: true, unlockLevel: 1 },
-    e: { type: 'e', key: 'e', cooldown: 1.2, currentCooldown: 0, icon: 'icons/PyroSpearE.png', maxCooldown: 1.2, name: 'Pyroclast', isUnlocked: true, unlockLevel: 1 }, // Uses Pyroclast
+    e: { type: 'e', key: 'e', cooldown: 1.2, currentCooldown: 0, icon: 'icons/PyroSpearE.png', maxCooldown: 1.2, name: 'Inferno', isUnlocked: true, unlockLevel: 1 }, // Uses Pyroclast
     r: { type: 'r', key: 'r', cooldown: 15.0, currentCooldown: 0, icon: 'icons/PyroSpearR.png', maxCooldown: 15.0, name: 'MeteorSwarm', isUnlocked: false, unlockLevel: 4 }, // MeteorSwarm moved to 'r' key
     passive: { type: 'passive', key: '1', cooldown: 0, currentCooldown: 0, icon: 'icons/PyroSpearPassive.png', maxCooldown: 0, name: 'Reignite', isUnlocked: false, unlockLevel: 3 },
     active: { type: 'active', key: '2', cooldown: 2, currentCooldown: 0, icon: 'icons/PyroSpear2.png', maxCooldown: 8, name: 'Breach', isUnlocked: false, unlockLevel: 2 }, // Breach moved to '2' key
@@ -329,7 +329,7 @@ export const SUBCLASS_ABILITIES: SubclassInfo = {
     active: { type: 'active', key: '2', cooldown: 7, currentCooldown: 0, icon: 'icons/VenomBow2.png', maxCooldown: 7, name: 'Viper Sting', isUnlocked: false, unlockLevel: 4 },
     special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/VenomBow2.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
     vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },
-    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/VenomBowInnate.png', maxCooldown: 0, name: 'Cobra Shots', isUnlocked: true, unlockLevel: 1 }
+    innate: { type: 'innate', key: 'w', cooldown: 0, currentCooldown: 0, icon: 'icons/VenomBowInnate.png', maxCooldown: 0, name: 'Venom Laced', isUnlocked: true, unlockLevel: 1 }
   },
 };
 
@@ -384,7 +384,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   return currentAbility.cooldown;
 };
 
-// Tooltip information for abilities
+// Tooltip information for abilities - now subclass-specific
 export interface AbilityTooltip {
   name: string;
   description: string;
@@ -392,55 +392,152 @@ export interface AbilityTooltip {
   unlockLevel: number;
 }
 
-export const ABILITY_TOOLTIPS: Record<keyof WeaponAbilities, AbilityTooltip> = {
-  q: {
-    name: 'Primary Attack',
-    description: 'Basic weapon attack with subclass-specific effects',
-    cooldown: 'Varies by weapon',
-    unlockLevel: 1
-  },
-  e: {
-    name: 'Special Ability',
-    description: 'Unique subclass ability with special effects',
-    cooldown: 'Varies by subclass',
-    unlockLevel: 1
-  },
-  r: {
-    name: 'Ultimate Ability',
-    description: 'Powerful ultimate ability unlocked at higher levels',
-    cooldown: 'Varies by subclass',
-    unlockLevel: 2
-  },
-  passive: {
-    name: 'Passive Effect',
-    description: 'Always-active passive ability that provides bonuses',
-    cooldown: 'Always Active',
-    unlockLevel: 3
-  },
-  active: {
-    name: 'Active Ability',
-    description: 'Powerful active ability with strategic uses',
-    cooldown: 'Varies by subclass',
-    unlockLevel: 4
-  },
-  special: {
-    name: 'Special Move',
-    description: 'Unique special ability with specific requirements',
-    cooldown: 'Varies by subclass',
-    unlockLevel: 99
-  },
-  vault: {
-    name: 'Vault',
-    description: 'Directional movement ability using dash charges',
-    cooldown: 'Uses Dash Charges',
-    unlockLevel: 1
-  },
-  innate: {
-    name: 'Innate Ability',
-    description: 'Weapon-specific inherent ability that is always active',
-    cooldown: 'Always Active',
-    unlockLevel: 1
+// Helper function to get tooltip for a specific ability in a subclass
+export const getAbilityTooltip = (weapon: WeaponType, subclass: WeaponSubclass, abilityType: 'q' | 'e' | 'r' | 'passive' | 'active' | 'special' | 'vault' | 'innate'): AbilityTooltip => {
+  const ability = SUBCLASS_ABILITIES[subclass][abilityType];
+
+  // Create cooldown string
+  const cooldownStr = ability.cooldown === 0 ? 'Always Active' : `${ability.cooldown}s`;
+
+  return {
+    name: ability.name,
+    description: getAbilityDescription(weapon, subclass, abilityType),
+    cooldown: cooldownStr,
+    unlockLevel: ability.unlockLevel
+  };
+};
+
+// Subclass-specific ability descriptions
+const getAbilityDescription = (weapon: WeaponType, subclass: WeaponSubclass, abilityType: 'q' | 'e' | 'r' | 'passive' | 'active' | 'special' | 'vault' | 'innate'): string => {
+  switch (weapon) {
+    case WeaponType.SWORD:
+      switch (subclass) {
+        case WeaponSubclass.VENGEANCE:
+          switch (abilityType) {
+            case 'q': return 'Powerful two-handed 3-hit combo attack';
+            case 'e': return 'Delivers an instant strike, calling down a bolt of holy energy to deal damage to nearby enemies';
+            case 'r': return 'Creates a devastating storm of divine energy around you, damaging all nearby enemies';
+            case 'passive': return 'Attacks have a 25% chance to heal you.';
+            case 'active': return 'Colossus Strike';
+            case 'innate': return 'Attacks have a 30% chance on hit to discharge a chain of lightning that jumps between enemies.';
+          }
+          break;
+        case WeaponSubclass.DIVINITY:
+          switch (abilityType) {
+            case 'q': return 'One-handed swing with a shield';
+            case 'e': return 'Delivers an instant strike, calling down a powerful ray of holy energy to deal damage to nearby enemies';
+            case 'r': return 'Oathstrike';
+            case 'passive': return 'Attacks have a chance to heal nearby allies when damaging enemies.';
+            case 'active': return 'Aegis';
+            case 'innate': return 'Always grants a protective bubble shield, blocking up to 50 damage. If broken, a new shield returns after 30 seconds.';
+          }
+          break;
+      }
+      break;
+
+    case WeaponType.SCYTHE:
+      switch (subclass) {
+        case WeaponSubclass.CHAOS:
+          switch (abilityType) {
+            case 'q': return 'Swift reap in a medium arc';
+            case 'e': return 'Consumes 1 Orb Charge to fire a chaotic bolt of green flame, dealing damage to the first enemy hit. Starting at level 2, Entropic Bolts have a 50% chance to become Crossentropy Bolts, dealing double damage and costing no orb charge.';
+            case 'r': return 'Dragon Claw';
+            case 'passive': return 'Entropic Bolts have a 50% chance to become Crossentropy bolts, dealing double damage and costing no orb charge.';
+            case 'active': return 'Breathe dragon fire in a wide arc, pushing enemies back. 3 Orbs are regenerated for every killing blow landed by this ability.';
+            case 'innate': return 'Critical hits dealt by Entropic Bolt and killing blows dealt by Dragon Claw always summon a Totem, healing you for 2 HP per second while dealing damage to enemiesfor 8 seconds. Up to 2 Totems can be active at once.';
+          }
+          break;
+        case WeaponSubclass.ABYSSAL:
+          switch (abilityType) {
+            case 'q': return 'Starting at level 2, the scythe is dual wielded and heals you for a portion of its damage dealt.';
+            case 'e': return 'Mark the nearest target in front of you for 2 seconds. After 2 seconds, a phantom sword crashes down onto the marked enemy, dealing massive damage. If the enemy was killed by this attack, summon an allied Death Knight to fight by your side.';
+            case 'r': return 'Reanimate';
+            case 'passive': return 'Dual wield scythes for increased attack speed and damage output';
+            case 'active': return 'Call down a devastating meteor that creates empowered area and summons an abomination';
+            case 'innate': return 'Every 5 seconds, the Abyssal Scythe passively charges. Your next melee attack unleashes this charge, dealing extra damage in wide arc in front of you.';
+          }
+          break;
+      }
+      break;
+
+    case WeaponType.SABRES:
+      switch (subclass) {
+        case WeaponSubclass.ASSASSIN:
+          switch (abilityType) {
+            case 'q': return 'Rapid close range twin sabre strikes';
+            case 'e': return 'Enter stealth mode, becoming invisible and gaining bonus damage on your next attack. If a killing blow is dealt with this ability, heal for 5-7 HP.';
+            case 'r': return 'Create a freezing blizzard that slows and damages enemies in a large area';
+            case 'passive': return 'Avalanche effect creates frost explosions when hitting enemies with sabres';
+            case 'active': return 'Eviscerate enemies with powerful charged strikes that stun and deal massive damage';
+            case 'innate': return 'Delivering a killing blow with Blinding Mist permanently increases its damage significantly as well as increases each Sabre\'s base swing damage by 1 permanently.';
+          }
+          break;
+        case WeaponSubclass.FROST:
+          switch (abilityType) {
+            case 'q': return 'Rapid twin sabre strikes that release icicle shards';
+            case 'e': return 'Channel a freezing beam that damages all enemies caught in a line, growing more powerful the longer it is channeled. Starting at level 3, enemies that stay in the beam for over 2 seconds are frozen solid.';
+            case 'r': return 'Launch a glacial shard that permamently increases its damage if delivering a killing blow. Deals double damage to frozen enemies.';
+            case 'passive': return 'Deep Freeze';
+            case 'active': return 'Summon an elemental ally that fights alongside you with frost magic';
+            case 'innate': return 'Icicles are periodically formed around you, and can be released alongside primary attacks. Deals triple damage to frozen enemies.';
+          }
+          break;
+      }
+      break;
+
+    case WeaponType.SPEAR:
+      switch (subclass) {
+        case WeaponSubclass.STORM:
+          switch (abilityType) {
+            case 'q': return '2-Round burst thrust in a straight line. Always deals critical damage if the enemy is caught with the tip of the spear.';
+            case 'e': return 'Consumes 1 Orb charge per second to spin in a whirlwind, rapidly attacking all nearby enemies with your spear. Critical damage is guaranteed at the spear\'s tip.';
+            case 'r': return 'Throw your spear like a javelin, stunning enemies in its path';
+            case 'passive': return 'Killing enemies reignites your attacks, providing temporary damage bonuses';
+            case 'active': return 'Breach through enemies, creating a path of destruction and stunning foes';
+            case 'innate': return 'Dealing 2 consecutive critical hits with the our primary attack has a chance to call down a lightning bolt that stuns the enemy in place for 2 seconds. Critical strikes with the Whirlwind ability also create an additional spinning Firestorm for 4 seconds.';
+          }
+          break;
+        case WeaponSubclass.PYRO:
+          switch (abilityType) {
+            case 'q': return 'Single thrust that always deals critical damage if the enemy is caught with the tip of the spear.';
+            case 'e': return 'Consumes 1 Orb every 0.5 seconds to charge up a massive fireball that deals increased damage the longer it is charged, exploding on impact.';
+            case 'r': return 'Call down a swarm of meteors that crash into enemies across the battlefield';
+            case 'passive': return 'Killing enemies reignites your attacks, building incinerate stacks for bonus damage';
+            case 'active': return 'Breach through enemies with explosive force, leaving fire in your wake';
+            case 'innate': return 'Firebolts are released from your spear during primary attacks, burning and damaging enemies in a straight line. Each enemy hit by this firebolt grants a burning stack. At 25 stacks, the next cast of Inferno becomes instant and will always deal its maximum damage.';
+          }
+          break;
+      }
+      break;
+
+    case WeaponType.BOW:
+      switch (subclass) {
+        case WeaponSubclass.ELEMENTAL:
+          switch (abilityType) {
+            case 'q': return 'Rapidly fires bone arrows. At level 3, frost arrows are fired instead, dealing increased damage and slowing enemies hit for 5 seconds.';
+            case 'e': return 'Charge up a powerful shot that deals increased damage the longer it is charged. At full charge, the arrow will pierce through enemies.';
+            case 'r': return 'Barrage';
+            case 'passive': return 'Elemental shots gain bonus damage and create lightning strikes';
+            case 'active': return 'Launch guided bolts that track and damage multiple enemies';
+            case 'innate': return 'Power Shots can now be Perfect Shots, dealing increased damage and stunning enemies if the shot is released at the right moment. Also greatly increases movement speed while charging Power Shot.';
+          }
+          break;
+        case WeaponSubclass.VENOM:
+          switch (abilityType) {
+            case 'q': return 'Rapidly fires poison arrows.';
+            case 'e': return 'Charge up a powerful shot that deals increased damage the longer it is charged. At full charge, the arrow will pierce through enemies.';
+            case 'r': return 'Barrage';
+            case 'passive': return 'Venom Shots: every 3rd Quick Shot landed deals bonus damage. ';
+            case 'active': return 'Viper Sting';
+            case 'innate': return 'If 12 consecutive hits of Quick Shot are landed, the bow glows green, allowing you to fire your next Power Shot without charging. Power Shots now also deal poison damage over time.';
+          }
+          break;
+      }
+      break;
   }
+
+  // Fallback description
+  return 'Ability description not available';
 }; 
 
 export const WEAPON_ORB_COUNTS: Record<WeaponType, number> = {

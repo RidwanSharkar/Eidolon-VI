@@ -135,10 +135,10 @@ export default function SkeletalMage({
   const MINIMUM_UPDATE_INTERVAL = 15;
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.1; // Reduced for smoother movement
-  const FIREBALL_COOLDOWN = 8000;
-  const FIREBALL_DAMAGE = 16;
+  const FIREBALL_COOLDOWN = 7500;
+  const FIREBALL_DAMAGE = 22;
   const LIGHTNING_COOLDOWN = 15000;
-  const LIGHTNING_DAMAGE = 22;
+  const LIGHTNING_DAMAGE = 25;
   const LIGHTNING_WARNING_DURATION = 2.0; // 2 seconds warning
   const LIGHTNING_DAMAGE_RADIUS = 2.0;
   const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement
