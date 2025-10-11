@@ -238,16 +238,16 @@ const DetailedTrees: React.FC<DetailedTreesProps> = ({ trees }) => {
           if (branch.children.length === 0) {
             const coneGeometry = createFoliageCone(branch.end, tree.scale);
             
-            // Create foliage material with blue colors
+            // Create foliage material with green colors
             const foliageColors = [
-              new THREE.Color(0x1E90FF), // Dodger blue
-              new THREE.Color(0x4169E1), // Royal blue
-              new THREE.Color(0x4682B4), // Steel blue
-              new THREE.Color(0x5F9EA0), // Cadet blue
-              new THREE.Color(0x87CEEB), // Sky blue
-              new THREE.Color(0xB0E0E6), // Powder blue
-              new THREE.Color(0x00BFFF), // Deep sky blue
-              new THREE.Color(0x1E3A8A)  // Dark blue
+              new THREE.Color(0x228B22), // Forest green
+              new THREE.Color(0x32CD32), // Lime green
+              new THREE.Color(0x90EE90), // Light green
+              new THREE.Color(0x00FF7F), // Spring green
+              new THREE.Color(0x3CB371), // Medium sea green
+              new THREE.Color(0x2E8B57), // Sea green
+              new THREE.Color(0x98FB98), // Pale green
+              new THREE.Color(0x00FA9A)  // Medium spring green
             ];
             
             const foliageColor = foliageColors[Math.floor(Math.random() * foliageColors.length)];

@@ -1,10 +1,9 @@
 // src/Versus/DeathKnight/DeathKnightModel.tsx
-import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, Shape, ExtrudeGeometry } from 'three';
+import React, { useRef, useState, useEffect } from 'react';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '@/gear/BonePlate';
 import DeathKnightSword from './DeathKnightSword';
-import DeathKnightTrailEffect from './DeathKnightTrailEffect';
 import * as THREE from 'three';
 
 interface DeathKnightModelProps {
@@ -39,52 +38,6 @@ largeBoneGeometry.userData = { shared: true }; // Mark as shared to prevent disp
 const clawGeometry = new ConeGeometry(0.022, 0.165, 6); // 1.1x larger than skeleton
 clawGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
 
-// Simplified blade decoration component with light purple
-function BladeDecoration({ scale = 1, position = [0, 0, 0], rotation = [0, 0, 0] }: { 
-  scale?: number; 
-  position?: [number, number, number]; 
-  rotation?: [number, number, number]; 
-}) {
-  // Create a simplified blade shape
-  const bladeShape = useMemo(() => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    shape.lineTo(0.15, -0.05);
-    shape.bezierCurveTo(0.3, 0.08, 0.5, 0.18, 0.6, 0.2);
-    shape.lineTo(0.4, 0.28);
-    shape.bezierCurveTo(0.2, 0.08, 0.08, 0.0, 0.04, 0.25);
-    shape.lineTo(0, 0);
-    return shape;
-  }, []);
-
-  const bladeExtrudeSettings = useMemo(() => ({
-    steps: 2,
-    depth: 0.02,
-    bevelEnabled: true,
-    bevelThickness: 0.015,
-    bevelSize: 0.02,
-    bevelSegments: 2,
-    curveSegments: 12
-  }), []);
-
-  const bladeGeometry = useMemo(() => new ExtrudeGeometry(bladeShape, bladeExtrudeSettings), [bladeShape, bladeExtrudeSettings]);
-
-  const bladeMaterial = useMemo(() => new MeshStandardMaterial({
-    color: "#DDA0DD", // Light purple (plum)
-    emissive: "#DDA0DD",
-    emissiveIntensity: 0.8,
-    metalness: 0.9,
-    roughness: 0.1,
-    transparent: true,
-    opacity: 1.0
-  }), []);
-
-  return (
-    <group position={position} rotation={rotation} scale={[scale, scale, scale]}>
-      <mesh geometry={bladeGeometry} material={bladeMaterial} />
-    </group>
-  );
-}
 
 function DeathKnightLegModel() {
   const createBoneSegment = (length: number, width: number) => (
@@ -277,7 +230,7 @@ function DeathKnightClawModel() {
   );
 }
 
-function DeathKnightShoulderPlate({ isLeftShoulder = false }: { isLeftShoulder?: boolean }) {
+function DeathKnightShoulderPlate({ }: { isLeftShoulder?: boolean }) {
   return (
     <group>
       <group>
@@ -309,33 +262,6 @@ function DeathKnightShoulderPlate({ isLeftShoulder = false }: { isLeftShoulder?:
           );
         })}
 
-        {/* Elaborate shoulder spikes - light purple style */}
-        {[0, 1, 2].map((i) => {
-          const angle = (i / 3) * Math.PI * 2;
-          const height = 0.12 + i * 0.02;
-          return (
-            <group key={i} rotation={[0, angle, 0]}>
-              <mesh position={[0.20, 0.15, 0]} rotation={[0.2, 0, 0]}>
-                <coneGeometry args={[0.022, height, 8]} />
-                <meshStandardMaterial 
-                  color="#DA70D6"
-                  roughness={0.2}
-                  metalness={0.9}
-                />
-              </mesh>
-              
-              {/* Spike bases */}
-              <mesh position={[0.20, 0.08, 0]}>
-                <cylinderGeometry args={[0.033, 0.022, 0.055, 8]} />
-                <meshStandardMaterial 
-                  color="#DDA0DD"
-                  roughness={0.3}
-                  metalness={0.8}
-                />
-              </mesh>
-            </group>
-          );
-        })}
 
         {/* Decorative trim rings - light purple */}
         <mesh position={[0, 0.165, 0]} rotation={[Math.PI/2, 0, 0]}>
@@ -365,38 +291,7 @@ function DeathKnightShoulderPlate({ isLeftShoulder = false }: { isLeftShoulder?:
           />
         </mesh>
 
-        {/* Central shoulder emblem */}
-        <group position={[0, 0.088, 0.18]}>
-          <mesh>
-            <cylinderGeometry args={[0.055, 0.055, 0.022, 8]} />
-            <meshStandardMaterial 
-              color="#D8BFD8"
-              roughness={0.1}
-              metalness={0.95}
-            />
-          </mesh>
-          
-          {/* Emblem details */}
-          <mesh position={[0, 0, 0.011]}>
-            <cylinderGeometry args={[0.033, 0.033, 0.011, 6]} />
-            <meshStandardMaterial 
-              color="#DDA0DD"
-              roughness={0.3}
-              metalness={0.8}
-            />
-          </mesh>
-
-          {/* Central spike */}
-          <mesh position={[0, 0.022, 0]}>
-            <coneGeometry args={[0.016, 0.044, 6]} />
-            <meshStandardMaterial 
-              color="#DA70D6"
-              roughness={0.2}
-              metalness={0.9}
-            />
-          </mesh>
-        </group>
-
+ 
         {/* Shoulder guard extensions */}
         {[-1, 1].map((side) => (
           <group key={side} position={[side * 0.165, -0.044, 0]} rotation={[0, side * Math.PI/8, side * 0.1]}>
@@ -421,35 +316,6 @@ function DeathKnightShoulderPlate({ isLeftShoulder = false }: { isLeftShoulder?:
           </group>
         ))}
 
-        {/* Decorative blade patterns on shoulder plates */}
-        {[-1, 1].map((side) => {
-          // For left shoulder, invert the blade directions for symmetry
-          const bladeMultiplier = isLeftShoulder ? -side : side;
-          return (
-            <group key={`blade-${side}`}>
-              {/* Secondary blade decoration on front - larger */}
-              <BladeDecoration 
-                scale={0.4}
-                position={[side * 0.15, 0.08, 0.2]}
-                rotation={[Math.PI/4, bladeMultiplier * Math.PI/8, bladeMultiplier * Math.PI/16]}
-              />
-              
-              {/* Side accent blade - larger and more visible */}
-              <BladeDecoration 
-                scale={0.3}
-                position={[side * 0.22, 0.15, 0.1]}
-                rotation={[Math.PI/6, bladeMultiplier * Math.PI/4, bladeMultiplier * Math.PI/8]}
-              />
-              
-              {/* Additional prominent blade on shoulder edge */}
-              <BladeDecoration 
-                scale={0.5}
-                position={[side * 0.25, 0.12, 0.05]}
-                rotation={[0, bladeMultiplier * Math.PI/3, bladeMultiplier * Math.PI/4]}
-              />
-            </group>
-          );
-        })}
       </group>
     </group>
   );
@@ -832,15 +698,13 @@ export default function DeathKnightModel({
     };
   }, []);
 
-  // LOD components removed - DeathKnight now always uses high detail model for stability
-
   return (
     <group
       ref={groupRef}
       position={[position[0], position[1] + 1.0, position[2]]} // Fixed base position
       scale={[0.85, 0.95, 0.85]} // Scaled for death knight size (1.1x skeleton)
     >
-      {/* High Detail Model - Always render full complex model (LOD removed) */}
+      {/* Boneplate) */}
       <group name="Body" position={[0, 1.176, 0.176]} scale={[0.935, 0.935, 0.935]} rotation={[0.2, 0, 0]}>
         <BonePlate />
       </group>
@@ -861,13 +725,7 @@ export default function DeathKnightModel({
             <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
           </mesh>
 
-          {/* Death knight jaw */}
-          <group position={[0, -0.18, 0.05]}>
-            <mesh position={[0, -0.10, 0.10]} rotation={[0, Math.PI/5, 0]}>
-              <cylinderGeometry args={[0.10, 0.10, 0.24, 5]} />
-              <meshStandardMaterial color="#c0c0c0" roughness={0.6} metalness={0.3} />
-            </mesh>
-          </group>
+
 
           {/* Glowing light purple eyes */}
           <group position={[0, 0.05, 0.14]}>
@@ -912,43 +770,7 @@ export default function DeathKnightModel({
               />
             </mesh>
 
-            {/* Helmet visor/face guard */}
-            <mesh position={[0, -0.05, 0.15]}>
-              <boxGeometry args={[0.32, 0.25, 0.08]} />
-              <meshStandardMaterial
-                color="#DDA0DD"
-                roughness={0.3}
-                metalness={0.8}
-              />
-            </mesh>
-
-            {/* Side helmet guards */}
-            <mesh position={[-0.18, -0.02, 0.08]}>
-              <boxGeometry args={[0.06, 0.22, 0.15]} />
-              <meshStandardMaterial
-                color="#DDA0DD"
-                roughness={0.3}
-                metalness={0.8}
-              />
-            </mesh>
-            <mesh position={[0.18, -0.02, 0.08]}>
-              <boxGeometry args={[0.06, 0.22, 0.15]} />
-              <meshStandardMaterial
-                color="#DDA0DD"
-                roughness={0.3}
-                metalness={0.8}
-              />
-            </mesh>
-
-            {/* Helmet crest/ridge */}
-            <mesh position={[0, 0.12, -0.05]} rotation={[0, 0, 0]}>
-              <boxGeometry args={[0.08, 0.04, 0.25]} />
-              <meshStandardMaterial
-                color="#DA70D6"
-                roughness={0.2}
-                metalness={0.9}
-              />
-            </mesh>
+ 
 
           </group>
         </group>
@@ -962,9 +784,6 @@ export default function DeathKnightModel({
         <DeathKnightShoulderPlate isLeftShoulder={false} />
       </group>
 
-      {/* Death Knight Trail Effects at shoulders - always show */}
-      <DeathKnightTrailEffect parentRef={groupRef} isLeftShoulder={true} />
-      <DeathKnightTrailEffect parentRef={groupRef} isLeftShoulder={false} />
 
       {/* Arms - death knight proportions */}
       <group

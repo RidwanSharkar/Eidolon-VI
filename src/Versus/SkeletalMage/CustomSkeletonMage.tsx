@@ -170,17 +170,6 @@ function BoneLegModel() {
                     <group>
                       {createParallelBones(0.15, 0.02)}
                       
-                      {/* Toe claws */}
-                      <group position={[0, -0.1, 0]} rotation={[Math.PI/6, 0, 0]}>
-                        <mesh>
-                          <coneGeometry args={[0.02, 0.15, 6]} />
-                          <meshStandardMaterial 
-                            color="#d4d4d4"
-                            roughness={0.3}
-                            metalness={0.4}
-                          />
-                        </mesh>
-                      </group>
                     </group>
                   </group>
                 ))}
@@ -240,30 +229,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
             <group position={[0, -0.5, 0]} rotation={[0, 0, Math.PI / 5.5]}>
               {createJoint(0.09)}
               
-              <group position={[0, -0.1, 0]}>
-                <mesh>
-                  <boxGeometry args={[0.2, 0.15, 0.08]} />
-                  <meshStandardMaterial color="#e8e8e8" roughness={0.4} />
-                </mesh>
-                {[-0.08, -0.04, 0, 0.04, 0.08].map((offset, i) => (
-                  <group 
-                    key={i} 
-                    position={[offset, -0.1, 0]}
-                    rotation={[0, 0, (i - 2) * Math.PI / 10]}
-                  >
-                    {createBoneSegment(0.5, 0.02)}
-                    <group position={[0.025, -0.3, 0]} rotation={[0, 0, Math.PI + Math.PI / 16]}>
-                      <mesh>
-                        <coneGeometry args={[0.03, 0.3, 6]} />
-                        <meshStandardMaterial 
-                          color="#d4d4d4"
-                          roughness={0.3}
-                          metalness={0.4}
-                        />
-                      </mesh>
-                    </group>
-                  </group>
-                ))}
+
 
                 {/* Add staff if it's NOT the left hand (since the model is mirrored) */}
                 {!isLeftHand && (
@@ -276,8 +242,8 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
           </group>
         </group>
       </group>
-    </group>
-  );
+
+  );  
 }
 
 function ShoulderPlate() {
@@ -465,28 +431,7 @@ function MageRobe() {
   );
 }
 
-function TeethInstances({ isUpper = true }) {
-  const teethInstances = useMemo(() => {
-    const count = isUpper ? 5 : 4;
-    const geometry = isUpper ? sharedGeometries.tooth : sharedGeometries.lowerTooth;
-    const mesh = new THREE.InstancedMesh(geometry, sharedMaterials.bone, count);
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    return mesh;
-  }, [isUpper]);
 
-  useEffect(() => {
-    const offsets = isUpper ? [-0.03, -0.06, -0.09, 0, 0.03] : [-0.06, -0.02, 0.02, 0.06];
-    offsets.forEach((offset, i) => {
-      tempPosition.set(offset, isUpper ? -0.25 : -0.18, 0.2);
-      tempRotation.set(isUpper ? 0.5 : 2.5, 0, 0);
-      tempScale.set(1, 1, 1);
-      setMatrixAt(teethInstances, i, tempPosition, tempRotation, tempScale);
-    });
-    teethInstances.instanceMatrix.needsUpdate = true;
-  }, [teethInstances, isUpper]);
-
-  return <primitive object={teethInstances} />;
-}
 
 function VertebraeInstances() {
   const instances = useMemo(() => {
@@ -713,15 +658,7 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
             </mesh>
           </group>
 
-          {/* Upper teeth row */}
-          <group position={[0.025, -0.25, 0.2175]}>
-            <TeethInstances isUpper={true} />
-          </group>
 
-          {/* Lower teeth row */}
-          <group position={[0, -0.18, 0.2]}>
-            <TeethInstances isUpper={false} />
-          </group>
         </group>
 
         {/* EYES============================= */}

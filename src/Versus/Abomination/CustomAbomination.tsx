@@ -291,29 +291,8 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
                   />
                 </group>
 
-                <mesh>
-                  <boxGeometry args={[0.2, 0.15, 0.08]} />
-                  <meshStandardMaterial color="#e8e8e8" roughness={0.4} />
-                </mesh>
-                {[-0.08, -0.04, 0, 0.04, 0.08].map((offset, i) => (
-                  <group 
-                    key={i} 
-                    position={[offset, -0.1, 0]}
-                    rotation={[0, 0, (i - 2) * Math.PI / 10]}
-                  >
-                    {createBoneSegment(0.5, 0.02)}
-                    <group position={[0.025, -0.3, 0]} rotation={[0, 0, Math.PI + Math.PI / 16]}>
-                      <mesh>
-                        <coneGeometry args={[0.03, 0.3, 6]} />
-                        <meshStandardMaterial 
-                          color="#d4d4d4"
-                          roughness={0.3}
-                          metalness={0.4}
-                        />
-                      </mesh>
-                    </group>
-                  </group>
-                ))}
+    
+
 
                 {/* Only render sword if it's the left hand */}
                 {!isLeftHand && (

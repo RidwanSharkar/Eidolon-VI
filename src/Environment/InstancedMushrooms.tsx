@@ -30,8 +30,8 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
       spots: new THREE.Color("#92E2FF").multiplyScalar(3.5)
     },
     orange: {
-      main: new THREE.Color("#FF9F56").multiplyScalar(5.5),
-      spots: new THREE.Color("#FF8F00").multiplyScalar(3)
+      main: new THREE.Color("#5BDF64").multiplyScalar(5.5),
+      spots: new THREE.Color("#5ABD61").multiplyScalar(3)
     }
   }), []);
 

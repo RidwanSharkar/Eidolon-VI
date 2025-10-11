@@ -25,6 +25,7 @@ const HealthOrb: React.FC<HealthOrbProps> = ({
 }) => {
   // Damage notification state - simplified to match original Panel implementation
   const [damageNotifications, setDamageNotifications] = useState<DamageNotificationData[]>([]);
+  const [radius, setRadius] = useState(55); // Responsive radius for experience ring
   const nextNotificationId = useRef(0);
   const prevHealth = useRef(currentHealth);
 
@@ -85,8 +86,18 @@ const HealthOrb: React.FC<HealthOrbProps> = ({
   const currentLevel = getLevel(killCount);
   const expProgress = getExpProgress(killCount);
   
+  // Responsive radius calculation
+  useEffect(() => {
+    const updateRadius = () => {
+      setRadius(window.innerWidth <= 768 ? 47 : 55);
+    };
+
+    updateRadius();
+    window.addEventListener('resize', updateRadius);
+    return () => window.removeEventListener('resize', updateRadius);
+  }, []);
+
   // Calculate stroke dash offset for circular progress (circumference = 2 * π * r)
-  const radius = 67; // Radius for the experience ring (increased for larger orb)
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (expProgress / 100) * circumference;
 
@@ -104,11 +115,11 @@ const HealthOrb: React.FC<HealthOrbProps> = ({
       ))}
       
       {/* Experience Ring */}
-      <svg className={styles.experienceRing} width="180" height="180">
+      <svg className={styles.experienceRing} width="140" height="140" viewBox="0 0 140 140">
         {/* Background ring */}
         <circle
-          cx="90"
-          cy="90"
+          cx="69"
+          cy="71"
           r={radius}
           fill="none"
           stroke="rgba(57, 255, 20, 0.2)"
@@ -116,8 +127,8 @@ const HealthOrb: React.FC<HealthOrbProps> = ({
         />
         {/* Progress ring */}
         <circle
-          cx="90"
-          cy="90"
+          cx="69"
+          cy="71"
           r={radius}
           fill="none"
           stroke="#39ff14"

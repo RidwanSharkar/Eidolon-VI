@@ -53,6 +53,15 @@ interface UseEviscerateLashProps {
   }>) => void;
   onApplyStunEffect?: (enemyId: string, duration?: number) => void;
   onChargesChange?: (charges: Array<{ id: number; available: boolean; cooldownStartTime: number | null }>) => void;
+  getActiveEffects?: () => Array<{
+    id: number;
+    type: string;
+    position: Vector3;
+    direction: Vector3;
+    duration?: number;
+    startTime?: number;
+    enemyId?: string;
+  }>;
 }
 
 const EVISCERATE_STUN_DURATION = 3000; // 3 seconds
@@ -67,7 +76,8 @@ export const useEviscerate = ({
   nextDamageNumberId,
   setActiveEffects,
   onApplyStunEffect,
-  onChargesChange
+  onChargesChange,
+  getActiveEffects
 }: UseEviscerateLashProps): UseEviscerateLashReturn => {
   const [isActive, setIsActive] = useState(false);
   const [slashPhase, setSlashPhase] = useState<'none' | 'first' | 'second'>('none');
@@ -76,6 +86,20 @@ export const useEviscerate = ({
   
   // Store direction when ability is triggered
   const [effectDirection, setEffectDirection] = useState<Vector3>(new Vector3(0, 0, 1));
+
+  // Helper function to check if target already has a stun effect active
+  const hasActiveStunEffect = useCallback((enemyId: string): boolean => {
+    if (!getActiveEffects) return false;
+
+    const activeEffects = getActiveEffects();
+    return activeEffects.some(effect =>
+      (effect.type === 'concussiveStun' || effect.type === 'evisceratestun') &&
+      effect.enemyId === enemyId &&
+      effect.startTime &&
+      effect.duration &&
+      (Date.now() - effect.startTime) < effect.duration
+    );
+  }, [getActiveEffects]);
   
   // Initialize 2 charges for Eviscerate
   const [charges, setCharges] = useState<Array<{ id: number; available: boolean; cooldownStartTime: number | null }>>(() => {
@@ -187,13 +211,13 @@ export const useEviscerate = ({
           onApplyStunEffect(enemyId, EVISCERATE_STUN_DURATION);
         }
 
-        // Create visual stun effect
-        if (setActiveEffects) {
+        // Create visual stun effect only if there's not already one active on this target
+        if (setActiveEffects && !hasActiveStunEffect(enemyId)) {
           const stunPosition = enemy.position.clone();
           stunPosition.y += 1;
-          
+
           const effectId = Date.now() + Math.random(); // Ensure unique ID
-          
+
           setActiveEffects(prev => [...prev, {
             id: effectId,
             type: 'evisceratestun', // New stun type for Eviscerate
@@ -206,7 +230,7 @@ export const useEviscerate = ({
         }
       }
     });
-  }, [enemyData, onHit, setDamageNumbers, nextDamageNumberId, setActiveEffects, onApplyStunEffect]);
+  }, [enemyData, onHit, setDamageNumbers, nextDamageNumberId, setActiveEffects, onApplyStunEffect, hasActiveStunEffect]);
 
   const triggerEviscerate = useCallback((playerPosition: Vector3, playerDirection: Vector3) => {
     

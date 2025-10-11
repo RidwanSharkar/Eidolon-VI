@@ -28,9 +28,7 @@ class ObjectPool<T> {
   release(object: T) {
     if (this.pool.length >= this.maxSize) {
       // Dispose of object if pool is full to prevent memory leaks
-      if (object && typeof (object as unknown as { dispose?: () => void }).dispose === 'function') {
-        ((object as unknown) as { dispose: () => void }).dispose();
-      }
+      this.disposeObject(object);
       return;
     }
     if (this.reset) {
@@ -39,21 +37,71 @@ class ObjectPool<T> {
     this.pool.push(object);
   }
 
+  private disposeObject(object: T) {
+    // Properly dispose of Three.js geometries and materials
+    if (object && typeof object === 'object') {
+      // Handle Three.js geometries
+      if (object instanceof THREE.BufferGeometry) {
+        try {
+          object.dispose();
+        } catch (e) {
+          console.warn('Failed to dispose geometry:', e);
+        }
+      }
+      // Handle Three.js materials
+      else if (object instanceof THREE.Material) {
+        try {
+          // Dispose all texture maps first
+          const material = object as THREE.Material & {
+            map?: THREE.Texture | THREE.Texture[];
+            normalMap?: THREE.Texture | THREE.Texture[];
+            roughnessMap?: THREE.Texture | THREE.Texture[];
+            metalnessMap?: THREE.Texture | THREE.Texture[];
+            emissiveMap?: THREE.Texture | THREE.Texture[];
+            aoMap?: THREE.Texture | THREE.Texture[];
+            displacementMap?: THREE.Texture | THREE.Texture[];
+            bumpMap?: THREE.Texture | THREE.Texture[];
+            lightMap?: THREE.Texture | THREE.Texture[];
+          };
+
+          const disposeTexture = (texture: THREE.Texture | THREE.Texture[] | undefined) => {
+            if (!texture) return;
+            if (Array.isArray(texture)) {
+              texture.forEach(tex => tex?.dispose?.());
+            } else {
+              texture?.dispose?.();
+            }
+          };
+
+          disposeTexture(material.map);
+          disposeTexture(material.normalMap);
+          disposeTexture(material.roughnessMap);
+          disposeTexture(material.metalnessMap);
+          disposeTexture(material.emissiveMap);
+          disposeTexture(material.aoMap);
+          disposeTexture(material.displacementMap);
+          disposeTexture(material.bumpMap);
+          disposeTexture(material.lightMap);
+
+          object.dispose();
+        } catch (e) {
+          console.warn('Failed to dispose material:', e);
+        }
+      }
+    }
+  }
+
   clear() {
     // Dispose of all objects in pool during cleanup
     this.pool.forEach(item => {
-      if (item && typeof (item as unknown as { dispose?: () => void }).dispose === 'function') {
-        ((item as unknown) as { dispose: () => void }).dispose();
-      }
+      this.disposeObject(item);
     });
     this.pool = [];
   }
 
   dispose() {
     this.pool.forEach(item => {
-      if (item && typeof (item as unknown as { dispose?: () => void }).dispose === 'function') {
-        ((item as unknown) as { dispose: () => void }).dispose();
-      }
+      this.disposeObject(item);
     });
     this.clear();
   }
@@ -103,30 +151,30 @@ class GeometryPools {
   public ascendantForcePulse: ObjectPool<THREE.SphereGeometry>;
 
   private constructor() {
-    // Skeleton slash effect pools
+    // Skeleton slash effect pools - reduced sizes for memory management
     this.slashMainTorus = new ObjectPool(
       () => new THREE.TorusGeometry(1.2, 0.15, 8, 32, Math.PI * 0.8),
-      5, 10
+      3, 6 // Reduced from 5,10 to 3,6
     );
-    
+
     this.slashInnerGlow = new ObjectPool(
       () => new THREE.TorusGeometry(1.2, 0.08, 16, 32, Math.PI * 0.8),
-      5, 10
+      3, 6 // Reduced from 5,10 to 3,6
     );
-    
+
     this.slashOuterGlow = new ObjectPool(
       () => new THREE.TorusGeometry(1.4, 0.2, 16, 32, Math.PI * 0.8),
-      5, 10
+      3, 6 // Reduced from 5,10 to 3,6
     );
-    
+
     this.slashParticle = new ObjectPool(
       () => new THREE.SphereGeometry(0.06, 6, 6),
-      20, 40
+      12, 24 // Reduced from 20,40 to 12,24
     );
-    
+
     this.slashTrailSegment = new ObjectPool(
       () => new THREE.CylinderGeometry(0.08, 0.02, 0.4, 8),
-      15, 30
+      8, 16 // Reduced from 15,30 to 8,16
     );
 
     // Skeleton charging indicator pools
@@ -177,35 +225,35 @@ class GeometryPools {
       60, 120 // High count since mist creates many particles and is used twice per use
     );
 
-    // DeathKnight effect pools (CRITICAL memory optimization)
+    // DeathKnight effect pools (REDUCED for memory management)
     this.deathKnightSlashTorus = new ObjectPool(
       () => new THREE.TorusGeometry(1.4, 0.18, 8, 32, Math.PI * 0.9),
-      2, 4 // CRITICAL: Reduced from 3,6 to 2,4 - DeathKnights are memory intensive
+      2, 4 // Reduced from 3,6 to 2,4 for stricter memory control
     );
 
     this.deathKnightSlashParticle = new ObjectPool(
       () => new THREE.SphereGeometry(0.08, 6, 6),
-      8, 16 // CRITICAL: Reduced from 12,24 to 8,16 - Limit particle effects
+      6, 12 // Reduced from 8,16 to 6,12 for stricter memory control
     );
 
     this.deathKnightChargingArea = new ObjectPool(
       () => this.createAttackAreaGeometry(),
-      2, 4 // CRITICAL: Reduced from 3,6 to 2,4 - DeathKnight charging is expensive
+      2, 4 // Kept at 2,4 for charging area reuse
     );
 
     this.deathKnightChargingRing = new ObjectPool(
       () => new THREE.RingGeometry(0.7, 0.78, 16),
-      4, 8 // CRITICAL: Reduced from 6,12 to 4,8 - Limit charging effects
+      3, 6 // Reduced from 4,8 to 3,6 for stricter memory control
     );
 
     this.deathKnightChargingOrb = new ObjectPool(
       () => new THREE.SphereGeometry(0.1, 8, 8),
-      4, 8 // CRITICAL: Reduced from 6,12 to 4,8 - Limit orb effects
+      3, 6 // Reduced from 4,8 to 3,6 for stricter memory control
     );
 
     this.deathGraspTentacle = new ObjectPool(
       () => new THREE.CylinderGeometry(0.12, 0.08, 2, 8),
-      5, 10 // CRITICAL: Reduced from 8,16 to 5,10 - DeathGrasp is very expensive
+      4, 8 // Reduced from 6,12 to 4,8 for stricter memory control
     );
 
     this.frostStrikeShard = new ObjectPool(
@@ -681,7 +729,7 @@ class MaterialPools {
         transparent: true,
         opacity: 0.8
       }),
-      8, 16, // CRITICAL: Reduced from 15,30 to 8,16 - DeathGrasp materials are expensive
+      4, 8, // Reduced from 8,16 to 4,8 for stricter memory control
       (material) => {
         material.opacity = 0.8;
         material.emissiveIntensity = 1.0;
@@ -836,8 +884,13 @@ export const materialPools = MaterialPools.getInstance();
 
 // Cleanup function for when the game shuts down
 export const disposeEffectPools = () => {
-  geometryPools.dispose();
-  materialPools.dispose();
+  try {
+    geometryPools.dispose();
+    materialPools.dispose();
+    console.log('✅ EffectPools disposed successfully');
+  } catch (error) {
+    console.error('❌ Error disposing EffectPools:', error);
+  }
 };
 
 // Make disposeEffectPools available globally for cleanup

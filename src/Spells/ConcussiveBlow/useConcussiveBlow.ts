@@ -36,6 +36,7 @@ interface UseConcussiveBlowProps {
     health: number;
     isDying?: boolean;
   }>;
+  getActiveEffects?: () => ActiveEffect[];
 }
 
 const STUN_DURATION = 2500; // 2 seconds
@@ -46,7 +47,8 @@ export function useConcussiveBlow({
   currentSubclass,
   setActiveEffects,
   onApplyStunEffect,
-  enemyData
+  enemyData,
+  getActiveEffects
 }: UseConcussiveBlowProps) {
   
   const [stunnedEnemies, setStunnedEnemies] = useState<Map<string, StunnedEnemy>>(new Map());
@@ -55,6 +57,20 @@ export function useConcussiveBlow({
 
   // Check if Concussive Blow is active (Storm subclass passive)
   const isConcussiveBlowActive = currentSubclass === WeaponSubclass.STORM;
+
+  // Helper function to check if target already has a stun effect active
+  const hasActiveStunEffect = useCallback((enemyId: string): boolean => {
+    if (!getActiveEffects) return false;
+
+    const activeEffects = getActiveEffects();
+    return activeEffects.some(effect =>
+      (effect.type === 'concussiveStun' || effect.type === 'evisceratestun') &&
+      effect.enemyId === enemyId &&
+      effect.startTime &&
+      effect.duration &&
+      (Date.now() - effect.startTime) < effect.duration
+    );
+  }, [getActiveEffects]);
 
   // Clean up stunned enemies when they die
   useEffect(() => {
@@ -85,7 +101,7 @@ export function useConcussiveBlow({
 
   // Stun an enemy
   const stunEnemy = useCallback((enemyId: string, enemyPosition: Vector3, startTime: number) => {
-    
+
     setStunnedEnemies(prevStunned => {
       const newStunned = new Map(prevStunned);
       newStunned.set(enemyId, {
@@ -101,13 +117,13 @@ export function useConcussiveBlow({
       onApplyStunEffect(enemyId, STUN_DURATION);
     }
 
-    // Create visual stun effect
-    if (setActiveEffects) {
+    // Create visual stun effect only if there's not already one active on this target
+    if (setActiveEffects && !hasActiveStunEffect(enemyId)) {
       const stunPosition = enemyPosition.clone();
       stunPosition.y += 1;
-      
+
       const effectId = Date.now() + Math.random(); // Ensure unique ID
-      
+
       setActiveEffects(prev => [...prev, {
         id: effectId,
         type: 'concussiveStun',
@@ -120,7 +136,7 @@ export function useConcussiveBlow({
 
       // Create lightning strike effect at enemy position
       const lightningEffectId = Date.now() + Math.random() + 0.1; // Ensure unique ID
-      
+
       setActiveEffects(prev => [...prev, {
         id: lightningEffectId,
         type: 'concussiveLightning',
@@ -131,7 +147,7 @@ export function useConcussiveBlow({
         enemyId: enemyId
       }]);
     }
-  }, [setActiveEffects, onApplyStunEffect]);
+  }, [setActiveEffects, onApplyStunEffect, hasActiveStunEffect]);
 
   // Start a new burst sequence
   const startBurstSequence = useCallback(() => {

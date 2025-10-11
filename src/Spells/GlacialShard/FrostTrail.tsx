@@ -15,7 +15,7 @@ const FrostTrail: React.FC<FrostTrailProps> = ({
   meshRef,
   opacity = 1
 }) => {
-  const particlesCount = 22; 
+  const particlesCount = 14; 
   const particlesRef = useRef<THREE.Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));

@@ -428,21 +428,20 @@ export default function Sword({
         onSwingComplete?.();
         return;
       }
-      
       if (effectiveComboStep === 1) {
         // 1st Hit: Original swing (top-right to bottom-left)
-        const forwardPhase = swingPhase <= 0.275
+        const forwardPhase = swingPhase <= 0.25
           ? swingPhase * 2
-          : (0.75 - (swingPhase - 0.115) * 1.2);
+          : (0.725 - (swingPhase - 0.115) * 1.1);
         
-        const pivotX = basePosition[0] + Math.sin(forwardPhase * Math.PI) * 2.5;
+        const pivotX = basePosition[0] + Math.sin(forwardPhase * Math.PI) * 2;
         const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -2;
-        const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 1.1;
+        const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 1;
         
         swordRef.current.position.set(pivotX, pivotY, pivotZ);
         
-        const rotationX = Math.sin(forwardPhase * Math.PI) * (-0.75) +1.5;
-        const rotationY = Math.sin(forwardPhase * Math.PI) * Math.PI;
+        const rotationX = Math.sin(forwardPhase * Math.PI) * (-0.75) + 1.25;
+        const rotationY = Math.sin(forwardPhase * Math.PI) * Math.PI/1.125;
         const rotationZ = Math.sin(forwardPhase * Math.PI) * (Math.PI / 3);
         
         swordRef.current.rotation.set(rotationX, rotationY, rotationZ);
@@ -453,32 +452,58 @@ export default function Sword({
           : (0.625 - (swingPhase - 0.075) * 1.20);
         
         // Shift origin point further to the left for better left-side swing appearance
-        const leftOffset = 3.33; // Additional left offset
+        const leftOffset = 2.5; // Additional left offset
         const pivotX = basePosition[0] + leftOffset - Math.sin(forwardPhase * Math.PI) * 2.5; // Mirrored X with left shift
-        const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -2;
+        const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -0.2;
         const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 1.1;
         
         swordRef.current.position.set(pivotX, pivotY, pivotZ);
         
         const rotationX = Math.sin(forwardPhase * Math.PI) * (-0.75) +1.5;
         const rotationY = -Math.sin(forwardPhase * Math.PI) * Math.PI; // Mirrored Y rotation
-        const rotationZ = -Math.sin(forwardPhase * Math.PI) * (Math.PI / 3); // Mirrored Z rotation
+        const rotationZ = -Math.sin(forwardPhase * Math.PI) * (Math.PI/1.75); // Mirrored Z rotation
         
         swordRef.current.rotation.set(rotationX, rotationY, rotationZ);
       } else if (effectiveComboStep === 3) {
         // 3rd Hit: Smite-like animation (top to center down)
         let rotationX, rotationY, positionX, positionY, positionZ;
         
-        if (swingPhase < 0.2) {
-          // Quick wind-up phase: pull back and up
-          const windupPhase = swingPhase * 5; // Multiply by 5 since we're using 0-0.2 range
-          rotationX = -Math.PI/3 - (windupPhase * Math.PI/3);
-          rotationY = windupPhase * Math.PI/4;
+        // Store initial position when swing starts to create smooth transition
+        if (swingProgress.current <= delta * 3) { // First frame of swing
+          // Store current position as starting point for smooth transition
+          const currentPos = swordRef.current.position;
+          const currentRot = swordRef.current.rotation;
           
-          // Move towards center during windup
-          positionX = basePosition[0] + (windupPhase * 1.5);
-          positionY = basePosition[1] + windupPhase * 1.5;
-          positionZ = basePosition[2] - windupPhase * 1.5;
+          // Use current position as base for this swing instead of basePosition
+          swordRef.current.userData = {
+            startPos: [currentPos.x, currentPos.y, currentPos.z],
+            startRot: [currentRot.x, currentRot.y, currentRot.z]
+          };
+        }
+        
+        // Get stored starting position or fallback to base position
+        const startPos = swordRef.current.userData?.startPos || basePosition;
+        const startRot = swordRef.current.userData?.startRot || [0, 0, 0];
+        
+        if (swingPhase < 0.2) {
+          // Quick wind-up phase: smoothly transition from current position to windup position
+          const windupPhase = swingPhase * 5; // Multiply by 5 since we're using 0-0.2 range
+          
+          // Target windup position
+          const targetWindupX = basePosition[0] + 1.5;
+          const targetWindupY = basePosition[1] + 1.5;
+          const targetWindupZ = basePosition[2] - 1.5;
+          
+          // Smoothly interpolate from start position to windup position
+          positionX = startPos[0] + (targetWindupX - startPos[0]) * windupPhase;
+          positionY = startPos[1] + (targetWindupY - startPos[1]) * windupPhase;
+          positionZ = startPos[2] + (targetWindupZ - startPos[2]) * windupPhase;
+          
+          // Rotation interpolation
+          const targetRotX = -Math.PI/3 - Math.PI/3;
+          const targetRotY = Math.PI/4;
+          rotationX = startRot[0] + (targetRotX - startRot[0]) * windupPhase;
+          rotationY = startRot[1] + (targetRotY - startRot[1]) * windupPhase;
         } else {
           // Strike phase: powerful downward swing to ground
           const strikePhase = (swingPhase - 0.2) * 2; // Normalize from 0.2-1.0 range

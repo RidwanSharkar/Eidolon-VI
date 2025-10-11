@@ -49,6 +49,7 @@ class PerformanceMonitor {
   private lastFrameTime = 0;
   private frameCount = 0;
   private frameRate = 0;
+  private metricsInterval: NodeJS.Timeout | null = null;
 
   private constructor() {
     this.startMonitoring();
@@ -82,8 +83,8 @@ class PerformanceMonitor {
     };
     updateFrameRate();
 
-    // Collect metrics every 10 seconds for DeathKnight monitoring
-    setInterval(() => {
+    // Collect metrics every 15 seconds for DeathKnight monitoring
+    this.metricsInterval = setInterval(() => {
       this.collectMetrics();
     }, 15000);
   }
@@ -216,6 +217,11 @@ class PerformanceMonitor {
     this.metrics = [];
     if (typeof window !== 'undefined' && window.__gameMetrics) {
       window.__gameMetrics = {};
+    }
+    // Stop the metrics collection interval
+    if (this.metricsInterval) {
+      clearInterval(this.metricsInterval);
+      this.metricsInterval = null;
     }
     console.log('🔄 Performance monitor reset');
   }

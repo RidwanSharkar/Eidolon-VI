@@ -451,4 +451,3 @@ export default function GameWrapper(props: GameWrapperProps) {
     </MultiplayerProvider>
   );
 }
-

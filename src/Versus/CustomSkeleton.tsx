@@ -1,6 +1,6 @@
 // src/versus/CustomSkeleton.tsx
 import React, { useRef, useState, useEffect } from 'react';
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry } from 'three';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../gear/BonePlate';
 import SkullShield from '../Weapons/SkullShield';
@@ -20,16 +20,12 @@ const standardBoneMaterial = new MeshStandardMaterial({
   metalness: 0.3
 });
 
-const darkBoneMaterial = new MeshStandardMaterial({
-  color: "#c4d4c4",
-  roughness: 0.3,
-  metalness: 0.4
-});
+
 
 // Cache geometries that are reused frequently
 const jointGeometry = new SphereGeometry(0.06, 8, 8);
 const smallBoneGeometry = new CylinderGeometry(0.04, 0.032, 1, 6);
-const clawGeometry = new ConeGeometry(0.02, 0.15, 6);
+
 
 function BoneLegModel() {
   // Simplified version that reuses geometries and materials
@@ -93,18 +89,7 @@ function BoneLegModel() {
                     {/* Toe bone segments */}
                     <group>
                       {createParallelBones(0.15, 0.02)}
-                      
-                      {/* Toe claws */}
-                      <group position={[0, -0.1, 0]} rotation={[Math.PI/6, 0, 0]}>
-                        <mesh>
-                          <coneGeometry args={[0.02, 0.15, 6]} />
-                          <meshStandardMaterial 
-                            color="#d4d4d4"
-                            roughness={0.3}
-                            metalness={0.4}
-                          />
-                        </mesh>
-                      </group>
+
                     </group>
                   </group>
                 ))}
@@ -170,18 +155,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
                   <boxGeometry args={[0.2, 0.15, 0.08]} />
                   <meshStandardMaterial color="#e8e8e8" roughness={0.4} />
                 </mesh>
-                {[-0.08, 0, 0.08].map((offset, i) => ( // Reduced from 5 fingers to 3
-                  <group 
-                    key={i} 
-                    position={[offset, -0.1, 0]}
-                    rotation={[0, 0, (i - 1) * Math.PI / 8]}
-                  >
-                    {createBoneSegment(0.5, 0.02)}
-                    <group position={[0.025, -0.3, 0]} rotation={[0, 0, Math.PI + Math.PI / 16]}>
-                      <mesh geometry={clawGeometry} material={darkBoneMaterial} />
-                    </group>
-                  </group>
-                ))}
+
 
                 {/* Only render sabre if it's the left hand */}
                 {!isLeftHand && (
@@ -445,37 +419,6 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
             </mesh>
           </group>
 
-          {/* Upper teeth row */}
-          <group position={[0.025, -0.25, 0.2175]} >
-            {[-0.03, -0.06, -0.09, -0, 0.03].map((offset, i) => (
-              <group key={i} position={[offset, 0, 0]} rotation={[0.5, 0, 0]}>
-                <mesh>
-                  <coneGeometry args={[0.03, 0.075, 3]} />
-                  <meshStandardMaterial 
-                    color="#e8e8e8"
-                    roughness={0.3}
-                    metalness={0.4}
-                  />
-                </mesh>
-              </group>
-            ))}
-          </group>
-
-          {/* Lower teeth row */}
-          <group position={[0, -0.18, 0.2]}>
-            {[-0.06, -0.02, 0.02, 0.06].map((offset, i) => (
-              <group key={i} position={[offset, 0, 0]} rotation={[2.5, 0, 0]}>
-                <mesh>
-                  <coneGeometry args={[0.01, 0.08, 3]} />
-                  <meshStandardMaterial 
-                    color="#e8e8e8"
-                    roughness={0.3}
-                    metalness={0.4}
-                  />
-                </mesh>
-              </group>
-            ))}
-          </group>
         </group>
 
         {/* EYES============================= */}

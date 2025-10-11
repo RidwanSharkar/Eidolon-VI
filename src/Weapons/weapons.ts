@@ -414,22 +414,22 @@ const getAbilityDescription = (weapon: WeaponType, subclass: WeaponSubclass, abi
       switch (subclass) {
         case WeaponSubclass.VENGEANCE:
           switch (abilityType) {
-            case 'q': return 'Powerful two-handed 3-hit combo attack';
-            case 'e': return 'Delivers an instant strike, calling down a bolt of holy energy to deal damage to nearby enemies';
-            case 'r': return 'Creates a devastating storm of divine energy around you, damaging all nearby enemies';
+            case 'q': return 'Powerful two-handed 3-hit combo attack.';
+            case 'e': return 'Delivers a powerful strike that calls down a beam of radiant energy that deals damage to enemies near the impact.';           
+             case 'r': return 'Creates a devastating storm of divine energy around you, damaging all nearby enemies';
             case 'passive': return 'Attacks have a 25% chance to heal you.';
             case 'active': return 'Colossus Strike';
-            case 'innate': return 'Attacks have a 30% chance on hit to discharge a chain of lightning that jumps between enemies.';
+            case 'innate': return 'Attacks have a 40% chance on hit to discharge lightning that jumps to the next closest enemy, up to 4 times.';
           }
           break;
         case WeaponSubclass.DIVINITY:
           switch (abilityType) {
-            case 'q': return 'One-handed swing with a shield';
-            case 'e': return 'Delivers an instant strike, calling down a powerful ray of holy energy to deal damage to nearby enemies';
+            case 'q': return 'One-handed swing in a wide arc with a shield.';
+            case 'e': return 'Delivers a powerful strike that calls down a beam of radiant energy that deals damage to enemies near the impact.';
             case 'r': return 'Oathstrike';
             case 'passive': return 'Attacks have a chance to heal nearby allies when damaging enemies.';
             case 'active': return 'Aegis';
-            case 'innate': return 'Always grants a protective bubble shield, blocking up to 50 damage. If broken, a new shield returns after 30 seconds.';
+            case 'innate': return 'Permanently grants a protective bubble shield that blocks up to 50 damage. If broken, a new shield returns after 30 seconds.';
           }
           break;
       }
@@ -439,7 +439,7 @@ const getAbilityDescription = (weapon: WeaponType, subclass: WeaponSubclass, abi
       switch (subclass) {
         case WeaponSubclass.CHAOS:
           switch (abilityType) {
-            case 'q': return 'Swift reap in a medium arc';
+            case 'q': return 'Swift reap in a medium arc.';
             case 'e': return 'Consumes 1 Orb Charge to fire a chaotic bolt of green flame, dealing damage to the first enemy hit. Starting at level 2, Entropic Bolts have a 50% chance to become Crossentropy Bolts, dealing double damage and costing no orb charge.';
             case 'r': return 'Dragon Claw';
             case 'passive': return 'Entropic Bolts have a 50% chance to become Crossentropy bolts, dealing double damage and costing no orb charge.';
@@ -450,7 +450,7 @@ const getAbilityDescription = (weapon: WeaponType, subclass: WeaponSubclass, abi
         case WeaponSubclass.ABYSSAL:
           switch (abilityType) {
             case 'q': return 'Starting at level 2, the scythe is dual wielded and heals you for a portion of its damage dealt.';
-            case 'e': return 'Mark the nearest target in front of you for 2 seconds. After 2 seconds, a phantom sword crashes down onto the marked enemy, dealing massive damage. If the enemy was killed by this attack, summon an allied Death Knight to fight by your side.';
+            case 'e': return 'Mark the nearest target in front of you for 2 seconds. After 2 seconds, a phantom sword crashes down onto the marked enemy. If the enemy was killed by this attack, raise a Death Knight to fight by your side and spread the Soul Reaper mark to 2 neighboring enemies.';
             case 'r': return 'Reanimate';
             case 'passive': return 'Dual wield scythes for increased attack speed and damage output';
             case 'active': return 'Call down a devastating meteor that creates empowered area and summons an abomination';
@@ -464,12 +464,12 @@ const getAbilityDescription = (weapon: WeaponType, subclass: WeaponSubclass, abi
       switch (subclass) {
         case WeaponSubclass.ASSASSIN:
           switch (abilityType) {
-            case 'q': return 'Rapid close range twin sabre strikes';
-            case 'e': return 'Enter stealth mode, becoming invisible and gaining bonus damage on your next attack. If a killing blow is dealt with this ability, heal for 5-7 HP.';
+            case 'q': return 'Rapid close range twin sabre strikes.';
+            case 'e': return 'Enter stealth mode, becoming invisible and gaining bonus damage on your next attack. The critical strike chance of this ability increases significantly if behind an enemy. If a killing blow is dealt with this ability, heal for 5-7 HP.';
             case 'r': return 'Create a freezing blizzard that slows and damages enemies in a large area';
             case 'passive': return 'Avalanche effect creates frost explosions when hitting enemies with sabres';
             case 'active': return 'Eviscerate enemies with powerful charged strikes that stun and deal massive damage';
-            case 'innate': return 'Delivering a killing blow with Blinding Mist permanently increases its damage significantly as well as increases each Sabre\'s base swing damage by 1 permanently.';
+            case 'innate': return 'Delivering a killing blow with Blinding Mist permanently increases its damage. Lethality stacks can accumulate without limit and also increases each Sabre\'s base swing damage by 1.';
           }
           break;
         case WeaponSubclass.FROST:
@@ -479,7 +479,7 @@ const getAbilityDescription = (weapon: WeaponType, subclass: WeaponSubclass, abi
             case 'r': return 'Launch a glacial shard that permamently increases its damage if delivering a killing blow. Deals double damage to frozen enemies.';
             case 'passive': return 'Deep Freeze';
             case 'active': return 'Summon an elemental ally that fights alongside you with frost magic';
-            case 'innate': return 'Icicles are periodically formed around you, and can be released alongside primary attacks. Deals triple damage to frozen enemies.';
+            case 'innate': return 'Icicles are periodically formed around you, and can be released in bursts alongside primary attacks. Deals triple damage to frozen enemies.';
           }
           break;
       }
@@ -490,11 +490,11 @@ const getAbilityDescription = (weapon: WeaponType, subclass: WeaponSubclass, abi
         case WeaponSubclass.STORM:
           switch (abilityType) {
             case 'q': return '2-Round burst thrust in a straight line. Always deals critical damage if the enemy is caught with the tip of the spear.';
-            case 'e': return 'Consumes 1 Orb charge per second to spin in a whirlwind, rapidly attacking all nearby enemies with your spear. Critical damage is guaranteed at the spear\'s tip.';
+            case 'e': return 'Consumes 1 Orb charge per second to spin in a whirlwind, rapidly attacking all nearby enemies around you. Critical damage is guaranteed at the spear\'s tip.';
             case 'r': return 'Throw your spear like a javelin, stunning enemies in its path';
             case 'passive': return 'Killing enemies reignites your attacks, providing temporary damage bonuses';
             case 'active': return 'Breach through enemies, creating a path of destruction and stunning foes';
-            case 'innate': return 'Dealing 2 consecutive critical hits with the our primary attack has a chance to call down a lightning bolt that stuns the enemy in place for 2 seconds. Critical strikes with the Whirlwind ability also create an additional spinning Firestorm for 4 seconds.';
+            case 'innate': return 'Dealing 2 consecutive critical hits with the primary attack has a chance to call down a lightning bolt that stuns the enemy in place for 2 seconds. Critical strikes with the Whirlwind ability also create an additional spinning Firestorm for 4 seconds.';
           }
           break;
         case WeaponSubclass.PYRO:
@@ -515,21 +515,21 @@ const getAbilityDescription = (weapon: WeaponType, subclass: WeaponSubclass, abi
         case WeaponSubclass.ELEMENTAL:
           switch (abilityType) {
             case 'q': return 'Rapidly fires bone arrows. At level 3, frost arrows are fired instead, dealing increased damage and slowing enemies hit for 5 seconds.';
-            case 'e': return 'Charge up a powerful shot that deals increased damage the longer it is charged. At full charge, the arrow will pierce through enemies.';
+            case 'e': return 'Charges up a powerful shot that deals increased damage the longer it is charged. At full charge, the arrow will pierce through enemies.';
             case 'r': return 'Barrage';
             case 'passive': return 'Elemental shots gain bonus damage and create lightning strikes';
             case 'active': return 'Launch guided bolts that track and damage multiple enemies';
-            case 'innate': return 'Power Shots can now be Perfect Shots, dealing increased damage and stunning enemies if the shot is released at the right moment. Also greatly increases movement speed while charging Power Shot.';
+            case 'innate': return 'Power Shots can now be Perfect Shots if released at the right moment, dealing increased damage and stunning enemies hit. In addition, Power Shots can now be charged while moving.';
           }
           break;
         case WeaponSubclass.VENOM:
           switch (abilityType) {
             case 'q': return 'Rapidly fires poison arrows.';
-            case 'e': return 'Charge up a powerful shot that deals increased damage the longer it is charged. At full charge, the arrow will pierce through enemies.';
+            case 'e': return 'Charges up a powerful shot that deals increased damage the longer it is charged. At full charge, the arrow will pierce through enemies.';
             case 'r': return 'Barrage';
             case 'passive': return 'Venom Shots: every 3rd Quick Shot landed deals bonus damage. ';
             case 'active': return 'Viper Sting';
-            case 'innate': return 'If 12 consecutive hits of Quick Shot are landed, the bow glows green, allowing you to fire your next Power Shot without charging. Power Shots now also deal poison damage over time.';
+            case 'innate': return 'If 12 consecutive hits of Quick Shot are landed, the bow glows green, allowing you to fire your next Power Shot instantly. Power Shots now also deal poison damage over time.';
           }
           break;
       }

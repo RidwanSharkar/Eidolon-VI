@@ -30,6 +30,19 @@ export const divineStormMaterials = {
   })
 };
 
+// Add disposal functions
+export function disposeDivineStormResources() {
+  divineStormGeometries.torus.dispose();
+  divineStormGeometries.tetrahedron.dispose();
+  divineStormMaterials.storm.dispose();
+  divineStormMaterials.shard.dispose();
+}
+
+// Auto-dispose on game reset
+if (typeof window !== 'undefined') {
+  window.addEventListener('gameReset', disposeDivineStormResources);
+}
+
 interface DivineStormShardProps {
   initialPosition: Vector3;
   onComplete: () => void;

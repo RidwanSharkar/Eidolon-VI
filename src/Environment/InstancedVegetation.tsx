@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
-const VEGETATION_COUNT = 400; // Number of vegetation patches
+const VEGETATION_COUNT = 100; // Number of vegetation patches (reduced from 400)
 const LEAVES_PER_PATCH = 7; // Number of leaves per patch
 
 export default function InstancedVegetation() {
