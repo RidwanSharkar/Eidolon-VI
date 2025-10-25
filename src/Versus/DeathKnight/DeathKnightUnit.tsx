@@ -113,6 +113,15 @@ export default function DeathKnightUnit({
   
   const targetRotation = useRef(0);
 
+  // Reusable Vector3 objects to prevent memory leaks
+  const tempVector1 = useRef(new Vector3());
+  const tempVector2 = useRef(new Vector3());
+  const tempVector3 = useRef(new Vector3());
+  const tempVector4 = useRef(new Vector3());
+  
+  // Track timeouts for cleanup
+  const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
+
   // Get the target using aggro system (can be player or summoned unit)
   const getTargetPlayer = useCallback((): TargetInfo | null => {
     // Initialize enemy in aggro system
@@ -286,12 +295,15 @@ export default function DeathKnightUnit({
     }));
 
     // Deal damage after a short delay (spell travel time) - only once per frost strike
-    setTimeout(() => {
+    const currentTimeouts = activeTimeouts.current; // Capture current ref value
+    const frostDamageTimeout = setTimeout(() => {
+      currentTimeouts.delete(frostDamageTimeout);
       if (!frostStrikeDamageRef.current && currentHealth.current > 0) {
         frostStrikeDamageRef.current = true;
         onAttackPlayer(FROST_STRIKE_DAMAGE);
       }
     }, 300);
+    currentTimeouts.add(frostDamageTimeout);
   }, [getTargetPlayerPosition, onAttackPlayer]);
 
   const handleFrostStrikeComplete = useCallback(() => {
@@ -370,29 +382,27 @@ export default function DeathKnightUnit({
         const normalizedSpeed = isSlowed ? baseWanderSpeed * 0.5 : baseWanderSpeed;
         const frameSpeed = normalizedSpeed * delta;
         
-        // Calculate direction to wander target
-        const direction = new Vector3()
-          .subVectors(wanderTarget.current, currentPosition.current)
-          .normalize();
+        // Calculate direction to wander target (reuse tempVector1)
+        tempVector1.current.subVectors(wanderTarget.current, currentPosition.current).normalize();
         
-        // Apply direct movement like player (no complex velocity smoothing)
-        const movement = direction.multiplyScalar(frameSpeed);
-        let newPosition = currentPosition.current.clone().add(movement);
+        // Apply direct movement like player (reuse tempVector2)
+        tempVector2.current.copy(tempVector1.current).multiplyScalar(frameSpeed);
+        tempVector3.current.copy(currentPosition.current).add(tempVector2.current);
         
         // Apply knockback effect if active
         if (knockbackEffect && knockbackEffect.isActive) {
           const knockbackDistance = knockbackEffect.distance * (1 - knockbackEffect.progress);
-          const knockbackMovement = knockbackEffect.direction.clone().multiplyScalar(knockbackDistance * delta * 10);
-          newPosition = newPosition.add(knockbackMovement);
+          tempVector4.current.copy(knockbackEffect.direction).multiplyScalar(knockbackDistance * delta * 10);
+          tempVector3.current.add(tempVector4.current);
         }
         
         // Simple interpolation for smoothness
-        currentPosition.current.lerp(newPosition, MOVEMENT_SMOOTHING);
+        currentPosition.current.lerp(tempVector3.current, MOVEMENT_SMOOTHING);
         currentPosition.current.y = 0;
         titanRef.current.position.copy(currentPosition.current);
         
         // Very slow rotation for lumbering effect
-        const targetRotation = Math.atan2(direction.x, direction.z);
+        const targetRotation = Math.atan2(tempVector1.current.x, tempVector1.current.z);
         const currentRotationY = titanRef.current.rotation.y;
         let rotationDiff = targetRotation - currentRotationY;
         
@@ -413,13 +423,11 @@ export default function DeathKnightUnit({
       const baseSpeed = isSlowed ? BASE_MOVEMENT_SPEED * 0.5 : BASE_MOVEMENT_SPEED;
       const frameSpeed = baseSpeed * delta;
 
-      // Calculate direction to target player
-      const direction = new Vector3()
-        .subVectors(targetPlayerPosition, currentPosition.current)
-        .normalize();
+      // Calculate direction to target player (reuse tempVector1)
+      tempVector1.current.subVectors(targetPlayerPosition, currentPosition.current).normalize();
 
-      // Calculate separation force (simplified)
-      const separationForce = new Vector3();
+      // Calculate separation force (reuse tempVector2)
+      tempVector2.current.set(0, 0, 0);
       const otherEnemies = titanRef.current.parent?.children
         .filter(child => 
           child !== titanRef.current && 
@@ -429,44 +437,41 @@ export default function DeathKnightUnit({
 
       if (otherEnemies.length > 0) {
         otherEnemies.forEach(enemy => {
-          const diff = new Vector3()
-            .subVectors(currentPosition.current, enemy.position)
+          // Use tempVector3 for diff calculation
+          tempVector3.current.subVectors(currentPosition.current, enemy.position)
             .normalize()
             .multiplyScalar(SEPARATION_FORCE);
-          separationForce.add(diff);
+          tempVector2.current.add(tempVector3.current);
         });
-        separationForce.normalize().multiplyScalar(0.3); // Limit separation influence
+        tempVector2.current.normalize().multiplyScalar(0.3); // Limit separation influence
       }
 
-      // Combine direction and separation (like player movement)
-      const finalDirection = direction.add(separationForce).normalize();
-      finalDirection.y = 0;
+      // Combine direction and separation (reuse tempVector1)
+      tempVector1.current.add(tempVector2.current).normalize();
+      tempVector1.current.y = 0;
 
-      // Apply direct movement calculation (like player)
-      const movement = finalDirection.multiplyScalar(frameSpeed);
-      let newPosition = currentPosition.current.clone().add(movement);
+      // Apply direct movement calculation (reuse tempVector3 for movement)
+      tempVector3.current.copy(tempVector1.current).multiplyScalar(frameSpeed);
+      tempVector4.current.copy(currentPosition.current).add(tempVector3.current);
       
       // Apply knockback effect if active
       if (knockbackEffect && knockbackEffect.isActive) {
         const knockbackDistance = knockbackEffect.distance * (1 - knockbackEffect.progress);
-        const knockbackMovement = knockbackEffect.direction.clone().multiplyScalar(knockbackDistance * delta * 10);
-        newPosition = newPosition.add(knockbackMovement);
+        tempVector2.current.copy(knockbackEffect.direction).multiplyScalar(knockbackDistance * delta * 10);
+        tempVector4.current.add(tempVector2.current);
       }
       
       // Simple smoothing for natural movement
-      currentPosition.current.lerp(newPosition, MOVEMENT_SMOOTHING);
+      currentPosition.current.lerp(tempVector4.current, MOVEMENT_SMOOTHING);
       currentPosition.current.y = 0;
 
       // Apply position to mesh
       titanRef.current.position.copy(currentPosition.current);
 
       // Slow, deliberate rotation
-      const lookTarget = new Vector3()
-        .copy(targetPlayerPosition)
-        .setY(currentPosition.current.y);
       targetRotation.current = Math.atan2(
-        lookTarget.x - currentPosition.current.x,
-        lookTarget.z - currentPosition.current.z
+        targetPlayerPosition.x - currentPosition.current.x,
+        targetPlayerPosition.z - currentPosition.current.z
       );
 
       const currentRotationY = titanRef.current.rotation.y;
@@ -556,39 +561,37 @@ export default function DeathKnightUnit({
         }
         
         // Deal damage after attack animation starts
-        setTimeout(() => {
+        const currentTimeouts = activeTimeouts.current; // Capture current ref value
+        const damageTimeout = setTimeout(() => {
+          currentTimeouts.delete(damageTimeout);
           if (!attackDamageRef.current && currentHealth.current > 0 && chargedTargetPos) {
             attackDamageRef.current = true;
-            
+
             // Check if targets are in the attack area (cone in front of Death Knight)
-            const attackDirection = new Vector3()
-              .subVectors(chargedTargetPos, attackStartPosition)
-              .normalize();
-            
+            tempVector1.current.subVectors(chargedTargetPos, attackStartPosition).normalize();
+
             // Check all potential targets for area damage
-            const playersInfo: PlayerInfo[] = allPlayers ? 
+            const playersInfo: PlayerInfo[] = allPlayers ?
               allPlayers.map((player, index) => ({
                 id: `player-${index}`,
                 position: player.position,
                 name: `Player ${index + 1}`
-              })) : 
+              })) :
               (playerPosition ? [{
                 id: 'local-player',
                 position: playerPosition,
                 name: 'Player'
               }] : []);
-            
+
             const allTargets = [...playersInfo, ...summonedUnits];
             const attackAngle = Math.PI * 0.7; // 70 degree cone (wider than skeleton)
-            
+
             allTargets.forEach(target => {
-              const targetDirection = new Vector3()
-                .subVectors(target.position, currentPosition.current)
-                .normalize();
-              
+              tempVector2.current.subVectors(target.position, currentPosition.current).normalize();
+
               const distanceToTarget = currentPosition.current.distanceTo(target.position);
-              const angleToTarget = attackDirection.angleTo(targetDirection);
-              
+              const angleToTarget = tempVector1.current.angleTo(tempVector2.current);
+
               // Check if target is within attack cone and range
               if (distanceToTarget <= ATTACK_RANGE && angleToTarget <= attackAngle / 2) {
                 if (isSummonedUnit(target)) {
@@ -603,10 +606,12 @@ export default function DeathKnightUnit({
               }
             });
           }
-        }, 800); // Damage timing
-        
+        }, 800);
+        currentTimeouts.add(damageTimeout);
+
         // Reset attack state and resume movement
-        setTimeout(() => {
+        const attackResetTimeout = setTimeout(() => {
+          currentTimeouts.delete(attackResetTimeout);
           setUnitState(prev => ({ ...prev, isAttacking: false }));
           chargeTargetPosition.current = null;
           // Resume movement after attack completes
@@ -619,7 +624,8 @@ export default function DeathKnightUnit({
               }
             }
           }
-        }, 1500); // Reduced attack animation duration
+        }, 1500);
+        currentTimeouts.add(attackResetTimeout);
       }
     }
 
@@ -639,11 +645,14 @@ export default function DeathKnightUnit({
         lastDeathGraspTime.current = currentTime;
 
         // Reset ability state after shorter duration
-        setTimeout(() => {
+        const currentTimeouts = activeTimeouts.current; // Capture current ref value
+        const deathGraspTimeout = setTimeout(() => {
+          currentTimeouts.delete(deathGraspTimeout);
           if (!activeEffects.deathGrasp) {
             setUnitState(prev => ({ ...prev, isUsingDeathGrasp: false }));
           }
         }, 1500);
+        currentTimeouts.add(deathGraspTimeout);
       }
     }
 
@@ -662,11 +671,14 @@ export default function DeathKnightUnit({
         lastFrostStrikeTime.current = currentTime;
 
         // Reset ability state after shorter duration
-        setTimeout(() => {
+        const currentTimeouts = activeTimeouts.current; // Capture current ref value
+        const frostStrikeTimeout = setTimeout(() => {
+          currentTimeouts.delete(frostStrikeTimeout);
           if (!activeEffects.frostStrike) {
             setUnitState(prev => ({ ...prev, isUsingFrostStrike: false }));
           }
         }, 1000);
+        currentTimeouts.add(frostStrikeTimeout);
       }
     }
 
@@ -679,7 +691,7 @@ export default function DeathKnightUnit({
       }
     }
 
-    // CRITICAL: ULTRA-FAST safety cleanup - check every 2 seconds for stuck effects
+    // safety cleanup - check every 2 seconds for stuck effects
     const ultraFastCleanupInterval = 2000; // 2 seconds
     if (now % ultraFastCleanupInterval < 100) { // Check roughly every 2 seconds
       const stuckEffects = Object.entries(activeEffects).filter(([, effect]) => {
@@ -724,9 +736,16 @@ export default function DeathKnightUnit({
     }
   }, [unitState.isDead]);
 
-    // CRITICAL: Enhanced cleanup for ability timers and effects with immediate disposal
+    // Enhanced cleanup for ability timers and effects with immediate disposal
   useEffect(() => {
+    // Capture current ref value when effect is created (not in cleanup)
+    const currentTimeouts = activeTimeouts.current;
+
     return () => {
+      // Use the captured ref value from when effect was created
+      currentTimeouts.forEach(timeout => clearTimeout(timeout));
+      currentTimeouts.clear();
+
       // Clear all pending timeouts and effects when component unmounts
       setUnitState({
         isAttacking: false,
@@ -758,7 +777,7 @@ export default function DeathKnightUnit({
       chargeTargetPosition.current = null;
       wanderTarget.current = null;
 
-      console.log(`🚨 CRITICAL: DeathKnight ${id} cleanup completed - ALL effects disposed`);
+      console.log(`🚨 CRITICAL: DeathKnight ${id} cleanup completed - ALL effects and timeouts disposed`);
     };
   }, [id]);
 

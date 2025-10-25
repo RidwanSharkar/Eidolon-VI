@@ -3707,7 +3707,7 @@ export default function Unit({
     };
   }, [setActiveEffects]);
 
-  // CRITICAL: ULTRA-AGGRESSIVE cleanup for damage numbers and effects - run every 500ms
+  // cleanup for damage numbers and effects - run every 500ms
   useEffect(() => {
     const ultraAggressiveCleanup = setInterval(() => {
       // Check if we have too many damage numbers - much more aggressive limits

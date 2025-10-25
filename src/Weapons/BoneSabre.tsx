@@ -1,10 +1,10 @@
 // src/Weapons/BoneSabre.tsx
-import React from 'react';
-import { Shape } from 'three';
+import React, { useMemo, useEffect, useRef } from 'react';
+import { Shape, ExtrudeGeometry } from 'three';
 
 export default function BoneSabre() {
-  // Create custom sabre blade shape (curved ornate style)
-  const createBladeShape = () => {
+  // Memoize shapes and geometries to prevent recreation on every render
+  const bladeShape = useMemo(() => {
     const shape = new Shape();
 
     // Start at center
@@ -39,10 +39,9 @@ export default function BoneSabre() {
     shape.quadraticCurveTo(0.1, -0.02, 0, 0);
 
     return shape;
-  };
+  }, []);
 
-  // Make inner blade shape match outer blade
-  const createInnerBladeShape = () => {
+  const innerBladeShape = useMemo(() => {
     const shape = new Shape();
 
     // Start at center
@@ -77,25 +76,53 @@ export default function BoneSabre() {
     shape.quadraticCurveTo(0.08, -0.02, 0, 0);
 
     return shape;
-  };
+  }, []);
 
   // Update blade extrude settings for an even thinner blade
-  const bladeExtrudeSettings = {
+  const bladeExtrudeSettings = useMemo(() => ({
     steps: 2,
     depth: 0.02, // Even thinner blade
     bevelEnabled: true,
     bevelThickness: 0.004,
     bevelSize: 0.008,
     bevelSegments: 3,
-  };
+  }), []);
 
-  const innerBladeExtrudeSettings = {
+  const innerBladeExtrudeSettings = useMemo(() => ({
     ...bladeExtrudeSettings,
     depth: 0.025,
     bevelThickness: 0.003,
     bevelSize: 0.004,
     bevelOffset: 0,
-  };
+  }), [bladeExtrudeSettings]);
+
+  // Memoize all geometries and store refs for disposal
+  const geometries = useRef<ExtrudeGeometry[]>([]);
+  
+  useMemo(() => {
+    // Dispose old geometries if they exist
+    geometries.current.forEach(geo => geo.dispose());
+    geometries.current = [];
+
+    // Create new geometries
+    geometries.current = [
+      new ExtrudeGeometry(bladeShape, bladeExtrudeSettings),
+      new ExtrudeGeometry(innerBladeShape, innerBladeExtrudeSettings),
+      new ExtrudeGeometry(innerBladeShape, { ...innerBladeExtrudeSettings, depth: 0.04 }),
+      new ExtrudeGeometry(innerBladeShape, { ...innerBladeExtrudeSettings, depth: 0.06 }),
+      new ExtrudeGeometry(innerBladeShape, { ...innerBladeExtrudeSettings, depth: 0.08 })
+    ];
+
+    return geometries.current;
+  }, [bladeShape, innerBladeShape, bladeExtrudeSettings, innerBladeExtrudeSettings]);
+
+  // Dispose geometries on unmount
+  useEffect(() => {
+    return () => {
+      geometries.current.forEach(geo => geo.dispose());
+      geometries.current = [];
+    };
+  }, []);
 
   return (
     <group 
@@ -122,8 +149,7 @@ export default function BoneSabre() {
               {/* Blade */}
       <group position={[0, 0.3, 0.0]} rotation={[0, Math.PI / 2, Math.PI / 2]}>
         {/* Base blade */}
-        <mesh>
-          <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+        <mesh geometry={geometries.current[0]}>
           <meshStandardMaterial 
             color="#8B0000"  // Dark crimson base
             emissive="#8B0000"  // Dark crimson emission
@@ -136,8 +162,7 @@ export default function BoneSabre() {
         </mesh>
         
         {/* Inner glow - dark crimson core */}
-        <mesh>
-          <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
+        <mesh geometry={geometries.current[1]}>
           <meshStandardMaterial 
             color="#A00000"
             emissive="#A00000"
@@ -150,11 +175,7 @@ export default function BoneSabre() {
         </mesh>
         
         {/* Middle ethereal layer */}
-        <mesh>
-          <extrudeGeometry args={[createInnerBladeShape(), {
-            ...innerBladeExtrudeSettings,
-            depth: 0.04
-          }]} />
+        <mesh geometry={geometries.current[2]}>
           <meshStandardMaterial 
             color="#B00000"
             emissive="#B00000"
@@ -167,11 +188,7 @@ export default function BoneSabre() {
         </mesh>
         
         {/* Outer ethereal glow */}
-        <mesh>
-          <extrudeGeometry args={[createInnerBladeShape(), {
-            ...innerBladeExtrudeSettings,
-            depth: 0.06
-          }]} />
+        <mesh geometry={geometries.current[3]}>
           <meshStandardMaterial 
             color="#C00000"
             emissive="#C00000"
@@ -184,11 +201,7 @@ export default function BoneSabre() {
         </mesh>
         
         {/* Additional outer glow */}
-        <mesh>
-          <extrudeGeometry args={[createInnerBladeShape(), {
-            ...innerBladeExtrudeSettings,
-            depth: 0.08
-          }]} />
+        <mesh geometry={geometries.current[4]}>
           <meshStandardMaterial 
             color="#D00000"
             emissive="#D00000"

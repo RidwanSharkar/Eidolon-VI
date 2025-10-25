@@ -402,7 +402,7 @@ export default function ReaperUnit({
             reaperRef.current.position.copy(behindPosition);
             reaperRef.current.position.y = -sinkDepth; // Start at same depth underground
             
-            // CRITICAL: Set rotation to face player immediately for backstab
+            // Set rotation to face player immediately for backstab
             const directionToPlayer = new Vector3()
               .subVectors(playerPosRef.current, behindPosition)
               .normalize();

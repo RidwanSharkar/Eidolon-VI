@@ -1,6 +1,6 @@
 # Eidolon VI
 
-![Eidolon Cover 1](https://github.com/user-attachments/assets/1535c3e9-b8fa-4581-aaae-669cecab789e)
+![EVI](https://github.com/user-attachments/assets/96123c93-4537-458a-a911-212da4645b8b)
 
 **GAMEPLAY:** <br>
 - **Vengeance Sword: https://www.youtube.com/watch?v=cwTIyLSqpi4** <br>
@@ -15,7 +15,12 @@
 - **New enemy types, combat mechanics and unlockable abilities** <br>
 - **Modified enemy spawning system, damage scaling and level progression** <br>
 - **Dash is now available to all weapons by double-tapping the direction's key** <br>
-- **Critical runes now have a chance to randomly drop from slain enemies**
+- **Critical runes now have a chance to randomly drop from slain enemies** <br>
+- **Reworked user interface and environment**
+
+![ScytheX](https://github.com/user-attachments/assets/e5cebe2a-e549-4768-834c-385ed08983be)
+
+![SwordX](https://github.com/user-attachments/assets/c15da9df-8966-46bb-8b13-6e47fddfb8fe)
 
 ---
 

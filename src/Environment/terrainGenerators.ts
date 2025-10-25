@@ -18,7 +18,7 @@ export interface DetailedTree {
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
   const mountains: Array<{ position: Vector3; scale: number }> = [];
-  const numberOfMountains = 20;
+  const numberOfMountains = 24;
   const radius = 51;
   
   // Create evenly spaced mountains around the perimeter

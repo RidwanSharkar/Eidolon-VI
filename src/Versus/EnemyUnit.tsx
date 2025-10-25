@@ -68,6 +68,14 @@ export default function EnemyUnit({
   
   const targetRotation = useRef(0);
 
+  // Reusable Vector3 objects to prevent memory leaks (CRITICAL for performance)
+  const tempVector1 = useRef(new Vector3());
+  const tempVector2 = useRef(new Vector3());
+  const tempVector3 = useRef(new Vector3());
+  
+  // Track timeouts for cleanup
+  const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
+
   // Get the target using aggro system (can be player or summoned unit)
   const getTargetPlayer = useCallback((): TargetInfo | null => {
     // Initialize enemy in aggro system
@@ -224,22 +232,20 @@ export default function EnemyUnit({
         const normalizedSpeed = isSlowed ? baseWanderSpeed * 0.5 : baseWanderSpeed;
         const frameSpeed = normalizedSpeed * delta;
         
-        // Calculate direction to wander target
-        const direction = new Vector3()
-          .subVectors(wanderTarget.current, currentPosition.current)
-          .normalize();
+        // Calculate direction to wander target (reuse tempVector1)
+        tempVector1.current.subVectors(wanderTarget.current, currentPosition.current).normalize();
         
-        // Apply direct movement like player (no complex velocity smoothing)
-        const movement = direction.multiplyScalar(frameSpeed);
-        const newPosition = currentPosition.current.clone().add(movement);
+        // Apply direct movement like player (reuse tempVector2)
+        tempVector2.current.copy(tempVector1.current).multiplyScalar(frameSpeed);
+        tempVector3.current.copy(currentPosition.current).add(tempVector2.current);
         
         // Simple interpolation for smoothness
-        currentPosition.current.lerp(newPosition, MOVEMENT_SMOOTHING);
+        currentPosition.current.lerp(tempVector3.current, MOVEMENT_SMOOTHING);
         currentPosition.current.y = 0;
         enemyRef.current.position.copy(currentPosition.current);
         
         // Smoother rotation with reduced speed
-        const targetRotation = Math.atan2(direction.x, direction.z);
+        const targetRotation = Math.atan2(tempVector1.current.x, tempVector1.current.z);
         const currentRotationY = enemyRef.current.rotation.y;
         let rotationDiff = targetRotation - currentRotationY;
         
@@ -269,13 +275,11 @@ export default function EnemyUnit({
       const baseSpeed = isSlowed ? BASE_MOVEMENT_SPEED * 0.5 : BASE_MOVEMENT_SPEED;
       const frameSpeed = baseSpeed * delta;
 
-      // Calculate direction to target player
-      const direction = new Vector3()
-        .subVectors(targetPlayerPosition, currentPosition.current)
-        .normalize();
+      // Calculate direction to target player (reuse tempVector1)
+      tempVector1.current.subVectors(targetPlayerPosition, currentPosition.current).normalize();
 
-      // Calculate separation force (simplified)
-      const separationForce = new Vector3();
+      // Calculate separation force (reuse tempVector2)
+      tempVector2.current.set(0, 0, 0);
       const otherEnemies = enemyRef.current.parent?.children
         .filter(child => 
           child !== enemyRef.current && 
@@ -285,44 +289,41 @@ export default function EnemyUnit({
 
       if (otherEnemies.length > 0) {
         otherEnemies.forEach(enemy => {
-          const diff = new Vector3()
-            .subVectors(currentPosition.current, enemy.position)
+          // Use tempVector3 for diff calculation
+          tempVector3.current.subVectors(currentPosition.current, enemy.position)
             .normalize()
             .multiplyScalar(SEPARATION_FORCE);
-          separationForce.add(diff);
+          tempVector2.current.add(tempVector3.current);
         });
-        separationForce.normalize().multiplyScalar(0.3); // Limit separation influence
+        tempVector2.current.normalize().multiplyScalar(0.3); // Limit separation influence
       }
 
-      // Combine direction and separation (like player movement)
-      const finalDirection = direction.add(separationForce).normalize();
-      finalDirection.y = 0;
+      // Combine direction and separation (reuse tempVector1)
+      tempVector1.current.add(tempVector2.current).normalize();
+      tempVector1.current.y = 0;
 
-      // Apply direct movement calculation (like player)
-      const movement = finalDirection.multiplyScalar(frameSpeed);
-      const newPosition = currentPosition.current.clone().add(movement);
+      // Apply direct movement calculation (reuse tempVector2 for movement)
+      tempVector2.current.copy(tempVector1.current).multiplyScalar(frameSpeed);
+      tempVector3.current.copy(currentPosition.current).add(tempVector2.current);
       
       // Apply knockback effect if active
       if (knockbackEffect && knockbackEffect.isActive) {
         const knockbackDistance = knockbackEffect.distance * (1 - knockbackEffect.progress);
-        const knockbackMovement = knockbackEffect.direction.clone().multiplyScalar(knockbackDistance * delta * 10);
-        newPosition.add(knockbackMovement);
+        tempVector2.current.copy(knockbackEffect.direction).multiplyScalar(knockbackDistance * delta * 10);
+        tempVector3.current.add(tempVector2.current);
       }
       
       // Simple smoothing for natural movement
-      currentPosition.current.lerp(newPosition, MOVEMENT_SMOOTHING);
+      currentPosition.current.lerp(tempVector3.current, MOVEMENT_SMOOTHING);
       currentPosition.current.y = 0;
 
       // Apply position to mesh
       enemyRef.current.position.copy(currentPosition.current);
 
       // Smooth rotation
-      const lookTarget = new Vector3()
-        .copy(targetPlayerPosition)
-        .setY(currentPosition.current.y);
       targetRotation.current = Math.atan2(
-        lookTarget.x - currentPosition.current.x,
-        lookTarget.z - currentPosition.current.z
+        targetPlayerPosition.x - currentPosition.current.x,
+        targetPlayerPosition.z - currentPosition.current.z
       );
 
       // Interpolate rotation
@@ -378,34 +379,33 @@ export default function EnemyUnit({
         const chargedTargetPos = chargeTargetPosition.current;
         
         // Deal damage after attack animation starts (similar to original timing)
-        setTimeout(() => {
+        const currentTimeouts = activeTimeouts.current; // Capture current ref value
+        const damageTimeout = setTimeout(() => {
+          currentTimeouts.delete(damageTimeout);
           // Use the stored target from when attack started
           const attackTarget = currentTargetRef.current;
           if (!attackTarget || !chargedTargetPos) return;
-          
-          // Check if targets are in the attack area (cone in front of skeleton)
-          const attackDirection = new Vector3()
-            .subVectors(chargedTargetPos, attackStartPosition)
-            .normalize();
-          
+
+          // Check if targets are in the attack area (reuse tempVector1 for attack direction)
+          tempVector1.current.subVectors(chargedTargetPos, attackStartPosition).normalize();
+
           // Check all potential targets for area damage
           const playersInfo: PlayerInfo[] = allPlayers || (playerPosition ? [{
             id: 'local-player',
             position: playerPosition,
             name: 'Player'
           }] : []);
-          
+
           const allTargets = [...playersInfo, ...summonedUnits];
           const attackAngle = Math.PI * 0.6; // 60 degree cone
-          
+
           allTargets.forEach(target => {
-            const targetDirection = new Vector3()
-              .subVectors(target.position, currentPosition.current)
-              .normalize();
-            
+            // Reuse tempVector2 for target direction
+            tempVector2.current.subVectors(target.position, currentPosition.current).normalize();
+
             const distanceToTarget = currentPosition.current.distanceTo(target.position);
-            const angleToTarget = attackDirection.angleTo(targetDirection);
-            
+            const angleToTarget = tempVector1.current.angleTo(tempVector2.current);
+
             // Check if target is within attack cone and range
             if (distanceToTarget <= ATTACK_RANGE && angleToTarget <= attackAngle / 2) {
               if (isSummonedUnit(target)) {
@@ -419,10 +419,12 @@ export default function EnemyUnit({
               }
             }
           });
-        }, 500); // Match original damage timing
-        
+        }, 500);
+        currentTimeouts.add(damageTimeout);
+
         // Reset attack state and resume movement
-        setTimeout(() => {
+        const attackResetTimeout = setTimeout(() => {
+          currentTimeouts.delete(attackResetTimeout);
           setIsAttacking(false);
           chargeTargetPosition.current = null;
           // Resume movement after attack completes
@@ -435,7 +437,8 @@ export default function EnemyUnit({
               }
             }
           }
-        }, 1000); // Longer duration for full attack animation
+        }, 1000);
+        currentTimeouts.add(attackResetTimeout);
       }
     }
 
@@ -472,6 +475,19 @@ export default function EnemyUnit({
       return () => clearTimeout(cleanup);
     }
   }, [isDead]);
+
+  // Cleanup timeouts on unmount to prevent memory leaks
+  useEffect(() => {
+    // Capture current ref value when effect is created (not in cleanup)
+    const currentTimeouts = activeTimeouts.current;
+
+    return () => {
+      // Use the captured ref value from when effect was created
+      currentTimeouts.forEach(timeout => clearTimeout(timeout));
+      currentTimeouts.clear();
+      console.log(`🧹 EnemyUnit ${id} cleanup: All timeouts cleared`);
+    };
+  }, [id]);
 
   useEffect(() => {
     const handleStealthBreak = () => {
