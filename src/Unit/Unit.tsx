@@ -594,7 +594,8 @@ export default function Unit({
     // Use the memoized function instead of an inline function
     checkForSpearKillAndProcessReignite: pyroclastCheckForSpearKillAndProcessReignite,
     isIncinerateEmpowered,
-    onIncinerateEmpowermentUsed: handleIncinerateEmpowermentUsed
+    onIncinerateEmpowermentUsed: handleIncinerateEmpowermentUsed,
+    level
   });
 
 

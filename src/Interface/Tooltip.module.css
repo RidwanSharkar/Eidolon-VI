@@ -1,20 +1,21 @@
 .tooltip {
-  position: absolute;
+  position: fixed;
   background-color: rgba(0, 0, 0, 0.95);
   color: #fff;
   padding: 0.8rem 1rem;
-  border-radius: 5px;
+  border-radius: 8px;
   pointer-events: none;
   transform: translate(-50%, -100%);
-  z-index: 1001;
+  z-index: 99999;
   opacity: 0;
-  animation: fadeIn 0.3s forwards;
+  animation: fadeIn 0.15s forwards;
   max-width: 300px;
+  min-width: 180px;
   width: max-content;
   white-space: normal;
   word-wrap: break-word;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(57, 255, 20, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 20px rgba(57, 255, 20, 0.1);
 }
 
 @keyframes fadeIn {
@@ -25,14 +26,39 @@
 
 .tooltip h3 {
   margin: 0;
-  font-size: 1.2rem;
-  margin-bottom: 0.4rem;
-  color: #00ffaa;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #39ff14;
+  text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
 }
 
 .tooltip p {
   margin: 0.2rem 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   line-height: 1.4;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.cooldown {
+  margin-top: 0.6rem !important;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffd700 !important;
+  font-size: 0.8rem !important;
+}
+
+.passive {
+  margin-top: 0.6rem !important;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #00ffaa !important;
+  font-size: 0.8rem !important;
+  font-style: italic;
+}
+
+.locked {
+  margin-top: 0.4rem !important;
+  color: #ff6b6b !important;
+  font-size: 0.8rem !important;
+  font-style: italic;
 } 

@@ -74,6 +74,15 @@ export default function ReaperUnit({
   // MEMORY FIX: Track timeouts for cleanup to prevent memory leaks
   const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
 
+  const registerTimeout = useCallback((fn: () => void, delay: number) => {
+    const timeout = setTimeout(() => {
+      activeTimeouts.current.delete(timeout);
+      fn();
+    }, delay);
+    activeTimeouts.current.add(timeout);
+    return timeout;
+  }, []);
+
   // State
   const [isAttacking, setIsAttacking] = useState(false);
   const [isDead, setIsDead] = useState(false);
@@ -193,11 +202,14 @@ export default function ReaperUnit({
 
   // Hide reaper for a short spawn animation
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = registerTimeout(() => {
       setIsSpawning(false);
     }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      clearTimeout(timer);
+      activeTimeouts.current.delete(timer);
+    };
+  }, [registerTimeout]);
 
   // Mark dead if health hits zero
   useEffect(() => {
@@ -277,12 +289,12 @@ export default function ReaperUnit({
       setIsAttackOnCooldown(true);
 
       // 1) range indicator 
-      setTimeout(() => {
+      registerTimeout(() => {
         setShowAttackIndicator(false);
         setIsAttacking(true);
 
         // 2) Attack hits ~150ms after the reaper transitions to animation (more reactive timing)
-        setTimeout(() => {
+        registerTimeout(() => {
           // READ LATEST positions from refs at the precise moment of impact
           const reaperGroundPos = currentPosition.current.clone();
           reaperGroundPos.y = 0;
@@ -313,11 +325,11 @@ export default function ReaperUnit({
         }, 150);
 
         // 3) Attack animation ends ~480ms after it starts (faster than boss)
-        setTimeout(() => {
+        registerTimeout(() => {
           setIsAttacking(false);
 
           // 4) Re-enable attacks once cooldown is over
-          setTimeout(() => {
+          registerTimeout(() => {
             setIsAttackOnCooldown(false);
           }, currentAttackCooldown.current);
         }, 480);
@@ -332,7 +344,8 @@ export default function ReaperUnit({
     getTargetPlayer,
     id,
     ATTACK_DAMAGE,
-    ATTACK_RANGE
+    ATTACK_RANGE,
+    registerTimeout
   ]);
 
   // Calculate position behind the player
@@ -412,7 +425,7 @@ export default function ReaperUnit({
         // Phase 2: Teleport behind player (after sink completes)
         setReEmergePhase('teleporting');
         
-        setTimeout(() => {
+        registerTimeout(() => {
           const behindPosition = getPositionBehindPlayer();
           currentPosition.current.copy(behindPosition);
           targetPosition.current.copy(behindPosition); // Sync target position
@@ -467,7 +480,7 @@ export default function ReaperUnit({
               setIsPostEmergeAggressive(true);
               
               // IMMEDIATE BACKSTAB ATTACK after re-emerging
-              setTimeout(() => {
+          registerTimeout(() => {
                 // Force an immediate attack since we're behind the player
                 setShowAttackIndicator(true);
                 lastAttackTime.current = Date.now();
@@ -475,12 +488,12 @@ export default function ReaperUnit({
                 setIsBackstabInProgress(true); // Set flag for backstab
 
                 // Attack indicator shows for shorter time for backstab
-                setTimeout(() => {
+            registerTimeout(() => {
                   setShowAttackIndicator(false);
                   setIsAttacking(true);
 
                   // Check if player is still within range for backstab damage
-                  setTimeout(() => {
+              registerTimeout(() => {
                     const reaperGroundPos = currentPosition.current.clone();
                     reaperGroundPos.y = 0;
                     const playerGroundPos = playerPosRef.current.clone();
@@ -502,22 +515,22 @@ export default function ReaperUnit({
                         }
                       }
                     }
-                  }, 80); // Very fast but still reactive backstab
+              }, 80); // Very fast but still reactive backstab
 
                   // Attack animation ends
-                  setTimeout(() => {
+              registerTimeout(() => {
                     setIsAttacking(false);
                     setIsBackstabInProgress(false); // Reset flag
                     
                     // Shorter cooldown after backstab
-                    setTimeout(() => {
+                registerTimeout(() => {
                       setIsAttackOnCooldown(false);
                     }, currentAttackCooldown.current * 0.5); // 50% reduced cooldown after backstab
                   }, 300); // Faster attack animation
-                }, 600); // Shorter wind-up for backstab
-              }, 100); // Start attack almost immediately after rising
+            }, 600); // Shorter wind-up for backstab
+          }, 100); // Start attack almost immediately after rising
               
-              setTimeout(() => {
+          registerTimeout(() => {
                 setIsPostEmergeAggressive(false);
               }, POST_EMERGE_AGGRESSIVE_DURATION);
             }
@@ -527,7 +540,7 @@ export default function ReaperUnit({
       }
     };
     animateSink();
-  }, [isReEmerging, reEmergePhase, getPositionBehindPlayer, onPositionUpdate, id, onAttackPlayer, onAttackSummonedUnit, getTargetPlayer, ATTACK_DAMAGE, currentAttackCooldown]);
+  }, [isReEmerging, reEmergePhase, getPositionBehindPlayer, onPositionUpdate, id, onAttackPlayer, onAttackSummonedUnit, getTargetPlayer, ATTACK_DAMAGE, currentAttackCooldown, registerTimeout]);
 
   // Helper to remove completed submerge effects
   const removeSubmergeEffect = useCallback((effectId: string) => {

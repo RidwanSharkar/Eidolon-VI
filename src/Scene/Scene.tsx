@@ -177,9 +177,9 @@ export default function Scene({
         switch (level) {
           case 1: return 625;
           case 2: return 784;
-          case 3: return 841;
-          case 4: return 961;
-          case 5: return 1024;
+          case 3: return 1024;
+          case 4: return 1156;
+          case 5: return 1225;
           default: return 625;
         }
       case 'mage':
@@ -193,23 +193,23 @@ export default function Scene({
         }
       case 'reaper':
         switch (level) {
-          case 2: return 841;
-          case 3: return 900;
-          case 4: return 1089;
-          case 5: return 1156;
+          case 2: return 900;
+          case 3: return 1089;
+          case 4: return 1296;
+          case 5: return 1369;
           default: return 784;
         }
       case 'abomination':
         switch (level) {
           case 3: return 2304;
-          case 4: return 2500;
-          case 5: return 2704;
+          case 4: return 2704;
+          case 5: return 3025;
           default: return 2304;
         }
       case 'ascendant':
         switch (level) {
-          case 4: return 1681;
-          case 5: return 1849;
+          case 4: return 1936;
+          case 5: return 2401;
           default: return 1681;
         }
       default:
@@ -1463,8 +1463,8 @@ export default function Scene({
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
           rotation: 0,
-          health: 4900,
-          maxHealth: 4900,
+          health: 6900,
+          maxHealth: 6900,
           type: 'fallen-titan' as const,
           ref: { current: group }
         };

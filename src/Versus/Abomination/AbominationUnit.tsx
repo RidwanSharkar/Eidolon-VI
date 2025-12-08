@@ -61,6 +61,15 @@ export default function AbominationUnit({
   // MEMORY FIX: Track timeouts for cleanup to prevent memory leaks
   const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
 
+  const registerTimeout = useCallback((fn: () => void, delay: number) => {
+    const timeout = setTimeout(() => {
+      activeTimeouts.current.delete(timeout);
+      fn();
+    }, delay);
+    activeTimeouts.current.add(timeout);
+    return timeout;
+  }, []);
+
   // Get the target using aggro system (can be player or summoned unit)
   const getTargetPlayer = useCallback((): TargetInfo | null => {
     // Initialize enemy in aggro system
@@ -192,11 +201,8 @@ export default function AbominationUnit({
     // Store the starting position for the leap animation
     leapStartPosition.current.copy(currentPosition.current);
 
-    // MEMORY FIX: Track timeout for cleanup
-    const currentTimeouts = activeTimeouts.current;
     // Phase 1: Charge up (1.25 seconds)
-    const chargeTimeout = setTimeout(() => {
-      currentTimeouts.delete(chargeTimeout);
+    const chargeTimeout = registerTimeout(() => {
       setShowLeapIndicator(false);
       setLeapPhase('airborne');
       
@@ -255,13 +261,11 @@ export default function AbominationUnit({
           setShowShockwave(true);
           
           // Phase 3: Landing and shockwave
-          const landingTimeout = setTimeout(() => {
-            currentTimeouts.delete(landingTimeout);
+          const landingTimeout = registerTimeout(() => {
             setLeapPhase('idle');
             setIsLeaping(false);
             isLeapBlocked.current = false; // Unblock leap after completion
           }, 500); // Brief landing phase
-          currentTimeouts.add(landingTimeout);
         }
       };
       
@@ -269,8 +273,7 @@ export default function AbominationUnit({
       animateJump();
       
     }, LEAP_CHARGE_DURATION);
-    currentTimeouts.add(chargeTimeout);
-  }, [isLeaping, leapPhase, onPositionUpdate, id, getTargetPlayerPosition, maxHealth]);
+  }, [isLeaping, leapPhase, onPositionUpdate, id, getTargetPlayerPosition, maxHealth, registerTimeout]);
 
   // Helper to remove completed shockwave effect
   const removeShockwaveEffect = useCallback(() => {
@@ -456,7 +459,7 @@ export default function AbominationUnit({
         
         // Stage the attacks with arm delay
         for (let i = 0; i < TOTAL_ARMS; i++) {
-          setTimeout(() => {
+          registerTimeout(() => {
             const finalTargetPlayerPosition = getTargetPlayerPosition();
             const finalDistanceToPlayer = currentPosition.current.distanceTo(finalTargetPlayerPosition);
             
@@ -482,7 +485,7 @@ export default function AbominationUnit({
         
         lastAttackTime.current = currentTime;
 
-        setTimeout(() => {
+        registerTimeout(() => {
           setIsAttacking(false);
         }, 800 + (TOTAL_ARMS * ARM_DELAY) + 300);
       }
@@ -512,15 +515,18 @@ export default function AbominationUnit({
 
   useEffect(() => {
     if (isDead) {
-      const cleanup = setTimeout(() => {
+      const cleanup = registerTimeout(() => {
         setShowDeathEffect(false);
         if (enemyRef.current?.parent) {
           enemyRef.current.parent.remove(enemyRef.current);
         }
       }, 3000);
-      return () => clearTimeout(cleanup);
+      return () => {
+        clearTimeout(cleanup);
+        activeTimeouts.current.delete(cleanup);
+      };
     }
-  }, [isDead]);
+  }, [isDead, registerTimeout]);
 
   // Add stealth break event listener in a useEffect
   useEffect(() => {

@@ -94,6 +94,9 @@ export default function Panel({
   const [tooltipContent, setTooltipContent] = useState<{
     name: string;
     description: string;
+    cooldown?: string;
+    unlockLevel?: number;
+    isLocked?: boolean;
   } | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
@@ -104,18 +107,35 @@ export default function Panel({
     e: React.MouseEvent,
     abilityKey: keyof WeaponAbilities
   ) => {
+    const ability = abilities[currentWeapon]?.[abilityKey];
+    if (!ability) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    
     if (currentSubclass) {
       const tooltip = getAbilityTooltip(currentWeapon, currentSubclass, abilityKey);
-      const rect = e.currentTarget.getBoundingClientRect();
       setTooltipContent({
         name: tooltip.name,
-        description: tooltip.description
+        description: tooltip.description,
+        cooldown: tooltip.cooldown,
+        unlockLevel: tooltip.unlockLevel,
+        isLocked: !ability.isUnlocked
       });
-      setTooltipPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.top
+    } else {
+      // Fallback when subclass is not set
+      setTooltipContent({
+        name: ability.name || abilityKey,
+        description: 'Select a subclass to see ability details',
+        cooldown: ability.cooldown > 0 ? `${ability.cooldown}s` : 'Always Active',
+        unlockLevel: ability.unlockLevel,
+        isLocked: !ability.isUnlocked
       });
     }
+    
+    setTooltipPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10
+    });
   };
 
   const handleAbilityLeave = () => {
@@ -370,7 +390,13 @@ export default function Panel({
 
         {tooltipContent && (
           <Tooltip 
-            content={{ title: tooltipContent.name, description: tooltipContent.description }}
+            content={{ 
+              title: tooltipContent.name, 
+              description: tooltipContent.description,
+              cooldown: tooltipContent.cooldown,
+              unlockLevel: tooltipContent.unlockLevel,
+              isLocked: tooltipContent.isLocked
+            }}
             visible={true}
             x={tooltipPosition.x}
             y={tooltipPosition.y}

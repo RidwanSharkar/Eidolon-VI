@@ -14,6 +14,8 @@
   border: none;
   box-shadow: none;
   backdrop-filter: none;
+  z-index: 100;
+  pointer-events: auto;
 }
 
 .weaponSection {
@@ -756,7 +758,7 @@
 .locked {
   opacity: 0.5;
   filter: grayscale(100%);
-  pointer-events: none;
+  cursor: not-allowed;
 }
 
 .locked .keyBind {

@@ -126,7 +126,30 @@ export default function Breach({
     let adjustedProgress = progress;
     if (distanceFromOrigin >= PLAY_AREA_RADIUS) {
       // If we'd breach the boundary, clamp the position to stay inside
-      newPosition.normalize().multiplyScalar(PLAY_AREA_RADIUS * 0.95);
+      // Calculate how far along the breach direction we can go while staying within bounds
+      const dirToNewPos = newPosition.clone().sub(startPosition.current);
+      const dirLength = dirToNewPos.length();
+      
+      if (dirLength > 0) {
+        // Find the maximum distance we can travel in this direction
+        const startDist = startPosition.current.length();
+        
+        // Project the movement onto the boundary - scale back the displacement
+        const maxAllowedDist = PLAY_AREA_RADIUS * 0.95;
+        
+        // If start position is already near boundary, just clamp to current position
+        if (startDist >= maxAllowedDist) {
+          newPosition.copy(startPosition.current);
+        } else {
+          // Calculate the point where the movement path intersects the boundary
+          // and clamp to slightly inside that
+          const normalizedDir = dirToNewPos.clone().normalize();
+          const maxTravel = Math.max(0, maxAllowedDist - startDist);
+          const actualTravel = Math.min(dirLength, maxTravel);
+          
+          newPosition.copy(startPosition.current).add(normalizedDir.multiplyScalar(actualTravel));
+        }
+      }
       
       // End the breach effect early
       if (adjustedProgress < 0.9) {

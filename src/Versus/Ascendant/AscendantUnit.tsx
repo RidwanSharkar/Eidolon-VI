@@ -97,6 +97,16 @@ export default function AscendantUnit({
     position: Vector3;
   } | null>(null);
   const lastForcePulseTime = useRef<number>(Date.now());
+  const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
+
+  const registerTimeout = useCallback((fn: () => void, delay: number) => {
+    const timeout = setTimeout(() => {
+      activeTimeouts.current.delete(timeout);
+      fn();
+    }, delay);
+    activeTimeouts.current.add(timeout);
+    return timeout;
+  }, []);
   
   // Blink ability state
   const [activeBlink, setActiveBlink] = useState<{
@@ -272,7 +282,7 @@ export default function AscendantUnit({
     });
 
     // Deal damage in the target area (1.5 unit radius)
-    setTimeout(() => {
+    registerTimeout(() => {
       const damageRadius = 1.5;
       
       // Check all potential targets for damage
@@ -305,7 +315,7 @@ export default function AscendantUnit({
         }
       });
     }, 200);
-  }, [allPlayers, playerPosition, summonedUnits, onAttackPlayer, onAttackSummonedUnit, id]);
+  }, [allPlayers, playerPosition, summonedUnits, onAttackPlayer, onAttackSummonedUnit, id, registerTimeout]);
 
   // Force Pulse ability - knocks back enemies within 6 units
   const triggerForcePulse = useCallback(() => {
@@ -423,7 +433,7 @@ export default function AscendantUnit({
     });
 
     // Update position after blink animation starts
-    setTimeout(() => {
+    registerTimeout(() => {
       currentPosition.current.copy(finalBlinkPosition);
       targetPosition.current.copy(finalBlinkPosition);
       if (ascendantRef.current) {
@@ -433,7 +443,7 @@ export default function AscendantUnit({
     }, 400); // Halfway through blink animation
 
     return true;
-  }, [getTargetPlayerPosition, onPositionUpdate, id, isBlinking]);
+  }, [getTargetPlayerPosition, onPositionUpdate, id, isBlinking, registerTimeout]);
 
   useFrame((_, delta) => {
     if (!ascendantRef.current || currentHealth.current <= 0 || isFrozen || isStunned) {
@@ -635,7 +645,7 @@ export default function AscendantUnit({
         }
 
         // Reset attack state after animation
-        setTimeout(() => {
+        registerTimeout(() => {
           setIsAttacking(false);
           setAttackingHand(null);
         }, 1500); // Longer than lightning duration for hand animation
@@ -666,15 +676,18 @@ export default function AscendantUnit({
 
   useEffect(() => {
     if (isDead) {
-      const cleanup = setTimeout(() => {
+      const cleanup = registerTimeout(() => {
         setShowDeathEffect(false);
         if (ascendantRef.current?.parent) {
           ascendantRef.current.parent.remove(ascendantRef.current);
         }
       }, 3500);
-      return () => clearTimeout(cleanup);
+      return () => {
+        clearTimeout(cleanup);
+        activeTimeouts.current.delete(cleanup);
+      };
     }
-  }, [isDead]);
+  }, [isDead, registerTimeout]);
 
       useEffect(() => {
       const handleStealthBreak = () => {
@@ -684,6 +697,14 @@ export default function AscendantUnit({
     window.addEventListener('stealthBreak', handleStealthBreak);
     return () => {
       window.removeEventListener('stealthBreak', handleStealthBreak);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timeouts = activeTimeouts.current;
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout));
+      timeouts.clear();
     };
   }, []);
 

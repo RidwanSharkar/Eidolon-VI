@@ -405,38 +405,39 @@ function GameContent({
               currentSubclass={currentSubclass}
             />
           )}
-          
-          {gameInProgress && (
-            <>
-              <Panel 
-                currentWeapon={currentWeapon}
-                currentSubclass={currentSubclass}
-                onWeaponSelect={() => {}}
-                abilities={abilities}
-                onReset={onReset}
-                stealthKillCount={stealthKillCount}
-                glacialShardKillCount={glacialShardKillCount}
-                dashCharges={dashCharges}
-                eviscerateLashes={eviscerateLashes}
-                boneclawCharges={boneclawCharges}
-                incinerateStacks={incinerateStacks}
-              />
-              <HealthOrb 
-                currentHealth={isInRoom ? currentPlayerHealth : playerHealth}
-                maxHealth={isInRoom ? currentPlayerMaxHealth : maxHealth}
-                killCount={isInRoom ? multiplayerKillCount : killCount}
-                hasShield={shieldState.hasShield}
-                shieldAbsorption={shieldState.shieldAbsorption}
-              />
-              <RuneCounter 
-                criticalRuneCount={criticalRuneCount}
-                critDamageRuneCount={critDamageRuneCount}
-                criticalChance={criticalChance}
-                criticalDamageMultiplier={criticalDamageMultiplier}
-              />
-            </>
-          )}
         </div>
+
+        {/* Game UI elements - rendered outside the pointer-events:none wrapper */}
+        {gameInProgress && (
+          <>
+            <Panel 
+              currentWeapon={currentWeapon}
+              currentSubclass={currentSubclass}
+              onWeaponSelect={() => {}}
+              abilities={abilities}
+              onReset={onReset}
+              stealthKillCount={stealthKillCount}
+              glacialShardKillCount={glacialShardKillCount}
+              dashCharges={dashCharges}
+              eviscerateLashes={eviscerateLashes}
+              boneclawCharges={boneclawCharges}
+              incinerateStacks={incinerateStacks}
+            />
+            <HealthOrb 
+              currentHealth={isInRoom ? currentPlayerHealth : playerHealth}
+              maxHealth={isInRoom ? currentPlayerMaxHealth : maxHealth}
+              killCount={isInRoom ? multiplayerKillCount : killCount}
+              hasShield={shieldState.hasShield}
+              shieldAbsorption={shieldState.shieldAbsorption}
+            />
+            <RuneCounter 
+              criticalRuneCount={criticalRuneCount}
+              critDamageRuneCount={critDamageRuneCount}
+              criticalChance={criticalChance}
+              criticalDamageMultiplier={criticalDamageMultiplier}
+            />
+          </>
+        )}
       </>
   );
 }

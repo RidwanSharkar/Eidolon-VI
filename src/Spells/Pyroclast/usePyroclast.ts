@@ -47,19 +47,32 @@ interface UsePyroclastProps {
   ) => void;
   isIncinerateEmpowered?: boolean; // Whether we have 25 Incinerate stacks
   onIncinerateEmpowermentUsed?: () => void; // Callback when empowerment is consumed
+  level?: number; // Player level for damage scaling
 }
 
-const PYROCLAST_DAMAGE_PER_SECOND = 257;
+// Level-based Pyroclast damage per second
+const PYROCLAST_DAMAGE_BY_LEVEL: Record<number, number> = {
+  1: 257,
+  2: 281,
+  3: 300,
+  4: 314,
+  5: 357,
+};
+
+function getPyroclastDamagePerSecond(level: number = 1): number {
+  return PYROCLAST_DAMAGE_BY_LEVEL[Math.min(Math.max(level, 1), 5)] || PYROCLAST_DAMAGE_BY_LEVEL[1];
+}
 const PYROCLAST_MAX_CHARGE_TIME = 4;
-const PYROCLAST_HIT_RADIUS = 3.75;
+const PYROCLAST_HIT_RADIUS = 3.25;
 const CHARGE_CONSUME_INTERVAL = 500;
 
-function calculatePyroclastDamage(chargeTimeSeconds: number): { damage: number; isCritical: boolean } {
+function calculatePyroclastDamage(chargeTimeSeconds: number, level: number = 1): { damage: number; isCritical: boolean } {
   // Clamp charge time between 0.5 and MAX_CHARGE_TIME seconds
   const clampedChargeTime = Math.max(0.5, Math.min(PYROCLAST_MAX_CHARGE_TIME, chargeTimeSeconds));
   
-  // Calculate base damage linearly
-  let damage = Math.floor(clampedChargeTime * PYROCLAST_DAMAGE_PER_SECOND);
+  // Calculate base damage linearly using level-scaled damage per second
+  const damagePerSecond = getPyroclastDamagePerSecond(level);
+  let damage = Math.floor(clampedChargeTime * damagePerSecond);
   
   // 11% chance to critical hit
   const isCritical = Math.random() < 0.11;
@@ -86,7 +99,8 @@ export function usePyroclast({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   checkForSpearKillAndProcessReignite,
   isIncinerateEmpowered = false,
-  onIncinerateEmpowermentUsed
+  onIncinerateEmpowermentUsed,
+  level = 1
 }: UsePyroclastProps) {
   // Add debug log to check if reigniteRef is properly passed
   
@@ -246,8 +260,8 @@ export function usePyroclast({
       // If within hit radius, process the hit
       if (distance < PYROCLAST_HIT_RADIUS) {
         
-        // Calculate damage based on charge time
-        const { damage, isCritical } = calculatePyroclastDamage(missile.chargeTime);
+        // Calculate damage based on charge time and level
+        const { damage, isCritical } = calculatePyroclastDamage(missile.chargeTime, level);
         
         // Store enemy position and health before damage
         const enemyPosition = enemy.position.clone();
@@ -302,7 +316,7 @@ export function usePyroclast({
           
           if (interpolatedDistance < PYROCLAST_HIT_RADIUS) {
             
-            const { damage, isCritical } = calculatePyroclastDamage(missile.chargeTime);
+            const { damage, isCritical } = calculatePyroclastDamage(missile.chargeTime, level);
             
             // Store enemy position and health before damage
             const enemyPosition = enemy.position.clone();
@@ -349,7 +363,7 @@ export function usePyroclast({
     }
 
     return collisionOccurred;
-  }, [reigniteRef, activeMissiles, enemyData, setDamageNumbers, nextDamageNumberId, onHit, checkForSpearKillAndProcessReignite]);
+  }, [reigniteRef, activeMissiles, enemyData, setDamageNumbers, nextDamageNumberId, onHit, checkForSpearKillAndProcessReignite, level]);
 
   const consumeCharge = useCallback(() => {
     const now = Date.now();
