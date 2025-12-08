@@ -14,6 +14,10 @@ export interface DetailedTree {
   trunkColor: Color;
   height: number;
   trunkRadius: number;
+  rotationY?: number; // Fixed rotation to prevent spinning
+  rotationX?: number;
+  rotationZ?: number;
+  seed?: number; // Seed for consistent tree generation
 }
 
 export const generateMountains = (): Array<{ position: Vector3; scale: number }> => {
@@ -54,13 +58,13 @@ export const generateMountains = (): Array<{ position: Vector3; scale: number }>
 
 export const generateTrees = (): DetailedTree[] => {
   return [
-    // 6 TREES
-    { position: new Vector3(-15, 0, -5), scale: 1.3, trunkColor: new Color(trunkColors[1]), height: 4.2, trunkRadius: 0.22 },
-    { position: new Vector3(-12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), height: 3.8, trunkRadius: 0.20 },
-    { position: new Vector3(-11, 0, 5), scale: 1.3, trunkColor: new Color(trunkColors[1]), height: 4.3, trunkRadius: 0.24 },
-    { position: new Vector3(-12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[2]), height: 3.3, trunkRadius: 0.16 },
-    { position: new Vector3(-5, 0, -15), scale: 0.85, trunkColor: new Color(trunkColors[1]), height: 3.6, trunkRadius: 0.18 },
-    { position: new Vector3(5, 0, -18), scale: 0.85, trunkColor: new Color(trunkColors[2]), height: 3.4, trunkRadius: 0.17 },
+    // 6 TREES with fixed rotations and seeds for consistency
+    { position: new Vector3(-15, 0, -5), scale: 1.3, trunkColor: new Color(trunkColors[1]), height: 4.2, trunkRadius: 0.22, rotationY: 0.5, rotationX: -0.02, rotationZ: 0.03, seed: 1 },
+    { position: new Vector3(-12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), height: 3.8, trunkRadius: 0.20, rotationY: 2.1, rotationX: 0.04, rotationZ: -0.01, seed: 2 },
+    { position: new Vector3(-11, 0, 5), scale: 1.3, trunkColor: new Color(trunkColors[1]), height: 4.3, trunkRadius: 0.24, rotationY: 4.7, rotationX: 0.01, rotationZ: 0.05, seed: 3 },
+    { position: new Vector3(-12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[2]), height: 3.3, trunkRadius: 0.16, rotationY: 1.8, rotationX: -0.03, rotationZ: -0.02, seed: 4 },
+    { position: new Vector3(-5, 0, -15), scale: 0.85, trunkColor: new Color(trunkColors[1]), height: 3.6, trunkRadius: 0.18, rotationY: 3.4, rotationX: 0.02, rotationZ: 0.04, seed: 5 },
+    { position: new Vector3(5, 0, -18), scale: 0.85, trunkColor: new Color(trunkColors[2]), height: 3.4, trunkRadius: 0.17, rotationY: 5.5, rotationX: -0.04, rotationZ: -0.03, seed: 6 },
   ];
 };
 

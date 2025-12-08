@@ -135,12 +135,12 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SCYTHE]: {
     normal: 29,
-    range: 4.25,
+    range: 4.3,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
     normal: 17, // Base damage - actual damage varies by subclass
-    range: 3.85,
+    range: 4.0,
     maxHitsPerSwing: 2
   },
   [WeaponType.SPEAR]: {

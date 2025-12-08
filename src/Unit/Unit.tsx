@@ -3314,7 +3314,7 @@ export default function Unit({
     setDamageNumbers(prev => prev.filter(dn => dn.id !== id));
   };
 
-  // CRITICAL: ULTRA-FAST cleanup for stuck damage numbers - run every 500ms
+  // CRITICAL: ULTRA-FAST cleanup for stuck damage numbers AND dead enemy DoT refs - run every 500ms
   useEffect(() => {
     const ultraFastCleanup = setInterval(() => {
       const now = Date.now();
@@ -3327,10 +3327,40 @@ export default function Unit({
 
         return filtered;
       });
+
+      // MEMORY FIX: Clean up DoT refs for dead enemies to prevent memory leaks
+      const aliveEnemyIds = new Set(enemyData.filter(e => e.health > 0).map(e => e.id));
+      
+      // Clean venomDoTEnemies for dead enemies
+      Object.keys(venomDoTEnemies.current).forEach(enemyId => {
+        const normalizedId = enemyId.startsWith('enemy-') ? enemyId : `enemy-${enemyId}`;
+        const rawId = enemyId.startsWith('enemy-') ? enemyId.slice(6) : enemyId;
+        if (!aliveEnemyIds.has(normalizedId) && !aliveEnemyIds.has(rawId)) {
+          delete venomDoTEnemies.current[enemyId];
+        }
+      });
+      
+      // Clean viperStingDoTEnemies for dead enemies
+      Object.keys(viperStingDoTEnemies.current).forEach(enemyId => {
+        const normalizedId = enemyId.startsWith('enemy-') ? enemyId : `enemy-${enemyId}`;
+        const rawId = enemyId.startsWith('enemy-') ? enemyId.slice(6) : enemyId;
+        if (!aliveEnemyIds.has(normalizedId) && !aliveEnemyIds.has(rawId)) {
+          delete viperStingDoTEnemies.current[enemyId];
+        }
+      });
+
+      // MEMORY FIX: Clear lastHitDetectionTime for dead enemies
+      Object.keys(lastHitDetectionTime.current).forEach(targetId => {
+        const normalizedId = targetId.startsWith('enemy-') ? targetId : `enemy-${targetId}`;
+        const rawId = targetId.startsWith('enemy-') ? targetId.slice(6) : targetId;
+        if (!aliveEnemyIds.has(normalizedId) && !aliveEnemyIds.has(rawId)) {
+          delete lastHitDetectionTime.current[targetId];
+        }
+      });
     }, 500); // Check every 500ms - much more aggressive cleanup
 
     return () => clearInterval(ultraFastCleanup);
-  }, []);
+  }, [enemyData]);
 
   // SABRE DOUBLE HIT
   useEffect(() => {

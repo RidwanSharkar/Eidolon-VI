@@ -57,6 +57,9 @@ export default function AbominationUnit({
   const targetPosition = useRef(initialPosition.clone());
   const currentHealth = useRef(health);
   const lastUpdateTime = useRef(Date.now());
+  
+  // MEMORY FIX: Track timeouts for cleanup to prevent memory leaks
+  const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
 
   // Get the target using aggro system (can be player or summoned unit)
   const getTargetPlayer = useCallback((): TargetInfo | null => {
@@ -84,7 +87,7 @@ export default function AbominationUnit({
 
   const ATTACK_RANGE = 3.0;
   const ATTACK_COOLDOWN = 3000;
-  const BASE_MOVEMENT_SPEED = 2.125; // Consistent base speed like other enemies
+  const BASE_MOVEMENT_SPEED = 2.25; // Consistent base speed like other enemies
   const POSITION_UPDATE_THRESHOLD = 0.125;
   const MINIMUM_UPDATE_INTERVAL = 20;
   const ATTACK_DAMAGE = 12;
@@ -97,7 +100,7 @@ export default function AbominationUnit({
   
   // Leap ability constants
   const LEAP_COOLDOWN = 12000; // 12 second cooldown for leap
-  const LEAP_CHARGE_DURATION = 1250; // 1.25 seconds charge-up
+  const LEAP_CHARGE_DURATION = 750; // 1.25 seconds charge-up
   const LEAP_AIRBORNE_DURATION = 2000; // 2 seconds in the air
   const LEAP_BEHIND_DISTANCE = 1.0; // Land 1.0 units behind target
 
@@ -189,8 +192,11 @@ export default function AbominationUnit({
     // Store the starting position for the leap animation
     leapStartPosition.current.copy(currentPosition.current);
 
+    // MEMORY FIX: Track timeout for cleanup
+    const currentTimeouts = activeTimeouts.current;
     // Phase 1: Charge up (1.25 seconds)
-    setTimeout(() => {
+    const chargeTimeout = setTimeout(() => {
+      currentTimeouts.delete(chargeTimeout);
       setShowLeapIndicator(false);
       setLeapPhase('airborne');
       
@@ -249,11 +255,13 @@ export default function AbominationUnit({
           setShowShockwave(true);
           
           // Phase 3: Landing and shockwave
-          setTimeout(() => {
+          const landingTimeout = setTimeout(() => {
+            currentTimeouts.delete(landingTimeout);
             setLeapPhase('idle');
             setIsLeaping(false);
             isLeapBlocked.current = false; // Unblock leap after completion
           }, 500); // Brief landing phase
+          currentTimeouts.add(landingTimeout);
         }
       };
       
@@ -261,6 +269,7 @@ export default function AbominationUnit({
       animateJump();
       
     }, LEAP_CHARGE_DURATION);
+    currentTimeouts.add(chargeTimeout);
   }, [isLeaping, leapPhase, onPositionUpdate, id, getTargetPlayerPosition, maxHealth]);
 
   // Helper to remove completed shockwave effect
@@ -523,6 +532,22 @@ export default function AbominationUnit({
     window.addEventListener('stealthBreak', handleStealthBreak);
     return () => {
       window.removeEventListener('stealthBreak', handleStealthBreak);
+    };
+  }, []);
+
+  // MEMORY FIX: Cleanup all active timeouts on unmount to prevent memory leaks
+  useEffect(() => {
+    const currentTimeouts = activeTimeouts.current;
+    
+    return () => {
+      currentTimeouts.forEach(timeout => clearTimeout(timeout));
+      currentTimeouts.clear();
+      // Reset state on unmount
+      setIsLeaping(false);
+      setLeapPhase('idle');
+      setShowLeapIndicator(false);
+      setShowShockwave(false);
+      isLeapBlocked.current = false;
     };
   }, []);
 

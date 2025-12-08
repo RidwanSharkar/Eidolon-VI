@@ -143,10 +143,10 @@ export default function SkeletalMage({
   const MINIMUM_UPDATE_INTERVAL = 15;
   const SEPARATION_RADIUS = 1.25;
   const SEPARATION_FORCE = 0.1; // Reduced for smoother movement
-  const FIREBALL_COOLDOWN = 7500;
+  const FIREBALL_COOLDOWN = 7000;
   const FIREBALL_DAMAGE = 22;
-  const LIGHTNING_COOLDOWN = 15000;
-  const LIGHTNING_DAMAGE = 25;
+  const LIGHTNING_COOLDOWN = 8000;
+  const LIGHTNING_DAMAGE = 40;
   const LIGHTNING_WARNING_DURATION = 2.0; // 2 seconds warning
   const LIGHTNING_DAMAGE_RADIUS = 2.0;
   const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement
@@ -562,15 +562,36 @@ export default function SkeletalMage({
       }
     }
 
-    // Clean up old fireballs (older than 10 seconds)
-    setActiveFireballs(prev => 
-      prev.filter(fireball => Date.now() - fireball.startTime < 10000)
-    );
+    // MEMORY FIX: Clean up old fireballs with hard limit (older than 10 seconds OR exceeds limit)
+    setActiveFireballs(prev => {
+      const filtered = prev.filter(fireball => Date.now() - fireball.startTime < 10000);
+      // Hard limit: keep only the most recent 5 fireballs max
+      return filtered.length > 5 ? filtered.slice(-5) : filtered;
+    });
 
-    // Clean up old lightning strikes (older than 3 seconds)
-    setActiveLightningStrikes(prev => 
-      prev.filter(strike => Date.now() - strike.startTime < 3000)
-    );
+    // MEMORY FIX: Clean up old lightning strikes with hard limit (older than 3 seconds OR exceeds limit)
+    setActiveLightningStrikes(prev => {
+      const filtered = prev.filter(strike => Date.now() - strike.startTime < 3000);
+      // Hard limit: keep only the most recent 3 lightning strikes max
+      return filtered.length > 3 ? filtered.slice(-3) : filtered;
+    });
+    
+    // MEMORY FIX: Clean up old lightning warnings with hard limit
+    setActiveLightningWarnings(prev => {
+      const filtered = prev.filter(warning => Date.now() - warning.startTime < 3000);
+      // Hard limit: keep only the most recent 3 warnings max
+      return filtered.length > 3 ? filtered.slice(-3) : filtered;
+    });
+    
+    // MEMORY FIX: Clean up old active effects
+    setActiveEffects(prev => {
+      const filtered = prev.filter(effect => {
+        const age = Date.now() - effect.startTime;
+        return age < (effect.duration || 2000);
+      });
+      // Hard limit: keep only the most recent 5 effects max
+      return filtered.length > 5 ? filtered.slice(-5) : filtered;
+    });
 
     // Update position with rate limiting
     const now = Date.now();

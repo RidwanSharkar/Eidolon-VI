@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, Vector3 } from 'three';
 import * as THREE from 'three';
@@ -13,86 +13,75 @@ interface BoneVortexProps {
   scale?: number;
 }
 
+// MEMORY FIX: Shared geometry - created once, reused by all instances
+const SHARED_DEATH_GEOMETRY = new THREE.CylinderGeometry(0.03, 0.025, 0.3, 6); // Reduced segments
+
+// MEMORY FIX: Pre-created material cache by color to avoid creating new materials
+const MATERIAL_CACHE = new Map<string, THREE.MeshStandardMaterial>();
+
+const getOrCreateMaterial = (color: string): THREE.MeshStandardMaterial => {
+  if (!MATERIAL_CACHE.has(color)) {
+    const material = new THREE.MeshStandardMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.525,
+      emissive: color,
+      emissiveIntensity: 0.75
+    });
+    MATERIAL_CACHE.set(color, material);
+  }
+  return MATERIAL_CACHE.get(color)!;
+};
+
 const getVortexColor = (weaponType: WeaponType, weaponSubclass?: WeaponSubclass) => {
   if (weaponSubclass) {
     switch (weaponSubclass) {
-      // Scythe subclasses
-      case WeaponSubclass.CHAOS:
-        return '#00FF4D'; // Keep original chaos color
-      case WeaponSubclass.ABYSSAL:
-        return '#8B00FF'; // Purple for abyssal
-      
-      // Sword subclasses
-      case WeaponSubclass.DIVINITY:
-        return '#FFD700'; // Keep original divinity color
-      case WeaponSubclass.VENGEANCE:
-        return '#FF8C00'; // More orange for vengeance
-      
-      // Sabres subclasses
-      case WeaponSubclass.FROST:
-        return '#00BBFF'; // Keep original frost color
-      case WeaponSubclass.ASSASSIN:
-        return '#4A00AA'; // Dark purple for assassin
-      
-      // Spear subclasses
-      case WeaponSubclass.PYRO:
-        return '#F33FAE'; // Keep original pyro color
-      case WeaponSubclass.STORM:
-        return '#808080'; // Grey for storm
-      
-      // Bow subclasses
-      case WeaponSubclass.ELEMENTAL:
-        return '#3A905E'; // Keep original elemental color
-      case WeaponSubclass.VENOM:
-        return '#17CC93'; // Green/purple for venom
+      case WeaponSubclass.CHAOS: return '#00FF4D';
+      case WeaponSubclass.ABYSSAL: return '#8B00FF';
+      case WeaponSubclass.DIVINITY: return '#FFD700';
+      case WeaponSubclass.VENGEANCE: return '#FF8C00';
+      case WeaponSubclass.FROST: return '#00BBFF';
+      case WeaponSubclass.ASSASSIN: return '#4A00AA';
+      case WeaponSubclass.PYRO: return '#F33FAE';
+      case WeaponSubclass.STORM: return '#808080';
+      case WeaponSubclass.ELEMENTAL: return '#3A905E';
+      case WeaponSubclass.VENOM: return '#17CC93';
     }
   }
   
-  // Fallback to weapon type colors
   switch (weaponType) {
-    case WeaponType.SCYTHE:
-      return '#00FF4D'; //  00FF88 FF6B6B FF6AAA
-    case WeaponType.SWORD:
-      return '#FFD700'; // FF9843  FF8C2D
-    case WeaponType.SABRES:
-      return '#00BBFF'; //ice blue 98F5FC 
-    case WeaponType.SPEAR:
-      return '#F33FAE'; //RED
-    default:
-      return '#00ff44'; // 00FF37
+    case WeaponType.SCYTHE: return '#00FF4D';
+    case WeaponType.SWORD: return '#FFD700';
+    case WeaponType.SABRES: return '#00BBFF';
+    case WeaponType.SPEAR: return '#F33FAE';
+    default: return '#00ff44';
   }
 };
 
-const createVortexSegment = (weaponType: WeaponType, weaponSubclass?: WeaponSubclass) => {
-  const color = getVortexColor(weaponType, weaponSubclass);
-  return (
-    <group>
-      <mesh>
-        <cylinderGeometry args={[0.03, 0.025, 0.3, 8]} />
-        <meshStandardMaterial 
-          color={color}
-          transparent
-          opacity={0.525}
-          emissive={color}
-          emissiveIntensity={0.75}
-        />
-      </mesh>
-    </group>
-  );
-};
+// MEMORY FIX: Reduced segment count
+const LAYER_COUNT = 8; // Reduced from 12
+const SEGMENTS_PER_LAYER = 6; // Reduced from 10
+const TOTAL_SEGMENTS = LAYER_COUNT * SEGMENTS_PER_LAYER; // 48 instead of 120
 
 export default function BoneVortex({ position, onComplete, isSpawning = false, weaponType, weaponSubclass }: BoneVortexProps) {
   const segmentsRef = useRef<Mesh[]>([]);
-  const layerCount = 12;
-  const segmentsPerLayer = 10;
+  const layerCount = LAYER_COUNT;
+  const segmentsPerLayer = SEGMENTS_PER_LAYER;
   const maxRadius = 1.15;
   const height = 2.75;
   const groupRef = useRef<Group>(null);
   const startTime = useRef(Date.now());
   const animationDuration = 1500;
+  const hasCompletedRef = useRef(false);
+  
+  // MEMORY FIX: Get cached material based on weapon
+  const material = useMemo(() => {
+    const color = getVortexColor(weaponType, weaponSubclass);
+    return getOrCreateMaterial(color);
+  }, [weaponType, weaponSubclass]);
   
   useFrame(() => {
-    if (!groupRef.current) return;
+    if (!groupRef.current || hasCompletedRef.current) return;
     
     const elapsed = Date.now() - startTime.current;
     const progress = Math.min(elapsed / animationDuration, 1);
@@ -101,7 +90,12 @@ export default function BoneVortex({ position, onComplete, isSpawning = false, w
     
     groupRef.current.position.set(position.x, 0, position.z);
     
-    segmentsRef.current.forEach((segment, i) => {
+    // MEMORY FIX: Use for loop instead of forEach, check array bounds
+    const segmentCount = Math.min(segmentsRef.current.length, TOTAL_SEGMENTS);
+    for (let i = 0; i < segmentCount; i++) {
+      const segment = segmentsRef.current[i];
+      if (!segment) continue;
+      
       const layer = Math.floor(i / segmentsPerLayer);
       const layerProgress = layer / (layerCount - 1);
       
@@ -125,30 +119,39 @@ export default function BoneVortex({ position, onComplete, isSpawning = false, w
       segment.rotation.z = Math.PI / 2 + layerProgress * 0.8;
       segment.rotation.x = Math.sin(elapsed * 0.004 + i) * 0.2;
       
-      const material = segment.material as THREE.MeshStandardMaterial;
-      material.opacity = Math.max(0, 0.7 - layerProgress * 0.4 - (effectiveProgress > 0.7 ? (effectiveProgress - 0.7) * 3 : 0));
-      material.emissiveIntensity = 0.5 + Math.sin(elapsed * 0.004 + i) * 0.3;
+      // MEMORY FIX: Use visibility instead of modifying shared material opacity
+      const opacity = Math.max(0, 0.7 - layerProgress * 0.4 - (effectiveProgress > 0.7 ? (effectiveProgress - 0.7) * 3 : 0));
+      segment.visible = opacity > 0.05;
       
-      const scale = 1 + Math.sin(elapsed * 0.003 + i * 0.5) * 0.2;
-      segment.scale.set(scale, scale, scale);
-    });
+      const scaleVal = 1 + Math.sin(elapsed * 0.003 + i * 0.5) * 0.2;
+      segment.scale.set(scaleVal, scaleVal, scaleVal);
+    }
 
-    if (progress === 1 && onComplete) {
+    if (progress === 1 && onComplete && !hasCompletedRef.current) {
+      hasCompletedRef.current = true;
       onComplete();
     }
   });
 
+  // MEMORY FIX: Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      segmentsRef.current = [];
+      hasCompletedRef.current = true;
+    };
+  }, []);
+
   return (
-    <group ref={groupRef} >
-      {Array.from({ length: layerCount * segmentsPerLayer }).map((_, i) => (
+    <group ref={groupRef}>
+      {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
         <mesh
           key={i}
           ref={(el) => {
             if (el) segmentsRef.current[i] = el;
           }}
-        >
-          {createVortexSegment(weaponType, weaponSubclass)}
-        </mesh>
+          geometry={SHARED_DEATH_GEOMETRY}
+          material={material}
+        />
       ))}
     </group>
   );

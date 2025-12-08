@@ -119,6 +119,11 @@ export default function DeathKnightUnit({
   const tempVector3 = useRef(new Vector3());
   const tempVector4 = useRef(new Vector3());
   
+  // MEMORY FIX: Reusable objects for frustum culling to prevent GC pressure
+  const reusableFrustum = useRef(new Frustum());
+  const reusableMatrix = useRef(new Matrix4());
+  const reusableSphere = useRef(new Sphere());
+  
   // Track timeouts for cleanup
   const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
 
@@ -163,8 +168,8 @@ export default function DeathKnightUnit({
   const BASE_MOVEMENT_SPEED = 2.5; // Consistent base speed like other enemies
   const POSITION_UPDATE_THRESHOLD = 0.3;
   const MINIMUM_UPDATE_INTERVAL = 30;
-  const ATTACK_DAMAGE = 24; // Basic attack damage (higher than skeleton)
-  const FROST_STRIKE_DAMAGE = 32; // Frost Strike damage
+  const ATTACK_DAMAGE = 28; // Basic attack damage (higher than skeleton)
+  const FROST_STRIKE_DAMAGE = 36; // Frost Strike damage
   const SEPARATION_RADIUS = 2.5; // Separation distance
   const SEPARATION_FORCE = 0.75; // Reduced for smoother movement
   const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement
@@ -317,16 +322,18 @@ export default function DeathKnightUnit({
       return;
     }
 
-    // Enhanced frustum culling - check if DeathKnight is in camera view
-    const frustum = new Frustum();
-    frustum.setFromProjectionMatrix(new Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+    // MEMORY FIX: Enhanced frustum culling - reuse objects instead of creating new each frame
+    reusableMatrix.current.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    reusableFrustum.current.setFromProjectionMatrix(reusableMatrix.current);
 
-    const sphere = new Sphere(
-      new Vector3(currentPosition.current.x, currentPosition.current.y + 1.5, currentPosition.current.z),
-      3 // Bounding sphere radius for DeathKnight
+    reusableSphere.current.center.set(
+      currentPosition.current.x,
+      currentPosition.current.y + 1.5,
+      currentPosition.current.z
     );
+    reusableSphere.current.radius = 3; // Bounding sphere radius for DeathKnight
 
-    const isInFrustum = frustum.intersectsSphere(sphere);
+    const isInFrustum = reusableFrustum.current.intersectsSphere(reusableSphere.current);
 
     // More aggressive culling: only update visibility state when it actually changes
     if (isInFrustum !== isVisible) {

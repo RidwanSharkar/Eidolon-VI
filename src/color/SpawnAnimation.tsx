@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, Vector3 } from 'three';
 import * as THREE from 'three';
@@ -10,33 +10,34 @@ interface BoneVortexProps {
   scale?: number;
 }
 
-const createVortexSegment = () => (
-  <group>
-    <mesh>
-      <cylinderGeometry args={[0.03, 0.025, 0.3, 8]} />
-      <meshStandardMaterial 
-        color="#F33FAE" // FF6AAA 91FF5E FF3B6C FF4271
-        transparent
-        opacity={0.55}
-        emissive="#FF0000"
-        emissiveIntensity={0.75}
-      />
-    </mesh>
-  </group>
-);
+// MEMORY FIX: Shared geometry and material - created once, reused by all instances
+const SHARED_VORTEX_GEOMETRY = new THREE.CylinderGeometry(0.03, 0.025, 0.3, 6); // Reduced segments from 8 to 6
+const SHARED_VORTEX_MATERIAL = new THREE.MeshStandardMaterial({
+  color: "#F33FAE",
+  transparent: true,
+  opacity: 0.55,
+  emissive: "#FF0000",
+  emissiveIntensity: 0.75
+});
+
+// MEMORY FIX:
+const LAYER_COUNT = 12; 
+const SEGMENTS_PER_LAYER = 8; 
+const TOTAL_SEGMENTS = LAYER_COUNT * SEGMENTS_PER_LAYER; 
 
 export default function BoneVortex2({ position, onComplete, isSpawning = false, scale = 1 }: BoneVortexProps) {
     const segmentsRef = useRef<Mesh[]>([]);
-    const layerCount = 12;
-    const segmentsPerLayer = 10;
+    const layerCount = LAYER_COUNT;
+    const segmentsPerLayer = SEGMENTS_PER_LAYER;
     const maxRadius = 1.15 * scale;
     const height = 2.75 * scale;
     const groupRef = useRef<Group>(null);
     const startTime = useRef(Date.now());
     const animationDuration = 1500;
+    const hasCompletedRef = useRef(false);
     
     useFrame(() => {
-      if (!groupRef.current) return;
+      if (!groupRef.current || hasCompletedRef.current) return;
       
       const elapsed = Date.now() - startTime.current;
       const progress = Math.min(elapsed / animationDuration, 1);
@@ -45,7 +46,12 @@ export default function BoneVortex2({ position, onComplete, isSpawning = false, 
       
       groupRef.current.position.copy(position);
       
-      segmentsRef.current.forEach((segment, i) => {
+      // MEMORY FIX: Only iterate over valid segments
+      const segmentCount = Math.min(segmentsRef.current.length, TOTAL_SEGMENTS);
+      for (let i = 0; i < segmentCount; i++) {
+        const segment = segmentsRef.current[i];
+        if (!segment) continue;
+        
         const layer = Math.floor(i / segmentsPerLayer);
         const layerProgress = layer / (layerCount - 1);
         
@@ -69,31 +75,40 @@ export default function BoneVortex2({ position, onComplete, isSpawning = false, 
         segment.rotation.z = Math.PI / 2 + layerProgress * 0.8;
         segment.rotation.x = Math.sin(elapsed * 0.004 + i) * 0.2;
         
-        const material = segment.material as THREE.MeshStandardMaterial;
-        material.opacity = Math.max(0, 0.7 - layerProgress * 0.4 - (effectiveProgress > 0.7 ? (effectiveProgress - 0.7) * 3 : 0));
-        material.emissiveIntensity = 0.5 + Math.sin(elapsed * 0.004 + i) * 0.3;
+        // MEMORY FIX: Use shared material opacity via mesh visibility instead of modifying material
+        const opacity = Math.max(0, 0.7 - layerProgress * 0.4 - (effectiveProgress > 0.7 ? (effectiveProgress - 0.7) * 3 : 0));
+        segment.visible = opacity > 0.05;
         
-        const scale = 1 + Math.sin(elapsed * 0.003 + i * 0.5) * 0.2;
-        segment.scale.set(scale, scale, scale);
-      });
+        const scaleVal = 1 + Math.sin(elapsed * 0.003 + i * 0.5) * 0.2;
+        segment.scale.set(scaleVal, scaleVal, scaleVal);
+      }
   
-      if (progress === 1 && onComplete) {
+      if (progress === 1 && onComplete && !hasCompletedRef.current) {
+        hasCompletedRef.current = true;
         onComplete();
       }
     });
   
 
+  // MEMORY FIX: Cleanup on unmount - clear refs to allow GC
+  useEffect(() => {
+    return () => {
+      segmentsRef.current = [];
+      hasCompletedRef.current = true;
+    };
+  }, []);
+
   return (
     <group ref={groupRef}>
-      {Array.from({ length: layerCount * segmentsPerLayer }).map((_, i) => (
+      {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
         <mesh
           key={i}
           ref={(el) => {
             if (el) segmentsRef.current[i] = el;
           }}
-        >
-          {createVortexSegment()}
-        </mesh>
+          geometry={SHARED_VORTEX_GEOMETRY}
+          material={SHARED_VORTEX_MATERIAL}
+        />
       ))}
     </group>
   );

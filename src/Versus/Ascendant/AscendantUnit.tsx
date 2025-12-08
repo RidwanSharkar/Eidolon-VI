@@ -152,7 +152,7 @@ export default function AscendantUnit({
   const BASE_MOVEMENT_SPEED = 2.4; // Consistent base speed like other enemies
   const POSITION_UPDATE_THRESHOLD = 0.25;
   const MINIMUM_UPDATE_INTERVAL = 25;
-  const ATTACK_DAMAGE = 28; // Lightning damage
+  const ATTACK_DAMAGE = 46; // Lightning damage
   const SEPARATION_RADIUS = 2.0;
   const SEPARATION_FORCE = 0.12; // Reduced for smoother movement
   const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement

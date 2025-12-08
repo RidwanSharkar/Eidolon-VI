@@ -70,6 +70,9 @@ export default function ReaperUnit({
 
   // Keep track of current health in a ref as well
   const currentHealth = useRef<number>(health);
+  
+  // MEMORY FIX: Track timeouts for cleanup to prevent memory leaks
+  const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
 
   // State
   const [isAttacking, setIsAttacking] = useState(false);
@@ -105,7 +108,7 @@ export default function ReaperUnit({
   const RE_EMERGE_COOLDOWN = 8000; // 8 second cooldown for Re-emerge
   const POST_EMERGE_AGGRESSIVE_DURATION = 3000; // 3 seconds of aggressive behavior after re-emerging
   const BASE_MOVEMENT_SPEED = 1.35; // Consistent base speed like other enemies
-  const ATTACK_DAMAGE = 24;
+  const ATTACK_DAMAGE = 29;
   const REAPER_HIT_HEIGHT = 1.5;       
   const REAPER_HIT_RADIUS = 3.0;
   const REAPER_HIT_HEIGHT_RANGE = 3.0;
@@ -204,6 +207,22 @@ export default function ReaperUnit({
       globalAggroSystem.removeEnemy(id);
     }
   }, [health, id, isDead]);
+
+  // MEMORY FIX: Cleanup all active timeouts on unmount to prevent memory leaks
+  useEffect(() => {
+    const currentTimeouts = activeTimeouts.current;
+    
+    return () => {
+      currentTimeouts.forEach(timeout => clearTimeout(timeout));
+      currentTimeouts.clear();
+      // Reset state on unmount
+      setIsReEmerging(false);
+      setReEmergePhase('idle');
+      setSubmergeEffects([]);
+      setMistEffects([]);
+      isReEmergeBlocked.current = false;
+    };
+  }, []);
 
   // Helper for your hitbox logic (updated to use current position)
   const isWithinHitBox = useCallback(

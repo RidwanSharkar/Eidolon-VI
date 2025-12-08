@@ -866,7 +866,7 @@
 .killCountOverlay {
   position: absolute;
   top: -5px;
-  right: -5px;
+  left: -5px;
   background: linear-gradient(135deg, #ff6b6b, #ff4757);
   color: white;
   border-radius: 50%;

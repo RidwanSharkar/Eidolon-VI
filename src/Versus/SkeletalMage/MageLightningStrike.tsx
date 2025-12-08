@@ -26,7 +26,7 @@ const MageLightningStrike: React.FC<MageLightningStrikeProps> = ({
   
   // Create more concentrated branching geometry for lightning bolt
   const mainBoltSegments = 128; // Increased for more detail
-  const branchCount = 24; // Doubled for more branches
+  const branchCount = 48; // Doubled for more branches (matching BowLightningStrike)
   
   const branches = useMemo(() => {
     const distance = position.clone().sub(skyPosition).length();
@@ -181,17 +181,22 @@ const MageLightningStrike: React.FC<MageLightningStrikeProps> = ({
     // Update pooled materials
     const { boltMaterials, impactMaterial, ringMaterials } = pooledResources;
     
-    // Update bolt materials
+    // Update bolt materials (matching BowLightningStrike)
     boltMaterials.forEach((material, index) => {
       const isCoreStrike = index < (branches[0]?.points.length || 0); // First branch is core
       material.opacity = isCoreStrike ? fadeOut : fadeOut * 0.8;
-      material.emissiveIntensity = isCoreStrike ? 3.0 * fadeOut : 2.0 * fadeOut;
+      material.emissiveIntensity = isCoreStrike ? 15 * fadeOut : 8 * fadeOut;
+      // Update colors to match BowLightningStrike
+      material.color.setHex(isCoreStrike ? 0xFFFFFF : 0x80D9FF);
+      material.emissive.setHex(0x80D9FF);
     });
     
-    // Update impact material
+    // Update impact material (matching BowLightningStrike)
     if (impactMaterial) {
       impactMaterial.opacity = fadeOut * 0.9;
-      impactMaterial.emissiveIntensity = 3.0 * fadeOut;
+      impactMaterial.emissiveIntensity = 6 * fadeOut;
+      impactMaterial.color.setHex(0xFFFFFF);
+      impactMaterial.emissive.setHex(0xB6EAFF);
     }
     
     // Update ring materials
@@ -230,10 +235,10 @@ const MageLightningStrike: React.FC<MageLightningStrikeProps> = ({
         <mesh
           geometry={pooledResources.impactGeometry}
           material={pooledResources.impactMaterial}
-          scale={[0.8, 0.8, 0.8]} // Scale to match original impact size
+          scale={[0.25, 0.25, 0.25]} // Scale to match BowLightningStrike
         />
         
-        {/* Impact rings */}
+        {/* Impact rings (matching BowLightningStrike) */}
         {[1, 1.4, 1.8].map((size, i) => (
           <mesh 
             key={i} 
@@ -244,10 +249,10 @@ const MageLightningStrike: React.FC<MageLightningStrikeProps> = ({
           />
         ))}
         
-        {/* Enhanced lighting */}
+        {/* Enhanced lighting (matching BowLightningStrike) */}
         <pointLight
           color="#80D9FF"
-          intensity={25 * (1 - (Date.now() - startTimeRef.current) / (duration * 1000)) * flickerRef.current}
+          intensity={10 * (1 - (Date.now() - startTimeRef.current) / (duration * 1000)) * flickerRef.current}
           distance={8}
           decay={2}
         />

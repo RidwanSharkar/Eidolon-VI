@@ -1,172 +1,118 @@
-import React, { useRef, useEffect, useMemo } from 'react';
-import * as THREE from 'three';
-
-interface MountainData {
-  position: THREE.Vector3;
-  scale: number;
-}
+import React, { useMemo, useRef, useEffect } from 'react';
+import { MeshStandardMaterial, InstancedMesh, Matrix4 } from 'three';
+import { MountainData, createPeakGeometry, createMountainBaseVariants } from './MountainGenerator';
 
 interface InstancedMountainsProps {
   mountains: MountainData[];
 }
 
+/**
+ * High-performance mountain renderer with jagged, natural-looking bases
+ * Creates a natural mountain border around the game world with unique rock formations
+ */
 const InstancedMountains: React.FC<InstancedMountainsProps> = ({ mountains }) => {
-  const baseRef = useRef<THREE.InstancedMesh>(null);
-  const secondaryRef = useRef<THREE.InstancedMesh>(null);
+  const baseRefs = useRef<(InstancedMesh | null)[]>([]);
 
   // Create varied peak geometries for natural snowtop variation
   const peakGeometries = useMemo(() => {
-    return mountains.map((_, index) => {
-      // Use index as seed for consistent variation per mountain
-      const seed = index * 0.618033988749; // Golden ratio for good distribution
-      
-      // Create more detailed cone geometry with higher resolution
-      const geometry = new THREE.ConeGeometry(5, 8, 16, 8); // More segments for detail
-      const positions = geometry.attributes.position.array as Float32Array;
-      
-      // Add natural variation to the peak shape with multiple noise layers
-      for (let i = 0; i < positions.length; i += 3) {
-        const x = positions[i];
-        const y = positions[i + 1];
-        const z = positions[i + 2];
-        
-        // Only modify vertices that are not at the very top or bottom
-        if (y > -3.5 && y < 3.5) {
-          // Create multiple layers of noise for more realistic terrain
-          const noiseX1 = Math.sin(x * 0.5 + seed) * Math.cos(z * 0.3 + seed * 2);
-          const noiseZ1 = Math.cos(x * 0.3 + seed * 3) * Math.sin(z * 0.5 + seed * 4);
-          
-          // Add finer detail noise
-          const noiseX2 = Math.sin(x * 1.2 + seed * 5) * Math.cos(z * 0.8 + seed * 6) * 0.3;
-          const noiseZ2 = Math.cos(x * 0.9 + seed * 7) * Math.sin(z * 1.1 + seed * 8) * 0.3;
-          
-          // Apply variation that's stronger at the snow line (middle of the peak)
-          const heightFactor = 1 - Math.abs(y) / 2; // Stronger variation in middle
-          const variation = 0.4 + Math.sin(seed * 10) * 0.3; // More dramatic variation
-          
-          positions[i] += (noiseX1 + noiseX2) * variation * heightFactor;
-          positions[i + 2] += (noiseZ1 + noiseZ2) * variation * heightFactor;
-          
-          // Add subtle height variation for more natural ridges
-          positions[i + 1] += Math.sin(x * 0.2 + z * 0.2 + seed) * 0.2 * heightFactor;
-        }
-      }
-      
-      geometry.attributes.position.needsUpdate = true;
-      geometry.computeVertexNormals(); // Recompute normals for proper lighting
-      
-      return geometry;
-    });
+    return mountains.map((_, index) => createPeakGeometry(index));
   }, [mountains]);
 
+  // Create 4 pre-generated jagged base geometry variants
+  const baseGeometryVariants = useMemo(() => {
+    return createMountainBaseVariants();
+  }, []);
+
+  // Memoize materials for better performance
+  const baseMaterial = useMemo(() => new MeshStandardMaterial({
+    color: "#8B7355", // Brown-gray mountain color
+    roughness: 0.9, // Higher roughness for more natural rock texture
+    metalness: 0.05, // Lower metalness for natural stone
+    bumpScale: 0.1, // Subtle bump mapping for surface detail
+  }), []);
+
+  const peakMaterial = useMemo(() => new MeshStandardMaterial({
+    color: "#f0f0f0", // Light gray-white for snow peaks
+    roughness: 0.3,
+    metalness: 0.0,
+  }), []);
+
+  // Set up instanced matrices for each geometry variant
   useEffect(() => {
-    if (!baseRef.current || !secondaryRef.current) return;
-
-    const matrix = new THREE.Matrix4();
-
-    // Handle base mountains
-    mountains.forEach((mountain, i) => {
-      matrix.makeTranslation(
-        mountain.position.x,
-        mountain.position.y,
-        mountain.position.z
-      );
-      const scaleMatrix = new THREE.Matrix4().makeScale(
-        mountain.scale,
-        mountain.scale,
-        mountain.scale
-      );
-      matrix.multiply(scaleMatrix);
-      baseRef.current?.setMatrixAt(i, matrix);
+    const matrix = new Matrix4();
+    
+    // Group mountains by geometry variant
+    const mountainsByVariant: { mountain: MountainData; originalIndex: number }[][] = baseGeometryVariants.map(() => []);
+    
+    mountains.forEach((mountain, index) => {
+      const variantIndex = index % baseGeometryVariants.length;
+      mountainsByVariant[variantIndex].push({ mountain, originalIndex: index });
     });
-
-    // Handle secondary mountains
-    mountains.forEach((mountain, i) => {
-      const rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(
-        new THREE.Euler(0, 0.5, 0.1)
-      );
+    
+    // Set matrices for each variant
+    mountainsByVariant.forEach((variantMountains, variantIndex) => {
+      const ref = baseRefs.current[variantIndex];
+      if (!ref) return;
       
-      // Calculate offset based on mountain scale
-      const offsetX = -4 * mountain.scale;
-      const offsetY = -5 * mountain.scale;
-      const offsetZ = -2 * mountain.scale;
+      variantMountains.forEach(({ mountain }, instanceIndex) => {
+        matrix.makeTranslation(
+          mountain.position.x,
+          mountain.position.y,
+          mountain.position.z
+        );
+        const scaleMatrix = new Matrix4().makeScale(
+          mountain.scale,
+          mountain.scale,
+          mountain.scale
+        );
+        matrix.multiply(scaleMatrix);
+        ref.setMatrixAt(instanceIndex, matrix);
+      });
       
-      matrix.makeTranslation(
-        mountain.position.x + offsetX,
-        mountain.position.y + offsetY,
-        mountain.position.z + offsetZ
-      );
-      
-      const scaleMatrix = new THREE.Matrix4().makeScale(
-        mountain.scale,
-        mountain.scale,
-        mountain.scale
-      );
-      
-      matrix.multiply(rotationMatrix).multiply(scaleMatrix);
-      secondaryRef.current?.setMatrixAt(i, matrix);
+      ref.instanceMatrix.needsUpdate = true;
     });
-
-    // Update matrices
-    baseRef.current.instanceMatrix.needsUpdate = true;
-    secondaryRef.current.instanceMatrix.needsUpdate = true;
-  }, [mountains]);
+  }, [mountains, baseGeometryVariants]);
 
   return (
     <group>
-      <instancedMesh
-        args={[undefined, undefined, mountains.length]}
-        ref={baseRef}
-        castShadow
-        receiveShadow
-      >
-        <coneGeometry args={[23, 35, 24, 6]} />
-        <meshStandardMaterial
-          color="#8B7355" // Brown-gray mountain color
-          roughness={0.8}
-          metalness={0.1}
-        />
-      </instancedMesh>
+      {/* Instanced mountain bases with geometry variants */}
+      {baseGeometryVariants.map((geometry, variantIndex) => {
+        const mountainsForThisVariant = mountains.filter((_, index) => index % baseGeometryVariants.length === variantIndex);
+        
+        return (
+          <instancedMesh
+            key={`base-variant-${variantIndex}`}
+            args={[geometry, baseMaterial, mountainsForThisVariant.length]}
+            ref={(ref) => {
+              baseRefs.current[variantIndex] = ref;
+            }}
+            castShadow
+            receiveShadow
+          />
+        );
+      })}
 
-      <instancedMesh
-        args={[undefined, undefined, mountains.length]}
-        ref={secondaryRef}
-        castShadow
-      >
-        <coneGeometry args={[24, 28, 20, 5]} />
-        <meshStandardMaterial
-          color="#6B5B47" // Darker brown for background mountains
-          roughness={0.9}
-          metalness={0.05}
-        />
-      </instancedMesh>
-
-      {/* Render individual peak meshes with varied geometries */}
+      {/* Individual peak meshes with varied geometries */}
       {mountains.map((mountain, index) => (
         <mesh
           key={`peak-${index}`}
           geometry={peakGeometries[index]}
+          material={peakMaterial}
           position={[
             mountain.position.x,
             mountain.position.y + (14 * mountain.scale),
             mountain.position.z
           ]}
           scale={[
-            mountain.scale * 0.9,
-            mountain.scale,
+            mountain.scale * 0.915,
+            mountain.scale ,
             mountain.scale * 0.9
           ]}
           castShadow
-        >
-          <meshStandardMaterial
-            color="#f0f0f0" // Light gray-white for snow peaks
-            roughness={0.3}
-            metalness={0.0}
-          />
-        </mesh>
+        />
       ))}
     </group>
   );
 };
 
-export default InstancedMountains; 
+export default InstancedMountains;

@@ -103,7 +103,7 @@ export default function EnemyUnit({
   const BASE_MOVEMENT_SPEED = 2.55; // Consistent base speed like player
   const POSITION_UPDATE_THRESHOLD = 0.2;
   const MINIMUM_UPDATE_INTERVAL = 20;
-  const ATTACK_DAMAGE = 10;
+  const ATTACK_DAMAGE = 12;
   const SEPARATION_RADIUS = 2.5;
   const SEPARATION_FORCE = 2.75; // Reduced for smoother movement
   const MOVEMENT_SMOOTHING = 0.85; // Smoothing factor for movement

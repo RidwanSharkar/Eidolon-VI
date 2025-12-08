@@ -42,12 +42,24 @@ export class AggroSystem {
   private readonly MAX_AGGRO_DISTANCE = 25; // Max distance to maintain aggro
   private readonly AGGRO_SWITCH_THRESHOLD = 5; // Minimum aggro difference to switch targets (reduced for better responsiveness)
   private readonly MEMORY_DURATION = 10000; // 10 seconds to remember players
+  
+  // MEMORY FIX: Hard limits to prevent memory leaks
+  private readonly MAX_ENEMIES_IN_TABLE = 20; // Maximum enemies tracked in aggro table
+  private readonly MAX_TARGETS_PER_ENEMY = 10; // Maximum targets tracked per enemy
 
   /**
    * Initialize aggro for an enemy
    */
   initializeEnemy(enemyId: string): void {
     if (!this.aggroTable.has(enemyId)) {
+      // MEMORY FIX: Enforce hard limit on total enemies in table
+      if (this.aggroTable.size >= this.MAX_ENEMIES_IN_TABLE) {
+        // Remove oldest entry (first in the Map)
+        const firstKey = this.aggroTable.keys().next().value;
+        if (firstKey) {
+          this.aggroTable.delete(firstKey);
+        }
+      }
       this.aggroTable.set(enemyId, []);
     }
   }
@@ -67,6 +79,20 @@ export class AggroSystem {
       existingEntry.lastDamageTime = now;
       existingEntry.lastSeenTime = now;
     } else {
+      // MEMORY FIX: Enforce hard limit on targets per enemy
+      if (aggroList.length >= this.MAX_TARGETS_PER_ENEMY) {
+        // Remove the entry with lowest aggro value
+        let lowestIndex = 0;
+        let lowestAggro = aggroList[0]?.aggroValue ?? Infinity;
+        for (let i = 1; i < aggroList.length; i++) {
+          if (aggroList[i].aggroValue < lowestAggro) {
+            lowestAggro = aggroList[i].aggroValue;
+            lowestIndex = i;
+          }
+        }
+        aggroList.splice(lowestIndex, 1);
+      }
+      
       aggroList.push({
         targetId,
         aggroValue: damage * this.DAMAGE_AGGRO_MULTIPLIER + this.INITIAL_AGGRO,
