@@ -56,6 +56,7 @@ interface SoulReaperState {
   markStartTime: number | null;
   swordDropping: boolean;
   swordVisible: boolean; // Track if sword should be visible
+  shouldCreateSkeleton: boolean; // Flag to trigger skeleton creation synchronously
   skeletonSummons: Array<{
     id: string;
     position: Vector3;
@@ -101,6 +102,7 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
     markStartTime: null,
     swordDropping: false,
     swordVisible: false,
+    shouldCreateSkeleton: false,
     skeletonSummons: [],
     chainTargets: []
   });
@@ -526,7 +528,8 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
         // Only summon skeleton if none exists on the map
         setState(prev => {
           let newSummons = prev.skeletonSummons;
-          
+          let shouldCreate = false;
+
           // Only create new skeleton if we don't have one already
           if (prev.skeletonSummons.length === 0) {
             newSummons = [{
@@ -535,21 +538,13 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
               health: constants.SKELETON_HEALTH,
               maxHealth: constants.SKELETON_HEALTH
             }];
-            
-            // Notify about skeleton count change
-            currentOnSkeletonCountChange?.(newSummons.length);
-            
-            // Report skeleton updates to parent
-            currentOnSkeletonUpdate?.(newSummons);
-            
-
-          } else {
-
+            shouldCreate = true;
           }
 
           const newState = {
             ...prev,
             skeletonSummons: newSummons,
+            shouldCreateSkeleton: shouldCreate,
             isMarked: false,
             targetId: null,
             targetPosition: null,
@@ -557,7 +552,7 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
             swordVisible: false,
             swordDropping: false // Reset sword dropping state
           };
-          
+
           return newState;
         });
       } else {
@@ -614,6 +609,23 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
       chainTargets: prev.chainTargets.filter(ct => ct.id !== chainTargetId)
     }));
   }, []);
+
+  // Handle skeleton creation synchronously to avoid setState during render
+  useEffect(() => {
+    if (state.shouldCreateSkeleton && state.skeletonSummons.length > 0) {
+      // Notify about skeleton count change
+      onSkeletonCountChange?.(state.skeletonSummons.length);
+
+      // Report skeleton updates to parent
+      onSkeletonUpdate?.(state.skeletonSummons);
+
+      // Reset the flag
+      setState(prev => ({
+        ...prev,
+        shouldCreateSkeleton: false
+      }));
+    }
+  }, [state.shouldCreateSkeleton, state.skeletonSummons, onSkeletonCountChange, onSkeletonUpdate]);
 
   // Handle skeleton death
   const handleSkeletonDeath = useCallback((skeletonId: string) => {

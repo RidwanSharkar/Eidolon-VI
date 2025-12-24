@@ -1,5 +1,5 @@
 // src/Spells/SoulReaper/AbyssalSkeletonSword.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Shape } from 'three';
 import * as THREE from 'three';
 
@@ -10,53 +10,53 @@ const COLORS = {
 } as const;
 
 export default function AbyssalSkeletonSword() {
-  // Create custom sword blade shape - larger version
-  const createBladeShape = () => {
+  // Create custom sword blade shape - larger version (memoized to prevent memory leaks)
+  const bladeShape = useMemo(() => {
     const shape = new Shape();
-    
+
     // Start at center
     shape.moveTo(0, 0);
-    
+
     // Left side guard
-    shape.lineTo(-0.4, 0.4);  
-    shape.lineTo(-0.24, -0.24); 
+    shape.lineTo(-0.4, 0.4);
+    shape.lineTo(-0.24, -0.24);
     shape.lineTo(0, 0);
-    
+
     // Right side guard
     shape.lineTo(0.4, 0.4);
     shape.lineTo(0.24, -0.24);
     shape.lineTo(0, 0);
-    
+
     // Blade shape - scaled up
     shape.lineTo(0, 0.12);
     shape.lineTo(0.32, 0.32);
     shape.quadraticCurveTo(1.28, 0.24, 2.4, 0.29);
     shape.quadraticCurveTo(3.2, 0.16, 3.52, 0);
-    
+
     shape.quadraticCurveTo(3.2, -0.16, 2.4, -0.29);
     shape.quadraticCurveTo(1.28, -0.24, 0.32, -0.32);
     shape.lineTo(0, -0.12);
     shape.lineTo(0, 0);
-    
-    return shape;
-  };
 
-  // Inner blade shape - larger version
-  const createInnerBladeShape = () => {
+    return shape;
+  }, []);
+
+  // Inner blade shape - larger version (memoized to prevent memory leaks)
+  const innerBladeShape = useMemo(() => {
     const shape = new Shape();
     shape.moveTo(0, 0);
-    
-    shape.lineTo(0, 0.096);   
-    shape.lineTo(0.24, 0.24); 
-    shape.quadraticCurveTo(1.92, 0.19, 2.4, 0.24); 
-    shape.quadraticCurveTo(3.2, 0.13, 3.44, 0);    
-    shape.quadraticCurveTo(3.2, -0.13, 2.4, -0.24); 
+
+    shape.lineTo(0, 0.096);
+    shape.lineTo(0.24, 0.24);
+    shape.quadraticCurveTo(1.92, 0.19, 2.4, 0.24);
+    shape.quadraticCurveTo(3.2, 0.13, 3.44, 0);
+    shape.quadraticCurveTo(3.2, -0.13, 2.4, -0.24);
     shape.quadraticCurveTo(1.92, -0.19, 0.24, -0.24);
-    shape.lineTo(0, -0.08);  
+    shape.lineTo(0, -0.08);
     shape.lineTo(0, 0);
-    
+
     return shape;
-  };
+  }, []);
 
   const bladeExtrudeSettings = {
     steps: 2,
@@ -191,7 +191,7 @@ export default function AbyssalSkeletonSword() {
         <group position={[0, 0.8, 0.56]} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
           {/* Base blade */}
           <mesh>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+            <extrudeGeometry args={[bladeShape, bladeExtrudeSettings]} />
             <meshStandardMaterial 
               color={COLORS.darkGreen}
               emissive={COLORS.malachiteGreen}
@@ -203,7 +203,7 @@ export default function AbyssalSkeletonSword() {
           
           {/* BLADE Glowing core - bright Scythe malachite */}
           <mesh>
-            <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
+            <extrudeGeometry args={[innerBladeShape, innerBladeExtrudeSettings]} />
             <meshStandardMaterial 
               color={COLORS.malachiteGreen}
               emissive={COLORS.malachiteGreen}

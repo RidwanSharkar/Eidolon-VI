@@ -12,6 +12,10 @@ import { UNIT_GEOMETRIES } from './UnitGeometries';
 // Pre-allocated colors for performance - avoids new THREE.Color() on every render
 const ICICLE_TRAIL_COLOR = new THREE.Color("#CCFFFF");
 
+// Unique ID generator to prevent key collisions
+let uniqueIdCounter = 0;
+const generateUniqueId = (prefix: string = '') => `${prefix}${Date.now()}-${uniqueIdCounter++}`;
+
 // Pre-allocated fallback quaternion and zero position for bow direction calculation
 const DEFAULT_QUATERNION = new THREE.Quaternion();
 const ZERO_POSITION = new Vector3(0, 0, 0);
@@ -953,6 +957,7 @@ export default function Unit({
       setIsSwinging(false);
       setIsColossusStriking(false);
       setIsStealthed(false);
+      setSoulReaperSkeletons(0); // Clear soul reaper skeletons on game reset
       setActiveVault({ isActive: false, direction: null });
       setAbyssalSlashEffects([]);
       setPlayerStunEffects([]);
@@ -1831,7 +1836,7 @@ export default function Unit({
             .normalize();
           
           setAbyssalSlashEffects(prev => [...prev, {
-            id: `abyssal-slash-${Date.now()}`,
+            id: generateUniqueId('abyssal-slash-'),
             position: target.position.clone(),
             direction,
             damage: empoweredDamage
