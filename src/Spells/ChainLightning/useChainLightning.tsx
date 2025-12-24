@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
 import { Enemy } from '@/Versus/enemy';
 import { SynchronizedEffect } from '@/Multiplayer/MultiplayerContext';
@@ -33,10 +33,19 @@ export const useChainLightning = ({
 }: ChainLightningProps) => {
   const CHAIN_CHANCE = 0.375;
   const INITIAL_DAMAGE = 23;
-  const MAX_JUMPS = 3; 
-  
+  const MAX_JUMPS = 3;
+
   const [lightningTargets, setLightningTargets] = useState<Vector3[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const timeoutsRef = useRef<Set<NodeJS.Timeout>>(new Set());
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeoutsRef.current.clear();
+    };
+  }, []);
 
   const processChainLightning = useCallback(() => {
     if (isProcessing) return;
@@ -106,7 +115,7 @@ export const useChainLightning = ({
       targets.push(nextTarget.position);
       hitTargets.add(nextTarget.id);
       
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         onEnemyDamage(nextTarget.id, damage, false, nextTarget.position, true);
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
@@ -114,9 +123,12 @@ export const useChainLightning = ({
           position: nextTarget.position.clone().add(new Vector3(0, 1.5, 0)),
           isCritical: false,
           isChainLightning: true,
-          createdAt: Date.now() // MEMORY FIX: Required for cleanup
+          createdAt: Date.now()
         }]);
+        timeoutsRef.current.delete(timeout);
       }, i * 100);
+
+      timeoutsRef.current.add(timeout);
       
       currentPos = nextTarget.position;
     }
@@ -135,10 +147,13 @@ export const useChainLightning = ({
         });
       }
       
-      setTimeout(() => {
+      const cleanupTimeout = setTimeout(() => {
         setLightningTargets([]);
         setIsProcessing(false);
+        timeoutsRef.current.delete(cleanupTimeout);
       }, 500);
+
+      timeoutsRef.current.add(cleanupTimeout);
     }
   }, [parentRef, enemies, onEnemyDamage, setDamageNumbers, nextDamageNumberId, isProcessing, sendEffect, isInRoom, isPlayer]);
 

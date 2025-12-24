@@ -132,6 +132,15 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
   }, []);
 
   const [lastCastTime, setLastCastTime] = useState(0);
+  const timeoutsRef = useRef<Set<NodeJS.Timeout>>(new Set());
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeoutsRef.current.clear();
+    };
+  }, []);
 
   // Consume 2 orb charges (similar to Oathstrike)
   const consumeCharges = useCallback(() => {
@@ -159,13 +168,16 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
     // Start cooldown recovery for each charge individually
     for (let i = 0; i < 2; i++) {
       if (availableCharges[i].id) {
-        setTimeout(() => {
-          setCharges(prev => prev.map((c, index) => 
+        const timeout = setTimeout(() => {
+          setCharges(prev => prev.map((c, index) =>
             index === availableCharges[i].id - 1
               ? { ...c, available: true, cooldownStartTime: null }
               : c
           ));
+          timeoutsRef.current.delete(timeout);
         }, ORBITAL_COOLDOWN);
+
+        timeoutsRef.current.add(timeout);
       }
     }
 
@@ -266,9 +278,9 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
     // Schedule damage for chain targets
     newChainTargets.forEach(target => {
       // Apply damage after mark duration
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         const chainTarget = enemyData.find(enemy => enemy.id === target.id);
-        
+
         // Check if target is still alive - if not, don't spread and just clean up
         if (!chainTarget || chainTarget.health <= 0 || chainTarget.isDying || chainTarget.deathStartTime) {
 
@@ -277,6 +289,7 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
             ...prev,
             chainTargets: prev.chainTargets.filter(ct => ct.id !== target.id)
           }));
+          timeoutsRef.current.delete(timeout);
           return;
         }
 
@@ -348,19 +361,25 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
             chainTargets: prev.chainTargets.filter(ct => ct.id !== target.id)
           }));
         }
+        timeoutsRef.current.delete(timeout);
       }, constants.MARK_DURATION);
-      
+
+      timeoutsRef.current.add(timeout);
+
       // Start sword dropping animation 0.5 seconds before damage to sync animation
-      setTimeout(() => {
+      const swordTimeout = setTimeout(() => {
         setState(prev => ({
           ...prev,
-          chainTargets: prev.chainTargets.map(ct => 
-            ct.id === target.id 
+          chainTargets: prev.chainTargets.map(ct =>
+            ct.id === target.id
               ? { ...ct, isMarked: false, isDropping: true }
               : ct
           )
         }));
+        timeoutsRef.current.delete(swordTimeout);
       }, constants.MARK_DURATION - 500); // Start sword drop 0.5 seconds before damage
+
+      timeoutsRef.current.add(swordTimeout);
     });
   }, [getDamageForLevel, level, constants.MAX_CHAIN_GENERATIONS, constants.MARK_DURATION, constants.SKELETON_HEALTH, enemyData, findNearbyEnemies, onDamage, onSkeletonCountChange, onSkeletonUpdate, setDamageNumbers, nextDamageNumberId]);
 

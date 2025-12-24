@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo } from 'react';
+import { useCallback, useRef, useMemo, useEffect } from 'react';
 import { Vector3, Group, Matrix4 } from 'three';
 import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
 
@@ -73,10 +73,19 @@ export function useBarrage({
 }: UseBarrageProps) {
   const activeProjectilesRef = useRef<BarrageProjectile[]>([]);
   const nextProjectileId = useRef(0);
-  
+  const timeoutsRef = useRef<Set<NodeJS.Timeout>>(new Set());
+
   // Recoil state
   const isRecoiling = useRef(false);
   const recoilStartTime = useRef<number | null>(null);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeoutsRef.current.clear();
+    };
+  }, []);
   const recoilStartPosition = useRef<Vector3 | null>(null);
   
   const RECOIL_DISTANCE = 4; // Same as vault distance
@@ -98,13 +107,16 @@ export function useBarrage({
     ));
 
     // Start cooldown recovery for the consumed charge
-    setTimeout(() => {
-      setCharges(prev => prev.map((c, index) => 
+    const timeout = setTimeout(() => {
+      setCharges(prev => prev.map((c, index) =>
         index === availableChargeIndex
           ? { ...c, available: true, cooldownStartTime: null }
           : c
       ));
+      timeoutsRef.current.delete(timeout);
     }, ORBITAL_COOLDOWN);
+
+    timeoutsRef.current.add(timeout);
 
     const unitPosition = parentRef.current.position.clone();
     unitPosition.y += 1; // Shoot from chest level

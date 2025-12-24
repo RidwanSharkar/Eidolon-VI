@@ -1,7 +1,22 @@
-import React, { useImperativeHandle, forwardRef, useState, useCallback, useMemo } from 'react';
-import { Group, Vector3 } from 'three';
+import React, { useImperativeHandle, forwardRef, useState, useCallback, useMemo, useEffect } from 'react';
+import { Group, Vector3, TorusGeometry, SphereGeometry, MeshStandardMaterial } from 'three';
 import { useReanimateManager } from '@/Spells/Reanimate/useReanimateManager';
 import { useFrame, RootState } from '@react-three/fiber';
+
+// Shared geometries for healing effect - avoid per-render allocations
+const healingGeometries = {
+  torus0: new TorusGeometry(0.8, 0.05, 16, 32),
+  torus1: new TorusGeometry(0.6, 0.05, 16, 32),
+  torus2: new TorusGeometry(0.4, 0.05, 16, 32),
+  centralGlow: new SphereGeometry(0.5, 32, 32),
+  particle: new SphereGeometry(0.095, 8, 8)
+};
+
+let healingResourceUsers = 0;
+
+const disposeHealingResources = () => {
+  Object.values(healingGeometries).forEach(geo => geo.dispose());
+};
 
 interface ReanimateProps {
   parentRef: React.RefObject<Group>;
@@ -35,6 +50,49 @@ export interface ReanimateRef {
 const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = React.memo(({ position, onComplete }) => {
   const [time, setTime] = useState(0);
   const duration = 1.5;
+
+  // Resource management
+  useEffect(() => {
+    healingResourceUsers += 1;
+    return () => {
+      healingResourceUsers = Math.max(0, healingResourceUsers - 1);
+      if (healingResourceUsers === 0) {
+        disposeHealingResources();
+      }
+    };
+  }, []);
+
+  // Shared materials - memoized to avoid recreation
+  const materials = useMemo(() => ({
+    ring: new MeshStandardMaterial({
+      color: "#60FF38",
+      emissive: "#60FF38",
+      emissiveIntensity: 1.5,
+      transparent: true,
+      opacity: 1
+    }),
+    centralGlow: new MeshStandardMaterial({
+      color: "#60FF38",
+      emissive: "#60FF38",
+      emissiveIntensity: 2,
+      transparent: true,
+      opacity: 0.3
+    }),
+    particle: new MeshStandardMaterial({
+      color: "#60FF38",
+      emissive: "#60FF38",
+      emissiveIntensity: 2.5,
+      transparent: true,
+      opacity: 0.8
+    })
+  }), []);
+
+  // Cleanup materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(materials).forEach(mat => mat.dispose());
+    };
+  }, [materials]);
   
   // Use useCallback for frame updates
   const onFrame = useCallback((_: RootState, delta: number) => {
@@ -54,24 +112,23 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = R
   const opacity = Math.sin(progress * Math.PI);
   const scale = 1 + progress * 2;
 
-  // Pre-calculate shared material properties
-  const ringMaterial = useMemo(() => ({
-    color: "#60FF38",
-    emissive: "#60FF38",
-    emissiveIntensity: 1.5,
-    transparent: true
-  }), []);
-
-  const particleMaterial = useMemo(() => ({
-    color: "#60FF38",
-    emissive: "#60FF38",
-    emissiveIntensity: 2.5,
-    transparent: true
-  }), []);
+  // Update material opacities
+  useFrame(() => {
+    materials.ring.opacity = opacity;
+    materials.centralGlow.opacity = opacity * 0.3;
+    materials.particle.opacity = opacity * 0.8;
+  });
 
   // Pre-generate arrays for iterations
   const rings = useMemo(() => [...Array(3)], []);
   const particles = useMemo(() => [...Array(12)], []);
+
+  // Get the correct torus geometry based on index
+  const getTorusGeometry = (i: number) => {
+    if (i === 0) return healingGeometries.torus0;
+    if (i === 1) return healingGeometries.torus1;
+    return healingGeometries.torus2;
+  };
 
   return (
     <group position={position.toArray()}>
@@ -81,26 +138,17 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = R
           key={`ring-${i}`}
           position={[0, progress * 2 + i * 0.5, 0]}
           rotation={[Math.PI / 2, 0, time * 2]}
-        >
-          <torusGeometry args={[0.8 - i * 0.2, 0.05, 16, 32]} />
-          <meshStandardMaterial
-            {...ringMaterial}
-            opacity={opacity * (1 - i * 0.2)}
-          />
-        </mesh>
+          geometry={getTorusGeometry(i)}
+          material={materials.ring}
+        />
       ))}
 
       {/* Central healing glow */}
-      <mesh scale={[scale, scale, scale]}>
-        <sphereGeometry args={[0.5, 32, 32]} />
-        <meshStandardMaterial
-          color="#60FF38"
-          emissive="#60FF38"
-          emissiveIntensity={2}
-          transparent
-          opacity={opacity * 0.3}
-        />
-      </mesh>
+      <mesh 
+        scale={[scale, scale, scale]}
+        geometry={healingGeometries.centralGlow}
+        material={materials.centralGlow}
+      />
 
       {/* Healing particles */}
       {particles.map((_, i) => {
@@ -116,13 +164,9 @@ const HealingEffect: React.FC<{ position: Vector3; onComplete: () => void }> = R
               yOffset + Math.sin(time * 3 + i) * 0.5,
               Math.sin(angle + time * 2) * radius/1.1
             ]}
-          >
-            <sphereGeometry args={[0.095, 8, 8]} />
-            <meshStandardMaterial
-              {...particleMaterial}
-              opacity={opacity * 0.8}
-            />
-          </mesh>
+            geometry={healingGeometries.particle}
+            material={materials.particle}
+          />
         );
       })}
 

@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3, Shape, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { calculateBoneclawHits } from '@/Spells/Boneclaw/BoneclawDamage';
@@ -47,6 +47,13 @@ const sharedMaterials = {
     transparent: true,
     side: DoubleSide
   })
+};
+
+let boneclawResourceUsers = 0;
+
+const disposeBoneclawResources = () => {
+  Object.values(sharedGeometries).forEach((geometry) => geometry.dispose());
+  Object.values(sharedMaterials).forEach((material) => material.dispose());
 };
 
 export default function Boneclaw({ position, direction, onComplete, parentRef, onHitTarget, enemyData, onSwingComplete, onKillingBlow, level = 1 }: BoneclawProps) {
@@ -198,6 +205,27 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
       ))}
     </group>
   );
+
+  // Resource management
+  useEffect(() => {
+    boneclawResourceUsers += 1;
+    return () => {
+      boneclawResourceUsers = Math.max(0, boneclawResourceUsers - 1);
+      if (boneclawResourceUsers === 0) {
+        disposeBoneclawResources();
+      }
+    };
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Ensure resources are disposed even if component count is wrong
+      if (boneclawResourceUsers <= 1) {
+        disposeBoneclawResources();
+      }
+    };
+  }, []);
 
   useFrame((_, delta) => {
     if (!clawRef.current || !parentRef?.current) return;

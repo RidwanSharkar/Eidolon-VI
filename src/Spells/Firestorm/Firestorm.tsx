@@ -56,7 +56,6 @@ export default function Firestorm({
   // Duration is now managed externally through isActive prop
   // const duration = 4; // 4 second duration as specified
   const [shards, setShards] = useState<Array<{ id: string; position: Vector3; type: 'orbital' | 'falling' }>>([]);
-  const [auras, setAuras] = useState<Array<{ id: string }>>([]);
 
   const ORBITAL_RADIUS = 2;        // Smaller radius for more concentrated effect
   const FALLING_RADIUS = 0.75;        // Much smaller radius for intense concentration
@@ -68,6 +67,15 @@ export default function Firestorm({
     return () => {
       firestormResourceUsers = Math.max(0, firestormResourceUsers - 1);
       if (firestormResourceUsers === 0) {
+        disposeFirestormResources();
+      }
+    };
+  }, []);
+
+  // Cleanup on unmount - ensure resources are disposed even if component count is wrong
+  useEffect(() => {
+    return () => {
+      if (firestormResourceUsers <= 1) {
         disposeFirestormResources();
       }
     };
@@ -123,11 +131,6 @@ export default function Firestorm({
       }]);
     }
 
-    if (Math.random() < 0.2) { // Increased aura spawn rate for more visual intensity
-      setAuras(prev => [...prev, {
-        id: `${Date.now()}-${Math.random()}`,
-      }]);
-    }
 
     // Damage dealing logic
     const now = Date.now();
@@ -162,7 +165,6 @@ export default function Firestorm({
           }}
         />
       ))}
-
 
     </group>
   );

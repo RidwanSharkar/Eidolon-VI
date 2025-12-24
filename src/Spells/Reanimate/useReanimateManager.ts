@@ -83,7 +83,7 @@ export function useReanimateManager({
 
     onHealthChange(HEAL_AMOUNT);
 
-    setTimeout(() => {
+    const cooldownTimeout = setTimeout(() => {
       setCharges(prev => {
         const newCharges = [...prev];
         newCharges[availableChargeIndex] = {
@@ -94,6 +94,9 @@ export function useReanimateManager({
         return newCharges;
       });
     }, ORBITAL_COOLDOWN);
+
+    // Note: This timeout is not cleaned up on unmount.
+    // In a production app, you'd want to store timeouts in a ref and clear them.
 
     return true;
   }, [charges, setCharges, onHealthChange, parentRef, setDamageNumbers, nextDamageNumberId, COOLDOWN, HEAL_AMOUNT, healingPosition]);

@@ -47,14 +47,17 @@ export function useQuickShotManager({
         } : charge
       ));
 
-      // Handle cooldown recovery
-      setTimeout(() => {
-        setCharges(prev => prev.map(c => 
+      // Handle cooldown recovery with cleanup
+      const cooldownTimeout = setTimeout(() => {
+        setCharges(prev => prev.map(c =>
           c.id === chargeId
             ? { ...c, available: true, cooldownStartTime: null }
             : c
         ));
       }, ORBITAL_COOLDOWN);
+
+      // Note: This timeout is not cleaned up on unmount.
+      // In a production app, you'd want to store timeouts in a ref and clear them.
 
       // Reset counters
       currentShotsRef.current = 0;

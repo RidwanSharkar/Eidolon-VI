@@ -1,5 +1,5 @@
 // src/color/DivineStormShard.tsx
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { Mesh, Vector3, TorusGeometry, SphereGeometry, MeshStandardMaterial, Color, AdditiveBlending } from 'three';
 import { useFrame } from '@react-three/fiber';
 
@@ -29,6 +29,8 @@ export const divineStormMaterials = {
   })
 };
 
+let divineStormResourceUsers = 0;
+
 // Add disposal functions
 export function disposeDivineStormResources() {
   divineStormGeometries.torus.dispose();
@@ -37,9 +39,13 @@ export function disposeDivineStormResources() {
   divineStormMaterials.shard.dispose();
 }
 
-// Auto-dispose on game reset
-if (typeof window !== 'undefined') {
+// Track listener registration to avoid multiple registrations
+let gameResetListenerRegistered = false;
+
+// Auto-dispose on game reset - only register once
+if (typeof window !== 'undefined' && !gameResetListenerRegistered) {
   window.addEventListener('gameReset', disposeDivineStormResources);
+  gameResetListenerRegistered = true;
 }
 
 interface DivineStormShardProps {
@@ -62,6 +68,17 @@ export default function DivineStormShard({ initialPosition, onComplete, type, ce
   const orbitRadius = useRef(Math.max(relativePos.length(), 1.5)); // Ensure minimum orbit radius
   const orbitAngle = useRef(Math.atan2(relativePos.z, relativePos.x));
   const startTime = useRef(Date.now());
+
+  // Resource management
+  useEffect(() => {
+    divineStormResourceUsers += 1;
+    return () => {
+      divineStormResourceUsers = Math.max(0, divineStormResourceUsers - 1);
+      if (divineStormResourceUsers === 0) {
+        disposeDivineStormResources();
+      }
+    };
+  }, []);
 
   useFrame((_, delta) => {
     if (!meshRef.current) return;

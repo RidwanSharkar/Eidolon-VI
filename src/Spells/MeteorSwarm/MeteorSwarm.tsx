@@ -37,6 +37,8 @@ export default function MeteorSwarm({
   const [activeMeteors, setActiveMeteors] = useState<ActiveMeteor[]>([]);
 
   useEffect(() => {
+    const timeouts: NodeJS.Timeout[] = [];
+
     // Schedule meteors to start based on their delays
     targets.forEach((target) => {
       const meteorStartTime = startTime + target.delay;
@@ -51,15 +53,21 @@ export default function MeteorSwarm({
         }]);
       } else {
         // Schedule the meteor to start after the delay
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
           setActiveMeteors(prev => [...prev, {
             id: `${target.targetId}-${target.delay}`,
             target,
             startTime: Date.now()
           }]);
         }, timeUntilStart);
+        timeouts.push(timeout);
       }
     });
+
+    // Cleanup timeouts on unmount or when dependencies change
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout));
+    };
   }, [targets, startTime]);
 
   const handleMeteorComplete = (meteorId: string) => {

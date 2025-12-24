@@ -1,5 +1,5 @@
 // src/Spells/Pyroclast/PyrochargeEffect.tsx
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
   AdditiveBlending,
@@ -7,8 +7,24 @@ import {
   Group,
   Material,
   Mesh,
-  MeshStandardMaterial
+  MeshStandardMaterial,
+  DodecahedronGeometry,
+  RingGeometry,
+  CylinderGeometry
 } from 'three';
+
+// Shared geometries for pyrocharge effect - avoid per-render allocations
+const pyrochargeGeometries = {
+  particle: new DodecahedronGeometry(0.2, 0),
+  groundRing: new RingGeometry(0, 0, 32), // Will be scaled dynamically
+  centerPillar: new CylinderGeometry(0.2, 0.5, 0, 8) // Will be scaled dynamically
+};
+
+let pyrochargeResourceUsers = 0;
+
+const disposePyrochargeResources = () => {
+  Object.values(pyrochargeGeometries).forEach(geo => geo.dispose());
+};
 
 interface PyrochargeEffectProps {
   parentRef: React.RefObject<Group>;
@@ -16,16 +32,81 @@ interface PyrochargeEffectProps {
   chargeProgress: number;
 }
 
-export default function PyrochargeEffect({ 
-  parentRef, 
-  isActive, 
-  chargeProgress 
+export default function PyrochargeEffect({
+  parentRef,
+  isActive,
+  chargeProgress
 }: PyrochargeEffectProps) {
   const flameParticlesRef = useRef<Group>(null);
   const lastUpdateTime = useRef(0);
   // Add state to track if we should show the effect (with a short delay)
   const [shouldShowEffect, setShouldShowEffect] = useState(false);
-  
+
+  // Resource management
+  useEffect(() => {
+    pyrochargeResourceUsers += 1;
+    return () => {
+      pyrochargeResourceUsers = Math.max(0, pyrochargeResourceUsers - 1);
+      if (pyrochargeResourceUsers === 0) {
+        disposePyrochargeResources();
+      }
+    };
+  }, []);
+
+  // Shared materials - memoized to avoid recreation
+  const materials = useMemo(() => ({
+    particle: new MeshStandardMaterial({
+      color: "#FF8800",
+      emissive: "#FF8800",
+      emissiveIntensity: 1,
+      transparent: true,
+      opacity: 0.6,
+      blending: AdditiveBlending,
+      depthWrite: false
+    }),
+    groundRing: new MeshStandardMaterial({
+      color: "#FF3000",
+      emissive: "#FF6000",
+      emissiveIntensity: 2,
+      transparent: true,
+      opacity: 0.3,
+      blending: AdditiveBlending,
+      depthWrite: false,
+      side: DoubleSide
+    }),
+    centerPillar: new MeshStandardMaterial({
+      color: "#FF4000",
+      emissive: "#FF6000",
+      emissiveIntensity: 3,
+      transparent: true,
+      opacity: 0.5,
+      blending: AdditiveBlending,
+      depthWrite: false
+    })
+  }), []);
+
+  // Pre-generate particle positions to avoid recalculating every render
+  // This must be called before any conditional returns to follow Rules of Hooks
+  const particlePositions = useMemo(() => {
+    const particleCount = 12;
+    return Array(particleCount).fill(null).map((_, i) => {
+      const angle = (i / particleCount) * Math.PI * 2;
+      const radius = 0.8 + (Math.random() * 0.3);
+      const offsetX = Math.sin(angle) * radius;
+      const offsetZ = Math.cos(angle) * radius;
+      const height = (Math.random() * 0.6) + 0.2;
+      const rotation = Math.random() * Math.PI * 2;
+      return { offsetX, offsetZ, height, rotation };
+    });
+  }, []); // Empty dependency array since we want this to be stable
+
+  // Cleanup materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(materials).forEach((mat: MeshStandardMaterial) => mat.dispose());
+    };
+  }, [materials]);
+
   // Add effect to handle the activation delay
   useEffect(() => {
     if (isActive) {
@@ -33,7 +114,7 @@ export default function PyrochargeEffect({
       const timer = setTimeout(() => {
         setShouldShowEffect(true);
       }, 100); // 100ms delay
-      
+
       return () => {
         clearTimeout(timer);
       };
@@ -57,7 +138,7 @@ export default function PyrochargeEffect({
         const mesh = child as Mesh;
         mesh.rotation.y += (Math.random() * 0.2 - 0.1);
         mesh.rotation.x += (Math.random() * 0.1 - 0.05);
-        
+
         // Scale based on charge progress
         const baseScale = 0.1 + (chargeProgress * 0.7); // Scale from 0.3 to 1.0
         const randomScale = baseScale * (0.8 + Math.random() * 0.4); // Add some randomness
@@ -81,69 +162,69 @@ export default function PyrochargeEffect({
   const particleCount = 12;
   const particles = [];
 
-  for (let i = 0; i < particleCount; i++) {
-    const angle = (i / particleCount) * Math.PI * 2;
-    const radius = 0.8 + (Math.random() * 0.3);
-    const offsetX = Math.sin(angle) * radius;
-    const offsetZ = Math.cos(angle) * radius;
-    const height = (Math.random() * 0.6) + 0.2;
+  // Get particle material with different colors
+  const getParticleMaterial = (i: number) => {
+    const color = i % 3 === 0 ? "#FF8800" : (i % 3 === 1 ? "#FF4400" : "#FF2200");
+    const emissive = i % 3 === 0 ? "#FF8800" : (i % 3 === 1 ? "#FF4400" : "#FF2200");
+    const emissiveIntensity = 1 + (chargeProgress * 4);
+    const opacity = 0.6 + (chargeProgress * 0.4);
 
+    // Clone material to allow different properties
+    return new MeshStandardMaterial({
+      color,
+      emissive,
+      emissiveIntensity,
+      transparent: true,
+      opacity,
+      blending: AdditiveBlending,
+      depthWrite: false
+    });
+  };
+
+  for (let i = 0; i < particleCount; i++) {
+    const pos = particlePositions[i];
     particles.push(
-      <mesh 
-        key={i} 
-        position={[offsetX, height, offsetZ]}
-        rotation={[0, Math.random() * Math.PI * 2, 0]}
-      >
-        <dodecahedronGeometry args={[0.2, 0]} />
-        <meshStandardMaterial
-          color={i % 3 === 0 ? "#FF8800" : (i % 3 === 1 ? "#FF4400" : "#FF2200")}
-          emissive={i % 3 === 0 ? "#FF8800" : (i % 3 === 1 ? "#FF4400" : "#FF2200")}
-          emissiveIntensity={1 + (chargeProgress * 4)}
-          transparent
-          opacity={0.6 + (chargeProgress * 0.4)}
-          blending={AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
+      <mesh
+        key={i}
+        position={[pos.offsetX, pos.height, pos.offsetZ]}
+        rotation={[0, pos.rotation, 0]}
+        geometry={pyrochargeGeometries.particle}
+        material={getParticleMaterial(i)}
+      />
     );
   }
 
-  // Add ground ring effect 
+  // Add ground ring effect
   const groundRingRadius = 0.8 + (chargeProgress * 1.375);
-  
+  const pillarHeight = 2 * chargeProgress;
+
+  // Update material properties dynamically
+  materials.groundRing.opacity = 0.3 + (chargeProgress * 0.6);
+  materials.groundRing.emissiveIntensity = 2 + (chargeProgress * 4);
+  materials.centerPillar.opacity = 0.5 + (chargeProgress * 0.4);
+  materials.centerPillar.emissiveIntensity = 3 + (chargeProgress * 3);
+
   return (
     <group ref={flameParticlesRef}>
       {/* Flame particles */}
       {particles}
-      
+
       {/* Ground fire ring */}
-      <mesh position={[0, 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[groundRingRadius - 0.2, groundRingRadius, 32]} />
-        <meshStandardMaterial
-          color="#FF3000"
-          emissive="#FF6000"
-          emissiveIntensity={2 + (chargeProgress * 4)}
-          transparent
-          opacity={0.3 + (chargeProgress * 0.6)}
-          blending={AdditiveBlending}
-          depthWrite={false}
-          side={DoubleSide}
-        />
-      </mesh>
-      
+      <mesh
+        position={[0, 0.5, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={[groundRingRadius, groundRingRadius, 1]}
+        geometry={pyrochargeGeometries.groundRing}
+        material={materials.groundRing}
+      />
+
       {/* Center fire pillar */}
-      <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.2, 0.5, 2 * chargeProgress, 8]} />
-        <meshStandardMaterial
-          color="#FF4000"
-          emissive="#FF6000"
-          emissiveIntensity={3 + (chargeProgress * 3)}
-          transparent
-          opacity={0.5 + (chargeProgress * 0.4)}
-          blending={AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
+      <mesh
+        position={[0, 0, 0]}
+        geometry={pyrochargeGeometries.centerPillar}
+        material={materials.centerPillar}
+        scale={[1, pillarHeight, 1]}
+      />
       
       {/* Light source */}
       <pointLight

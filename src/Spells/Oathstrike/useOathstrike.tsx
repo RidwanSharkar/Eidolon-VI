@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Vector3, Group } from 'three';
 import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
 import { calculateDamage } from '@/Weapons/damage';
@@ -50,6 +50,15 @@ export const useOathstrike = ({
 }) => {
   const [isActive, setIsActive] = useState(false);
   const HEAL_AMOUNT = 5;
+  const timeoutsRef = useRef<Set<NodeJS.Timeout>>(new Set());
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeoutsRef.current.clear();
+    };
+  }, []);
   
   const { processHealing } = useHealing({
     currentHealth,
@@ -85,13 +94,16 @@ export const useOathstrike = ({
     // Start cooldown recovery for each charge individually
     for (let i = 0; i < 2; i++) {
       if (availableCharges[i].id) {
-        setTimeout(() => {
-          setCharges(prev => prev.map((c, index) => 
+        const timeout = setTimeout(() => {
+          setCharges(prev => prev.map((c, index) =>
             index === availableCharges[i].id - 1
               ? { ...c, available: true, cooldownStartTime: null }
               : c
           ));
+          timeoutsRef.current.delete(timeout);
         }, ORBITAL_COOLDOWN);
+
+        timeoutsRef.current.add(timeout);
       }
     }
 

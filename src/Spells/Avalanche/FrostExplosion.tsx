@@ -1,6 +1,15 @@
 import { useFrame } from '@react-three/fiber';
-import { Vector3, AdditiveBlending } from 'three';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { Vector3, AdditiveBlending, IcosahedronGeometry, MeshStandardMaterial } from 'three';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+
+// Shared geometry for frost particles - avoid per-render allocations
+const sharedIcosahedronGeometry = new IcosahedronGeometry(1, 0);
+
+let frostExplosionResourceUsers = 0;
+
+const disposeFrostExplosionResources = () => {
+  sharedIcosahedronGeometry.dispose();
+};
 
 interface FrostExplosionProps {
   position: Vector3;
@@ -21,6 +30,35 @@ export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComp
   
   const MINIMUM_DURATION = 1250;
   const MAXIMUM_DURATION = 2850;
+
+  // Resource management
+  useEffect(() => {
+    frostExplosionResourceUsers += 1;
+    return () => {
+      frostExplosionResourceUsers = Math.max(0, frostExplosionResourceUsers - 1);
+      if (frostExplosionResourceUsers === 0) {
+        disposeFrostExplosionResources();
+      }
+    };
+  }, []);
+
+  // Shared material - memoized to avoid recreation
+  const particleMaterial = useMemo(() => new MeshStandardMaterial({
+    color: "#E5F7FF",
+    emissive: "#E5F7FF",
+    emissiveIntensity: 1,
+    transparent: true,
+    opacity: 0.45,
+    depthWrite: false,
+    blending: AdditiveBlending
+  }), []);
+
+  // Cleanup material on unmount
+  useEffect(() => {
+    return () => {
+      particleMaterial.dispose();
+    };
+  }, [particleMaterial]);
 
   // Initialize particles only once
   useEffect(() => {
@@ -81,6 +119,15 @@ export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComp
     }
   });
 
+  // Update material opacity based on particle life (use first particle's life as reference)
+  useFrame(() => {
+    if (renderParticles.length > 0) {
+      // Use average life of visible particles for consistent fading
+      const avgLife = renderParticles.reduce((sum, p) => sum + p.life, 0) / renderParticles.length;
+      particleMaterial.opacity = avgLife * 0.45;
+    }
+  });
+
   return (
     <group>
       {renderParticles.map((particle, i) => (
@@ -89,18 +136,9 @@ export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComp
           position={particle.position.toArray()} 
           scale={[particle.scale, particle.scale, particle.scale]}
           rotation={[particle.rotation, particle.rotation, particle.rotation]}
-        >
-          <icosahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial
-            color="#E5F7FF"
-            emissive="#E5F7FF"
-            emissiveIntensity={1}
-            transparent
-            opacity={particle.life * 0.45}
-            depthWrite={false}
-            blending={AdditiveBlending}
-          />
-        </mesh>
+          geometry={sharedIcosahedronGeometry}
+          material={particleMaterial}
+        />
       ))}
     </group>
   );

@@ -9,6 +9,7 @@ import {
   MeshBasicMaterial,
   RingGeometry,
   SphereGeometry,
+  TorusGeometry,
   Vector3
 } from 'three';
 import LegionMeteorTrail from './LegionMeteorTrail';
@@ -75,12 +76,30 @@ export default function Legion({
     pulsingRingGeometry: new RingGeometry(DAMAGE_RADIUS - 0.8, DAMAGE_RADIUS - 0.6, WARNING_RING_SEGMENTS),
     outerGlowGeometry: new RingGeometry(DAMAGE_RADIUS - 0.25, DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
     particleGeometry: new SphereGeometry(0.1, 8, 8),
-    impactSphereGeometry: new SphereGeometry(1, 32, 32)
+    impactSphereGeometry: new SphereGeometry(1, 32, 32),
+    // Add torus geometries for impact effect to avoid inline allocations
+    impactTorus1: new TorusGeometry(1.0, 0.225, 4, 32),
+    impactTorus2: new TorusGeometry(1.15, 0.225, 4, 32),
+    impactTorus3: new TorusGeometry(1.3, 0.225, 4, 32),
+    impactTorus4: new TorusGeometry(1.45, 0.225, 4, 32),
+    impactTorus5: new TorusGeometry(1.6, 0.225, 4, 32)
   }), []);
 
   const materials = useMemo(() => ({
     meteorMaterial: new MeshBasicMaterial({ color: "#00ff44" })
   }), []);
+
+  // Get the appropriate torus geometry by index
+  const getImpactTorusGeometry = useCallback((i: number) => {
+    switch (i) {
+      case 0: return geometries.impactTorus1;
+      case 1: return geometries.impactTorus2;
+      case 2: return geometries.impactTorus3;
+      case 3: return geometries.impactTorus4;
+      case 4: return geometries.impactTorus5;
+      default: return geometries.impactTorus1;
+    }
+  }, [geometries]);
 
   // Impact effect component
   const createLegionImpactEffect = (position: Vector3, startTime: number, onComplete: () => void) => {
@@ -91,6 +110,8 @@ export default function Legion({
       onComplete();
       return null;
     }
+
+    const ringScale = 1.125 + elapsed * 2;
 
     return (
       <group position={position}>
@@ -122,10 +143,14 @@ export default function Legion({
           />
         </mesh>
 
-        {/* Multiple expanding rings - green themed */}
-        {[1.0, 1.15, 1.3, 1.45, 1.6].map((size, i) => (
-          <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-            <torusGeometry args={[size * (1.125 + elapsed * 2), 0.225, 4, 32]} />
+        {/* Multiple expanding rings - green themed - using shared geometries */}
+        {[0, 1, 2, 3, 4].map((i) => (
+          <mesh 
+            key={i} 
+            rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
+            scale={[ringScale, ringScale, ringScale]}
+          >
+            <primitive object={getImpactTorusGeometry(i)} />
             <meshStandardMaterial
               color="#00ff22"
               emissive="#00ff44"

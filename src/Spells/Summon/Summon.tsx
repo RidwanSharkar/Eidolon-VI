@@ -1,9 +1,25 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Group, Vector3, AdditiveBlending } from 'three';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+import { Group, Vector3, AdditiveBlending, SphereGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { SummonProps } from '@/Spells/Summon/SummonProps';
 import { Enemy } from '@/Versus/enemy';
 import TotemModel from '@/Spells/Summon/TotemModel';
+
+// Shared geometries for summon explosion - avoid per-render allocations
+const summonGeometries = {
+  explosionSphere: new SphereGeometry(0.35, 32, 32),
+  innerSphere: new SphereGeometry(0.25, 24, 24),
+  torus0: new TorusGeometry(0.45, 0.045, 16, 32),
+  torus1: new TorusGeometry(0.65, 0.045, 16, 32),
+  torus2: new TorusGeometry(0.85, 0.045, 16, 32),
+  spark: new SphereGeometry(0.05, 8, 8)
+};
+
+let summonResourceUsers = 0;
+
+const disposeSummonResources = () => {
+  Object.values(summonGeometries).forEach(geo => geo.dispose());
+};
 
 export default function SummonedHandler({
   position,
@@ -18,6 +34,64 @@ export default function SummonedHandler({
 }: SummonProps) {
   const groupRef = useRef<Group>(null);
   const [currentTarget, setCurrentTarget] = useState<Enemy | null>(null);
+
+  // Resource management
+  useEffect(() => {
+    summonResourceUsers += 1;
+    return () => {
+      summonResourceUsers = Math.max(0, summonResourceUsers - 1);
+      if (summonResourceUsers === 0) {
+        disposeSummonResources();
+      }
+    };
+  }, []);
+
+  // Shared materials - memoized to avoid recreation
+  const explosionMaterials = useMemo(() => ({
+    outer: new MeshStandardMaterial({
+      color: "#8800ff",
+      emissive: "#9933ff",
+      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.8,
+      depthWrite: false,
+      blending: AdditiveBlending
+    }),
+    inner: new MeshStandardMaterial({
+      color: "#aa66ff",
+      emissive: "#ffffff",
+      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+      blending: AdditiveBlending
+    }),
+    torus: new MeshStandardMaterial({
+      color: "#8800ff",
+      emissive: "#9933ff",
+      emissiveIntensity: 1,
+      transparent: true,
+      opacity: 0.6,
+      depthWrite: false,
+      blending: AdditiveBlending
+    }),
+    spark: new MeshStandardMaterial({
+      color: "#aa66ff",
+      emissive: "#ffffff",
+      emissiveIntensity: 2,
+      transparent: true,
+      opacity: 0.8,
+      depthWrite: false,
+      blending: AdditiveBlending
+    })
+  }), []);
+
+  // Cleanup materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(explosionMaterials).forEach(mat => mat.dispose());
+    };
+  }, [explosionMaterials]);
   
   const constants = useRef({
     lastAttackTime: 0,
@@ -197,48 +271,45 @@ export default function SummonedHandler({
             const effectPosition = target.position.clone()
               .setY(1.5)
               .sub(totemWorldPos);
+
+            // Update material opacities based on fade
+            explosionMaterials.outer.opacity = 0.8 * fade;
+            explosionMaterials.outer.emissiveIntensity = 0.5 * fade;
+            explosionMaterials.inner.opacity = 0.9 * fade;
+            explosionMaterials.inner.emissiveIntensity = 0.5 * fade;
+            explosionMaterials.torus.opacity = 0.6 * fade;
+            explosionMaterials.torus.emissiveIntensity = 1 * fade;
+            explosionMaterials.spark.opacity = 0.8 * fade;
+            explosionMaterials.spark.emissiveIntensity = 2 * fade;
+
+            const getTorusGeometry = (i: number) => {
+              if (i === 0) return summonGeometries.torus0;
+              if (i === 1) return summonGeometries.torus1;
+              return summonGeometries.torus2;
+            };
             
             return (
               <group key={effect.id} position={effectPosition.toArray()}>
-                <mesh>
-                  <sphereGeometry args={[0.35 * (1 + elapsed * 2), 32, 32]} />
-                  <meshStandardMaterial
-                    color="#8800ff"
-                    emissive="#9933ff"
-                    emissiveIntensity={0.5 * fade}
-                    transparent
-                    opacity={0.8 * fade}
-                    depthWrite={false}
-                    blending={AdditiveBlending}
-                  />
-                </mesh>
+                <mesh
+                  geometry={summonGeometries.explosionSphere}
+                  material={explosionMaterials.outer}
+                  scale={[1 + elapsed * 2, 1 + elapsed * 2, 1 + elapsed * 2]}
+                />
                 
-                <mesh>
-                  <sphereGeometry args={[0.25 * (1 + elapsed * 3), 24, 24]} />
-                  <meshStandardMaterial
-                    color="#aa66ff"
-                    emissive="#ffffff"
-                    emissiveIntensity={0.5 * fade}
-                    transparent
-                    opacity={0.9 * fade}
-                    depthWrite={false}
-                    blending={AdditiveBlending}
-                  />
-                </mesh>
+                <mesh
+                  geometry={summonGeometries.innerSphere}
+                  material={explosionMaterials.inner}
+                  scale={[1 + elapsed * 3, 1 + elapsed * 3, 1 + elapsed * 3]}
+                />
 
-                {[0.45, 0.65, 0.85].map((size, i) => (
-                  <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-                    <torusGeometry args={[size * (1 + elapsed * 3), 0.045, 16, 32]} />
-                    <meshStandardMaterial
-                      color="#8800ff"
-                      emissive="#9933ff"
-                      emissiveIntensity={1 * fade}
-                      transparent
-                      opacity={0.6 * fade * (1 - i * 0.2)}
-                      depthWrite={false}
-                      blending={AdditiveBlending}
-                    />
-                  </mesh>
+                {[0, 1, 2].map((i) => (
+                  <mesh 
+                    key={i} 
+                    rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
+                    geometry={getTorusGeometry(i)}
+                    material={explosionMaterials.torus}
+                    scale={[1 + elapsed * 3, 1 + elapsed * 3, 1 + elapsed * 3]}
+                  />
                 ))}
 
                 {[...Array(4)].map((_, i) => {
@@ -252,18 +323,9 @@ export default function SummonedHandler({
                         Math.cos(angle) * radius,
                         0
                       ]}
-                    >
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshStandardMaterial
-                        color="#aa66ff"
-                        emissive="#ffffff"
-                        emissiveIntensity={2 * fade}
-                        transparent
-                        opacity={0.8 * fade}
-                        depthWrite={false}
-                        blending={AdditiveBlending}
-                      />
-                    </mesh>
+                      geometry={summonGeometries.spark}
+                      material={explosionMaterials.spark}
+                    />
                   );
                 })}
 

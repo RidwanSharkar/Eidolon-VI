@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BlizzardShard from '@/Spells/Blizzard/BlizzardShard';
@@ -28,6 +28,13 @@ export const sharedMaterials = {
   })
 };
 
+let blizzardResourceUsers = 0;
+
+const disposeBlizzardResources = () => {
+  Object.values(sharedGeometries).forEach((geometry) => geometry.dispose());
+  Object.values(sharedMaterials).forEach((material) => material.dispose());
+};
+
 interface BlizzardProps {
   position: Vector3;
   onComplete: () => void;
@@ -48,13 +55,36 @@ export default function Blizzard({
   const progressRef = useRef(0);
   const lastDamageTime = useRef<number>(0);
   const duration = 7;
-  const shardsRef = useRef<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
-  const aurasRef = useRef<Array<{ id: number }>>([]);
+  const [shards, setShards] = useState<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
+  const [auras, setAuras] = useState<Array<{ id: number }>>([]);
 
   const ORBITAL_RADIUS = .8;        // Radius of the orbital shard spawn area
   const FALLING_RADIUS = 2.5;        // Radius of the falling shard spawn area
   const ORBITAL_HEIGHT = 2.35;        // Height of orbital shards
   const FALLING_HEIGHT = 1.2;       // Starting height of falling shards
+
+  // Resource management
+  useEffect(() => {
+    blizzardResourceUsers += 1;
+    return () => {
+      blizzardResourceUsers = Math.max(0, blizzardResourceUsers - 1);
+      if (blizzardResourceUsers === 0) {
+        disposeBlizzardResources();
+      }
+    };
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      setShards([]);
+      setAuras([]);
+      // Ensure resources are disposed even if component count is wrong
+      if (blizzardResourceUsers <= 1) {
+        disposeBlizzardResources();
+      }
+    };
+  }, []);
 
   useFrame((_, delta) => {
     if (!stormRef.current || !parentRef?.current) return;
@@ -73,41 +103,41 @@ export default function Blizzard({
     if (Math.random() < 0.3) { // Reduced from 0.2
       const angle = Math.random() * Math.PI * 2;
       const spawnRadius = Math.random() * ORBITAL_RADIUS / 50;
-      
+
       const orbitalPosition = new Vector3(
         Math.cos(angle) * spawnRadius,
         ORBITAL_HEIGHT + Math.random() * 1.7,
         Math.sin(angle) * spawnRadius
       );
 
-      shardsRef.current.push({
+      setShards(prev => [...prev, {
         id: Date.now() + Math.random(),
         position: orbitalPosition,
         type: 'orbital'
-      });
+      }]);
     }
 
     if (Math.random() > 0.2) { // Reduced from 0.3
       const angle = Math.random() * Math.PI * 2;
       const spawnRadius = Math.random() * FALLING_RADIUS;
-      
+
       const fallingPosition = new Vector3(
         Math.cos(angle) * spawnRadius,
         FALLING_HEIGHT + Math.random() * 3,
         Math.sin(angle) * spawnRadius
       );
 
-      shardsRef.current.push({
+      setShards(prev => [...prev, {
         id: Date.now() + Math.random(),
         position: fallingPosition,
         type: 'falling'
-      });
+      }]);
     }
 
     if (Math.random() < 0.1) { // 10% chance each frame
-      aurasRef.current.push({
+      setAuras(prev => [...prev, {
         id: Date.now() + Math.random(),
-      });
+      }]);
     }
     
     const now = Date.now();
@@ -132,22 +162,22 @@ export default function Blizzard({
   return (
     <group ref={stormRef}>
 
-      {shardsRef.current.map(shard => (
+      {shards.map(shard => (
         <BlizzardShard
           key={shard.id}
           initialPosition={shard.position}
           type={shard.type}
           onComplete={() => {
-            shardsRef.current = shardsRef.current.filter(s => s.id !== shard.id);
+            setShards(prev => prev.filter(s => s.id !== shard.id));
           }}
         />
       ))}
 
-      {aurasRef.current.map(aura => (
+      {auras.map(aura => (
         <BlizzardAura
           key={aura.id}
           onComplete={() => {
-            aurasRef.current = aurasRef.current.filter(a => a.id !== aura.id);
+            setAuras(prev => prev.filter(a => a.id !== aura.id));
           }}
         />
       ))}

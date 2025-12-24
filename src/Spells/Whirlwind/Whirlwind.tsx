@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import {
@@ -6,13 +6,29 @@ import {
   Color,
   DoubleSide,
   Mesh,
-  MeshStandardMaterial
+  MeshStandardMaterial,
+  TorusGeometry,
+  PlaneGeometry
 } from 'three';
 import { useWhirlwindManager } from './useWhirlwindManager';
 import { ReigniteRef } from '../Reignite/Reignite';
 
 // Pre-allocated colors for performance - avoids new Color() on every render
 const WHIRLWIND_RED = new Color(0xFF0000);
+
+// Shared geometries for whirlwind - avoid per-render allocations
+const whirlwindGeometries = {
+  torus0: new TorusGeometry(0.5 * 1.75, 0.1, 16, 32),
+  torus1: new TorusGeometry(1.0 * 1.75, 0.1, 16, 32),
+  torus2: new TorusGeometry(1.5 * 1.75, 0.1, 16, 32),
+  trailPlane: new PlaneGeometry(5.1, 0.25)
+};
+
+let whirlwindResourceUsers = 0;
+
+const disposeWhirlwindResources = () => {
+  Object.values(whirlwindGeometries).forEach(geo => geo.dispose());
+};
 
 interface WhirlwindProps {
   parentRef: React.RefObject<Group>;
@@ -233,6 +249,58 @@ export default function Whirlwind({
   const fireEffectRef = useRef<boolean>(false);
   const prevActiveState = useRef<boolean>(false);
 
+  // Resource management
+  useEffect(() => {
+    whirlwindResourceUsers += 1;
+    return () => {
+      whirlwindResourceUsers = Math.max(0, whirlwindResourceUsers - 1);
+      if (whirlwindResourceUsers === 0) {
+        disposeWhirlwindResources();
+      }
+    };
+  }, []);
+
+  // Shared materials - memoized to avoid recreation
+  const ringMaterial = useMemo(() => new MeshStandardMaterial({
+    color: WHIRLWIND_RED,
+    emissive: WHIRLWIND_RED,
+    emissiveIntensity: 4,
+    transparent: true,
+    opacity: 0.6,
+    side: DoubleSide
+  }), []);
+
+  const trailMaterial = useMemo(() => new MeshStandardMaterial({
+    color: WHIRLWIND_RED,
+    emissive: WHIRLWIND_RED,
+    emissiveIntensity: 4,
+    transparent: true,
+    opacity: 0.4,
+    side: DoubleSide,
+    blending: AdditiveBlending
+  }), []);
+
+  // Cleanup materials on unmount
+  useEffect(() => {
+    return () => {
+      ringMaterial.dispose();
+      trailMaterial.dispose();
+    };
+  }, [ringMaterial, trailMaterial]);
+
+  // Get torus geometry by index
+  const getTorusGeometry = (i: number) => {
+    switch (i) {
+      case 0: return whirlwindGeometries.torus0;
+      case 1: return whirlwindGeometries.torus1;
+      case 2: return whirlwindGeometries.torus2;
+      default: return whirlwindGeometries.torus0;
+    }
+  };
+
+  // Ring opacity based on index
+  const getRingOpacity = (i: number) => 0.6 - i * 0.15;
+
   const { consumeCharge } = useWhirlwindManager({
     parentRef,
     charges,
@@ -393,39 +461,38 @@ export default function Whirlwind({
       <group ref={whirlwindRef}>
         {shouldBeActive && (
           <>
-            {/* Whirlwind effect rings - rotated to be parallel to ground */}
-            {[0.5, 1, 1.5].map((radius, i) => (
-              <mesh key={i} position={[0, -0.25, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[radius * 1.75, 0.1, 16, 32]} />
-                <meshStandardMaterial
-                  color={WHIRLWIND_RED}
-                  emissive={WHIRLWIND_RED}
-                  emissiveIntensity={4}
-                  transparent
-                  opacity={0.6 - i * 0.15}
-                  side={DoubleSide}
-                />
-              </mesh>
-            ))}
+            {/* Whirlwind effect rings - rotated to be parallel to ground - using shared geometries */}
+            {[0, 1, 2].map((i) => {
+              // Clone material to allow different opacities
+              const opacity = getRingOpacity(i);
+              return (
+                <mesh 
+                  key={i} 
+                  position={[0, -0.25, 0]} 
+                  rotation={[Math.PI / 2, 0, 0]}
+                  geometry={getTorusGeometry(i)}
+                >
+                  <meshStandardMaterial
+                    color={WHIRLWIND_RED}
+                    emissive={WHIRLWIND_RED}
+                    emissiveIntensity={4}
+                    transparent
+                    opacity={opacity}
+                    side={DoubleSide}
+                  />
+                </mesh>
+              );
+            })}
 
-            {/* Energy trails - also rotated to be parallel to ground */}
+            {/* Energy trails - also rotated to be parallel to ground - using shared geometry */}
             {[...Array(8)].map((_, i) => (
               <mesh
                 key={`trail-${i}`}
                 position={[0, -0.25, 0]}
                 rotation={[0, (i / 8) * Math.PI*3, 0]}
-              >
-                <planeGeometry args={[5.1, 0.25]} />
-                <meshStandardMaterial
-                  color={WHIRLWIND_RED}
-                  emissive={WHIRLWIND_RED}
-                  emissiveIntensity={4}
-                  transparent
-                  opacity={0.4}
-                  side={DoubleSide}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
+                geometry={whirlwindGeometries.trailPlane}
+                material={trailMaterial}
+              />
             ))}
           </>
         )}

@@ -1,12 +1,28 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { AdditiveBlending, Color, Group } from 'three';
+import { AdditiveBlending, Color, Group, CylinderGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
 import PyroclastExplosion from './PyroclastExplosion';
 import PyroclastTrail from './PyroclastTrail';
 
 // Pre-allocated color for performance - avoids new Color() on every render
 const PYROCLAST_TRAIL_COLOR = new Color("#FF2200");
+
+// Shared geometries for pyroclast missile - avoid per-render allocations
+const missileGeometries = {
+  cylinder: new CylinderGeometry(0.3, 0.4, 2, 6),
+  torus0: new TorusGeometry(0.4, 0.1, 6, 12),
+  torus1: new TorusGeometry(0.5, 0.1, 6, 12),
+  torus2: new TorusGeometry(0.6, 0.1, 6, 12),
+  torus3: new TorusGeometry(0.7, 0.1, 6, 12),
+  torus4: new TorusGeometry(0.8, 0.1, 6, 12)
+};
+
+let pyroclastMissileResourceUsers = 0;
+
+const disposePyroclastMissileResources = () => {
+  Object.values(missileGeometries).forEach(geo => geo.dispose());
+};
 
 interface PyroclastMissileProps {
   id: number;
@@ -32,6 +48,60 @@ export default function PyroclastMissile({
   const [impactPosition, setImpactPosition] = useState<Vector3 | null>(null);
   const [explosionStartTime, setExplosionStartTime] = useState<number | null>(null);
   const [opacity, setOpacity] = useState(1.0); // Add opacity state for fading
+
+  // Resource management
+  useEffect(() => {
+    pyroclastMissileResourceUsers += 1;
+    return () => {
+      pyroclastMissileResourceUsers = Math.max(0, pyroclastMissileResourceUsers - 1);
+      if (pyroclastMissileResourceUsers === 0) {
+        disposePyroclastMissileResources();
+      }
+    };
+  }, []);
+
+  // Calculate scale and intensity based on chargeTime - memoized
+  const normalizedCharge = Math.min(chargeTime / 4, 1.0);
+  const scale = 0.5 + (normalizedCharge * 0.75);
+  const intensity = 1.25 + (normalizedCharge * 2.5);
+
+  // Shared materials - memoized to avoid recreation
+  const materials = useMemo(() => ({
+    core: new MeshStandardMaterial({
+      color: "#FF2200",
+      emissive: "#FF2200",
+      emissiveIntensity: intensity,
+      transparent: true,
+      opacity: 0.9
+    }),
+    flame: new MeshStandardMaterial({
+      color: "#FF2200",
+      emissive: "#FF2200",
+      emissiveIntensity: intensity,
+      transparent: true,
+      opacity: 0.7,
+      blending: AdditiveBlending
+    })
+  }), [intensity]);
+
+  // Cleanup materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(materials).forEach(mat => mat.dispose());
+    };
+  }, [materials]);
+
+  // Get torus geometry by index
+  const getTorusGeometry = (i: number) => {
+    switch (i) {
+      case 0: return missileGeometries.torus0;
+      case 1: return missileGeometries.torus1;
+      case 2: return missileGeometries.torus2;
+      case 3: return missileGeometries.torus3;
+      case 4: return missileGeometries.torus4;
+      default: return missileGeometries.torus0;
+    }
+  };
 
   // Initialize position on mount
   useEffect(() => {
@@ -106,10 +176,10 @@ export default function PyroclastMissile({
     }, 200); // Small delay after explosion ends
   };
 
-  // Calculate scale and intensity based on chargeTime
-  const normalizedCharge = Math.min(chargeTime / 4, 1.0);
-  const scale = 0.5 + (normalizedCharge * 0.75);
-  const intensity = 1.25 + (normalizedCharge * 2.5);
+  // Update material opacities based on current opacity
+  materials.core.opacity = 0.9 * opacity;
+  materials.core.emissiveIntensity = intensity * opacity;
+  materials.flame.emissiveIntensity = intensity * opacity;
 
   return (
     <group>
@@ -132,34 +202,36 @@ export default function PyroclastMissile({
               0
             ]}
           >
-            <mesh rotation={[Math.PI/2, 0, 0]}>
-              <cylinderGeometry args={[0.3 * scale, 0.4 * scale, 2 * scale, 6]} />
-              <meshStandardMaterial
-                color="#FF2200"
-                emissive="#FF2200"
-                emissiveIntensity={intensity * opacity}
-                transparent
-                opacity={0.9 * opacity}
-              />
-            </mesh>
+            <mesh 
+              rotation={[Math.PI/2, 0, 0]}
+              geometry={missileGeometries.cylinder}
+              material={materials.core}
+              scale={[scale, scale, scale]}
+            />
 
-            {/* Flame trail */}
-            {[...Array(5)].map((_, i) => (
-              <mesh
-                key={i}
-                position={[0, 0, -i * 0.45 +1]}
-              >
-                <torusGeometry args={[0.4 * scale + (i * 0.1), 0.1, 6, 12]} />
-                <meshStandardMaterial
-                  color="#FF2200"
-                  emissive="#FF2200"
-                  emissiveIntensity={intensity * (1 - i * 0.2) * opacity}
-                  transparent
-                  opacity={(0.7 - (i * 0.15)) * opacity}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
-            ))}
+            {/* Flame trail - using shared geometries */}
+            {[0, 1, 2, 3, 4].map((i) => {
+              const flameOpacity = (0.7 - (i * 0.15)) * opacity;
+              const flameIntensity = intensity * (1 - i * 0.2) * opacity;
+              
+              return (
+                <mesh
+                  key={i}
+                  position={[0, 0, -i * 0.45 + 1]}
+                  geometry={getTorusGeometry(i)}
+                  scale={[scale, scale, scale]}
+                >
+                  <meshStandardMaterial
+                    color="#FF2200"
+                    emissive="#FF2200"
+                    emissiveIntensity={flameIntensity}
+                    transparent
+                    opacity={flameOpacity}
+                    blending={AdditiveBlending}
+                  />
+                </mesh>
+              );
+            })}
 
             {/* Light source */}
             <pointLight

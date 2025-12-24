@@ -1,5 +1,23 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Vector3, AdditiveBlending } from 'three';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
+import { Vector3, AdditiveBlending, SphereGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
+
+// Shared geometries for pyroclast explosion - avoid per-render allocations
+const pyroclastGeometries = {
+  coreExplosion: new SphereGeometry(0.5, 32, 32),
+  innerEnergy: new SphereGeometry(0.525, 24, 24),
+  torus0: new TorusGeometry(0.45, 0.06, 16, 32),
+  torus1: new TorusGeometry(0.675, 0.06, 16, 32),
+  torus2: new TorusGeometry(0.8, 0.06, 16, 32),
+  torus3: new TorusGeometry(0.925, 0.06, 16, 32),
+  torus4: new TorusGeometry(1.125, 0.06, 16, 32),
+  spark: new SphereGeometry(0.08, 8, 8)
+};
+
+let pyroclastExplosionResourceUsers = 0;
+
+const disposePyroclastExplosionResources = () => {
+  Object.values(pyroclastGeometries).forEach(geo => geo.dispose());
+};
 
 interface PyroclastExplosionProps {
   position: Vector3;
@@ -22,6 +40,86 @@ export default function PyroclastExplosion({
   const scale = 0.5 + (normalizedCharge * 0.8); // Increased base scale
   const intensity = 2 + (normalizedCharge * 3); // Increased intensity
   const sparkCount = 12; // More sparks
+
+  // Resource management
+  useEffect(() => {
+    pyroclastExplosionResourceUsers += 1;
+    return () => {
+      pyroclastExplosionResourceUsers = Math.max(0, pyroclastExplosionResourceUsers - 1);
+      if (pyroclastExplosionResourceUsers === 0) {
+        disposePyroclastExplosionResources();
+      }
+    };
+  }, []);
+
+  // Shared materials - memoized to avoid recreation
+  const materials = useMemo(() => ({
+    coreExplosion: new MeshStandardMaterial({
+      color: "#FF2200",
+      emissive: "#FF3300",
+      emissiveIntensity: intensity * 0.5,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+      blending: AdditiveBlending
+    }),
+    innerEnergy: new MeshStandardMaterial({
+      color: "#FF4400",
+      emissive: "#FF6600",
+      emissiveIntensity: intensity * 0.5,
+      transparent: true,
+      opacity: 0.95,
+      depthWrite: false,
+      blending: AdditiveBlending
+    }),
+    torus: new MeshStandardMaterial({
+      color: "#FF2200",
+      emissive: "#FF4400",
+      emissiveIntensity: intensity * 0.3,
+      transparent: true,
+      opacity: 0.7,
+      depthWrite: false,
+      blending: AdditiveBlending
+    }),
+    spark: new MeshStandardMaterial({
+      color: "#FF5500",
+      emissive: "#FF7700",
+      emissiveIntensity: intensity * 1.2,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+      blending: AdditiveBlending
+    })
+  }), [intensity]);
+
+  // Cleanup materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(materials).forEach(mat => mat.dispose());
+    };
+  }, [materials]);
+
+  // Pre-generate spark positions
+  const sparkPositions = useMemo(() => {
+    return Array(sparkCount).fill(null).map((_, i) => ({
+      angle: (i / sparkCount) * Math.PI * 2,
+      randomOffset: Math.random() * 0.3,
+      yOffset: (Math.random() - 0.5) * 0.5,
+      depthOffset: (Math.random() - 0.5) * 0.3
+    }));
+  }, [sparkCount]);
+
+  // Get torus geometry by index
+  const getTorusGeometry = (i: number) => {
+    switch (i) {
+      case 0: return pyroclastGeometries.torus0;
+      case 1: return pyroclastGeometries.torus1;
+      case 2: return pyroclastGeometries.torus2;
+      case 3: return pyroclastGeometries.torus3;
+      case 4: return pyroclastGeometries.torus4;
+      default: return pyroclastGeometries.torus0;
+    }
+  };
   
   useEffect(() => {
     // Animation timer
@@ -58,79 +156,63 @@ export default function PyroclastExplosion({
   // More dynamic effect - faster expansion for initial impact
   const expansionRate = 3 + (elapsed < 0.1 ? 8 : 0);
 
+  // Update material opacities based on fade
+  const coreScale = scale * (1 + elapsed * expansionRate);
+  const innerScale = scale * (1 + elapsed * (expansionRate + 1));
+  const ringScale = scale * (1 + elapsed * (expansionRate + 2));
+
+  materials.coreExplosion.opacity = 0.9 * fade;
+  materials.coreExplosion.emissiveIntensity = intensity * fade * 0.5;
+  materials.innerEnergy.opacity = 0.95 * fade;
+  materials.innerEnergy.emissiveIntensity = intensity * 0.5 * fade;
+  materials.torus.opacity = 0.7 * fade;
+  materials.torus.emissiveIntensity = intensity * fade * 0.3;
+  materials.spark.opacity = 0.9 * fade;
+  materials.spark.emissiveIntensity = intensity * 1.2 * fade;
+
   return (
     <group position={position}>
       {/* Core explosion sphere */}
-      <mesh>
-        <sphereGeometry args={[0.5 * scale * (1 + elapsed * expansionRate), 32, 32]} />
-        <meshStandardMaterial
-          color="#FF2200"
-          emissive="#FF3300" 
-          emissiveIntensity={intensity * fade * 0.5}
-          transparent
-          opacity={0.9 * fade}
-          depthWrite={false}
-          blending={AdditiveBlending}
-        />
-      </mesh>
+      <mesh
+        geometry={pyroclastGeometries.coreExplosion}
+        material={materials.coreExplosion}
+        scale={[coreScale, coreScale, coreScale]}
+      />
       
       {/* Inner energy sphere */}
-      <mesh>
-        <sphereGeometry args={[0.525 * scale * (1 + elapsed * (expansionRate + 1)), 24, 24]} />
-        <meshStandardMaterial
-          color="#FF4400"
-          emissive="#FF6600"
-          emissiveIntensity={intensity * 0.5 * fade}
-          transparent
-          opacity={0.95 * fade}
-          depthWrite={false}
-          blending={AdditiveBlending}
-        />
-      </mesh>
+      <mesh
+        geometry={pyroclastGeometries.innerEnergy}
+        material={materials.innerEnergy}
+        scale={[innerScale, innerScale, innerScale]}
+      />
 
-      {/* Multiple expanding rings */}
-      {[0.45, 0.675, 0.8, 0.925, 1.125].map((ringSize, i) => (
-        <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-          <torusGeometry args={[ringSize * scale * (1 + elapsed * (expansionRate + 2)), 0.06 * scale, 16, 32]} />
-          <meshStandardMaterial  
-            color="#FF2200"
-            emissive="#FF4400"
-            emissiveIntensity={intensity * fade * 0.3}
-            transparent
-            opacity={0.7 * fade * (1 - i * 0.15)}
-            depthWrite={false}
-            blending={AdditiveBlending}
-          />
-        </mesh>
+      {/* Multiple expanding rings - using shared geometries */}
+      {[0, 1, 2, 3, 4].map((i) => (
+        <mesh 
+          key={i} 
+          rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
+          geometry={getTorusGeometry(i)}
+          material={materials.torus}
+          scale={[ringScale, ringScale, ringScale]}
+        />
       ))}
 
-      {/* Particle sparks - more dynamic positioning */}
-      {[...Array(sparkCount)].map((_, i) => {
-        const angle = (i / sparkCount) * Math.PI * 2;
-        const randomOffset = Math.random() * 0.3;
-        const radius = scale * (1 + elapsed * (expansionRate - 1)) * (1 + randomOffset);
-        const yOffset = (Math.random() - 0.5) * 0.5; // Add some vertical variation
+      {/* Particle sparks - using pre-generated positions */}
+      {sparkPositions.map((spark, i) => {
+        const radius = scale * (1 + elapsed * (expansionRate - 1)) * (1 + spark.randomOffset);
         
         return (
           <mesh
             key={`spark-${i}`}
             position={[
-              Math.sin(angle) * radius,
-              Math.cos(angle) * radius + yOffset,
-              (Math.random() - 0.5) * 0.3 // Add some depth
+              Math.sin(spark.angle) * radius,
+              Math.cos(spark.angle) * radius + spark.yOffset,
+              spark.depthOffset
             ]}
-          >
-            <sphereGeometry args={[0.08 * scale, 8, 8]} />
-            <meshStandardMaterial
-              color="#FF5500"
-              emissive="#FF7700"
-              emissiveIntensity={intensity * 1.2 * fade}
-              transparent
-              opacity={0.9 * fade}
-              depthWrite={false}
-              blending={AdditiveBlending}
-            />
-          </mesh>
+            geometry={pyroclastGeometries.spark}
+            material={materials.spark}
+            scale={[scale, scale, scale]}
+          />
         );
       })}
 

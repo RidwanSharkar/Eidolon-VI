@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Group, Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
 import DivineStormShard from '@/color/DivineStormShard';
@@ -19,13 +19,20 @@ export default function DivineStorm({
 }: DivineStormProps) {
   const stormRef = useRef<Group>(null);
   const progressRef = useRef(0);
-  const shardsRef = useRef<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
+  const [shards, setShards] = useState<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
 
   // Smaller parameters than Firestorm for more focused divine effect
   const ORBITAL_RADIUS = 1.5;        // Smaller radius than firestorm
   const FALLING_RADIUS = 1.0;        // Smaller radius for concentration
   const ORBITAL_HEIGHT = -2.0;       // Height for orbital shards
   const FALLING_HEIGHT = 1.0;        // Starting height for falling shards
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      setShards([]);
+    };
+  }, []);
 
   useFrame((_, delta) => {
     if (!stormRef.current || !parentRef?.current) return;
@@ -48,36 +55,36 @@ export default function DivineStorm({
     if (Math.random() < 0.6) {
       const angle = Math.random() * Math.PI * 2;
       const spawnRadius = Math.random() * ORBITAL_RADIUS;
-      
+
       const orbitalPosition = new Vector3(
         Math.cos(angle) * spawnRadius,
         ORBITAL_HEIGHT + Math.random() * 0.6,
         Math.sin(angle) * spawnRadius
       );
 
-      shardsRef.current.push({
+      setShards(prev => [...prev, {
         id: Date.now() + Math.random(),
         position: orbitalPosition,
         type: 'orbital'
-      });
+      }]);
     }
 
     // Spawn falling shards
     if (Math.random() < 0.4) {
       const angle = Math.random() * Math.PI * 2;
       const spawnRadius = Math.random() * FALLING_RADIUS;
-      
+
       const fallingPosition = new Vector3(
         Math.cos(angle) * spawnRadius,
         FALLING_HEIGHT + Math.random() * 1.2,
         Math.sin(angle) * spawnRadius
       );
 
-      shardsRef.current.push({
+      setShards(prev => [...prev, {
         id: Date.now() + Math.random(),
         position: fallingPosition,
         type: 'falling'
-      });
+      }]);
     }
 
   });
@@ -85,14 +92,14 @@ export default function DivineStorm({
   return (
     <group ref={stormRef}>
       {/* Spinning divine shards */}
-      {shardsRef.current.map(shard => (
+      {shards.map(shard => (
         <DivineStormShard
           key={shard.id}
           initialPosition={shard.position}
           type={shard.type}
           centerPosition={new Vector3(0, 0, 0)} // Relative to storm center
           onComplete={() => {
-            shardsRef.current = shardsRef.current.filter(s => s.id !== shard.id);
+            setShards(prev => prev.filter(s => s.id !== shard.id));
           }}
         />
       ))}
