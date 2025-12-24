@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Vector3 } from 'three';
 import { DamageNumber } from '@/Unit/useDamageNumbers';
+import { calculateDamage } from '@/Weapons/damage';
 
 export interface LavaLashProjectile {
   id: number;
@@ -104,10 +105,9 @@ export function useLavaLash({
         
         hitEnemies.current.add(hitKey);
         
-        // Calculate level-based damage
+        // Calculate damage with rune system
         const baseDamage = getLavaLashDamage(level);
-        const isCritical = Math.random() < 0.15; // 15% crit chance
-        const finalDamage = isCritical ? baseDamage * 2 : baseDamage;
+        const { damage: finalDamage, isCritical } = calculateDamage(baseDamage);
         
         if (onHit) {
           onHit(enemy.id, finalDamage);

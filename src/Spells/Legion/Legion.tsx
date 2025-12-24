@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import LegionMeteorTrail from './LegionMeteorTrail';
+import { calculateDamage } from '@/Weapons/damage';
 
 interface LegionProps {
   targetPosition: THREE.Vector3;
@@ -195,7 +196,8 @@ export default function Legion({
       
       // Check for player damage and empowerment
       if (tempPlayerGroundPos.distanceTo(tempTargetGroundPos) <= DAMAGE_RADIUS) {
-        onImpact(METEOR_DAMAGE);
+        const { damage: meteorDamage, isCritical: meteorCrit } = calculateDamage(METEOR_DAMAGE);
+        onImpact(meteorDamage);
         
         // Trigger player empowerment if callback is provided
         if (onPlayerEmpowerment) {
@@ -203,25 +205,28 @@ export default function Legion({
         }
       }
 
+      // Calculate damage once for all enemies hit by this meteor
+      const { damage: meteorDamage, isCritical: meteorCrit } = calculateDamage(METEOR_DAMAGE);
+
       // Check for enemy damage in impact area
       if (enemyData && onHit && setDamageNumbers && nextDamageNumberId) {
         enemyData.forEach(enemy => {
           if (enemy.health <= 0 || enemy.isDying) return;
-          
+
           // Reuse temp vector to avoid allocations
           tempEnemyGroundPos.set(enemy.position.x, 0, enemy.position.z);
           const distance = tempEnemyGroundPos.distanceTo(tempTargetGroundPos);
-          
+
           if (distance <= DAMAGE_RADIUS) {
-            onHit(enemy.id, METEOR_DAMAGE);
-            
+            onHit(enemy.id, meteorDamage);
+
             // Add damage number with green color (isLegion: true)
             // Use clone() + add with temp offset to minimize allocations
             setDamageNumbers(prev => [...prev, {
               id: nextDamageNumberId.current++,
-              damage: METEOR_DAMAGE,
+              damage: meteorDamage,
               position: enemy.position.clone().add(tempDamageNumberOffset),
-              isCritical: false,
+              isCritical: meteorCrit,
               isLegion: true,
               createdAt: Date.now() // MEMORY FIX: Required for cleanup
             }]);

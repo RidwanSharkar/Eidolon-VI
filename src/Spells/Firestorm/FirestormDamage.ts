@@ -1,5 +1,6 @@
 // src/Spells/Firestorm/FirestormDamage.ts
 import { Vector3 } from 'three';
+import { calculateDamage } from '@/Weapons/damage';
 
 interface FirestormHit {
   targetId: string;
@@ -20,10 +21,11 @@ export function calculateFirestormDamage(
     const distance = playerPosition.distanceTo(enemy.position);
     
     if (distance <= firestormRadius) {
-      // 15% critical chance for firestorm
-      const isCritical = Math.random() < 0.15;
-      const damage = isCritical ? baseDamage * 2 : baseDamage;
-      
+      // Use global critical rune system for firestorm damage
+      const damageResult = calculateDamage(baseDamage);
+      const damage = damageResult.damage;
+      const isCritical = damageResult.isCritical;
+
       hits.push({
         targetId: `enemy-${enemy.id}`,
         damage,

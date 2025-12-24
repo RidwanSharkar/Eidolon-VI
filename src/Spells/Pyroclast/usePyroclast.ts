@@ -3,6 +3,7 @@ import { Vector3 } from 'three';
 import { Group } from 'three';
 import { ORBITAL_COOLDOWN } from '@/color/ChargedOrbitals';
 import { ReigniteRef } from '../Reignite/Reignite';
+import { calculateDamage } from '@/Weapons/damage';
 
 interface UsePyroclastProps {
   parentRef: React.RefObject<Group>;
@@ -69,21 +70,13 @@ const CHARGE_CONSUME_INTERVAL = 500;
 function calculatePyroclastDamage(chargeTimeSeconds: number, level: number = 1): { damage: number; isCritical: boolean } {
   // Clamp charge time between 0.5 and MAX_CHARGE_TIME seconds
   const clampedChargeTime = Math.max(0.5, Math.min(PYROCLAST_MAX_CHARGE_TIME, chargeTimeSeconds));
-  
+
   // Calculate base damage linearly using level-scaled damage per second
   const damagePerSecond = getPyroclastDamagePerSecond(level);
-  let damage = Math.floor(clampedChargeTime * damagePerSecond);
-  
-  // 11% chance to critical hit
-  const isCritical = Math.random() < 0.11;
-  
-  // Double damage on critical hits
-  if (isCritical) {
-    damage *= 2;
-  }
-  
-  
-  return { damage, isCritical };
+  const baseDamage = Math.floor(clampedChargeTime * damagePerSecond);
+
+  // Use rune system for critical calculation
+  return calculateDamage(baseDamage);
 }
 
 export function usePyroclast({

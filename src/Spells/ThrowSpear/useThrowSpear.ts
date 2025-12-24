@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Vector3, Group } from 'three';
+import { calculateDamage } from '@/Weapons/damage';
 
 interface ThrowSpearProjectile {
   id: number;
@@ -280,28 +281,27 @@ export function useThrowSpear({
                   // Mark enemy as hit
                   updatedProjectile.hitEnemies.add(enemy.id);
                   
-                  let finalDamage = updatedProjectile.damage;
-                  
+                  // Calculate damage with rune system
+                  const { damage: baseDamageWithCrit, isCritical: isCrit } = calculateDamage(updatedProjectile.damage);
+
                   // Check if enemy is stunned BEFORE applying damage (important for timing)
                   const wasEnemyStunned = isEnemyStunned && isEnemyStunned(enemy.id);
-                  
+
                   // Double damage if enemy is stunned
-                  if (wasEnemyStunned) {
-                    finalDamage *= 2;
-                  }
-                  
+                  const finalDamage = wasEnemyStunned ? baseDamageWithCrit * 2 : baseDamageWithCrit;
+
                   // Store enemy health before damage to check if it was a killing blow
                   const enemyHealthBeforeDamage = enemy.health;
-                  
+
                   // Apply damage
                   onHit(enemy.id, finalDamage);
-                  
+
                   // Add damage number
                   setDamageNumbers(prev => [...prev, {
                     id: nextDamageNumberId.current++,
                     damage: finalDamage,
                     position: enemy.position.clone(),
-                    isCritical: false,
+                    isCritical: isCrit,
                     isThrowSpear: true,
                     createdAt: Date.now() // MEMORY FIX: Required for cleanup
                   }]);
@@ -363,19 +363,18 @@ export function useThrowSpear({
                   // Mark enemy as hit during return phase
                   updatedProjectile.returnHitEnemies.add(enemy.id);
                   
-                  let finalDamage = updatedProjectile.damage;
-                  
+                  // Calculate damage with rune system
+                  const { damage: baseDamageWithCrit, isCritical: isCrit } = calculateDamage(updatedProjectile.damage);
+
                   // Check if enemy is stunned BEFORE applying damage (important for timing)
                   const wasEnemyStunned = isEnemyStunned && isEnemyStunned(enemy.id);
-                  
+
                   // Double damage if enemy is stunned
-                  if (wasEnemyStunned) {
-                    finalDamage *= 2;
-                  }
-                  
+                  const finalDamage = wasEnemyStunned ? baseDamageWithCrit * 2 : baseDamageWithCrit;
+
                   // Store enemy health before damage to check if it was a killing blow
                   const enemyHealthBeforeDamage = enemy.health;
-                  
+
                   // Apply damage again
                   onHit(enemy.id, finalDamage);
                   
@@ -384,7 +383,7 @@ export function useThrowSpear({
                     id: nextDamageNumberId.current++,
                     damage: finalDamage,
                     position: enemy.position.clone(),
-                    isCritical: false,
+                    isCritical: isCrit,
                     isThrowSpear: true,
                     createdAt: Date.now() // MEMORY FIX: Required for cleanup
                   }]);

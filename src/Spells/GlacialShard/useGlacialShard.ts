@@ -3,6 +3,7 @@ import { Vector3 } from 'three';
 import { Group } from 'three';
 import { WeaponSubclass } from '@/Weapons/weapons';
 import { SynchronizedEffect } from '@/Multiplayer/MultiplayerContext';
+import { calculateDamage } from '@/Weapons/damage';
 
 interface UseGlacialShardProps {
   parentRef: React.RefObject<Group>;
@@ -73,23 +74,18 @@ const DAMAGE_PER_KILL = 6;
 const CRIT_CHANCE_PER_KILL = 0.025; // 2.5%
 
 function calculateGlacialShardDamage(isFrozen: boolean = false, bonusDamage: number = 0, bonusCritChance: number = 0): { damage: number; isCritical: boolean } {
-  let damage = GLACIAL_SHARD_DAMAGE + bonusDamage;
-  
-  // Base crit chance plus bonus from kills
-  const totalCritChance = GLACIAL_SHARD_CRIT_CHANCE + bonusCritChance;
-  const isCritical = Math.random() < totalCritChance;
-  
-  // Double damage on critical hits
-  if (isCritical) {
-    damage *= 2;
-  }
-  
-  // Double damage if enemy is frozen (Deep Freeze passive)
-  if (isFrozen) {
-    damage *= 2;  // FROZENDAMAGEMULTIPLIER 2x
-  }
-  
-  return { damage, isCritical };
+  // Calculate base damage with rune system (includes CriticalRune and CritDamageRune bonuses)
+  const baseDamage = GLACIAL_SHARD_DAMAGE + bonusDamage;
+  const { damage: runeDamage, isCritical: runeCritical } = calculateDamage(baseDamage);
+
+  // Apply frozen damage multiplier (Deep Freeze passive) - this is separate from rune crit
+  const frozenMultiplier = isFrozen ? 2 : 1;  // FROZENDAMAGEMULTIPLIER 2x
+  const finalDamage = Math.floor(runeDamage * frozenMultiplier);
+
+  // Critical status is true if rune crit OR frozen (for visual effect)
+  const isCritical = runeCritical || isFrozen;
+
+  return { damage: finalDamage, isCritical };
 }
 
 export function useGlacialShard({

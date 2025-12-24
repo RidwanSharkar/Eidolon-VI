@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import MeteorTrail from './MeteorTrail';
 import { Enemy } from '@/Versus/enemy';
+import { calculateDamage } from '@/Weapons/damage';
 
 interface MeteorProps {
   targetId: string;
@@ -161,16 +162,19 @@ export default function Meteor({ targetId, initialTargetPosition, onImpact, onCo
       // Apply damage to all enemies within radius on impact
       const impactPosition = new THREE.Vector3(currentTargetPosition.x, 0, currentTargetPosition.z);
       
+      // Calculate damage once for all enemies hit by this meteor
+      const { damage: meteorDamage, isCritical: meteorCrit } = calculateDamage(METEOR_DAMAGE);
+
       if (onHit) {
         enemyData.forEach(enemy => {
           // Only damage living enemies
           if (enemy.health <= 0 || enemy.isDying) return;
-          
+
           const enemyPos = new THREE.Vector3(enemy.position.x, 0, enemy.position.z);
           const distance = enemyPos.distanceTo(impactPosition);
-          
+
           if (distance <= DAMAGE_RADIUS) {
-            onHit(enemy.id, METEOR_DAMAGE, false, impactPosition);
+            onHit(enemy.id, meteorDamage, meteorCrit, impactPosition);
           }
         });
       }
@@ -180,7 +184,7 @@ export default function Meteor({ targetId, initialTargetPosition, onImpact, onCo
       tempTargetGroundPos.set(currentTargetPosition.x, 0, currentTargetPosition.z);
       
       if (tempPlayerGroundPos.distanceTo(tempTargetGroundPos) <= DAMAGE_RADIUS) {
-        onImpact(METEOR_DAMAGE);
+        onImpact(meteorDamage);
       }
       return;
     }

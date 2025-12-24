@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Vector3, Group } from 'three';
+import { calculateDamage } from '@/Weapons/damage';
 
 export interface UseEviscerateLashReturn {
   isActive: boolean;
@@ -176,13 +177,16 @@ export const useEviscerate = ({
           const enemyFacing = new Vector3(0, 0, 1); // Assume enemies face forward initially
           const backstabDotProduct = playerToEnemy.dot(enemyFacing);
           
-          let finalDamage = BASE_DAMAGE;
-          let isCritical = false;
-          
+          // Calculate base damage with rune system
+          const { damage: baseDamageWithCrit, isCritical: runeCritical } = calculateDamage(BASE_DAMAGE);
+
+          let finalDamage = baseDamageWithCrit;
+          let isCritical = runeCritical;
+
           // Backstab detection: if player is behind enemy (dot product > 0.5)
           if (backstabDotProduct > 0.5) {
-            finalDamage = BASE_DAMAGE * 2; // Double damage for backstab
-            isCritical = true;
+            finalDamage *= 2; // Double damage for backstab
+            isCritical = true; // Always show as critical for backstab
           }
           
           onHit(`enemy-${enemy.id}`, finalDamage);

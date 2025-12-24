@@ -1,4 +1,5 @@
 import { Vector3 } from 'three';
+import { calculateDamage } from '@/Weapons/damage';
 
 // Dragon Breath damage constants
 const DRAGON_BREATH_BASE_DAMAGE = 360;
@@ -46,9 +47,8 @@ export function calculateDragonBreathHits(
     // Check if enemy is within the breath cone
     if (angle > DRAGON_BREATH_ARC_HALF) continue;
 
-    // Dragon Breath doesn't crit - consistent green flame damage
-    const damage = DRAGON_BREATH_BASE_DAMAGE;
-    const isCritical = false;
+    // Calculate damage with rune system
+    const { damage, isCritical } = calculateDamage(DRAGON_BREATH_BASE_DAMAGE);
 
     // Calculate knockback direction (away from caster)
     const knockbackDirection = STATIC_VECTORS.temp1.clone().normalize();

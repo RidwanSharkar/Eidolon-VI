@@ -8,6 +8,7 @@ import { WeaponSubclass } from '@/Weapons/weapons';
 import * as THREE from 'three';
 import { DamageNumber } from '../../Unit/useDamageNumbers';
 import { SynchronizedEffect } from '@/Multiplayer/MultiplayerContext';
+import { calculateDamage } from '@/Weapons/damage';
 
 interface FirebeamManagerProps {
   parentRef: React.RefObject<THREE.Group>;
@@ -133,15 +134,14 @@ export const useFirebeamManager = ({
 
     const currentTime = Date.now();
     const timeActive = firebeamStartTime.current ? (currentTime - firebeamStartTime.current) / 1000 : 0;
-    
-    // Calculate damage scaling - increases every second held
+
+    // Calculate base damage with rune system
     const baseDamage = 43;
+    const { damage: baseDamageWithCrit, isCritical: isBaseCritical } = calculateDamage(baseDamage);
+
+    // Calculate damage scaling - increases every second held (applied after critical)
     const damageMultiplier = 1 + Math.floor(timeActive) * 0.5; // +50% damage per second held
-    const baseFinalDamage = Math.floor(baseDamage * damageMultiplier);
-    
-    // Apply 2x damage multiplier against frozen enemies (Deep Freeze passive)
-    const freezeMultiplier = currentSubclass === WeaponSubclass.FROST ? 2 : 1;
-    const finalDamage = baseFinalDamage;
+    const finalDamage = Math.floor(baseDamageWithCrit * damageMultiplier);
 
 
 
@@ -184,17 +184,17 @@ export const useFirebeamManager = ({
       const perpendicularDistance = enemyPos2D.distanceTo(projectedPoint);
       
       if (perpendicularDistance < 1.375) {
-        // Apply freeze damage multiplier for this specific enemy
+        // Apply freeze damage multiplier for this specific enemy (Deep Freeze passive)
         const enemyIsFrozen = isEnemyFrozen(enemy.id);
-        const enemyFinalDamage = enemyIsFrozen ? finalDamage * freezeMultiplier : finalDamage;
-        
+        const freezeMultiplier = currentSubclass === WeaponSubclass.FROST ? 2 : 1;
+        const enemyFinalDamage = enemyIsFrozen ? Math.floor(finalDamage * freezeMultiplier) : finalDamage;
 
         onHit(enemy.id, enemyFinalDamage);
         setDamageNumbers(prev => [...prev, {
           id: nextDamageNumberId.current++,
           damage: enemyFinalDamage,
           position: enemy.position.clone(),
-          isCritical: damageMultiplier > 2 || enemyIsFrozen, // Critical display if 2x+ damage OR frozen
+          isCritical: isBaseCritical || enemyIsFrozen, // Critical if rune crit OR frozen (for visual effect)
           isFirebeam: true,
           createdAt: Date.now() // MEMORY FIX: Required for cleanup
         }]);

@@ -1704,19 +1704,19 @@ export default function Unit({
         // Sabres damage calculation - different damage for different subclasses
         // For Assassin subclass, include stealth kill count bonus
         const sabresDamage = getWeaponDamage(WeaponType.SABRES, currentSubclass, stealthKillCount, undefined);
-        
-        // Calculate damage independently for each hit
+
+        // Calculate damage independently for each hit using global critical rune system
         // Calculate and store critical status for this specific hit
         const currentHitIndex = currentHits;
-        isCritical = Math.random() < 0.25; // 25% crit chance for Sabres
-        
+        const damageResult = calculateDamage(sabresDamage);
+        damage = damageResult.damage;
+        isCritical = damageResult.isCritical;
+
         // Store the critical hit status for this specific hit
         setHitCountThisSwing(prev => ({
           ...prev,
           [`${target.id}_crit_${currentHitIndex}`]: isCritical
         }));
-        
-        damage = isCritical ? sabresDamage * 2 : sabresDamage;
       } else if (currentWeapon === WeaponType.SWORD && !isSmiting && !isOathstriking) {
         // Sword damage calculation - different behavior for subclasses
         if (currentSubclass === WeaponSubclass.DIVINITY) {
@@ -2129,19 +2129,21 @@ export default function Unit({
       if (timeSinceLastTick >= 1000) {
         const enemy = enemyData.find(e => e.id === enemyId);
         if (enemy && enemy.health > 0) {
-          // Deal poison damage - 29 at levels 1-2, 71 at level 3+
-          const poisonDamage = level >= 3 ? 71 : 37;
-          onHit(enemyId, poisonDamage);
+        // Deal poison damage - 37 at levels 1-2, 71 at level 3+ (using global critical system)
+        const poisonDamage = level >= 3 ? 71 : 37;
+        const { damage: finalPoisonDamage, isCritical: isPoisonCritical } = calculateDamage(poisonDamage);
+        onHit(enemyId, finalPoisonDamage);
           
           // Add poison damage number
           setDamageNumbers(prev => [...prev, {
             id: nextDamageNumberId.current++,
-            damage: poisonDamage,
+            damage: finalPoisonDamage,
             position: enemy.position.clone(),
-            isCritical: false,
+            isCritical: isPoisonCritical,
             isLightning: false,
             isBlizzard: false,
             isHealing: false,
+            isPoisonDoT: true,
             isBoneclaw: false,
             isSmite: false,
             isSword: false,
@@ -2196,16 +2198,17 @@ export default function Unit({
       if (timeSinceLastTick >= 1000) {
         const enemy = enemyData.find(e => e.id === enemyId);
         if (enemy && enemy.health > 0) {
-          // Deal viper sting poison damage - 53 damage per second
+          // Deal viper sting poison damage - 53 damage per second (using global critical system)
           const viperPoisonDamage = 53;
-          onHit(enemyId, viperPoisonDamage);
+          const { damage: finalViperDamage, isCritical: isViperCritical } = calculateDamage(viperPoisonDamage);
+          onHit(enemyId, finalViperDamage);
           
           // Add viper sting poison damage number
           setDamageNumbers(prev => [...prev, {
             id: nextDamageNumberId.current++,
-            damage: viperPoisonDamage,
+            damage: finalViperDamage,
             position: enemy.position.clone(),
-            isCritical: false,
+            isCritical: isViperCritical,
             isLightning: false,
             isBlizzard: false,
             isHealing: false,

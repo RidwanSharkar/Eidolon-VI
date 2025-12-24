@@ -2,6 +2,7 @@ import { useCallback, useRef, useEffect } from 'react';
 import { Vector3, Group } from 'three';
 import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
 import { DamageNumber } from '../../Unit/useDamageNumbers';
+import { calculateDamage } from '@/Weapons/damage';
 
 interface ViperStingProjectile {
   id: number;
@@ -197,6 +198,9 @@ export function useViperSting({
       projectilePool.current.forEach(projectile => {
         if (!projectile.active) return;
 
+        // Calculate damage once for this projectile (includes rune system)
+        const { damage: projectileDamage, isCritical: isProjectileCrit } = calculateDamage(DAMAGE);
+
         // Handle fading
         if (projectile.fadeStartTime) {
           const fadeElapsed = now - projectile.fadeStartTime;
@@ -240,19 +244,19 @@ export function useViperSting({
                 projectile.hitEnemies.add(enemy.id);
                 
                 // Apply damage
-                onHit(enemy.id, DAMAGE);
-                
+                onHit(enemy.id, projectileDamage);
+
                 // Apply DoT effect
                 if (applyDoT) {
                   applyDoT(enemy.id);
                 }
-                
+
                 // Add damage number
                 setDamageNumbers(prev => [...prev, {
                   id: nextDamageNumberId.current++,
-                  damage: DAMAGE,
+                  damage: projectileDamage,
                   position: enemy.position.clone(),
-                  isCritical: false,
+                  isCritical: isProjectileCrit,
                   isViperSting: true,
                   createdAt: Date.now() // MEMORY FIX: Required for cleanup
                 }]);
@@ -306,19 +310,19 @@ export function useViperSting({
                 projectile.returnHitEnemies.add(enemy.id);
                 
                 // Apply damage again
-                onHit(enemy.id, DAMAGE);
-                
+                onHit(enemy.id, projectileDamage);
+
                 // Apply DoT effect for return shot as well
                 if (applyDoT) {
                   applyDoT(enemy.id);
                 }
-                
+
                 // Add damage number
                 setDamageNumbers(prev => [...prev, {
                   id: nextDamageNumberId.current++,
-                  damage: DAMAGE,
+                  damage: projectileDamage,
                   position: enemy.position.clone(),
-                  isCritical: false,
+                  isCritical: isProjectileCrit,
                   isViperSting: true,
                   createdAt: Date.now() // MEMORY FIX: Required for cleanup
                 }]);

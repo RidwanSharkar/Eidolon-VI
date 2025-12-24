@@ -1,5 +1,6 @@
 // src/Spells/Raze/RazeDamage.ts
 import { Vector3 } from 'three';
+import { calculateDamage } from '@/Weapons/damage';
 
 interface RazeHit {
   targetId: string;
@@ -33,11 +34,12 @@ export function calculateRazeDamage(
       );
       
       if (isInStrip) {
-        
-        // 5% critical chance for raze damage
-        const isCritical = Math.random() < 0.1;
-        const damage = isCritical ? baseDamage * 2 : baseDamage;
-        
+
+        // Use global critical rune system for raze damage
+        const damageResult = calculateDamage(baseDamage);
+        const damage = damageResult.damage;
+        const isCritical = damageResult.isCritical;
+
         hits.push({
           targetId: enemy.id, // enemy.id already includes "enemy-" prefix from Scene.tsx
           damage,
