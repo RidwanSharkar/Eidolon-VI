@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3, Euler, Shape, ExtrudeGeometry, MeshStandardMaterial } from 'three';
 import * as THREE from 'three';
 
@@ -16,47 +16,50 @@ interface BoneWingsProps {
   parentRef: React.RefObject<Group>;
 }
 
+// Shared shapes and settings - moved inside component for proper disposal
+const FEATHER_SHAPE = (() => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(0.06, 0.8);
+  shape.lineTo(0.03, 1.0);
+  shape.lineTo(0, 0.95);
+  shape.lineTo(-0.03, 1.0);
+  shape.lineTo(-0.06, 0.8);
+  shape.lineTo(0, 0);
+  return shape;
+})();
+
+const RED_MARKING_SHAPE = (() => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(0.05, 0.6);
+  shape.lineTo(0.025, 0.8);
+  shape.lineTo(0, 0.75);
+  shape.lineTo(-0.025, 0.8);
+  shape.lineTo(-0.05, 0.6);
+  shape.lineTo(0, 0);
+  return shape;
+})();
+
+const EXTRUDE_SETTINGS = {
+  steps: 1,
+  depth: 0.02,
+  bevelEnabled: true,
+  bevelThickness: 0.005,
+  bevelSize: 0.008,
+  bevelSegments: 2,
+  curveSegments: 8
+} as const;
+
+
 export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneWingsProps) {
   const wingsRef = useRef<Group>(null);
 
-  // Wing feather shape - thinner and more angular
-  const featherShape = useMemo(() => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    shape.lineTo(0.06, 0.8);  // Reduced from 0.1 to 0.06
-    shape.lineTo(0.03, 1.0);  // Reduced from 0.05 to 0.03
-    shape.lineTo(0, 0.95);
-    shape.lineTo(-0.03, 1.0); // Reduced from -0.05 to -0.03
-    shape.lineTo(-0.06, 0.8); // Reduced from -0.1 to -0.06
-    shape.lineTo(0, 0);
-    return shape;
-  }, []);
+  // Create geometries and materials with proper disposal
+  const featherGeometry = useMemo(() => new ExtrudeGeometry(FEATHER_SHAPE, EXTRUDE_SETTINGS), []);
+  const redMarkingGeometry = useMemo(() => new ExtrudeGeometry(RED_MARKING_SHAPE, EXTRUDE_SETTINGS), []);
 
-  // Red marking shape - thinner blade design
-  const redMarkingShape = useMemo(() => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    shape.lineTo(0.05, 0.6);  // Reduced from 0.08 to 0.05
-    shape.lineTo(0.025, 0.8); // Reduced from 0.04 to 0.025
-    shape.lineTo(0, 0.75);
-    shape.lineTo(-0.025, 0.8); // Reduced from -0.04 to -0.025
-    shape.lineTo(-0.05, 0.6);  // Reduced from -0.08 to -0.05
-    shape.lineTo(0, 0);
-    return shape;
-  }, []);
-
-  const extrudeSettings = useMemo(() => ({
-    steps: 1,
-    depth: 0.02,
-    bevelEnabled: true,
-    bevelThickness: 0.005,
-    bevelSize: 0.008,
-    bevelSegments: 2,
-    curveSegments: 8
-  }), []);
-
-  // Materials
-  const materials = useMemo(() => ({
+  const sharedMaterials = useMemo(() => ({
     feather: new MeshStandardMaterial({
       color: "#F5F5DC",
       emissive: "#2A2A1A",
@@ -84,12 +87,19 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
     })
   }), []);
 
-  // Geometries
-  const featherGeometry = useMemo(() => new ExtrudeGeometry(featherShape, extrudeSettings), [featherShape, extrudeSettings]);
-  const redMarkingGeometry = useMemo(() => new ExtrudeGeometry(redMarkingShape, extrudeSettings), [redMarkingShape, extrudeSettings]);
+  // Dispose geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      featherGeometry.dispose();
+      redMarkingGeometry.dispose();
+      sharedMaterials.feather.dispose();
+      sharedMaterials.redMarking.dispose();
+      sharedMaterials.wingBone.dispose();
+    };
+  }, [featherGeometry, redMarkingGeometry, sharedMaterials]);
 
   // Wing segment definitions - creating layered angel wing structure with better spacing
-  const wingSegments: WingSegment[] = useMemo(() => [
+  const wingSegments: WingSegment[] = [
     // Primary feathers (outermost, longest) - increased spacing
     { 
       pos: new Vector3(isLeftWing ? -1.0 : 1.0, 0.3, -0.15), 
@@ -160,9 +170,7 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
       hasRedMarking: false
     },
     
-  ], [isLeftWing]);
-
-
+  ];
 
   // Create individual wing feather with optional red marking
   const createWingFeather = (segment: WingSegment, index: number) => (
@@ -173,7 +181,7 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
       scale={segment.scale}
     >
       {/* Base feather */}
-      <mesh geometry={featherGeometry} material={materials.feather}>
+      <mesh geometry={featherGeometry} material={sharedMaterials.feather}>
         <pointLight
           color="#F5F5DC"
           intensity={0.3}
@@ -184,9 +192,9 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
       
       {/* Red marking overlay */}
       {segment.hasRedMarking && (
-        <mesh 
-          geometry={redMarkingGeometry} 
-          material={materials.redMarking}
+        <mesh
+          geometry={redMarkingGeometry}
+          material={sharedMaterials.redMarking}
           position={[0, 0, 0.01]}
         >
           <pointLight
@@ -217,4 +225,4 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
 
     </group>
   );
-} 
+}

@@ -150,6 +150,16 @@ class GeometryPools {
   public ascendantChargingOrb: ObjectPool<THREE.SphereGeometry>;
   public ascendantForcePulse: ObjectPool<THREE.SphereGeometry>;
 
+  // Unit projectile geometries
+  public arrowCylinder: ObjectPool<THREE.CylinderGeometry>;
+  public arrowRing: ObjectPool<THREE.TorusGeometry>;
+  public spearCylinder: ObjectPool<THREE.CylinderGeometry>;
+  public projectileParticle: ObjectPool<THREE.SphereGeometry>;
+  public projectileTorus: ObjectPool<THREE.TorusGeometry>;
+  public projectileSphere: ObjectPool<THREE.SphereGeometry>;
+  public projectileCone: ObjectPool<THREE.ConeGeometry>;
+  public projectilePlane: ObjectPool<THREE.PlaneGeometry>;
+
   private constructor() {
     // Skeleton slash effect pools - reduced sizes for memory management
     this.slashMainTorus = new ObjectPool(
@@ -291,6 +301,47 @@ class GeometryPools {
       () => new THREE.SphereGeometry(1.0, 16, 16),
       8, 16
     );
+
+    // Unit projectile geometry pools
+    this.arrowCylinder = new ObjectPool(
+      () => new THREE.CylinderGeometry(0.02, 0.075, 1.75, 6),
+      10, 20
+    );
+
+    this.arrowRing = new ObjectPool(
+      () => new THREE.TorusGeometry(0.125, 0.05, 6, 12),
+      15, 30
+    );
+
+    this.spearCylinder = new ObjectPool(
+      () => new THREE.CylinderGeometry(0.08, 0.18, 1.5, 4),
+      8, 16
+    );
+
+    this.projectileParticle = new ObjectPool(
+      () => new THREE.SphereGeometry(0.08, 3, 3),
+      20, 40
+    );
+
+    this.projectileTorus = new ObjectPool(
+      () => new THREE.TorusGeometry(0.25, 0.06, 3, 6),
+      10, 20
+    );
+
+    this.projectileSphere = new ObjectPool(
+      () => new THREE.SphereGeometry(0.05, 3, 3),
+      25, 50
+    );
+
+    this.projectileCone = new ObjectPool(
+      () => new THREE.ConeGeometry(0.08, 0.4, 6),
+      10, 20
+    );
+
+    this.projectilePlane = new ObjectPool(
+      () => new THREE.PlaneGeometry(1, 0.1),
+      5, 10
+    );
   }
 
   private createAttackAreaGeometry(): THREE.BufferGeometry {
@@ -359,6 +410,16 @@ class GeometryPools {
     this.ascendantChargingArea.dispose();
     this.ascendantChargingOrb.dispose();
     this.ascendantForcePulse.dispose();
+
+    // Unit projectile geometries
+    this.arrowCylinder.dispose();
+    this.arrowRing.dispose();
+    this.spearCylinder.dispose();
+    this.projectileParticle.dispose();
+    this.projectileTorus.dispose();
+    this.projectileSphere.dispose();
+    this.projectileCone.dispose();
+    this.projectilePlane.dispose();
   }
 }
 
@@ -882,12 +943,38 @@ class MaterialPools {
 export const geometryPools = GeometryPools.getInstance();
 export const materialPools = MaterialPools.getInstance();
 
+// Import shared resources for disposal
+import '../Spells/Boneclaw/BoneClawScratch';
+import '../Versus/Abomination/CustomAbomination';
+import '../Spells/Summon/TotemModel';
+// Global shared resource disposal registry
+const globalSharedResources: Array<{ dispose: () => void; name: string }> = [];
+
+// Function to register global shared resources for disposal
+export const registerGlobalSharedResource = (disposeFn: () => void, name: string) => {
+  globalSharedResources.push({ dispose: disposeFn, name });
+};
+
+// Dispose all global shared resources
+const disposeGlobalSharedResources = () => {
+  globalSharedResources.forEach(({ dispose, name }) => {
+    try {
+      dispose();
+      console.log(`✅ Disposed global shared resource: ${name}`);
+    } catch (error) {
+      console.error(`❌ Error disposing global shared resource ${name}:`, error);
+    }
+  });
+  globalSharedResources.length = 0; // Clear the registry
+};
+
 // Cleanup function for when the game shuts down
 export const disposeEffectPools = () => {
   try {
     geometryPools.dispose();
     materialPools.dispose();
-    console.log('✅ EffectPools disposed successfully');
+    disposeGlobalSharedResources();
+    console.log('✅ EffectPools and global shared resources disposed successfully');
   } catch (error) {
     console.error('❌ Error disposing EffectPools:', error);
   }

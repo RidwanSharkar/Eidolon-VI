@@ -8,6 +8,8 @@ import { DamageNumber } from '@/Unit/useDamageNumbers';
 import { WeaponSubclass, getWeaponDamage, WeaponType } from '@/Weapons/weapons';
 import { calculateDamage } from '@/Weapons/damage';
 
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const SPEAR_COLOR = new THREE.Color(0xFF544E);
 
 interface SpearProps {
   isSwinging: boolean;
@@ -284,7 +286,8 @@ export default function Spear({
                 id: nextDamageNumberId.current++,
                 damage,
                 position: enemy.position.clone(),
-                isCritical
+                isCritical,
+                createdAt: Date.now() // MEMORY FIX: Required for cleanup
               }]);
               
               // Use the same hitKey system for recording hits
@@ -482,8 +485,8 @@ export default function Spear({
           <mesh>
             <sphereGeometry args={[0.155, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFF544E)}         // Spear red to match GhostTrail
-              emissive={new THREE.Color(0xFF544E)}      // Spear red emission
+              color={SPEAR_COLOR}         // Spear red to match GhostTrail
+              emissive={SPEAR_COLOR}      // Spear red emission
               emissiveIntensity={2}                    // for orange 
               transparent
               opacity={1}
@@ -493,8 +496,8 @@ export default function Spear({
           <mesh>
             <sphereGeometry args={[0.1, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFF544E)}
-              emissive={new THREE.Color(0xFF544E)}
+              color={SPEAR_COLOR}
+              emissive={SPEAR_COLOR}
               emissiveIntensity={40}
               transparent
               opacity={0.8}
@@ -504,8 +507,8 @@ export default function Spear({
           <mesh>
             <sphereGeometry args={[0.145, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFF544E)}
-              emissive={new THREE.Color(0xFF544E)}
+              color={SPEAR_COLOR}
+              emissive={SPEAR_COLOR}
               emissiveIntensity={35}
               transparent
               opacity={0.6}
@@ -515,8 +518,8 @@ export default function Spear({
           <mesh>
             <sphereGeometry args={[.175, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFF544E)}
-              emissive={new THREE.Color(0xFF544E)}
+              color={SPEAR_COLOR}
+              emissive={SPEAR_COLOR}
               emissiveIntensity={30}
               transparent
               opacity={0.4}
@@ -524,7 +527,7 @@ export default function Spear({
           </mesh>
 
           <pointLight 
-            color={new THREE.Color(0xFF544E)}
+            color={SPEAR_COLOR}
             intensity={2}
             distance={0.5}
             decay={2}
@@ -537,8 +540,8 @@ export default function Spear({
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                 <meshStandardMaterial 
-                  color={new THREE.Color(0xFF544E)}
-                  emissive={new THREE.Color(0xFF544E)}
+                  color={SPEAR_COLOR}
+                  emissive={SPEAR_COLOR}
                   emissiveIntensity={1.55}
                   metalness={0.8}
                   roughness={0.1}
@@ -555,8 +558,8 @@ export default function Spear({
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                 <meshStandardMaterial 
-                  color={new THREE.Color(0xFF544E)}
-                  emissive={new THREE.Color(0xFF544E)}
+                  color={SPEAR_COLOR}
+                  emissive={SPEAR_COLOR}
                   emissiveIntensity={1.55}
                   metalness={0.8}
                   roughness={0.1}
@@ -573,8 +576,8 @@ export default function Spear({
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                 <meshStandardMaterial 
-                  color={new THREE.Color(0xFF544E)}
-                  emissive={new THREE.Color(0xFF544E)}
+                  color={SPEAR_COLOR}
+                  emissive={SPEAR_COLOR}
                   emissiveIntensity={1.55}
                   metalness={0.8}
                   roughness={0.1}
@@ -591,8 +594,8 @@ export default function Spear({
           <mesh>
             <extrudeGeometry args={[createInnerBladeShape(), bladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xFF544E)}
-              emissive={new THREE.Color(0xFF544E)}
+              color={SPEAR_COLOR}
+              emissive={SPEAR_COLOR}
               emissiveIntensity={1.5}
               metalness={0.3}
               roughness={0.1}
@@ -602,8 +605,8 @@ export default function Spear({
           <mesh>
             <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xFF544E)}
-              emissive={new THREE.Color(0xFF544E)}
+              color={SPEAR_COLOR}
+              emissive={SPEAR_COLOR}
               emissiveIntensity={1}
               metalness={0.2}
               roughness={0.1}

@@ -68,7 +68,28 @@ const sharedGeometries = {
   eyeGlow: new THREE.SphereGeometry(0.035, 8, 8),
   eyeOuterGlow: new THREE.SphereGeometry(0.05, 6.5, 2),
   vertebrae: new THREE.CylinderGeometry(0.0225, 0.0225, 0.03, 6),
-  particle: new THREE.SphereGeometry(0.01, 6, 6)
+  particle: new THREE.SphereGeometry(0.01, 6, 6),
+  // MEMORY FIX: Additional cached geometries
+  skull: new THREE.SphereGeometry(0.22, 8, 8),
+  facePlate: new THREE.BoxGeometry(0.28, 0.28, 0.1),
+  cheekbone: new THREE.BoxGeometry(0.08, 0.12, 0.15),
+  jaw: new THREE.CylinderGeometry(0.08, 0.08, 0.2, 5),
+  pelvis: new THREE.CylinderGeometry(0.21, 0.20, 0.2, 8),
+  pelvisJoint: new THREE.SphereGeometry(0.075, 8, 8),
+  footPlate: new THREE.BoxGeometry(0.15, 0.02, 0.4),
+  shoulderBase: new THREE.CylinderGeometry(0.123, 0.19, 0.175, 6),
+  armorPlate: new THREE.BoxGeometry(0.12, 0.19, 0.02),
+  armorRidge: new THREE.BoxGeometry(0.035, 0.24, 0.015),
+  robeBody: new THREE.CylinderGeometry(0.17, 0.45, 1.85, 6),
+  robeTrim: new THREE.CylinderGeometry(0.285, 0.285, 0.135, 8),
+  robeSleeve: new THREE.CylinderGeometry(0.1, 0.125, 0.3, 6),
+  neck: new THREE.CylinderGeometry(0.04, 0.04, 0.2, 6),
+  rimHover: new THREE.TorusGeometry(0.2, 0.035, 3, 5),
+  rimBottom: new THREE.TorusGeometry(0.16, 0.02, 4, 5),
+  rimBottomLarge: new THREE.TorusGeometry(0.20, 0.02, 4, 5),
+  rimMid: new THREE.TorusGeometry(0.175, 0.0175, 6, 6),
+  beltRing: new THREE.TorusGeometry(0.075, 0.03, 3, 16),
+  kneeJoint: new THREE.SphereGeometry(0.12, 12, 12)
 };
 
 const sharedMaterials = {
@@ -157,11 +178,8 @@ function BoneLegModel() {
               
               {/* Foot structure */}
               <group position={[0, -0.015, 0.1]}>
-                {/* Main foot plate */}
-                <mesh>
-                  <boxGeometry args={[0.15, 0.02, 0.4]} />
-                  <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-                </mesh>
+                {/* Main foot plate - MEMORY FIX: Use cached geometry */}
+                <mesh geometry={sharedGeometries.footPlate} material={sharedMaterials.bone} />
                 
                 {/* Toe bones */}
                 {[-0.05, 0, 0.05].map((offset, i) => (
@@ -623,39 +641,22 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
       <group name="Head" position={[0, 1.7, 0.1]} scale={[ 0.75, 0.8, 0.8]}>
         {/* Main skull shape */}
         <group>
-          {/* Back of cranium */}
-          <mesh position={[0, 0, -0.05]}>
-            <sphereGeometry args={[0.22, 8, 8]} />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-          </mesh>
+          {/* Back of cranium - MEMORY FIX: Use cached geometry */}
+          <mesh position={[0, 0, -0.05]} geometry={sharedGeometries.skull} material={sharedMaterials.bone} />
           
-          {/* Front face plate */}
-          <mesh position={[0, -0.02, 0.12]}>
-            <boxGeometry args={[0.28, 0.28, 0.1]} />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-          </mesh>
+          {/* Front face plate - MEMORY FIX: Use cached geometry */}
+          <mesh position={[0, -0.02, 0.12]} geometry={sharedGeometries.facePlate} material={sharedMaterials.bone} />
 
-          {/* Cheekbones */}
+          {/* Cheekbones - MEMORY FIX: Use cached geometry */}
           <group>
-            <mesh position={[0.12, -0.08, 0.1]}>
-              <boxGeometry args={[0.08, 0.12, 0.15]} />
-              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-            </mesh>
-            <mesh position={[-0.12, -0.08, 0.1]}>
-              <boxGeometry args={[0.08, 0.12, 0.15]} />
-              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-            </mesh>
+            <mesh position={[0.12, -0.08, 0.1]} geometry={sharedGeometries.cheekbone} material={sharedMaterials.bone} />
+            <mesh position={[-0.12, -0.08, 0.1]} geometry={sharedGeometries.cheekbone} material={sharedMaterials.bone} />
           </group>
 
-          {/* Jaw structure */}
+          {/* Jaw structure - MEMORY FIX: Use cached geometry */}
           <group position={[0, -0.15, 0.05]}>
-
-            
             {/* Lower jaw - more angular and pointed */}
-            <mesh position={[0, -0.08, 0.08]} rotation={[0, Math.PI/5, 0]}>
-              <cylinderGeometry args={[0.08, 0.08, 0.2, 5]} />
-              <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
-            </mesh>
+            <mesh position={[0, -0.08, 0.08]} rotation={[0, Math.PI/5, 0]} geometry={sharedGeometries.jaw} material={sharedMaterials.darkBone} />
           </group>
 
 
@@ -665,82 +666,20 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
 
         {/* Eye sockets with glow effect */}
         <group position={[0, 0.05, 0.14]}>
-          {/* Left eye */}
+          {/* Left eye - MEMORY FIX: Use cached geometries and materials */}
           <group position={[-0.07, 0, 0]}>
-            {/* Core eye */}
-            <mesh>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="#2FFF00" emissive="#2FFF00" emissiveIntensity={3} />
-            </mesh>
-            {/* Inner glow */}
-            <mesh scale={1.2}>
-              <sphereGeometry args={[0.035, 8, 8]} />
-              <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
-                emissiveIntensity={1}
-                transparent
-                opacity={0.75}
-              />
-            </mesh>
-            {/* Outer glow */}
-            <mesh scale={1.4}>
-              <sphereGeometry args={[0.05, 6.5, 2]} />
-              <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
-                emissiveIntensity={1}
-                transparent
-                opacity={0.7}
-              />
-            </mesh>
-            {/* Point light for dynamic glow */}
-            <pointLight 
-              color="#FF4C4C"
-              intensity={0.5}
-              distance={1}
-              decay={2}
-            />
+            <mesh geometry={sharedGeometries.eye} material={sharedMaterials.eyeCore} />
+            <mesh scale={1.2} geometry={sharedGeometries.eyeGlow} material={sharedMaterials.eyeGlow} />
+            <mesh scale={1.4} geometry={sharedGeometries.eyeOuterGlow} material={sharedMaterials.eyeOuterGlow} />
+            <pointLight color="#FF4C4C" intensity={0.5} distance={1} decay={2} />
           </group>
 
-
-
-          {/* Right eye */}
+          {/* Right eye - MEMORY FIX: Use cached geometries and materials */}
           <group position={[0.07, 0, 0]}>
-            {/* Core eye */}
-            <mesh>
-              <sphereGeometry args={[0.02, 8, 8]} />
-              <meshStandardMaterial color="#2FFF00" emissive="#2FFF00" emissiveIntensity={3} />
-            </mesh>
-            {/* Inner glow */}
-            <mesh scale={1.2}>
-              <sphereGeometry args={[0.035, 8, 8]} />
-              <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
-                emissiveIntensity={1}
-                transparent
-                opacity={0.75}
-              />
-            </mesh>
-            {/* Outer glow */}
-            <mesh scale={1.4}>
-              <sphereGeometry args={[0.05, 6.5, 2]} />
-              <meshStandardMaterial 
-                color="#2FFF00"
-                emissive="#2FFF00"
-                emissiveIntensity={1}
-                transparent
-                opacity={.7}
-              />
-            </mesh>
-            {/* Point light for dynamic glow */}
-            <pointLight 
-              color="#FF4C4C"
-              intensity={0.5}
-              distance={1}
-              decay={1}
-            />
+            <mesh geometry={sharedGeometries.eye} material={sharedMaterials.eyeCore} />
+            <mesh scale={1.2} geometry={sharedGeometries.eyeGlow} material={sharedMaterials.eyeGlow} />
+            <mesh scale={1.4} geometry={sharedGeometries.eyeOuterGlow} material={sharedMaterials.eyeOuterGlow} />
+            <pointLight color="#FF4C4C" intensity={0.5} distance={1} decay={1} />
           </group>
         </group>
       </group>
@@ -760,15 +699,10 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
       <group name="RightArm" position={[0.35, 1.325, 0.1]} scale={[0.4, 0.4, 0.4]} rotation={[0, -Math.PI/2.5, 0]}>
         <BossClawModel isLeftHand={false} />
       </group>
-      {/* Pelvis structure */}
+      {/* Pelvis structure - MEMORY FIX: Use cached geometries */}
       <group position={[0, 0.7, 0]} scale={[1.4, 1, 0.8]}>
         {/* Main pelvic bowl */}
-        <mesh>
-          <cylinderGeometry args={[0.21, 0.20, 0.2, 8]} />
-          <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
-        </mesh>
-
-   
+        <mesh geometry={sharedGeometries.pelvis} material={sharedMaterials.darkBone} />
 
         {/* Sacral vertebrae */}
         <group position={[0, 0.15, -0.16]} rotation={[0.1, 0, 0]}>
@@ -778,10 +712,7 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
         {/* Pelvic joints */}
         {[-1, 1].map((side) => (
           <group key={side} position={[0.15 * side, -0.1, 0]}>
-            <mesh>
-              <sphereGeometry args={[0.075, 8, 8]} />
-              <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
-            </mesh>
+            <mesh geometry={sharedGeometries.pelvisJoint} material={sharedMaterials.darkBone} />
           </group>
         ))}
       </group>
@@ -800,11 +731,9 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
       </group>
 
       {/* Neck connection - keep current position */}
+      {/* Neck - MEMORY FIX: Use cached geometry */}
       <group position={[0, 1.2, 0]}>
-        <mesh>
-          <cylinderGeometry args={[0.04, 0.04, 0.2, 6]} />
-          <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-        </mesh>
+        <mesh geometry={sharedGeometries.neck} material={sharedMaterials.bone} />
       </group>
     </group>
   );

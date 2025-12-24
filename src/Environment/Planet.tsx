@@ -37,6 +37,16 @@ const Planet: React.FC = () => {
   const matrix = useMemo(() => new THREE.Matrix4(), []);
   const sphere = useMemo(() => new THREE.Sphere(new THREE.Vector3(), 24 * Math.sqrt(3)), []);
 
+  // Cleanup geometries and materials on unmount
+  React.useEffect(() => {
+    return () => {
+      sphereGeometry.dispose();
+      ringGeometry.dispose();
+      planetMaterial.dispose();
+      glowMaterial.dispose();
+    };
+  }, [sphereGeometry, ringGeometry, planetMaterial, glowMaterial]);
+
   // Rotate the ring slowly
   useFrame((state, delta) => {
     if (ringRef.current) {

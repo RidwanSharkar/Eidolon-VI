@@ -1,5 +1,19 @@
 // src/weapons/Sword.tsx
 
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const SWORD_COLORS = {
+  // Chain lightning colors
+  chainLightningGold: new THREE.Color(0xFFD700),
+  chainLightningOrange: new THREE.Color(0xFFA500),
+  // Sword glow colors
+  swordYellow: new THREE.Color(0xFFFF00),
+  swordOrange: new THREE.Color(0xFF6F00),
+  swordBrightOrange: new THREE.Color(0xFFB700),
+  // Divine storm colors
+  divineGold: new THREE.Color(0xFFD700),
+  divineCornsilk: new THREE.Color(0xFFF8DC),
+} as const;
+
 interface SwordProps {
   isSwinging: boolean;
   isSmiting: boolean;
@@ -179,7 +193,8 @@ export default function Sword({
               damage: 29,
               position: enemy.position.clone(),
               isCritical: false,
-              isHolyBurn: true
+              isHolyBurn: true,
+              createdAt: Date.now() // MEMORY FIX: Required for cleanup
             }]);
           }
           
@@ -291,7 +306,8 @@ export default function Sword({
               damage: 79,
               position: enemy.position.clone(),
               isCritical: false,
-              isDivineStorm: true
+              isDivineStorm: true,
+              createdAt: Date.now() // MEMORY FIX: Required for cleanup
             }]);
           }
           
@@ -659,8 +675,8 @@ export default function Sword({
               <mesh>
                 <extrudeGeometry args={[createBladeShape(), { ...bladeExtrudeSettings, depth: 0.07 }]} />
                 <meshStandardMaterial
-                  color={new THREE.Color(0xFFD700)}
-                  emissive={new THREE.Color(0xFFA500)}
+                  color={SWORD_COLORS.chainLightningGold}
+                  emissive={SWORD_COLORS.chainLightningOrange}
                   emissiveIntensity={1.5}
                   transparent
                   opacity={0.3}
@@ -678,8 +694,8 @@ export default function Sword({
               >
                 <sphereGeometry args={[1.25, 6, 6]} />
                 <meshStandardMaterial
-                  color={new THREE.Color(0xFFD700)}
-                  emissive={new THREE.Color(0xFFA500)}
+                  color={SWORD_COLORS.chainLightningGold}
+                  emissive={SWORD_COLORS.chainLightningOrange}
                   emissiveIntensity={3 * spark.life}
                   transparent
                   opacity={spark.life * 0.6}
@@ -755,8 +771,8 @@ export default function Sword({
           <mesh>
             <sphereGeometry args={[0.155, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFFFF00)}         // Pure yellow
-              emissive={new THREE.Color(0xFF6F00)}      // Yellow emission
+              color={SWORD_COLORS.swordYellow}         // Pure yellow
+              emissive={SWORD_COLORS.swordOrange}      // Yellow emission
               emissiveIntensity={2}                    // Orange 
               transparent
               opacity={1}
@@ -767,8 +783,8 @@ export default function Sword({
           <mesh>
             <sphereGeometry args={[0.1, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFFFF00)}
-              emissive={new THREE.Color(0xFFFF00)}
+              color={SWORD_COLORS.swordYellow}
+              emissive={SWORD_COLORS.swordYellow}
               emissiveIntensity={40}
               transparent
               opacity={0.8}
@@ -778,8 +794,8 @@ export default function Sword({
           <mesh>
             <sphereGeometry args={[0.145, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFFFF00)}
-              emissive={new THREE.Color(0xFF6F00)}
+              color={SWORD_COLORS.swordYellow}
+              emissive={SWORD_COLORS.swordOrange}
               emissiveIntensity={35}
               transparent
               opacity={0.6}
@@ -789,8 +805,8 @@ export default function Sword({
           <mesh>
             <sphereGeometry args={[.175, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFFFF00)}
-              emissive={new THREE.Color(0xFF6F00)}
+              color={SWORD_COLORS.swordYellow}
+              emissive={SWORD_COLORS.swordOrange}
               emissiveIntensity={30}
               transparent
               opacity={0.4}
@@ -799,7 +815,7 @@ export default function Sword({
 
           {/* Enhanced point light */}
           <pointLight 
-            color={new THREE.Color(0xFF6F00)}
+            color={SWORD_COLORS.swordOrange}
             intensity={2}
             distance={0.5}
             decay={2}
@@ -812,8 +828,8 @@ export default function Sword({
           <mesh>
             <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xFF6F00)}  
-              emissive={new THREE.Color(0xFF6F00)}
+              color={SWORD_COLORS.swordOrange}  
+              emissive={SWORD_COLORS.swordOrange}
               emissiveIntensity={2.5}
               metalness={0.3}
               roughness={0.1}
@@ -824,8 +840,8 @@ export default function Sword({
           <mesh>
             <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xFFB700)}  
-              emissive={new THREE.Color(0xFF6F00)}
+              color={SWORD_COLORS.swordBrightOrange}  
+              emissive={SWORD_COLORS.swordOrange}
               emissiveIntensity={5}
               metalness={0.2}
               roughness={0.1}
@@ -845,8 +861,8 @@ export default function Sword({
             <mesh position={[0, 0, 0]}>
               <sphereGeometry args={[1.05, 16, 16]} />
               <meshStandardMaterial
-                color={new THREE.Color(0xFFD700)}
-                emissive={new THREE.Color(0xFFD700)}
+                color={SWORD_COLORS.divineGold}
+                emissive={SWORD_COLORS.divineGold}
                 emissiveIntensity={2}
                 transparent
                 opacity={0.3}
@@ -858,8 +874,8 @@ export default function Sword({
             <mesh position={[0, 0, 0]}>
               <sphereGeometry args={[0.95, 12, 12]} />
               <meshStandardMaterial
-                color={new THREE.Color(0xFFF8DC)}
-                emissive={new THREE.Color(0xFFD700)}
+                color={SWORD_COLORS.divineCornsilk}
+                emissive={SWORD_COLORS.divineGold}
                 emissiveIntensity={1}
                 transparent
                 opacity={0.15}
@@ -871,7 +887,7 @@ export default function Sword({
 
             {/* Divine light */}
             <pointLight 
-              color={new THREE.Color(0xFFD700)}
+              color={SWORD_COLORS.divineGold}
               intensity={1}
               distance={8}
               decay={1}

@@ -43,7 +43,8 @@ export const useHealing = ({
           damage: actualHealAmount,
           position: position,
           isCritical: false,
-          isHealing: true
+          isHealing: true,
+          createdAt: Date.now() // MEMORY FIX: Required for cleanup
         }]);
       }
     }

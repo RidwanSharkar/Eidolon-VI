@@ -72,7 +72,8 @@ export function useEagleEye({
         damage: EAGLE_EYE_BONUS_DAMAGE,
         position: position.clone(),
         isCritical: true,
-        isEagleEye: true
+        isEagleEye: true,
+        createdAt: Date.now() // MEMORY FIX: Required for cleanup
       }]);
       
       // Create Eagle Eye visual effect

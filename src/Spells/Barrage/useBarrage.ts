@@ -1,7 +1,14 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useMemo } from 'react';
 import { Vector3, Group } from 'three';
 import * as THREE from 'three';
 import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
+
+// Pre-allocated rotation matrices for barrage angles to avoid per-shot allocations
+const BARRAGE_ROTATION_MATRICES = [
+  new THREE.Matrix4().makeRotationY(0),           // Center (0°)
+  new THREE.Matrix4().makeRotationY(Math.PI / 6), // Left (30°)
+  new THREE.Matrix4().makeRotationY(-Math.PI / 6) // Right (-30°)
+] as const;
 
 interface BarrageProjectile {
   id: number;
@@ -108,13 +115,10 @@ export function useBarrage({
       .applyQuaternion(parentRef.current.quaternion)
       .normalize();
 
-    // Create 3 arrows: center (0°), left (45°), right (-45°)
-    const angles = [0, Math.PI / 6, -Math.PI / 6]; // 0°, 45°, -45°
-    
-    angles.forEach(angle => {
+    // Create 3 arrows: center (0°), left (30°), right (-30°)
+    BARRAGE_ROTATION_MATRICES.forEach(rotationMatrix => {
       // Rotate the base direction by the specified angle around the Y axis
       const direction = baseDirection.clone();
-      const rotationMatrix = new THREE.Matrix4().makeRotationY(angle);
       direction.applyMatrix4(rotationMatrix);
 
       const projectile: BarrageProjectile = {
@@ -239,7 +243,8 @@ export function useBarrage({
               damage: projectile.damage,
               position: enemy.position.clone(),
               isCritical: false,
-              isBarrage: true
+              isBarrage: true,
+              createdAt: Date.now() // MEMORY FIX: Required for cleanup
             }]);
 
             // This projectile stops after hitting one enemy

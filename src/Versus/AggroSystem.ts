@@ -284,6 +284,28 @@ export class AggroSystem {
   clear(): void {
     this.aggroTable.clear();
   }
+
+  /**
+   * MEMORY FIX: Clean up aggro entries for dead enemies
+   * Call this periodically to prevent memory leaks
+   */
+  cleanupDeadEnemies(aliveEnemyIds: Set<string>): number {
+    let cleaned = 0;
+    for (const [enemyId] of this.aggroTable.entries()) {
+      if (!aliveEnemyIds.has(enemyId)) {
+        this.aggroTable.delete(enemyId);
+        cleaned++;
+      }
+    }
+    return cleaned;
+  }
+
+  /**
+   * MEMORY FIX: Get the current size of the aggro table for monitoring
+   */
+  getTableSize(): number {
+    return this.aggroTable.size;
+  }
 }
 
 // Global aggro system instance

@@ -1,5 +1,29 @@
 import { useRef } from 'react';
 import { Group, Vector3, Euler } from 'three';
+import * as THREE from 'three';
+
+// MEMORY FIX: Cached geometries - created once at module load
+const CACHED_GEOMETRIES = {
+  boneShaft: new THREE.CylinderGeometry(0.023, 0.0175, 0.32, 3),
+  joint: new THREE.SphereGeometry(0.035, 4, 4)
+};
+
+// MEMORY FIX: Cached material - created once at module load
+const CACHED_MATERIAL = new THREE.MeshStandardMaterial({
+  color: "#ffffff",
+  emissive: "#304040",
+  emissiveIntensity: 0.6,
+  roughness: 0.3,
+  metalness: 0.4
+});
+
+const CACHED_JOINT_MATERIAL = new THREE.MeshStandardMaterial({
+  color: "#ffffff",
+  emissive: "#304040",
+  emissiveIntensity: 0.6,
+  roughness: 0.4,
+  metalness: 0.3
+});
 
 interface BonePosition {
   pos: Vector3;
@@ -15,7 +39,7 @@ interface BoneWingsProps {
 
 export default function BoneWings({ collectedBones, isLeftWing }: BoneWingsProps) {
   const wingsRef = useRef<Group>(null);
-    const wingBonePositions: BonePosition[] = [
+  const wingBonePositions: BonePosition[] = [
     // Main central arm bone
     { 
       pos: new Vector3(isLeftWing ? -0.3 : 0.3, 0.275, 0), 
@@ -61,38 +85,7 @@ export default function BoneWings({ collectedBones, isLeftWing }: BoneWingsProps
       rot: new Euler(0.2, 0, isLeftWing ? -Math.PI / -0.45 : Math.PI / -0.45), 
       scale: 0.8 
     },
-    
   ];
-
-  const createBonePiece = () => (
-    <group>
-      {/* Main bone shaft */}
-      <mesh>
-        <cylinderGeometry args={[0.023, 0.0175, 0.32, 3]} />
-        <meshStandardMaterial 
-          color="#ffffff"
-          emissive="#304040"
-          emissiveIntensity={0.6}
-          roughness={0.3}
-          metalness={0.4}
-        />
-      </mesh>
-      
-      {/* Upper joint */}
-      <mesh position={new Vector3(0, 0.2, 0)}>
-        <sphereGeometry args={[0.035, 4, 4]} />
-        <meshStandardMaterial 
-          color="#ffffff"
-          emissive="#304040"
-          emissiveIntensity={0.6}
-          roughness={0.4}
-          metalness={0.3}
-        />
-      </mesh>
-
-    </group>
-  );
-  
 
   return (
     <group 
@@ -107,9 +100,16 @@ export default function BoneWings({ collectedBones, isLeftWing }: BoneWingsProps
           rotation={bone.rot}
           scale={bone.scale}
         >
-          {createBonePiece()}
+          {/* Bone piece - MEMORY FIX: Use cached geometries and materials */}
+          <group>
+            {/* Main bone shaft */}
+            <mesh geometry={CACHED_GEOMETRIES.boneShaft} material={CACHED_MATERIAL} />
+            
+            {/* Upper joint */}
+            <mesh position={new Vector3(0, 0.2, 0)} geometry={CACHED_GEOMETRIES.joint} material={CACHED_JOINT_MATERIAL} />
+          </group>
         </group>
       ))}
     </group>
   );
-} 
+}

@@ -5,6 +5,17 @@ import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const COLORS = {
+  purpleBlue: new THREE.Color(0x8844FF),
+  purpleEmission: new THREE.Color(0x6622FF),
+  lightPurple: new THREE.Color(0xCC88FF),
+  lightPurpleEmission: new THREE.Color(0xAA66FF),
+  pinkRed: new THREE.Color(0xFF4488),
+  magenta: new THREE.Color(0xDD44FF),
+  purpleWhite: new THREE.Color(0xFFCCFF),
+} as const;
+
 interface EvisceratestunEffectProps {
   position: Vector3;
   duration?: number;
@@ -63,8 +74,8 @@ export default function EvisceratestunEffect({
       <mesh>
         <sphereGeometry args={[0.3, 8, 8]} />
         <meshStandardMaterial
-          color={new THREE.Color(0x8844FF)}        // Purple-blue
-          emissive={new THREE.Color(0x6622FF)}     // Purple emission
+          color={COLORS.purpleBlue}
+          emissive={COLORS.purpleEmission}
           emissiveIntensity={intensity * 3}
           transparent
           opacity={fadeProgress * 0.9}
@@ -75,8 +86,8 @@ export default function EvisceratestunEffect({
       <mesh>
         <sphereGeometry args={[0.2, 8, 8]} />
         <meshStandardMaterial
-          color={new THREE.Color(0xCC88FF)}
-          emissive={new THREE.Color(0xAA66FF)}
+          color={COLORS.lightPurple}
+          emissive={COLORS.lightPurpleEmission}
           emissiveIntensity={intensity * 5}
           transparent
           opacity={fadeProgress * 0.7}
@@ -89,8 +100,8 @@ export default function EvisceratestunEffect({
           <mesh position={[0.6, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.02, 0.02, 1.2, 4]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFF4488)}      // Pink-red
-              emissive={new THREE.Color(0xFF4488)}
+              color={COLORS.pinkRed}
+              emissive={COLORS.pinkRed}
               emissiveIntensity={intensity * 4}
               transparent
               opacity={fadeProgress * 0.8}
@@ -110,8 +121,8 @@ export default function EvisceratestunEffect({
               rotation={[0, 0, 0]}>
           <cylinderGeometry args={[0.015, 0.015, 2, 4]} />
           <meshStandardMaterial
-            color={new THREE.Color(0xDD44FF)}       // Magenta
-            emissive={new THREE.Color(0xDD44FF)}
+            color={COLORS.magenta}
+            emissive={COLORS.magenta}
             emissiveIntensity={intensity * 3}
             transparent
             opacity={fadeProgress * 0.6}
@@ -123,8 +134,8 @@ export default function EvisceratestunEffect({
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.8, 0.05, 8, 16]} />
         <meshStandardMaterial
-          color={new THREE.Color(0x8844FF)}
-          emissive={new THREE.Color(0x8844FF)}
+          color={COLORS.purpleBlue}
+          emissive={COLORS.purpleBlue}
           emissiveIntensity={intensity * 2}
           transparent
           opacity={fadeProgress * 0.5}
@@ -133,7 +144,7 @@ export default function EvisceratestunEffect({
 
       {/* Point light for illumination - Purple theme */}
       <pointLight 
-        color={new THREE.Color(0x8844FF)}
+        color={COLORS.purpleBlue}
         intensity={intensity * 3}
         distance={3}
         decay={2}
@@ -149,8 +160,8 @@ export default function EvisceratestunEffect({
               ]}>
           <sphereGeometry args={[0.03, 4, 4]} />
           <meshStandardMaterial
-            color={new THREE.Color(0xFFCCFF)}       // Light purple-white sparks
-            emissive={new THREE.Color(0xFFCCFF)}
+            color={COLORS.purpleWhite}
+            emissive={COLORS.purpleWhite}
             emissiveIntensity={intensity * 6}
             transparent
             opacity={fadeProgress * Math.random() * 0.8}

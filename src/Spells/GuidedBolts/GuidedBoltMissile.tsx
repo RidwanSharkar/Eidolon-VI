@@ -1,8 +1,11 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Group } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import GuidedBoltTrail from './GuidedBoltTrail';
+
+// Pre-allocated color for trail - module level constant
+const TRAIL_COLOR = new THREE.Color("#4DC7FF");
 
 interface GuidedBoltMissileProps {
   position: Vector3;
@@ -16,16 +19,25 @@ export default function GuidedBoltMissile({ position, targetPosition, direction 
   // Light teal color for guided bolt arrows
   const arrowColor = "#80d9ff";
   
-  // Shared material for the bone arrow with teal coloring
-  const boneMaterial = new THREE.MeshStandardMaterial({
-    color: arrowColor,
-    roughness: 0.8,
-    metalness: 0.2,
-    transparent: true,
-    opacity: 1,
-    emissive: new THREE.Color(arrowColor),
-    emissiveIntensity: 0.3
-  });
+  // Shared material for the bone arrow with teal coloring - properly memoized
+  const boneMaterial = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: arrowColor,
+      roughness: 0.8,
+      metalness: 0.2,
+      transparent: true,
+      opacity: 1,
+      emissive: arrowColor,
+      emissiveIntensity: 0.3
+    });
+  }, [arrowColor]);
+
+  // Cleanup material on unmount
+  useEffect(() => {
+    return () => {
+      boneMaterial.dispose();
+    };
+  }, [boneMaterial]);
 
   useFrame(() => {
     if (!missileRef.current) return;
@@ -60,7 +72,7 @@ export default function GuidedBoltMissile({ position, targetPosition, direction 
     <group>
       {/* Trail effect */}
       <GuidedBoltTrail
-        color={new THREE.Color("#4DC7FF")}
+        color={TRAIL_COLOR}
         size={0.3}
         meshRef={missileRef}
         opacity={0.9}

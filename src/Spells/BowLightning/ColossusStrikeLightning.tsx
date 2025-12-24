@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -124,6 +124,14 @@ const ColossusStrikeLightning: React.FC<ColossusStrikeLightningProps> = ({
       transparent: true
     })
   }), []);
+
+  // Cleanup geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
+    };
+  }, [geometries, materials]);
   
   useFrame(() => {
     const elapsed = (Date.now() - startTimeRef.current) / 1000;

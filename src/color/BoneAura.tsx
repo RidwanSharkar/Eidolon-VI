@@ -20,7 +20,7 @@ const createBonePiece = () => (
     </mesh>
     
     {/* Bone joints */}
-    <mesh position={new THREE.Vector3(0, 0.1, 0)} rotation={new THREE.Euler(0, 0, Math.PI / 6)}>
+    <mesh position={[0, 0.1, 0]} rotation={[0, 0, Math.PI / 6]}>
       <sphereGeometry args={[0.03, 4, 4]} />
       <meshStandardMaterial 
         color="#ffffff"
@@ -29,7 +29,7 @@ const createBonePiece = () => (
       />
     </mesh>
 
-    <mesh position={new THREE.Vector3(0, -0.1, 0)} rotation={new THREE.Euler(0, 0, -Math.PI / 6)}>
+    <mesh position={[0, -0.1, 0]} rotation={[0, 0, -Math.PI / 6]}>
       <sphereGeometry args={[0.0325, 4, 4]} />
       <meshStandardMaterial 
         color="#a4a4a4"

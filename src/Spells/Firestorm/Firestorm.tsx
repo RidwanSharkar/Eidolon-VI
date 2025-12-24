@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import FirestormShard from '@/Spells/Firestorm/FirestormShard';
@@ -25,6 +25,13 @@ export const sharedMaterials = {
     transparent: true,
     opacity: 0.8
   })
+};
+
+let firestormResourceUsers = 0;
+
+const disposeFirestormResources = () => {
+  Object.values(sharedGeometries).forEach((geometry) => geometry.dispose());
+  Object.values(sharedMaterials).forEach((material) => material.dispose());
 };
 
 interface FirestormProps {
@@ -55,6 +62,16 @@ export default function Firestorm({
   const FALLING_RADIUS = 0.75;        // Much smaller radius for intense concentration
   const ORBITAL_HEIGHT = -3.5;        // Lower height for more ground-level intensity
   const FALLING_HEIGHT = 0.75;       // Higher starting height for dramatic falls
+
+  useEffect(() => {
+    firestormResourceUsers += 1;
+    return () => {
+      firestormResourceUsers = Math.max(0, firestormResourceUsers - 1);
+      if (firestormResourceUsers === 0) {
+        disposeFirestormResources();
+      }
+    };
+  }, []);
 
   useFrame((_, delta) => {
     if (!stormRef.current || !parentRef?.current) return;

@@ -188,7 +188,8 @@ export function useGuidedBolts({
               (Math.random() - 0.5) * 0.5
             )),
             isCritical,
-            isGuidedBolt: true
+            isGuidedBolt: true,
+            createdAt: Date.now() // MEMORY FIX: Required for cleanup
           }]);
 
           return { ...missile, hasCollided: true };

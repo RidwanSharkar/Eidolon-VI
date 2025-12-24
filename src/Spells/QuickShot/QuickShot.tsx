@@ -240,7 +240,8 @@ export const useQuickShot = ({
                 damage,
                 position: enemy.position.clone(),
                 isCritical: false,
-                isElementalQuickShot
+                isElementalQuickShot,
+                createdAt: Date.now() // MEMORY FIX: Required for cleanup
               }]);
               
               // Only trigger EagleEye effects for VENOM subclass

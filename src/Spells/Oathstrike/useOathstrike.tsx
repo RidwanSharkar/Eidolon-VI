@@ -141,7 +141,8 @@ export const useOathstrike = ({
             damage,
             position: enemy.position.clone(),
             isCritical,
-            isOathstrike: true  // New flag for Oathstrike damage
+            isOathstrike: true,  // New flag for Oathstrike damage
+            createdAt: Date.now() // MEMORY FIX: Required for cleanup
           }]);
         }
       }

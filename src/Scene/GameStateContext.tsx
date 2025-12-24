@@ -55,6 +55,9 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   // Calculate critical damage multiplier based on rune count (2.0x base + 0.2x per rune)
   const criticalDamageMultiplier = 2.0 + (critDamageRuneCount * 0.15);
   
+  // MEMORY FIX: Hard limit for rune arrays to prevent unbounded growth
+  const MAX_RUNES_ON_MAP = 10;
+  
   const addCriticalRune = (position: Vector3) => {
     const newRune: CriticalRune = {
       id: `crit-rune-${Date.now()}-${Math.random()}`,
@@ -62,6 +65,10 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     };
     setCriticalRunes(prev => {
       const updated = [...prev, newRune];
+      // MEMORY FIX: Keep only the most recent runes if limit exceeded
+      if (updated.length > MAX_RUNES_ON_MAP) {
+        return updated.slice(-MAX_RUNES_ON_MAP);
+      }
       return updated;
     });
   };
@@ -73,6 +80,10 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     };
     setCritDamageRunes(prev => {
       const updated = [...prev, newRune];
+      // MEMORY FIX: Keep only the most recent runes if limit exceeded
+      if (updated.length > MAX_RUNES_ON_MAP) {
+        return updated.slice(-MAX_RUNES_ON_MAP);
+      }
       return updated;
     });
   };

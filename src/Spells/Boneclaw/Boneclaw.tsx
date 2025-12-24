@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { Group, Vector3, Shape, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { calculateBoneclawHits } from '@/Spells/Boneclaw/BoneclawDamage';
@@ -89,7 +89,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
     </group>
   );
 
-  const createSpectralClawShape = () => {
+  const spectralClawShape = useMemo(() => {
     const shape = new Shape();
     shape.moveTo(0, 0);
     
@@ -110,9 +110,9 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
     );
     shape.lineTo(0, 0);
     return shape;
-  };
+  }, []);
 
-  const spectralClawSettings = {
+  const spectralClawSettings = useMemo(() => ({
     steps: 1,
     depth: 0.00010,
     bevelEnabled: true,
@@ -120,7 +120,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
     bevelSize: 0.0175,
     bevelSegments: 1,
     curveSegments: 16
-  };
+  }), []);
 
   const createSpectralClaw = (index: number) => (
     <group 
@@ -129,7 +129,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
       scale={[0.7, 0.7, 0.7]}
     >
       <mesh>
-        <extrudeGeometry args={[createSpectralClawShape(), spectralClawSettings]} />
+        <extrudeGeometry args={[spectralClawShape, spectralClawSettings]} />
         <meshStandardMaterial 
           color="#39ff14"
           emissive="#39ff14"

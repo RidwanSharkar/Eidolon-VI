@@ -1,10 +1,11 @@
 // src/Spells/SoulReaper/AbyssalSkeletonModel.tsx
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, Shape, ExtrudeGeometry } from 'three';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, Shape, ExtrudeGeometry, TorusGeometry, BoxGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '@/gear/BonePlate';
 import AbyssalSkeletonSword from './AbyssalSkeletonSword';
 import DeathKnightTrailEffect from '@/Versus/DeathKnight/DeathKnightTrailEffect';
+import { registerGlobalSharedResource } from '@/Scene/EffectPools';
 
 interface AbyssalSkeletonModelProps {
   position: [number, number, number];
@@ -17,23 +18,121 @@ interface AbyssalSkeletonModelProps {
   onFrostStrikeStart?: () => void;
 }
 
-// Reuse Materials - malachite green theme
-const standardBoneMaterial = new MeshStandardMaterial({
-  color: "#d0d0d0", // Keep bone color neutral
-  roughness: 0.5,
-  metalness: 0.4
-});
+// MEMORY FIX: Create shared geometries at module level
+const ABYSSAL_SKELETON_GEOMETRIES = {
+  // Joint geometries
+  jointSmall: new SphereGeometry(0.066, 8, 8),
+  jointMedium: new SphereGeometry(0.088, 12, 12),
+  jointLarge: new SphereGeometry(0.132, 12, 12),
+  jointPelvis: new SphereGeometry(0.08, 8, 8),
+  jointHand: new SphereGeometry(0.099, 12, 12),
+  
+  // Bone geometries
+  largeBone: new CylinderGeometry(0.044, 0.035, 1.1, 6),
+  claw: new ConeGeometry(0.022, 0.165, 6),
+  neck: new CylinderGeometry(0.066, 0.066, 0.165, 6),
+  
+  // Skull parts
+  cranium: new SphereGeometry(0.26, 8, 8),
+  facePlate: new BoxGeometry(0.34, 0.34, 0.12),
+  jaw: new CylinderGeometry(0.10, 0.10, 0.24, 5),
+  eye: new SphereGeometry(0.025, 8, 8),
+  helmetBowl: new SphereGeometry(0.25, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.6),
+  
+  // Shoulder pauldron
+  shoulderPauldron: new SphereGeometry(0.22, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.9),
+  shoulderSpike: new ConeGeometry(0.022, 0.12, 8),
+  shoulderSpikeBase: new CylinderGeometry(0.033, 0.022, 0.055, 8),
+  shoulderTrimSmall: new TorusGeometry(0.165, 0.016, 6, 12),
+  shoulderTrimMed: new TorusGeometry(0.198, 0.022, 8, 16),
+  shoulderTrimLarge: new TorusGeometry(0.22, 0.018, 8, 16),
+  shoulderEmblem: new CylinderGeometry(0.055, 0.055, 0.022, 8),
+  shoulderEmblemInner: new CylinderGeometry(0.033, 0.033, 0.011, 6),
+  shoulderEmblemSpike: new ConeGeometry(0.016, 0.044, 6),
+  
+  // Leg parts  
+  kneeJoint: new SphereGeometry(0.088, 12, 12),
+  bootBody: new BoxGeometry(0.175, 0.21, 0.55),
+  bootFront: new BoxGeometry(0.15, 0.225, 0.055),
+  bootTop: new BoxGeometry(0.14, 0.25, 0.018),
+  bootSole: new BoxGeometry(0.175, 0.325, 0.044),
+  bootSide: new BoxGeometry(0.0175, 0.40, 0.14),
+  
+  // Claw/hand
+  handBase: new BoxGeometry(0.22, 0.165, 0.088),
+  
+  // Pelvis
+  pelvis: new CylinderGeometry(0.22, 0.20, 0.18, 8),
+  girdle: new CylinderGeometry(0.275, 0.275, 0.08, 16),
+  kiltPlate: new BoxGeometry(0.25, 0.375, 0.02),
+  kiltTrim: new BoxGeometry(0.09, 0.18, 0.01),
+  
+  // Shoulder plate parts
+  shoulderPlate: new BoxGeometry(0.1, 0.165, 0.033),
+  shoulderGuard: new BoxGeometry(0.088, 0.132, 0.055),
+  shoulderGuardTrim: new BoxGeometry(0.099, 0.143, 0.011),
+};
 
-const darkBoneMaterial = new MeshStandardMaterial({
-  color: "#b8b8b8", // Keep bone color neutral
-  roughness: 0.4,
-  metalness: 0.5
-});
+// Shared materials - malachite green theme
+const ABYSSAL_SKELETON_MATERIALS = {
+  standardBone: new MeshStandardMaterial({
+    color: "#d0d0d0",
+    roughness: 0.5,
+    metalness: 0.4
+  }),
+  darkBone: new MeshStandardMaterial({
+    color: "#b8b8b8",
+    roughness: 0.4,
+    metalness: 0.5
+  }),
+  pelvisBone: new MeshStandardMaterial({
+    color: "#c0c0c0",
+    roughness: 0.6,
+    metalness: 0.3
+  }),
+  eyeGlow: new MeshStandardMaterial({
+    color: "#00FF7F",
+    emissive: "#00FF7F",
+    emissiveIntensity: 4
+  }),
+  malachiteGreen: new MeshStandardMaterial({
+    color: "#00b359",
+    roughness: 0.3,
+    metalness: 0.8
+  }),
+  malachiteDark: new MeshStandardMaterial({
+    color: "#008040",
+    roughness: 0.2,
+    metalness: 0.9
+  }),
+  malachiteDarkest: new MeshStandardMaterial({
+    color: "#006633",
+    roughness: 0.1,
+    metalness: 0.95
+  }),
+};
 
-// Cache geometries that are reused frequently (scaled for death knight)
-const jointGeometry = new SphereGeometry(0.066, 8, 8); // 1.1x larger than skeleton
-const largeBoneGeometry = new CylinderGeometry(0.044, 0.035, 1.1, 6); // 1.1x larger than skeleton  
-const clawGeometry = new ConeGeometry(0.022, 0.165, 6); // 1.1x larger than skeleton
+// Lazy registration of global shared resources (client-side only)
+let registeredAbyssalSkeletonResources = false;
+const registerAbyssalSkeletonResources = () => {
+  if (registeredAbyssalSkeletonResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      Object.values(ABYSSAL_SKELETON_GEOMETRIES).forEach(geo => geo.dispose());
+      Object.values(ABYSSAL_SKELETON_MATERIALS).forEach(mat => mat.dispose());
+    }, 'AbyssalSkeletonModel');
+    registeredAbyssalSkeletonResources = true;
+  } catch (error) {
+    console.warn('Failed to register AbyssalSkeleton resources:', error);
+  }
+};
+
+// Legacy aliases for backward compatibility
+const standardBoneMaterial = ABYSSAL_SKELETON_MATERIALS.standardBone;
+const darkBoneMaterial = ABYSSAL_SKELETON_MATERIALS.darkBone;
+const jointGeometry = ABYSSAL_SKELETON_GEOMETRIES.jointSmall;
+const largeBoneGeometry = ABYSSAL_SKELETON_GEOMETRIES.largeBone;
+const clawGeometry = ABYSSAL_SKELETON_GEOMETRIES.claw;
 
 // Simplified blade decoration component
 function BladeDecoration({ scale = 1, position = [0, 0, 0], rotation = [0, 0, 0] }: { 
@@ -116,10 +215,7 @@ function AbyssalSkeletonLegModel() {
         
         {/* Knee joint */}
         <group position={[0, -0.385, 0]}>
-          <mesh>
-            <sphereGeometry args={[0.088, 12, 12]} />
-            <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-          </mesh>
+          <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.kneeJoint} material={ABYSSAL_SKELETON_MATERIALS.standardBone} />
           
           {/* Lower leg */}
           <group position={[0, -0.165, 0]}>
@@ -131,72 +227,23 @@ function AbyssalSkeletonLegModel() {
               
               {/* Foot structure - malachite green boots */}
               <group position={[0, -0.017, 0.11]}>
-                <mesh>
-
-                </mesh>
-                
                 {/* Malachite green boots with proper orientation */}
                 <group position={[0, 0, 0]}>
                   {/* Main boot body - malachite green */}
-                  <mesh position={[0, 0.044, 0.055]}>
-                    <boxGeometry args={[0.175, 0.21, 0.55]} />
-                    <meshStandardMaterial 
-                      color="#00b359" 
-                      roughness={0.3} 
-                      metalness={0.8}
-                    />
-                  </mesh>
+                  <mesh position={[0, 0.044, 0.055]} geometry={ABYSSAL_SKELETON_GEOMETRIES.bootBody} material={ABYSSAL_SKELETON_MATERIALS.malachiteGreen} />
 
                   {/* Forward extending foot portion - scaled smaller and lowered */}
-                  <mesh position={[0, 0.325, 0.25]} rotation={[0.65, 0, 0]}>
-                    <boxGeometry args={[0.15, 0.225, 0.055]} />
-                    <meshStandardMaterial 
-                      color="#00b359" 
-                      roughness={0.3} 
-                      metalness={0.8}
-                    />
-                  </mesh>
+                  <mesh position={[0, 0.325, 0.25]} rotation={[0.65, 0, 0]} geometry={ABYSSAL_SKELETON_GEOMETRIES.bootFront} material={ABYSSAL_SKELETON_MATERIALS.malachiteGreen} />
 
                   {/* Foot top plate for better definition - adjusted to match smaller foot */}
-                  <mesh position={[0, 0.23, 0.25]}>
-                    <boxGeometry args={[0.14, 0.25, 0.018]} />
-                    <meshStandardMaterial 
-                      color="#008040" 
-                      roughness={0.2} 
-                      metalness={0.9}
-                    />
-                  </mesh>
-
-
+                  <mesh position={[0, 0.23, 0.25]} geometry={ABYSSAL_SKELETON_GEOMETRIES.bootTop} material={ABYSSAL_SKELETON_MATERIALS.malachiteDark} />
                   
                   {/* Enhanced boot sole with treads - corrected to extend along foot length */}
-                  <mesh position={[0, 0.25, 0.35]}>
-                    <boxGeometry args={[0.175, 0.325, 0.044]} />
-                    <meshStandardMaterial 
-                      color="#008040" 
-                      roughness={0.8} 
-                      metalness={0.4}
-                    />
-                  </mesh>
-
-
-                  
-
- 
-
-
-
+                  <mesh position={[0, 0.25, 0.35]} geometry={ABYSSAL_SKELETON_GEOMETRIES.bootSole} material={ABYSSAL_SKELETON_MATERIALS.malachiteDark} />
 
                   {/* Side armor reinforcement - corrected to run along foot length */}
                   {[-1, 1].map((side) => (
-                    <mesh key={side} position={[side * 0.1125, 0.125, 0.275]}>
-                      <boxGeometry args={[0.0175, 0.40, 0.14]} />
-                      <meshStandardMaterial 
-                        color="#008040" 
-                        roughness={0.2} 
-                        metalness={0.9}
-                      />
-                    </mesh>
+                    <mesh key={side} position={[side * 0.1125, 0.125, 0.275]} geometry={ABYSSAL_SKELETON_GEOMETRIES.bootSide} material={ABYSSAL_SKELETON_MATERIALS.malachiteDark} />
                   ))}
                 </group>
                 
@@ -243,14 +290,7 @@ function AbyssalSkeletonClawModel() {
         {createParallelBones(1.43, 0.165)} {/* 1.1x scale */}
         
         <group position={[0.275, -0.935, 0.231]}> 
-          <mesh>
-            <sphereGeometry args={[0.132, 12, 12]} />
-            <meshStandardMaterial 
-              color="#d0d0d0"
-              roughness={0.5}
-              metalness={0.4}
-            />
-          </mesh>
+          <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.jointLarge} material={ABYSSAL_SKELETON_MATERIALS.standardBone} />
           
           <group rotation={[-0.7, -0, Math.PI / 5]}>
             {createParallelBones(0.88, 0.132)}
@@ -259,10 +299,7 @@ function AbyssalSkeletonClawModel() {
               {createJoint(0.099)}
               
               <group position={[0, -0.11, 0]}>
-                <mesh>
-                  <boxGeometry args={[0.22, 0.165, 0.088]} />
-                  <meshStandardMaterial color="#d0d0d0" roughness={0.5} />
-                </mesh>
+                <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.handBase} material={ABYSSAL_SKELETON_MATERIALS.standardBone} />
                 
                 {/* Three fingers */}
                 {[-0.088, 0, 0.088].map((offset, i) => (
@@ -291,14 +328,7 @@ function AbyssalSkeletonShoulderPlate() {
     <group>
       <group>
         {/* Main shoulder pauldron - malachite green theme */}
-        <mesh>
-          <sphereGeometry args={[0.22, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.9]} />
-          <meshStandardMaterial 
-            color="#00b359"
-            roughness={0.3}
-            metalness={0.8}
-          />
-        </mesh>
+        <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderPauldron} material={ABYSSAL_SKELETON_MATERIALS.malachiteGreen} />
 
         {/* Layered armor plates - malachite green style */}
         {[0, 1, 2, 3, 4, 5].map((i) => {
@@ -306,15 +336,13 @@ function AbyssalSkeletonShoulderPlate() {
           const radius = 0.18 + (i % 2) * 0.02;
           return (
             <group key={i} rotation={[0, angle, 0]}>
-              <mesh position={[radius, -0.033 * i, 0]} rotation={[0.1, 0, 0]}>
-                <boxGeometry args={[0.1, 0.165 - i * 0.011, 0.033]} />
-                <meshStandardMaterial 
-                  color={i % 2 === 0 ? "#00b359" : "#008040"}
-                  roughness={0.3}
-                  metalness={0.8}
-                />
-              </mesh>
-
+              <mesh 
+                position={[radius, -0.033 * i, 0]} 
+                rotation={[0.1, 0, 0]}
+                geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderPlate}
+                scale={[1, (0.165 - i * 0.011)/0.165, 1]}
+                material={i % 2 === 0 ? ABYSSAL_SKELETON_MATERIALS.malachiteGreen : ABYSSAL_SKELETON_MATERIALS.malachiteDark}
+              />
             </group>
           );
         })}
@@ -325,109 +353,45 @@ function AbyssalSkeletonShoulderPlate() {
           const height = 0.12 + i * 0.02;
           return (
             <group key={i} rotation={[0, angle, 0]}>
-              <mesh position={[0.20, 0.15, 0]} rotation={[0.2, 0, 0]}>
-                <coneGeometry args={[0.022, height, 8]} />
-                <meshStandardMaterial 
-                  color="#008040"
-                  roughness={0.2}
-                  metalness={0.9}
-                />
-              </mesh>
+              <mesh
+                position={[0.20, 0.15, 0]}
+                rotation={[0.2, 0, 0]}
+                geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderSpike}
+                scale={[1, height/0.12, 1]}
+                material={ABYSSAL_SKELETON_MATERIALS.malachiteDark}
+              />
               
               {/* Spike bases */}
-              <mesh position={[0.20, 0.08, 0]}>
-                <cylinderGeometry args={[0.033, 0.022, 0.055, 8]} />
-                <meshStandardMaterial 
-                  color="#00b359"
-                  roughness={0.3}
-                  metalness={0.8}
-                />
-              </mesh>
+              <mesh position={[0.20, 0.08, 0]} geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderSpikeBase} material={ABYSSAL_SKELETON_MATERIALS.malachiteGreen} />
             </group>
           );
         })}
 
         {/* Decorative trim rings - malachite green */}
-        <mesh position={[0, 0.165, 0]} rotation={[Math.PI/2, 0, 0]}>
-          <torusGeometry args={[0.165, 0.016, 6, 12]} />
-          <meshStandardMaterial 
-            color="#008040"
-            roughness={0.2}
-            metalness={0.9}
-          />
-        </mesh>
+        <mesh position={[0, 0.165, 0]} rotation={[Math.PI/2, 0, 0]} geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderTrimSmall} material={ABYSSAL_SKELETON_MATERIALS.malachiteDark} />
 
-        <mesh position={[0, 0.055, 0]} rotation={[Math.PI/2, 0, 0]}>
-          <torusGeometry args={[0.198, 0.022, 8, 16]} />
-          <meshStandardMaterial 
-            color="#006633"
-            roughness={0.1}
-            metalness={0.95}
-          />
-        </mesh>
+        <mesh position={[0, 0.055, 0]} rotation={[Math.PI/2, 0, 0]} geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderTrimMed} material={ABYSSAL_SKELETON_MATERIALS.malachiteDarkest} />
 
-        <mesh position={[0, -0.066, 0]} rotation={[Math.PI/2, 0, 0]}>
-          <torusGeometry args={[0.22, 0.018, 8, 16]} />
-          <meshStandardMaterial 
-            color="#008040"
-            roughness={0.2}
-            metalness={0.9}
-          />
-        </mesh>
+        <mesh position={[0, -0.066, 0]} rotation={[Math.PI/2, 0, 0]} geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderTrimLarge} material={ABYSSAL_SKELETON_MATERIALS.malachiteDark} />
 
         {/* Central shoulder emblem */}
         <group position={[0, 0.088, 0.18]}>
-          <mesh>
-            <cylinderGeometry args={[0.055, 0.055, 0.022, 8]} />
-            <meshStandardMaterial 
-              color="#006633"
-              roughness={0.1}
-              metalness={0.95}
-            />
-          </mesh>
+          <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderEmblem} material={ABYSSAL_SKELETON_MATERIALS.malachiteDarkest} />
           
           {/* Emblem details */}
-          <mesh position={[0, 0, 0.011]}>
-            <cylinderGeometry args={[0.033, 0.033, 0.011, 6]} />
-            <meshStandardMaterial 
-              color="#00b359"
-              roughness={0.3}
-              metalness={0.8}
-            />
-          </mesh>
+          <mesh position={[0, 0, 0.011]} geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderEmblemInner} material={ABYSSAL_SKELETON_MATERIALS.malachiteGreen} />
 
           {/* Central spike */}
-          <mesh position={[0, 0.022, 0]}>
-            <coneGeometry args={[0.016, 0.044, 6]} />
-            <meshStandardMaterial 
-              color="#008040"
-              roughness={0.2}
-              metalness={0.9}
-            />
-          </mesh>
+          <mesh position={[0, 0.022, 0]} geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderEmblemSpike} material={ABYSSAL_SKELETON_MATERIALS.malachiteDark} />
         </group>
 
         {/* Shoulder guard extensions */}
         {[-1, 1].map((side) => (
           <group key={side} position={[side * 0.165, -0.044, 0]} rotation={[0, side * Math.PI/8, side * 0.1]}>
-            <mesh>
-              <boxGeometry args={[0.088, 0.132, 0.055]} />
-              <meshStandardMaterial 
-                color="#00b359"
-                roughness={0.3}
-                metalness={0.8}
-              />
-            </mesh>
+            <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderGuard} material={ABYSSAL_SKELETON_MATERIALS.malachiteGreen} />
             
             {/* Guard trim */}
-            <mesh position={[0, 0, 0.028]}>
-              <boxGeometry args={[0.099, 0.143, 0.011]} />
-              <meshStandardMaterial 
-                color="#008040"
-                roughness={0.2}
-                metalness={0.9}
-              />
-            </mesh>
+            <mesh position={[0, 0, 0.028]} geometry={ABYSSAL_SKELETON_GEOMETRIES.shoulderGuardTrim} material={ABYSSAL_SKELETON_MATERIALS.malachiteDark} />
           </group>
         ))}
 
@@ -824,33 +788,21 @@ export default function AbyssalSkeletonModel({
         {/* Main skull shape */}
         <group>
           {/* Back of cranium */}
-          <mesh position={[0, 0, -0.05]}>
-            <sphereGeometry args={[0.26, 8, 8]} />
-            <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-          </mesh>
+          <mesh position={[0, 0, -0.05]} geometry={ABYSSAL_SKELETON_GEOMETRIES.cranium} material={ABYSSAL_SKELETON_MATERIALS.standardBone} />
           
           {/* Front face plate */}
-          <mesh position={[0, -0.02, 0.12]}>
-            <boxGeometry args={[0.34, 0.34, 0.12]} />
-            <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-          </mesh>
+          <mesh position={[0, -0.02, 0.12]} geometry={ABYSSAL_SKELETON_GEOMETRIES.facePlate} material={ABYSSAL_SKELETON_MATERIALS.standardBone} />
 
           {/* Death knight jaw */}
           <group position={[0, -0.18, 0.05]}>
-            <mesh position={[0, -0.10, 0.10]} rotation={[0, Math.PI/5, 0]}>
-              <cylinderGeometry args={[0.10, 0.10, 0.24, 5]} />
-              <meshStandardMaterial color="#c0c0c0" roughness={0.6} metalness={0.3} />
-            </mesh>
+            <mesh position={[0, -0.10, 0.10]} rotation={[0, Math.PI/5, 0]} geometry={ABYSSAL_SKELETON_GEOMETRIES.jaw} material={ABYSSAL_SKELETON_MATERIALS.pelvisBone} />
           </group>
 
           {/* Glowing green eyes - malachite theme */}
           <group position={[0, 0.05, 0.14]}>
             {/* Left eye */}
             <group position={[-0.09, 0, 0]}>
-              <mesh>
-                <sphereGeometry args={[0.025, 8, 8]} />
-                <meshStandardMaterial color="#00FF7F" emissive="#00FF7F" emissiveIntensity={4} />
-              </mesh>
+              <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.eye} material={ABYSSAL_SKELETON_MATERIALS.eyeGlow} />
               <pointLight 
                 color="#00FF7F"
                 intensity={0.8}
@@ -861,10 +813,7 @@ export default function AbyssalSkeletonModel({
 
             {/* Right eye */}
             <group position={[0.09, 0, 0]}>
-              <mesh>
-                <sphereGeometry args={[0.025, 8, 8]} />
-                <meshStandardMaterial color="#00FF7F" emissive="#00FF7F" emissiveIntensity={4} />
-              </mesh>
+              <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.eye} material={ABYSSAL_SKELETON_MATERIALS.eyeGlow} />
               <pointLight 
                 color="#00FF7F"
                 intensity={0.8}
@@ -877,14 +826,7 @@ export default function AbyssalSkeletonModel({
           {/* Malachite green helmet */}
           <group position={[0, 0.1, 0]}>
             {/* Main helmet bowl */}
-            <mesh position={[0, 0.05, -0.02]}>
-              <sphereGeometry args={[0.25, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
-              <meshStandardMaterial 
-                color="#00b359" 
-                roughness={0.3} 
-                metalness={0.8}
-              />
-            </mesh>
+            <mesh position={[0, 0.05, -0.02]} geometry={ABYSSAL_SKELETON_GEOMETRIES.helmetBowl} material={ABYSSAL_SKELETON_MATERIALS.malachiteGreen} />
 
 
 
@@ -967,32 +909,19 @@ export default function AbyssalSkeletonModel({
 
       {/* Pelvis structure - death knight proportions with malachite green kilt */}
       <group position={[0, 0.625, +0.05]} scale={[1.1, 1.1, 1.1]} rotation={[0.1, 0, 0]}>
-        <mesh>
-          <cylinderGeometry args={[0.22, 0.20, 0.18, 8]} />
-          <meshStandardMaterial color="#c0c0c0" roughness={0.6} metalness={0.3} />
-        </mesh>
+        <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.pelvis} material={ABYSSAL_SKELETON_MATERIALS.pelvisBone} />
 
         {/* Pelvic joints */}
         {[-1, 1].map((side) => (
           <group key={side} position={[0.18 * side, -0.09, 0]}>
-            <mesh>
-              <sphereGeometry args={[0.08, 8, 8]} />
-              <meshStandardMaterial color="#c0c0c0" roughness={0.6} metalness={0.3} />
-            </mesh>
+            <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.jointPelvis} material={ABYSSAL_SKELETON_MATERIALS.pelvisBone} />
           </group>
         ))}
 
         {/* Plate mail girdle with malachite green armored kilt */}
         <group position={[0, 0, 0]}>
           {/* Main girdle belt */}
-          <mesh position={[0, 0.05, 0]}>
-            <cylinderGeometry args={[0.275, 0.275, 0.08, 16]} />
-            <meshStandardMaterial 
-              color="#00b359" 
-              roughness={0.3} 
-              metalness={0.8}
-            />
-          </mesh>
+          <mesh position={[0, 0.05, 0]} geometry={ABYSSAL_SKELETON_GEOMETRIES.girdle} material={ABYSSAL_SKELETON_MATERIALS.malachiteGreen} />
 
 
           {/* Armored kilt plates - arranged in a circle */}
@@ -1003,24 +932,10 @@ export default function AbyssalSkeletonModel({
             return (
               <group key={i} position={[x, -0.06, z]} rotation={[0, -angle, 0]}>
                 {/* Individual kilt plate */}
-                <mesh position={[0, 0.05, 0]} rotation={[0.1, 0, 0]}>
-                  <boxGeometry args={[0.25, 0.375, 0.02]} />
-                  <meshStandardMaterial 
-                    color="#00b359" 
-                    roughness={0.3} 
-                    metalness={0.8}
-                  />
-                </mesh>
+                <mesh position={[0, 0.05, 0]} rotation={[0.1, 0, 0]} geometry={ABYSSAL_SKELETON_GEOMETRIES.kiltPlate} material={ABYSSAL_SKELETON_MATERIALS.malachiteGreen} />
                 
                 {/* Plate trim */}
-                <mesh position={[0, -0.15, 0.01]} rotation={[0.1, 0, 0]}>
-                  <boxGeometry args={[0.09, 0.18, 0.01]} />
-                  <meshStandardMaterial 
-                    color="#008040" 
-                    roughness={0.2} 
-                    metalness={0.9}
-                  />
-                </mesh>
+                <mesh position={[0, -0.15, 0.01]} rotation={[0.1, 0, 0]} geometry={ABYSSAL_SKELETON_GEOMETRIES.kiltTrim} material={ABYSSAL_SKELETON_MATERIALS.malachiteDark} />
               </group>
             );
           })}
@@ -1038,10 +953,7 @@ export default function AbyssalSkeletonModel({
 
       {/* Neck connection - death knight proportions */}
       <group position={[0, 1.408, 0.176]}>
-        <mesh>
-          <cylinderGeometry args={[0.066, 0.066, 0.165, 6]} />
-          <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-        </mesh>
+        <mesh geometry={ABYSSAL_SKELETON_GEOMETRIES.neck} material={ABYSSAL_SKELETON_MATERIALS.standardBone} />
       </group>
     </group>
   );

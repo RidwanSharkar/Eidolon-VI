@@ -1,10 +1,11 @@
 // src/Versus/FallenTitan/FallenTitanModel.tsx
-import React, { useRef, useState, useEffect } from 'react';
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry } from 'three';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, BoxGeometry, TorusGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../../gear/BonePlate';
 import FallenTitanSword from './FallenTitanSword';
 import DragonSkull from '@/gear/DragonSkull';
+import { registerGlobalSharedResource } from '../../Scene/EffectPools';
 
 
 interface FallenTitanModelProps {
@@ -14,31 +15,98 @@ interface FallenTitanModelProps {
   onHit?: (damage: number) => void;
 }
 
-// Reuse Materials
-const standardBoneMaterial = new MeshStandardMaterial({
-  color: "#d0d0d0", // Darker than regular skeleton
-  roughness: 0.5,
-  metalness: 0.4
-});
+// MEMORY FIX: Create shared geometries at module level
+const TITAN_GEOMETRIES = {
+  // Joint geometries
+  jointSmall: new SphereGeometry(0.18, 8, 8),
+  jointMedium: new SphereGeometry(0.24, 12, 12),
+  jointLarge: new SphereGeometry(0.36, 12, 12),
+  jointPelvis: new SphereGeometry(0.11, 8, 8),
+  
+  // Bone geometries
+  largeBone: new CylinderGeometry(0.12, 0.096, 3, 6),
+  claw: new ConeGeometry(0.06, 0.45, 6),
+  neck: new CylinderGeometry(0.06, 0.06, 0.3, 6),
+  
+  // Skull parts
+  cranium: new SphereGeometry(0.26, 8, 8),
+  facePlate: new BoxGeometry(0.34, 0.34, 0.12),
+  jaw: new CylinderGeometry(0.10, 0.10, 0.24, 5),
+  eye: new SphereGeometry(0.025, 8, 8),
+  
+  // Shoulder plate parts
+  shoulderBase: new CylinderGeometry(0.369, 0.57, 0.525, 6),
+  shoulderPlate: new BoxGeometry(0.36, 0.57, 0.06),
+  shoulderRidge: new BoxGeometry(0.105, 0.72, 0.045),
+  shoulderRimSmall: new TorusGeometry(0.195, 0.06, 3, 5),
+  shoulderRimMed: new TorusGeometry(0.48, 0.06, 4, 5),
+  shoulderRimLarge: new TorusGeometry(0.60, 0.06, 4, 5),
+  shoulderRimHover: new TorusGeometry(0.375, 0.0525, 6, 6),
+  
+  // Pelvis
+  pelvisBowl: new CylinderGeometry(0.31, 0.30, 0.24, 8),
+  
+  // Foot/claw parts
+  footPlate: new BoxGeometry(0.45, 0.06, 1.2),
+  toeClaw: new ConeGeometry(0.06, 0.45, 6),
+  
+  // Hand parts
+  handBase: new BoxGeometry(0.6, 0.45, 0.24),
+};
 
-const darkBoneMaterial = new MeshStandardMaterial({
-  color: "#b8b8b8", // Darker than regular skeleton
-  roughness: 0.4,
-  metalness: 0.5
-});
+// Shared materials
+const TITAN_MATERIALS = {
+  standardBone: new MeshStandardMaterial({
+    color: "#d0d0d0",
+    roughness: 0.5,
+    metalness: 0.4
+  }),
+  darkBone: new MeshStandardMaterial({
+    color: "#b8b8b8",
+    roughness: 0.4,
+    metalness: 0.5
+  }),
+  pelvisBone: new MeshStandardMaterial({
+    color: "#c0c0c0",
+    roughness: 0.6,
+    metalness: 0.3
+  }),
+  eyeGlow: new MeshStandardMaterial({
+    color: "#FF0000",
+    emissive: "#FF0000",
+    emissiveIntensity: 4
+  }),
+};
 
-// Cache geometries that are reused frequently (scaled up for titan)
-const jointGeometry = new SphereGeometry(0.18, 8, 8); // 3x larger
-const largeBoneGeometry = new CylinderGeometry(0.12, 0.096, 3, 6); // 3x larger
-const clawGeometry = new ConeGeometry(0.06, 0.45, 6); // 3x larger
+// Lazy registration of global shared resources (client-side only)
+let registeredTitanResources = false;
+const registerTitanResources = () => {
+  if (registeredTitanResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      Object.values(TITAN_GEOMETRIES).forEach(geo => geo.dispose());
+      Object.values(TITAN_MATERIALS).forEach(mat => mat.dispose());
+    }, 'FallenTitanModel');
+    registeredTitanResources = true;
+  } catch (error) {
+    console.warn('Failed to register Titan resources:', error);
+  }
+};
+
+// Legacy aliases for backward compatibility
+const standardBoneMaterial = TITAN_MATERIALS.standardBone;
+const darkBoneMaterial = TITAN_MATERIALS.darkBone;
+const jointGeometry = TITAN_GEOMETRIES.jointSmall;
+const largeBoneGeometry = TITAN_GEOMETRIES.largeBone;
+const clawGeometry = TITAN_GEOMETRIES.claw;
 
 function TitanLegModel() {
   const createBoneSegment = (length: number, width: number) => (
-    <mesh geometry={largeBoneGeometry} material={standardBoneMaterial} scale={[width/0.12, length/3, width/0.12]} />
+    <mesh geometry={TITAN_GEOMETRIES.largeBone} material={TITAN_MATERIALS.standardBone} scale={[width/0.12, length/3, width/0.12]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.18, size/0.18, size/0.18]} />
+    <mesh geometry={TITAN_GEOMETRIES.jointSmall} material={TITAN_MATERIALS.standardBone} scale={[size/0.18, size/0.18, size/0.18]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -66,10 +134,7 @@ function TitanLegModel() {
         
         {/* Knee joint */}
         <group position={[0, -1.05, 0]}>
-          <mesh>
-            <sphereGeometry args={[0.24, 12, 12]} />
-            <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-          </mesh>
+          <mesh geometry={TITAN_GEOMETRIES.jointMedium} material={TITAN_MATERIALS.standardBone} />
           
           {/* Lower leg */}
           <group position={[0, -0.45, 0]}>
@@ -81,10 +146,7 @@ function TitanLegModel() {
               
               {/* Foot structure - larger and more imposing */}
               <group position={[0, -0.045, 0.3]}>
-                <mesh>
-                  <boxGeometry args={[0.45, 0.06, 1.2]} />
-                  <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-                </mesh>
+                <mesh geometry={TITAN_GEOMETRIES.footPlate} material={TITAN_MATERIALS.standardBone} />
                 
                 {/* Toe bones */}
                 {[-0.15, 0, 0.15].map((offset, i) => (
@@ -94,14 +156,7 @@ function TitanLegModel() {
                       
                       {/* Toe claws */}
                       <group position={[0, -0.3, 0]} rotation={[Math.PI/6, 0, 0]}>
-                        <mesh>
-                          <coneGeometry args={[0.06, 0.45, 6]} />
-                          <meshStandardMaterial 
-                            color="#b8b8b8"
-                            roughness={0.4}
-                            metalness={0.5}
-                          />
-                        </mesh>
+                        <mesh geometry={TITAN_GEOMETRIES.toeClaw} material={TITAN_MATERIALS.darkBone} />
                       </group>
                     </group>
                   </group>
@@ -117,11 +172,11 @@ function TitanLegModel() {
 
 function TitanClawModel() {
   const createBoneSegment = (length: number, width: number) => (
-    <mesh geometry={largeBoneGeometry} material={standardBoneMaterial} scale={[width/0.12, length/3, width/0.12]} />
+    <mesh geometry={TITAN_GEOMETRIES.largeBone} material={TITAN_MATERIALS.standardBone} scale={[width/0.12, length/3, width/0.12]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.18, size/0.18, size/0.18]} />
+    <mesh geometry={TITAN_GEOMETRIES.jointSmall} material={TITAN_MATERIALS.standardBone} scale={[size/0.18, size/0.18, size/0.18]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -147,14 +202,7 @@ function TitanClawModel() {
         {createParallelBones(3.9, 0.45)} {/* 3x scale */}
         
         <group position={[0.75, -2.55, 0.63]}> 
-          <mesh>
-            <sphereGeometry args={[0.36, 12, 12]} />
-            <meshStandardMaterial 
-              color="#d0d0d0"
-              roughness={0.5}
-              metalness={0.4}
-            />
-          </mesh>
+          <mesh geometry={TITAN_GEOMETRIES.jointLarge} material={TITAN_MATERIALS.standardBone} />
           
           <group rotation={[-0.7, -0, Math.PI / 5]}>
             {createParallelBones(2.4, 0.36)}
@@ -163,10 +211,7 @@ function TitanClawModel() {
               {createJoint(0.27)}
               
               <group position={[0, -0.3, 0]}>
-                <mesh>
-                  <boxGeometry args={[0.6, 0.45, 0.24]} />
-                  <meshStandardMaterial color="#d0d0d0" roughness={0.5} />
-                </mesh>
+                <mesh geometry={TITAN_GEOMETRIES.handBase} material={TITAN_MATERIALS.standardBone} />
                 
                 {/* Three large fingers */}
                 {[-0.24, 0, 0.24].map((offset, i) => (
@@ -177,7 +222,7 @@ function TitanClawModel() {
                   >
                     {createBoneSegment(1.5, 0.06)}
                     <group position={[0.075, -0.9, 0]} rotation={[0, 0, Math.PI + Math.PI / 16]}>
-                      <mesh geometry={clawGeometry} material={darkBoneMaterial} />
+                      <mesh geometry={TITAN_GEOMETRIES.claw} material={TITAN_MATERIALS.darkBone} />
                     </group>
                   </group>
                 ))}
@@ -195,30 +240,15 @@ function TitanShoulderPlate() {
     <group>
       <group>
         {/* Base plate - larger */}
-        <mesh>
-          <cylinderGeometry args={[0.369, 0.57, 0.525, 6, 1, false, 0, Math.PI*2]} />
-          <meshStandardMaterial 
-            color="#d0d0d0"
-            roughness={0.5}
-            metalness={0.4}
-          />
-        </mesh>
+        <mesh geometry={TITAN_GEOMETRIES.shoulderBase} material={TITAN_MATERIALS.standardBone} />
 
         {/* Overlapping armor plates */}
         {[0, 1, 2, 3].map((i) => (
           <group key={i} rotation={[0, (i * Math.PI) / 2, 0]}>
-            <mesh position={[0.33, 0, 0]} rotation={[0, Math.PI / 6, 0]}>
-              <boxGeometry args={[0.36, 0.57, 0.06]} />
-              <meshStandardMaterial 
-                color="#b8b8b8"
-                roughness={0.6}
-                metalness={0.5}
-              />
-            </mesh>
+            <mesh position={[0.33, 0, 0]} rotation={[0, Math.PI / 6, 0]} geometry={TITAN_GEOMETRIES.shoulderPlate} material={TITAN_MATERIALS.darkBone} />
             
             {/* Decorative ridge */}
-            <mesh position={[0.21, 0.15, 0.0]} rotation={[0, Math.PI / 6, 0]}>
-              <boxGeometry args={[0.105, 0.72, 0.045]} />
+            <mesh position={[0.21, 0.15, 0.0]} rotation={[0, Math.PI / 6, 0]} geometry={TITAN_GEOMETRIES.shoulderRidge}>
               <meshStandardMaterial 
                 color="#a0a0a0"
                 roughness={0.4}
@@ -229,41 +259,13 @@ function TitanShoulderPlate() {
         ))}
 
         {/* Rims - scaled up */}
-        <mesh position={[0, 0.66, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.195, 0.06, 3, 5]} />
-          <meshStandardMaterial 
-            color="#b8b8b8"
-            roughness={0.4}
-            metalness={0.6}
-          />
-        </mesh>
+        <mesh position={[0, 0.66, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]} geometry={TITAN_GEOMETRIES.shoulderRimSmall} material={TITAN_MATERIALS.darkBone} />
 
-        <mesh position={[0, 0, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.48, 0.06, 4, 5]} />
-          <meshStandardMaterial 
-            color="#b8b8b8"
-            roughness={0.4}
-            metalness={0.6}
-          />
-        </mesh>
+        <mesh position={[0, 0, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]} geometry={TITAN_GEOMETRIES.shoulderRimMed} material={TITAN_MATERIALS.darkBone} />
 
-        <mesh position={[0, -0.30, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.60, 0.06, 4, 5]} />
-          <meshStandardMaterial 
-            color="#b8b8b8"
-            roughness={0.4}
-            metalness={0.6}
-          />
-        </mesh>
+        <mesh position={[0, -0.30, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]} geometry={TITAN_GEOMETRIES.shoulderRimLarge} material={TITAN_MATERIALS.darkBone} />
 
-        <mesh position={[0, 0.30, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.375, 0.0525, 6, 6]} />
-          <meshStandardMaterial 
-            color="#b8b8b8"
-            roughness={0.4}
-            metalness={0.6}
-          />
-        </mesh>
+        <mesh position={[0, 0.30, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]} geometry={TITAN_GEOMETRIES.shoulderRimHover} material={TITAN_MATERIALS.darkBone} />
       </group>
     </group>
   );
@@ -275,6 +277,11 @@ export default function FallenTitanModel({
   isWalking, 
   onHit 
 }: FallenTitanModelProps) {
+  // Register shared resources on first use
+  useEffect(() => {
+    registerTitanResources();
+  }, []);
+
   const groupRef = useRef<Group>(null);
   const leftArmRef = useRef<Group>(null);
   const rightArmRef = useRef<Group>(null);
@@ -445,33 +452,21 @@ export default function FallenTitanModel({
         {/* Main skull shape */}
         <group>
           {/* Back of cranium */}
-          <mesh position={[0, 0, -0.05]}>
-            <sphereGeometry args={[0.26, 8, 8]} />
-            <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-          </mesh>
+          <mesh position={[0, 0, -0.05]} geometry={TITAN_GEOMETRIES.cranium} material={TITAN_MATERIALS.standardBone} />
           
           {/* Front face plate */}
-          <mesh position={[0, -0.02, 0.12]}>
-            <boxGeometry args={[0.34, 0.34, 0.12]} />
-            <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-          </mesh>
+          <mesh position={[0, -0.02, 0.12]} geometry={TITAN_GEOMETRIES.facePlate} material={TITAN_MATERIALS.standardBone} />
 
           {/* Larger, more menacing jaw */}
           <group position={[0, -0.18, 0.05]}>
-            <mesh position={[0, -0.10, 0.10]} rotation={[0, Math.PI/5, 0]}>
-              <cylinderGeometry args={[0.10, 0.10, 0.24, 5]} />
-              <meshStandardMaterial color="#c0c0c0" roughness={0.6} metalness={0.3} />
-            </mesh>
+            <mesh position={[0, -0.10, 0.10]} rotation={[0, Math.PI/5, 0]} geometry={TITAN_GEOMETRIES.jaw} material={TITAN_MATERIALS.pelvisBone} />
           </group>
 
           {/* Glowing red eyes - more menacing */}
           <group position={[0, 0.05, 0.14]}>
             {/* Left eye */}
             <group position={[-0.09, 0, 0]}>
-              <mesh>
-                <sphereGeometry args={[0.025, 8, 8]} />
-                <meshStandardMaterial color="#FF0000" emissive="#FF0000" emissiveIntensity={4} />
-              </mesh>
+              <mesh geometry={TITAN_GEOMETRIES.eye} material={TITAN_MATERIALS.eyeGlow} />
               <pointLight 
                 color="#FF0000"
                 intensity={0.8}
@@ -482,10 +477,7 @@ export default function FallenTitanModel({
 
             {/* Right eye */}
             <group position={[0.09, 0, 0]}>
-              <mesh>
-                <sphereGeometry args={[0.025, 8, 8]} />
-                <meshStandardMaterial color="#FF0000" emissive="#FF0000" emissiveIntensity={4} />
-              </mesh>
+              <mesh geometry={TITAN_GEOMETRIES.eye} material={TITAN_MATERIALS.eyeGlow} />
               <pointLight 
                 color="#FF0000"
                 intensity={0.8}
@@ -541,18 +533,12 @@ export default function FallenTitanModel({
 
       {/* Pelvis structure - more robust and positioned for hunched stance */}
       <group position={[0, 1.8, -0.1]} scale={[1.6, 1.2, 1.1]} rotation={[-0.2, 0, 0]}>
-        <mesh>
-          <cylinderGeometry args={[0.31, 0.30, 0.24, 8]} />
-          <meshStandardMaterial color="#c0c0c0" roughness={0.6} metalness={0.3} />
-        </mesh>
+        <mesh geometry={TITAN_GEOMETRIES.pelvisBowl} material={TITAN_MATERIALS.pelvisBone} />
 
         {/* Pelvic joints */}
         {[-1, 1].map((side) => (
           <group key={side} position={[0.22 * side, -0.12, 0]}>
-            <mesh>
-              <sphereGeometry args={[0.11, 8, 8]} />
-              <meshStandardMaterial color="#c0c0c0" roughness={0.6} metalness={0.3} />
-            </mesh>
+            <mesh geometry={TITAN_GEOMETRIES.jointPelvis} material={TITAN_MATERIALS.pelvisBone} />
           </group>
         ))}
       </group>
@@ -567,10 +553,7 @@ export default function FallenTitanModel({
 
       {/* Neck connection - adjusted for hunched posture */}
       <group position={[0, 3.2, 0.4]}>
-        <mesh>
-          <cylinderGeometry args={[0.06, 0.06, 0.3, 6]} />
-          <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-        </mesh>
+        <mesh geometry={TITAN_GEOMETRIES.neck} material={TITAN_MATERIALS.standardBone} />
       </group>
     </group>
   );

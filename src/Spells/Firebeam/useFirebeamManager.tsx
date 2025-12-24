@@ -195,7 +195,8 @@ export const useFirebeamManager = ({
           damage: enemyFinalDamage,
           position: enemy.position.clone(),
           isCritical: damageMultiplier > 2 || enemyIsFrozen, // Critical display if 2x+ damage OR frozen
-          isFirebeam: true
+          isFirebeam: true,
+          createdAt: Date.now() // MEMORY FIX: Required for cleanup
         }]);
         
         // Track Firebeam hit for Deep Freeze system

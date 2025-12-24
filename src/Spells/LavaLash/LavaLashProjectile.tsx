@@ -4,6 +4,9 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import LavaLashTrail from './LavaLashTrail';
 
+// Pre-allocated color for performance - avoids new THREE.Color() on every render
+const LAVA_TRAIL_COLOR = new THREE.Color("#FF4500");
+
 interface LavaLashProjectileProps {
   id: number;
   position: Vector3;
@@ -70,7 +73,7 @@ export default function LavaLashProjectile({
         <>
           {/* Lava trail effect - completely outside the moving group to avoid coordinate conflicts */}
           <LavaLashTrail
-            color={new THREE.Color("#FF4500")} // Orange-red fire color
+            color={LAVA_TRAIL_COLOR} // Orange-red fire color
             size={0.205}
             meshRef={projectileRef}
             opacity={opacity * 0.9} // Apply dynamic opacity to trail

@@ -22,16 +22,16 @@ const LavaLashTrail: React.FC<LavaLashTrailProps> = ({
   const scalesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const isInitialized = useRef(false);
   
-  // ref to store the last known position for smoother updates
+  // Reusable vectors to avoid allocations in frame loop and effects
   const lastKnownPosition = useRef(new THREE.Vector3());
+  const worldPositionRef = useRef(new THREE.Vector3());
 
   // Initialize positions only once when mesh is available
   useEffect(() => {
     if (meshRef.current && !isInitialized.current) {
-      // Get world position to handle coordinate space correctly
-      const worldPosition = new THREE.Vector3();
-      meshRef.current.getWorldPosition(worldPosition);
-      const { x, y, z } = worldPosition;
+      // Get world position to handle coordinate space correctly - reuse ref
+      meshRef.current.getWorldPosition(worldPositionRef.current);
+      const { x, y, z } = worldPositionRef.current;
       lastKnownPosition.current.set(x, y, z);
       
       // Initialize all particles at the starting position
@@ -49,9 +49,9 @@ const LavaLashTrail: React.FC<LavaLashTrailProps> = ({
   useFrame(() => {
     if (!particlesRef.current?.parent || !meshRef.current || !isInitialized.current) return;
 
-    // Get world position to handle coordinate space correctly
-    const worldPosition = new THREE.Vector3();
-    meshRef.current.getWorldPosition(worldPosition);
+    // Get world position to handle coordinate space correctly - reuse ref
+    meshRef.current.getWorldPosition(worldPositionRef.current);
+    const worldPosition = worldPositionRef.current;
     
     // Only update if position has changed significantly
     if (worldPosition.distanceToSquared(lastKnownPosition.current) > 0.0001) {

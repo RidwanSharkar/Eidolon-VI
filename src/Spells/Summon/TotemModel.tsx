@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Group, MeshStandardMaterial, CylinderGeometry, ConeGeometry, PlaneGeometry, SphereGeometry } from 'three';
 import BoneAuraTotem from './BoneAuraTotem';
 import UnholyAura from './UnholyAura';
+import { registerGlobalSharedResource } from '../../Scene/EffectPools';
 
 const SHARED_MATERIALS = {
   bone: new MeshStandardMaterial({
@@ -37,6 +38,21 @@ const SHARED_GEOMETRIES = {
   lightning: new SphereGeometry(0.1, 16, 16)
 };
 
+// Lazy registration of global shared resources (client-side only)
+let registeredTotemResources = false;
+const registerTotemResources = () => {
+  if (registeredTotemResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      Object.values(SHARED_GEOMETRIES).forEach(geo => geo.dispose());
+      Object.values(SHARED_MATERIALS).forEach(mat => mat.dispose());
+    }, 'TotemModel');
+    registeredTotemResources = true;
+  } catch (error) {
+    console.warn('Failed to register Totem resources:', error);
+  }
+};
+
 // ===========================================
 
 interface TotemModelProps {
@@ -44,6 +60,11 @@ interface TotemModelProps {
 }
 
 export default function TotemModel({ isAttacking }: TotemModelProps) {
+  // Register shared resources on first use
+  useEffect(() => {
+    registerTotemResources();
+  }, []);
+
   const totemRef = useRef<Group>(null);
 
   return (

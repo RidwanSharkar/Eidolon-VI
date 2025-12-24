@@ -5,6 +5,18 @@ import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const COLORS = {
+  brightBlue: new THREE.Color(0x6666FF),
+  blueEmission: new THREE.Color(0x4444FF),
+  lightBlue: new THREE.Color(0xAAAAFF),
+  lightBlueEmission: new THREE.Color(0x8888FF),
+  brightYellow: new THREE.Color(0xFFFF66),
+  brightCyan: new THREE.Color(0x66EEFF),
+  pointLight: new THREE.Color(0x6699FF),
+  white: new THREE.Color(0xFFFFFF),
+} as const;
+
 interface PlayerStunEffectProps {
   position: Vector3;
   duration?: number;
@@ -63,8 +75,8 @@ export default function PlayerStunEffect({
       <mesh>
         <sphereGeometry args={[0.4, 8, 8]} />
         <meshStandardMaterial
-          color={new THREE.Color(0x6666FF)}        // Brighter electric blue
-          emissive={new THREE.Color(0x4444FF)}     // Blue emission
+          color={COLORS.brightBlue}
+          emissive={COLORS.blueEmission}
           emissiveIntensity={intensity * 4}
           transparent
           opacity={fadeProgress * 0.9}
@@ -75,8 +87,8 @@ export default function PlayerStunEffect({
       <mesh>
         <sphereGeometry args={[0.25, 8, 8]} />
         <meshStandardMaterial
-          color={new THREE.Color(0xAAAAFF)}
-          emissive={new THREE.Color(0x8888FF)}
+          color={COLORS.lightBlue}
+          emissive={COLORS.lightBlueEmission}
           emissiveIntensity={intensity * 6}
           transparent
           opacity={fadeProgress * 0.8}
@@ -89,8 +101,8 @@ export default function PlayerStunEffect({
           <mesh position={[0.8, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.025, 0.025, 1.6, 4]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFFFF66)}      // Bright electric yellow
-              emissive={new THREE.Color(0xFFFF66)}
+              color={COLORS.brightYellow}
+              emissive={COLORS.brightYellow}
               emissiveIntensity={intensity * 5}
               transparent
               opacity={fadeProgress * 0.9}
@@ -110,8 +122,8 @@ export default function PlayerStunEffect({
               rotation={[0, 0, 0]}>
           <cylinderGeometry args={[0.02, 0.02, 2.5, 4]} />
           <meshStandardMaterial
-            color={new THREE.Color(0x66EEFF)}       // Bright cyan
-            emissive={new THREE.Color(0x66EEFF)}
+            color={COLORS.brightCyan}
+            emissive={COLORS.brightCyan}
             emissiveIntensity={intensity * 4}
             transparent
             opacity={fadeProgress * 0.7}
@@ -123,8 +135,8 @@ export default function PlayerStunEffect({
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[1.0, 0.06, 8, 16]} />
         <meshStandardMaterial
-          color={new THREE.Color(0x6666FF)}
-          emissive={new THREE.Color(0x6666FF)}
+          color={COLORS.brightBlue}
+          emissive={COLORS.brightBlue}
           emissiveIntensity={intensity * 3}
           transparent
           opacity={fadeProgress * 0.6}
@@ -135,8 +147,8 @@ export default function PlayerStunEffect({
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[1.3, 0.04, 8, 16]} />
         <meshStandardMaterial
-          color={new THREE.Color(0x4444FF)}
-          emissive={new THREE.Color(0x4444FF)}
+          color={COLORS.blueEmission}
+          emissive={COLORS.blueEmission}
           emissiveIntensity={intensity * 2}
           transparent
           opacity={fadeProgress * 0.4}
@@ -145,7 +157,7 @@ export default function PlayerStunEffect({
 
       {/* Point light for illumination - brighter */}
       <pointLight 
-        color={new THREE.Color(0x6699FF)}
+        color={COLORS.pointLight}
         intensity={intensity * 5}
         distance={4}
         decay={2}
@@ -161,8 +173,8 @@ export default function PlayerStunEffect({
               ]}>
           <sphereGeometry args={[0.04, 4, 4]} />
           <meshStandardMaterial
-            color={new THREE.Color(0xFFFFFF)}       // White sparks
-            emissive={new THREE.Color(0xFFFFFF)}
+            color={COLORS.white}
+            emissive={COLORS.white}
             emissiveIntensity={intensity * 8}
             transparent
             opacity={fadeProgress * Math.random() * 0.9}

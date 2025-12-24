@@ -3,6 +3,11 @@ import { Group, Vector3, Object3D, Material } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+// Pre-allocated vectors and quaternions to avoid per-frame allocations
+const tempForward = new THREE.Vector3();
+const tempAxisX = new THREE.Vector3(-1, 0, 0);
+const tempFlatRotation = new THREE.Quaternion();
+
 interface AbyssalSlashEffectProps {
   startPosition: Vector3;
   direction: Vector3;
@@ -83,8 +88,11 @@ export default function AbyssalSlashEffect({
       if (currentEffect) {
         currentEffect.scale.set(0, 0, 0);
       }
+      // Dispose geometries and materials
+      Object.values(geometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
     };
-  }, []);
+  }, [geometries, materials]);
 
   useFrame((_, delta) => {
     if (!effectRef.current || !isActive.current || !parentRef.current) return;
@@ -102,24 +110,21 @@ export default function AbyssalSlashEffect({
       // Position and rotation logic from OathStrike
       const parentQuaternion = parentRef.current.quaternion;
       
-      // Create the forward vector and apply parent's rotation
-      const forward = new THREE.Vector3(0, 0, 2);
-      forward.applyQuaternion(parentQuaternion);
+      // Reuse the forward vector and apply parent's rotation
+      tempForward.set(0, 0, 2);
+      tempForward.applyQuaternion(parentQuaternion);
       
       // Position the effect
       effectRef.current.position.copy(parentRef.current.position)
-        .add(forward)
+        .add(tempForward)
         .setY(0.1);
       
-      // Quaternion for laying flat (-90 degrees around X axis)
-      const flatRotation = new THREE.Quaternion().setFromAxisAngle(
-        new THREE.Vector3(-1, 0, 0),
-        -Math.PI/2
-      );
+      // Reuse quaternion for laying flat (-90 degrees around X axis)
+      tempFlatRotation.setFromAxisAngle(tempAxisX, -Math.PI/2);
       
       // Combine the flat rotation with the parent's rotation
       effectRef.current.quaternion.copy(parentQuaternion)
-        .multiply(flatRotation);
+        .multiply(tempFlatRotation);
 
       // Scale and fade effects (33% smaller than OathStrike)
       const scale = Math.sin(progress * Math.PI) * 1.0; // Reduced from 1.5 to 1.0 (33% smaller)

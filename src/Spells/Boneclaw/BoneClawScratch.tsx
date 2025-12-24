@@ -1,7 +1,81 @@
-import { useRef } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Group, MeshBasicMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { registerGlobalSharedResource } from '../../Scene/EffectPools';
+
+// Pre-allocated color for performance
+const BONECLAW_COLOR = new THREE.Color('#39ff14');
+
+// Module-level shared geometries (singleton pattern for maximum reuse)
+const SHARED_GEOMETRIES = {
+  beam: new THREE.CylinderGeometry(0.1, 0.1, 15, 16),
+  innerBeam: new THREE.CylinderGeometry(0.175, 0.175, 15, 16),
+  middleBeam: new THREE.CylinderGeometry(0.25, 0.25, 15, 16),
+  outerBeam: new THREE.CylinderGeometry(0.375, 0.375, 15, 16),
+  torus: new THREE.TorusGeometry(0.5, 0.08, 32, 32),
+  particle: new THREE.SphereGeometry(0.04, 8, 8)
+};
+
+// Module-level shared materials for torusSpiral and particle meshes (avoids per-render allocations)
+const SHARED_TORUS_MATERIAL = new THREE.MeshStandardMaterial({
+  color: BONECLAW_COLOR,
+  emissive: BONECLAW_COLOR,
+  emissiveIntensity: 3,
+  transparent: true,
+  opacity: 0.4
+});
+
+const SHARED_PARTICLE_MATERIAL = new THREE.MeshStandardMaterial({
+  color: BONECLAW_COLOR,
+  emissive: BONECLAW_COLOR,
+  emissiveIntensity: 12,
+  transparent: true,
+  opacity: 0.6
+});
+
+// Register global shared resources for disposal
+// Lazy registration of global shared resources (client-side only)
+let registeredBoneClawResources = false;
+const registerBoneClawResources = () => {
+  if (registeredBoneClawResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      Object.values(SHARED_GEOMETRIES).forEach(geo => geo.dispose());
+      SHARED_TORUS_MATERIAL.dispose();
+      SHARED_PARTICLE_MATERIAL.dispose();
+    }, 'BoneClawScratch');
+    registeredBoneClawResources = true;
+  } catch (error) {
+    console.warn('Failed to register BoneClaw resources:', error);
+  }
+};
+
+// Helper to create shader material with specific opacity
+const createShaderMaterial = (opacity: number, color: THREE.Color) => new THREE.ShaderMaterial({
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 uColor;
+    varying vec2 vUv;
+    void main() {
+      float strength = 1.0 - length(vUv - vec2(0.5));
+      vec3 glowColor = mix(uColor, vec3(1.0), 0.3);
+      gl_FragColor = vec4(glowColor, strength * ${opacity.toFixed(2)});
+    }
+  `,
+  uniforms: {
+    uColor: { value: color }
+  }
+});
 
 interface BoneclawScratchProps {
   position: Vector3;
@@ -10,72 +84,53 @@ interface BoneclawScratchProps {
 }
 
 export default function BoneClawScratch({ position, direction, onComplete }: BoneclawScratchProps) {
+  // Register shared resources on first use
+  useEffect(() => {
+    registerBoneClawResources();
+  }, []);
+
   const effectRef = useRef<Group>(null);
   const progressRef = useRef(0);
   const animationDuration = 1.2;
   const delayTimer = useRef(0);
   const startDelay = 0.125;
-  const color = new THREE.Color('#39ff14');
   const scorchedDuration = 2.5;
   const scorchedRef = useRef<Group>(null);
   const scorchedProgressRef = useRef(0);
 
-  // Calculate three positions, one center and two on the sides
-  const centerPosition = new Vector3(
-    position.x + direction.x * 5,
-    0,
-    position.z + direction.z * 5
-  );
+  // Memoize positions based on position and direction props
+  const { centerPosition, leftPosition, rightPosition } = useMemo(() => {
+    const center = new Vector3(
+      position.x + direction.x * 5,
+      0,
+      position.z + direction.z * 5
+    );
+    const perpVector = new Vector3(-direction.z, 0, direction.x).normalize();
+    const spacing = 1.35;
+    return {
+      centerPosition: center,
+      leftPosition: center.clone().add(perpVector.clone().multiplyScalar(-spacing)),
+      rightPosition: center.clone().add(perpVector.clone().multiplyScalar(spacing))
+    };
+  }, [position, direction]);
 
-  // Calculate perpendicular vector for spacing the side scratches
-  const perpVector = new Vector3(-direction.z, 0, direction.x).normalize();
-  const spacing = 1.35; // Adjust this value to control spacing between scratches
+  // Memoize shader materials with proper disposal
+  const sharedShaderMaterials = useMemo(() => ({
+    core: createShaderMaterial(0.95, BONECLAW_COLOR),
+    inner: createShaderMaterial(0.8, BONECLAW_COLOR),
+    middle: createShaderMaterial(0.6, BONECLAW_COLOR),
+    outer: createShaderMaterial(0.4, BONECLAW_COLOR)
+  }), []);
 
-  const leftPosition = centerPosition.clone().add(perpVector.clone().multiplyScalar(-spacing));
-  const rightPosition = centerPosition.clone().add(perpVector.clone().multiplyScalar(spacing));
-
-  // Cache shader materials
-  const createSharedShaderMaterial = (opacity: number) => new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    vertexShader: `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 uColor;
-      varying vec2 vUv;
-      void main() {
-        float strength = 1.0 - length(vUv - vec2(0.5));
-        vec3 glowColor = mix(uColor, vec3(1.0), 0.3);
-        gl_FragColor = vec4(glowColor, strength * ${opacity});
-      }
-    `,
-    uniforms: {
-      uColor: { value: color }
-    }
-  });
-
-  const sharedShaderMaterials = {
-    core: createSharedShaderMaterial(0.95),
-    inner: createSharedShaderMaterial(0.8),
-    middle: createSharedShaderMaterial(0.6),
-    outer: createSharedShaderMaterial(0.4)
-  };
-
-  // Cache geometries
-  const sharedGeometries = {
-    beam: new THREE.CylinderGeometry(0.1, 0.1, 15, 16),
-    innerBeam: new THREE.CylinderGeometry(0.175, 0.175, 15, 16),
-    middleBeam: new THREE.CylinderGeometry(0.25, 0.25, 15, 16),
-    outerBeam: new THREE.CylinderGeometry(0.375, 0.375, 15, 16),
-    torus: new THREE.TorusGeometry(0.5, 0.08, 32, 32),
-    particle: new THREE.SphereGeometry(0.04, 8, 8)
-  };
+  // Cleanup materials on unmount
+  useEffect(() => {
+    return () => {
+      sharedShaderMaterials.core.dispose();
+      sharedShaderMaterials.inner.dispose();
+      sharedShaderMaterials.middle.dispose();
+      sharedShaderMaterials.outer.dispose();
+    };
+  }, [sharedShaderMaterials]);
 
   useFrame((_, delta) => {
     if (!effectRef.current) return;
@@ -127,29 +182,26 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
       ]}
     >
       {/* Core beam */}
-      <mesh geometry={sharedGeometries.beam} material={sharedShaderMaterials.core} />
+      <mesh geometry={SHARED_GEOMETRIES.beam} material={sharedShaderMaterials.core} />
 
       {/* inner core beam */}
-      <mesh geometry={sharedGeometries.innerBeam} material={sharedShaderMaterials.inner} />
+      <mesh geometry={SHARED_GEOMETRIES.innerBeam} material={sharedShaderMaterials.inner} />
 
       {/* Inner glow */}
-      <mesh geometry={sharedGeometries.middleBeam} material={sharedShaderMaterials.middle} />
+      <mesh geometry={SHARED_GEOMETRIES.middleBeam} material={sharedShaderMaterials.middle} />
 
       {/* Outer glow */}
-      <mesh geometry={sharedGeometries.outerBeam} material={sharedShaderMaterials.outer} />
+      <mesh geometry={SHARED_GEOMETRIES.outerBeam} material={sharedShaderMaterials.outer} />
 
       {/*Spiral effectSky */}
       {[...Array(8)].map((_, i) => (
-        <mesh key={i} rotation={[0, (i * Math.PI) / 1.5, 0]} position={[0, +7.45, 0]}>
-          <torusGeometry args={[0.5, 0.08, 32, 32]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={3}
-            transparent
-            opacity={0.4}
-          />
-        </mesh>
+        <mesh 
+          key={i} 
+          rotation={[0, (i * Math.PI) / 1.5, 0]} 
+          position={[0, +7.45, 0]} 
+          geometry={SHARED_GEOMETRIES.torus}
+          material={SHARED_TORUS_MATERIAL}
+        />
       ))}
 
 
@@ -162,23 +214,16 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
             (i - 4) * 0.5,
             Math.sin((i * Math.PI) / 4) * 0.5,
           ]}
-        >
-          <sphereGeometry args={[0.04, 8, 8]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={12}
-            transparent
-            opacity={0.6}
-          />
-        </mesh>
+          geometry={SHARED_GEOMETRIES.particle}
+          material={SHARED_PARTICLE_MATERIAL}
+        />
       ))}
 
       {/* Impact point glow */}
-      <pointLight position={[0, 0, 0]} color={color} intensity={20} distance={6} />
+      <pointLight position={[0, 0, 0]} color={BONECLAW_COLOR} intensity={20} distance={6} />
 
       {/* Ambient glow */}
-      <pointLight position={[0, 0, 0]} color={color} intensity={15} distance={3} />
+      <pointLight position={[0, 0, 0]} color={BONECLAW_COLOR} intensity={15} distance={3} />
     </group>
   );
 

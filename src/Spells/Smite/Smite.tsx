@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { WeaponType } from '../../Weapons/weapons';
@@ -123,6 +123,14 @@ export default function Smite({ position, onComplete }: SmiteProps) {
       )
     }))
   ), []);
+
+  // Cleanup geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(cylinderGeometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
+    };
+  }, [cylinderGeometries, materials]);
 
   useFrame((_, delta) => {
     if (!lightningRef.current) return;

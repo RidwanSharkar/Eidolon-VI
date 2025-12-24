@@ -203,11 +203,24 @@ const DetailedTrees: React.FC<DetailedTreesProps> = ({ trees }) => {
   }, []);
 
   useEffect(() => {
-    // Clear previous trees
+    // Clear previous trees and dispose resources
     treeGroupsRef.current.forEach(group => {
       if (group.parent) {
         group.parent.remove(group);
       }
+      // Recursively dispose of geometries and materials
+      group.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach(m => m.dispose());
+            } else {
+              child.material.dispose();
+            }
+          }
+        }
+      });
     });
     treeGroupsRef.current = [];
 

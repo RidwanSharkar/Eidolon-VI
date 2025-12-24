@@ -91,7 +91,8 @@ export const useChainLightning = ({
       damage: INITIAL_DAMAGE,
       position: firstTarget.position.clone().add(new Vector3(0, 1.5, 0)),
       isCritical: false,
-      isChainLightning: true
+      isChainLightning: true,
+      createdAt: Date.now() // MEMORY FIX: Required for cleanup
     }]);
 
     // Process chain targets
@@ -112,7 +113,8 @@ export const useChainLightning = ({
           damage,
           position: nextTarget.position.clone().add(new Vector3(0, 1.5, 0)),
           isCritical: false,
-          isChainLightning: true
+          isChainLightning: true,
+          createdAt: Date.now() // MEMORY FIX: Required for cleanup
         }]);
       }, i * 100);
       

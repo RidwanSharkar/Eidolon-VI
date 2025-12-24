@@ -193,7 +193,8 @@ export const useEviscerate = ({
             damage: finalDamage,
             position: enemy.position.clone().add(new Vector3(0, 1, 0)),
             isCritical,
-            isEviscerate: true
+            isEviscerate: true,
+            createdAt: Date.now() // MEMORY FIX: Required for cleanup
           }]);
           
           // Apply stun effect to this enemy

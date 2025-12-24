@@ -1,7 +1,17 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, Shape } from 'three';
 import * as THREE from 'three';
+
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const COLORS = {
+  // Going out colors (red)
+  spearRed: new THREE.Color(0xFF544E),
+  lightningRed: new THREE.Color(0xFF544E),
+  // Returning colors (cyan/blue)
+  spearBlue: new THREE.Color(0x0088FF),
+  lightningCyan: new THREE.Color(0x00FFFF),
+};
 
 interface ThrowSpearProjectileProps {
   position: Vector3;
@@ -23,6 +33,12 @@ export default function ThrowSpearProjectile({
 
   // Calculate visual intensity based on charge time (0-1)
   const chargeIntensity = Math.min(chargeTime / 2, 1);
+  
+  // Memoize colors based on isReturning state
+  const { spearColor, lightningColor } = useMemo(() => ({
+    spearColor: isReturning ? COLORS.spearBlue : COLORS.spearRed,
+    lightningColor: isReturning ? COLORS.lightningCyan : COLORS.lightningRed,
+  }), [isReturning]);
   
   useFrame(() => {
     if (!groupRef.current) return;
@@ -99,8 +115,6 @@ export default function ThrowSpearProjectile({
   // Colors get more intense with higher charge
   const baseEmissiveIntensity = 1.5 + (chargeIntensity * 2); // 1.5 to 3.5
   const coreEmissiveIntensity = 2 + (chargeIntensity * 3); // 2 to 5
-  const lightningColor = isReturning ? 0x00FFFF : 0xFF544E; // Cyan when returning, spear red when going out
-  const spearColor = isReturning ? 0x0088FF : 0xFF544E; // Blue tint when returning, spear red when going out
 
   return (
     <group ref={groupRef}>
@@ -181,8 +195,8 @@ export default function ThrowSpearProjectile({
             <mesh>
               <sphereGeometry args={[0.155, 16, 16]} />
               <meshStandardMaterial
-                color={new THREE.Color(spearColor)}
-                emissive={new THREE.Color(spearColor)}
+                color={spearColor}
+                emissive={spearColor}
                 emissiveIntensity={baseEmissiveIntensity}
                 transparent
                 opacity={opacity}
@@ -192,8 +206,8 @@ export default function ThrowSpearProjectile({
             <mesh>
               <sphereGeometry args={[0.1, 16, 16]} />
               <meshStandardMaterial
-                color={new THREE.Color(spearColor)}
-                emissive={new THREE.Color(spearColor)}
+                color={spearColor}
+                emissive={spearColor}
                 emissiveIntensity={coreEmissiveIntensity}
                 transparent
                 opacity={opacity * 0.8}
@@ -203,8 +217,8 @@ export default function ThrowSpearProjectile({
             <mesh>
               <sphereGeometry args={[0.145, 16, 16]} />
               <meshStandardMaterial
-                color={new THREE.Color(spearColor)}
-                emissive={new THREE.Color(spearColor)}
+                color={spearColor}
+                emissive={spearColor}
                 emissiveIntensity={baseEmissiveIntensity + 1}
                 transparent
                 opacity={opacity * 0.6}
@@ -214,8 +228,8 @@ export default function ThrowSpearProjectile({
             <mesh>
               <sphereGeometry args={[.175, 16, 16]} />
               <meshStandardMaterial
-                color={new THREE.Color(spearColor)}
-                emissive={new THREE.Color(spearColor)}
+                color={spearColor}
+                emissive={spearColor}
                 emissiveIntensity={baseEmissiveIntensity}
                 transparent
                 opacity={opacity * 0.4}
@@ -224,7 +238,7 @@ export default function ThrowSpearProjectile({
 
             {/* Point light for illumination */}
             <pointLight 
-              color={new THREE.Color(lightningColor)}
+              color={lightningColor}
               intensity={chargeIntensity * 2 + 2}
               distance={0.5}
               decay={2}
@@ -239,8 +253,8 @@ export default function ThrowSpearProjectile({
                 <mesh>
                   <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                   <meshStandardMaterial 
-                    color={new THREE.Color(spearColor)}
-                    emissive={new THREE.Color(spearColor)}
+                    color={spearColor}
+                    emissive={spearColor}
                     emissiveIntensity={baseEmissiveIntensity}
                     metalness={0.8}
                     roughness={0.1}
@@ -258,8 +272,8 @@ export default function ThrowSpearProjectile({
                 <mesh>
                   <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                   <meshStandardMaterial 
-                    color={new THREE.Color(spearColor)}
-                    emissive={new THREE.Color(spearColor)}
+                    color={spearColor}
+                    emissive={spearColor}
                     emissiveIntensity={baseEmissiveIntensity}
                     metalness={0.8}
                     roughness={0.1}
@@ -276,8 +290,8 @@ export default function ThrowSpearProjectile({
                 <mesh>
                   <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
                   <meshStandardMaterial 
-                    color={new THREE.Color(spearColor)}
-                    emissive={new THREE.Color(spearColor)}
+                    color={spearColor}
+                    emissive={spearColor}
                     emissiveIntensity={baseEmissiveIntensity}
                     metalness={0.8}
                     roughness={0.1}
@@ -295,8 +309,8 @@ export default function ThrowSpearProjectile({
             <mesh>
               <extrudeGeometry args={[createInnerBladeShape(), bladeExtrudeSettings]} />
               <meshStandardMaterial 
-                color={new THREE.Color(spearColor)}
-                emissive={new THREE.Color(spearColor)}
+                color={spearColor}
+                emissive={spearColor}
                 emissiveIntensity={baseEmissiveIntensity}
                 metalness={0.3}
                 roughness={0.1}
@@ -308,8 +322,8 @@ export default function ThrowSpearProjectile({
             <mesh>
               <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
               <meshStandardMaterial 
-                color={new THREE.Color(spearColor)}
-                emissive={new THREE.Color(spearColor)}
+                color={spearColor}
+                emissive={spearColor}
                 emissiveIntensity={baseEmissiveIntensity * 0.7}
                 metalness={0.2}
                 roughness={0.1}
@@ -339,8 +353,8 @@ export default function ThrowSpearProjectile({
             <mesh scale={[trailScale, trailScale, trailScale]}>
               <sphereGeometry args={[0.15, 8, 8]} />
               <meshStandardMaterial
-                color={new THREE.Color(lightningColor)}
-                emissive={new THREE.Color(lightningColor)}
+                color={lightningColor}
+                emissive={lightningColor}
                 emissiveIntensity={chargeIntensity * 4 + 2}
                 transparent
                 opacity={trailOpacity}
@@ -353,8 +367,8 @@ export default function ThrowSpearProjectile({
             <mesh scale={[trailScale * 1.5, trailScale * 1.5, trailScale * 1.5]}>
               <sphereGeometry args={[0.2, 6, 6]} />
               <meshStandardMaterial
-                color={new THREE.Color(lightningColor)}
-                emissive={new THREE.Color(lightningColor)}
+                color={lightningColor}
+                emissive={lightningColor}
                 emissiveIntensity={chargeIntensity * 2 + 1}
                 transparent
                 opacity={trailOpacity * 0.5}
@@ -374,8 +388,8 @@ export default function ThrowSpearProjectile({
           >
             <torusGeometry args={[0.15 + i * 0.05, 0.02, 6, 12]} />
             <meshStandardMaterial
-              color={new THREE.Color(lightningColor)}
-              emissive={new THREE.Color(lightningColor)}
+              color={lightningColor}
+              emissive={lightningColor}
               emissiveIntensity={baseEmissiveIntensity + chargeIntensity}
               transparent
               opacity={opacity * 0.7}

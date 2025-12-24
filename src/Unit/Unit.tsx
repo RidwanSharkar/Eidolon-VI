@@ -6,6 +6,32 @@ import Fireball from '../Spells/Fireball/Fireball';
 import CrossentropyBolt from '../Spells/Fireball/CrossentropyBolt';
 import * as THREE from 'three';
 import { WeaponType, WeaponSubclass, WEAPON_DAMAGES, WEAPON_ORB_COUNTS, getWeaponDamage } from '../Weapons/weapons';
+import { geometryPools as effectGeometryPools } from '../Scene/EffectPools';
+import { UNIT_GEOMETRIES } from './UnitGeometries';
+
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const ICICLE_TRAIL_COLOR = new THREE.Color("#CCFFFF");
+
+// Pre-allocated fallback quaternion and zero position for bow direction calculation
+const DEFAULT_QUATERNION = new THREE.Quaternion();
+const ZERO_POSITION = new Vector3(0, 0, 0);
+
+// Pre-allocated vectors for stealth calculations (reused to avoid allocations)
+const STEALTH_ENEMY_FORWARD = new Vector3();
+const STEALTH_TO_PLAYER = new Vector3();
+const STEALTH_EULER = new THREE.Euler();
+
+// Shared geometries to prevent memory leaks - created once, reused everywhere
+const SHARED_ARROW_CYLINDER = new THREE.CylinderGeometry(0.02, 0.075, 1.75, 6);
+const SHARED_ARROW_RING_0 = new THREE.TorusGeometry(0.125, 0.05, 6, 12);
+const SHARED_ARROW_RING_1 = new THREE.TorusGeometry(0.165, 0.05, 6, 12);
+const SHARED_ARROW_RING_2 = new THREE.TorusGeometry(0.205, 0.05, 6, 12);
+const SHARED_SPEAR_CYLINDER = new THREE.CylinderGeometry(0.08, 0.18, 1.5, 4);
+const SHARED_PROJECTILE_SPHERE = new THREE.SphereGeometry(0.08, 3, 3);
+const SHARED_PROJECTILE_PARTICLE = new THREE.SphereGeometry(0.05, 3, 3);
+const SHARED_PROJECTILE_TORUS = new THREE.TorusGeometry(0.25, 0.06, 3, 6);
+const SHARED_PROJECTILE_CONE = new THREE.ConeGeometry(0.08, 0.4, 6);
+const SHARED_PROJECTILE_PLANE = new THREE.PlaneGeometry(1, 0.1);
 
 import Scythe from '@/Weapons/Scythe';
 import Sword from '@/Weapons/Sword';
@@ -180,7 +206,7 @@ function IcicleProjectileWithTrail({ projectile }: IcicleProjectileWithTrailProp
     <group>
       {/* Icicle trail effect - smaller than elemental */}
       <ElementalTrail
-        color={new THREE.Color("#CCFFFF")}
+        color={ICICLE_TRAIL_COLOR}
         size={0.2} // Smaller than elemental (0.35)
         meshRef={projectileRef}
         opacity={projectile.opacity * 0.8}
@@ -197,7 +223,7 @@ function IcicleProjectileWithTrail({ projectile }: IcicleProjectileWithTrailProp
       >
         {/* Main icicle body - rotated to point forward like ElementalProjectile */}
         <mesh rotation={[Math.PI/2, 0, 0]}>
-          <coneGeometry args={[0.08, 0.4, 6]} />
+          <primitive object={UNIT_GEOMETRIES.projectileCone} />
           <meshStandardMaterial
             color="#AAEEFF"
             emissive="#AAEEFF"
@@ -965,7 +991,8 @@ export default function Unit({
         damage,
         position: position.clone(),
         isCritical: false,
-        isMeteor: true
+        isMeteor: true,
+        createdAt: Date.now()
       }]);
     },
     playerPosition: groupRef.current?.position || new Vector3()
@@ -989,12 +1016,12 @@ export default function Unit({
           const playerPos = groupRef.current.position;
           const enemyPos = target.position;
           
-          const enemyForward = new Vector3(0, 0, 1).applyEuler(new THREE.Euler(0, target.rotation, 0));
-          const toPlayer = new Vector3()
-            .subVectors(playerPos, enemyPos)
-            .normalize();
+          // Reuse pre-allocated vectors to avoid garbage collection
+          STEALTH_EULER.set(0, target.rotation, 0);
+          STEALTH_ENEMY_FORWARD.set(0, 0, 1).applyEuler(STEALTH_EULER);
+          STEALTH_TO_PLAYER.subVectors(playerPos, enemyPos).normalize();
           
-          const dotProduct = toPlayer.dot(enemyForward);
+          const dotProduct = STEALTH_TO_PLAYER.dot(STEALTH_ENEMY_FORWARD);
           
           // Break stealth immediately to prevent race conditions
           isStealthStrike = true;
@@ -1050,7 +1077,8 @@ export default function Unit({
           damage: finalDamage,
           position: target.position.clone(),
           isCritical,
-          isStealthStrike
+          isStealthStrike,
+          createdAt: Date.now()
         }]);
       }
 
@@ -1585,7 +1613,8 @@ export default function Unit({
           id: nextDamageNumberId.current++,
           damage,
           position: target.position.clone(),
-          isCritical
+          isCritical,
+          createdAt: Date.now()
         }]);
 
         // Schedule lightning damage
@@ -1626,9 +1655,10 @@ export default function Unit({
             damage: lightningDamage,
             position: updatedTarget.position.clone(),
             isCritical: lightningCrit,
-            isLightning: true
+            isLightning: true,
+            createdAt: Date.now()
           }]);
-          
+
           currentPendingTargets.delete(target.id);
         }, 300);
       }
@@ -1734,7 +1764,8 @@ export default function Unit({
                 target.position.z
               ),
               isCritical: false,
-              isOrbShield: true
+              isOrbShield: true,
+              createdAt: Date.now() // MEMORY FIX: Required for cleanup
             }];
           });
 
@@ -1788,7 +1819,8 @@ export default function Unit({
           ),
           isCritical: false,
           isHealing: false,
-          isBoneclaw: true // Using green color from boneclaw
+          isBoneclaw: true, // Using green color from boneclaw
+          createdAt: Date.now()
         }]);
         
         // Trigger slash effect
@@ -1879,21 +1911,23 @@ export default function Unit({
               target.position.z
             ),
             isCritical: hitIsCritical,
-            isLegionEmpoweredScythe
+            isLegionEmpoweredScythe,
+            createdAt: Date.now()
           }]);
         } else {
           // Check if this is an empowered Abyssal Scythe attack (47 damage)
-          const isLegionEmpoweredScythe = currentWeapon === WeaponType.SCYTHE && 
-                                         currentSubclass === WeaponSubclass.ABYSSAL && 
-                                         legionEmpowerment.isEmpowered && 
+          const isLegionEmpoweredScythe = currentWeapon === WeaponType.SCYTHE &&
+                                         currentSubclass === WeaponSubclass.ABYSSAL &&
+                                         legionEmpowerment.isEmpowered &&
                                          damage === 47;
-          
+
           setDamageNumbers(prev => [...prev, {
             id: nextDamageNumberId.current++,
             damage,
             position: target.position.clone(),
             isCritical,
-            isLegionEmpoweredScythe
+            isLegionEmpoweredScythe,
+            createdAt: Date.now()
           }]);
         }
       }
@@ -2108,6 +2142,7 @@ export default function Unit({
             isSword: false,
             isSabres: false,
             isOathstrike: false,
+            createdAt: Date.now(),
             isFirebeam: false,
             isOrbShield: false,
             isChainLightning: false,
@@ -2174,6 +2209,7 @@ export default function Unit({
             isSword: false,
             isSabres: false,
             isOathstrike: false,
+            createdAt: Date.now(),
             isFirebeam: false,
             isOrbShield: false,
             isChainLightning: false,
@@ -3260,7 +3296,8 @@ export default function Unit({
         damage: baseDamage,
         position: closestEnemy.position.clone(),
         isCritical: false,
-        isColossusStrike: true
+        isColossusStrike: true,
+        createdAt: Date.now()
       }]);
 
       // Calculate lightning damage: 100 + (20% of enemy's max health)
@@ -3278,7 +3315,8 @@ export default function Unit({
           damage: lightningDamage,
           position: closestEnemy.position.clone(),
           isCritical: false,
-          isColossusLightning: true
+          isColossusLightning: true,
+          createdAt: Date.now()
         }]);
       }, 100);
 
@@ -3320,11 +3358,23 @@ export default function Unit({
     const ultraFastCleanup = setInterval(() => {
       const now = Date.now();
       setDamageNumbers(prev => {
+        // MEMORY FIX: Use createdAt timestamp for accurate age calculation
+        // If createdAt is missing, remove immediately (legacy damage number that wasn't cleaned up)
         const filtered = prev.filter(dn => {
-          // Remove damage numbers older than 1.5 seconds (was 3 seconds)
-          const age = now - (typeof dn.id === 'number' ? dn.id : 0);
-          return age < 1500; // Reduced from 3000ms to 1500ms
+          const dnWithCreatedAt = dn as DamageNumberType & { createdAt?: number };
+          // CRITICAL: If createdAt is missing, remove this damage number immediately
+          // This fixes the memory leak where damage numbers without createdAt were never cleaned up
+          if (!dnWithCreatedAt.createdAt) {
+            return false; // Remove damage numbers without createdAt
+          }
+          const age = now - dnWithCreatedAt.createdAt;
+          return age < 2000; // Remove damage numbers older than 2 seconds
         });
+        
+        // MEMORY FIX: Hard limit - never allow more than 15 damage numbers (reduced from 20)
+        if (filtered.length > 15) {
+          return filtered.slice(-15);
+        }
 
         return filtered;
       });
@@ -3358,6 +3408,47 @@ export default function Unit({
           delete lastHitDetectionTime.current[targetId];
         }
       });
+      
+      // MEMORY FIX: Hard limit on pendingLightningTargets Set
+      if (pendingLightningTargets.current.size > 10) {
+        pendingLightningTargets.current.clear();
+      }
+      
+      // MEMORY FIX: Hard limit on dragonBreathDamageApplied Set
+      if (dragonBreathDamageApplied.current.size > 20) {
+        dragonBreathDamageApplied.current.clear();
+      }
+      
+      // MEMORY FIX: Hard limit on venomDoTEnemies (max 5 active DoTs)
+      const venomKeys = Object.keys(venomDoTEnemies.current);
+      if (venomKeys.length > 5) {
+        // Keep only the 5 most recent DoTs
+        const sorted = venomKeys.sort((a, b) => 
+          (venomDoTEnemies.current[b]?.startTime || 0) - (venomDoTEnemies.current[a]?.startTime || 0)
+        );
+        sorted.slice(5).forEach(key => delete venomDoTEnemies.current[key]);
+      }
+      
+      // MEMORY FIX: Hard limit on viperStingDoTEnemies (max 5 active DoTs)
+      const viperKeys = Object.keys(viperStingDoTEnemies.current);
+      if (viperKeys.length > 5) {
+        const sorted = viperKeys.sort((a, b) => 
+          (viperStingDoTEnemies.current[b]?.startTime || 0) - (viperStingDoTEnemies.current[a]?.startTime || 0)
+        );
+        sorted.slice(5).forEach(key => delete viperStingDoTEnemies.current[key]);
+      }
+      
+      // MEMORY FIX: Hard limit on lastHitDetectionTime (max 20 entries)
+      const hitTimeKeys = Object.keys(lastHitDetectionTime.current);
+      if (hitTimeKeys.length > 20) {
+        const now = Date.now();
+        // Remove entries older than 2 seconds
+        hitTimeKeys.forEach(key => {
+          if (now - lastHitDetectionTime.current[key] > 2000) {
+            delete lastHitDetectionTime.current[key];
+          }
+        });
+      }
     }, 500); // Check every 500ms - much more aggressive cleanup
 
     return () => clearInterval(ultraFastCleanup);
@@ -3493,7 +3584,8 @@ export default function Unit({
         isColossusLightning: false,
         isFirestorm: false,
         isElementalBowPowershot: isFullyChargedBehavior && currentSubclass === WeaponSubclass.ELEMENTAL && abilities[WeaponType.BOW].passive.isUnlocked,
-        isPoisonDoT: false
+        isPoisonDoT: false,
+        createdAt: Date.now()
       }
     ]);
     
@@ -3643,7 +3735,8 @@ export default function Unit({
         position: enemy.position.clone(),
         isCritical,
         isFireball: true,
-        isCrossentropyBolt: isCrossentropyBolt
+        isCrossentropyBolt: isCrossentropyBolt,
+        createdAt: Date.now()
       }]);
     }
 
@@ -3714,18 +3807,28 @@ export default function Unit({
     const consolidatedCleanup = () => {
       const now = Date.now();
       
-      setActiveEffects(prev => 
-        prev.filter(effect => {
-          // Skip effects that don't have timing
-          if (!effect.startTime || !effect.duration) return true;
+      setActiveEffects(prev => {
+        // MEMORY FIX: Hard limit on total active effects
+        const MAX_ACTIVE_EFFECTS = 15;
+        
+        const filtered = prev.filter(effect => {
+          // MEMORY FIX: Effects without timing get a default 5 second max lifetime
+          const startTime = effect.startTime || now;
+          const duration = effect.duration || 5; // Default 5 seconds if no duration
           
-          const elapsed = (now - effect.startTime) / 1000;
-          const duration = effect.duration;
+          const elapsed = (now - startTime) / 1000;
           
           // Keep effect if it hasn't expired
           return elapsed < duration;
-        })
-      );
+        });
+        
+        // MEMORY FIX: If still over limit, keep only most recent
+        if (filtered.length > MAX_ACTIVE_EFFECTS) {
+          return filtered.slice(-MAX_ACTIVE_EFFECTS);
+        }
+        
+        return filtered;
+      });
     };
 
     // Single interval at 500ms instead of multiple 100ms intervals
@@ -3741,29 +3844,56 @@ export default function Unit({
   // cleanup for damage numbers and effects - run every 500ms
   useEffect(() => {
     const ultraAggressiveCleanup = setInterval(() => {
-      // Check if we have too many damage numbers - much more aggressive limits
+      // MEMORY FIX: More aggressive limits for damage numbers (reduced from 20/15 to 15/10)
       if (damageNumbers.length > 15) {
-        setDamageNumbers(prev => prev.slice(-10)); // Keep only the last 10 (was 20)
+        setDamageNumbers(prev => prev.slice(-10)); // Keep only the last 10
       }
 
-      // Check if we have too many active effects - much more aggressive limits
-      if (activeEffects.length > 25) {
-        setActiveEffects(prev => prev.slice(-15)); // Keep only the last 15 (was 30)
+      // MEMORY FIX: More aggressive limits for active effects (reduced from 20/15 to 12/8)
+      if (activeEffects.length > 12) {
+        setActiveEffects(prev => prev.slice(-8)); // Keep only the last 8
       }
 
-      // Check if we have too many fireballs - much more aggressive limits
-      if (fireballs.length > 10) {
-        setFireballs(prev => prev.slice(-5)); // Keep only the last 5 (was 10)
+      // Check if we have too many fireballs - much more aggressive limits (reduced from 10/5 to 6/3)
+      if (fireballs.length > 6) {
+        setFireballs(prev => prev.slice(-3)); // Keep only the last 3
       }
 
-      // Check if we have too many active projectiles - add this check
-      if (activeProjectiles.length > 30) {
-        setActiveProjectiles(prev => prev.slice(-15)); // Keep only the last 15
+      // Check if we have too many active projectiles (reduced from 30/15 to 20/10)
+      if (activeProjectiles.length > 20) {
+        setActiveProjectiles(prev => prev.slice(-10)); // Keep only the last 10
+      }
+
+      // MEMORY FIX: Limit colossus strike lightning effects (reduced from 8/5 to 4/2)
+      if (colossusStrikeLightning.length > 4) {
+        setColossusStrikeLightning(prev => prev.slice(-2));
+      }
+
+      // MEMORY FIX: Limit player stun effects (reduced from 5/3 to 3/2)
+      if (playerStunEffects.length > 3) {
+        setPlayerStunEffects(prev => prev.slice(-2));
+      }
+
+      // MEMORY FIX: Limit abyssal slash effects (reduced from 8/5 to 4/2)
+      if (abyssalSlashEffects.length > 4) {
+        setAbyssalSlashEffects(prev => prev.slice(-2));
+      }
+
+      // MEMORY FIX: Cleanup stale soul steal effects (effects older than 2 seconds)
+      const now = Date.now();
+      if (viperStingSoulStealEffects.current.length > 0) {
+        viperStingSoulStealEffects.current = viperStingSoulStealEffects.current.filter(
+          effect => now - effect.startTime < 2000 // Remove effects older than 2 seconds
+        );
+        // Hard limit: never allow more than 10 soul steal effects
+        if (viperStingSoulStealEffects.current.length > 10) {
+          viperStingSoulStealEffects.current = viperStingSoulStealEffects.current.slice(-10);
+        }
       }
     }, 500); // Check every 500ms - much more aggressive cleanup
 
     return () => clearInterval(ultraAggressiveCleanup);
-  }, [damageNumbers.length, activeEffects.length, fireballs.length, activeProjectiles.length]);
+  }, [damageNumbers.length, activeEffects.length, fireballs.length, activeProjectiles.length, colossusStrikeLightning.length, playerStunEffects.length, abyssalSlashEffects.length]);
 
   // Add additional cleanup for unmounting
 
@@ -4093,8 +4223,8 @@ export default function Unit({
         ) : currentWeapon === WeaponType.BOW ? (
           <group position={[0, 0.1, 0.3]}>
             <EtherealBow
-              position={new Vector3()}
-              direction={new Vector3(0, 0, 1).applyQuaternion(groupRef.current?.quaternion || new THREE.Quaternion())}
+              position={ZERO_POSITION}
+              direction={new Vector3(0, 0, 1).applyQuaternion(groupRef.current?.quaternion || DEFAULT_QUATERNION)}
               chargeProgress={bowChargeProgress}
               isCharging={isBowCharging || isAbilityBowAnimation}
               onRelease={releaseBowShot}
@@ -4255,7 +4385,7 @@ export default function Unit({
           >
             {/* Base arrow */}
             <mesh rotation={[Math.PI/2, 0, 0]}>
-              <cylinderGeometry args={[0.02, 0.075, 1.75, 6]} /> {/* Segments */}
+              <primitive object={UNIT_GEOMETRIES.arrowCylinder} />
               <meshStandardMaterial
                 color={currentSubclass === WeaponSubclass.VENOM ? "#00ff60" : "#00ffff"}
                 emissive={currentSubclass === WeaponSubclass.VENOM ? "#00aa30" : "#00ffff"}
@@ -4272,7 +4402,9 @@ export default function Unit({
                 position={[0, 0, -i * 0.45 + 0.5]}
                 rotation={[Math.PI, 0, Date.now() * 0.003 + i * Math.PI / 3]}
               >
-                <torusGeometry args={[0.125 + i * 0.04, 0.05, 6, 12]} /> {/* Segments */}
+                {i === 0 && <primitive object={UNIT_GEOMETRIES.arrowRing0} />}
+                {i === 1 && <primitive object={UNIT_GEOMETRIES.arrowRing1} />}
+                {i === 2 && <primitive object={UNIT_GEOMETRIES.arrowRing2} />}
                 <meshStandardMaterial
                   color={currentSubclass === WeaponSubclass.VENOM ? "#00ff50" : "#00ffff"}
                   emissive={currentSubclass === WeaponSubclass.VENOM ? "#00aa25" : "#00ffff"}
@@ -4307,7 +4439,7 @@ export default function Unit({
             >
               {/* Core arrow shaft - thinner */}
               <mesh rotation={[Math.PI/2, 0, 0]}>
-                <cylinderGeometry args={[0.08, 0.18, 1.5, 4]} /> {/* Thinner than original */}
+                <primitive object={UNIT_GEOMETRIES.spearCylinder} />
                 <meshStandardMaterial
                   color={
                     currentSubclass === WeaponSubclass.ELEMENTAL && abilities[WeaponType.BOW].passive.isUnlocked ? "#ff0000" :
@@ -4345,7 +4477,7 @@ export default function Unit({
                     ]}
                   >
                     <mesh>
-                      <sphereGeometry args={[0.08, 3, 3]} /> {/* Smaller spheres */}
+                      <primitive object={UNIT_GEOMETRIES.projectileSphere} />
                       <meshStandardMaterial
                         color={
                           currentSubclass === WeaponSubclass.ELEMENTAL && abilities[WeaponType.BOW].passive.isUnlocked ? "#ff2200" :
@@ -4384,7 +4516,7 @@ export default function Unit({
                       ]}
                     >
                       <mesh>
-                        <sphereGeometry args={[0.05 + Math.random() * 0.06, 3, 3]} /> {/* Smaller particles */}
+                        <primitive object={UNIT_GEOMETRIES.projectileParticle} />
                         <meshStandardMaterial
                           color={i % 2 === 0 ? "#ffcc00" : "#ff4400"}
                           emissive={i % 2 === 0 ? "#ffcc00" : "#ff4400"}
@@ -4415,7 +4547,7 @@ export default function Unit({
                       ]}
                     >
                       <mesh>
-                        <sphereGeometry args={[0.05 + Math.random() * 0.06, 3, 3]} /> {/* Smaller particles */}
+                        <primitive object={UNIT_GEOMETRIES.projectileParticle} />
                         <meshStandardMaterial
                           color={i % 2 === 0 ? "#00ff40" : "#00aa20"}
                           emissive={i % 2 === 0 ? "#00ff40" : "#00aa20"}
@@ -4441,7 +4573,7 @@ export default function Unit({
                     rotation={[0, Date.now() * 0.001 + i, 0]}
                   >
                     <mesh scale={scale}>
-                      <torusGeometry args={[0.25, 0.06, 3, 6]} /> {/* Smaller torus */}
+                      <primitive object={UNIT_GEOMETRIES.projectileTorus} />
                       <meshStandardMaterial
                         color={
                           currentSubclass === WeaponSubclass.ELEMENTAL && abilities[WeaponType.BOW].passive.isUnlocked ? "#ff4400" :
@@ -4567,7 +4699,8 @@ export default function Unit({
               damage,
               position: position.clone(),
               isCritical,
-              isBoneclaw
+              isBoneclaw,
+              createdAt: Date.now()
             }]);
           }}
           onKillingBlow={(position) => {
@@ -4638,7 +4771,8 @@ export default function Unit({
                   damage,
                   position: position.clone(),
                   isCritical,
-                  isBlizzard
+                  isBlizzard,
+                  createdAt: Date.now()
                 }]);
               }}
               onComplete={() => {
@@ -4665,7 +4799,8 @@ export default function Unit({
                   damage,
                   position: position.clone(),
                   isCritical,
-                  isFirestorm
+                  isFirestorm,
+                  createdAt: Date.now()
                 }]);
               }}
               onComplete={() => {
@@ -4695,7 +4830,8 @@ export default function Unit({
                   damage,
                   position: position.clone(),
                   isCritical,
-                  isDivineStorm
+                  isDivineStorm,
+                  createdAt: Date.now()
                 }]);
               }}
               onComplete={() => {
@@ -4822,7 +4958,8 @@ export default function Unit({
                     damage,
                     position: position || targetEnemy.position.clone(),
                     isCritical: false,
-                    isSummon: true
+                    isSummon: true,
+                    createdAt: Date.now()
                   }]);
                 }
               }}
@@ -4856,7 +4993,8 @@ export default function Unit({
                     damage,
                     position: position || targetEnemy.position.clone(),
                     isCritical: false,
-                    isSummon: true
+                    isSummon: true,
+                    createdAt: Date.now()
                   }]);
                 }
               }}
@@ -4904,7 +5042,8 @@ export default function Unit({
                 damage: hit.damage,
                 position: hit.position.clone().add(new Vector3(0, 2, 0)),
                 isCritical: hit.isCritical,
-                isDragonBreath: true
+                isDragonBreath: true,
+                createdAt: Date.now()
               }]);
             });
           }
@@ -5517,7 +5656,8 @@ export default function Unit({
               damage: damage,
               position: position.clone().add(new Vector3(0, 1.5, 0)),
               isCritical: isCritical || false,
-              isBreach: true
+              isBreach: true,
+              createdAt: Date.now()
             }]);
           }}
           reigniteRef={reigniteRef}
@@ -5591,6 +5731,7 @@ export default function Unit({
               position: position.clone(),
               isCritical: false,
               isMeteor: true,
+              createdAt: Date.now(),
               onComplete: () => {
                 setDamageNumbers(prev => prev.filter(dn => dn.id !== nextDamageNumberId.current - 1));
               }
@@ -5656,7 +5797,8 @@ export default function Unit({
                 damage: 2,
                 position: groupRef.current!.position.clone().add(new Vector3(0, 1.5, 0)),
                 isCritical: false,
-                isHealing: true
+                isHealing: true,
+                createdAt: Date.now()
               }]);
             }
             // Remove the effect from the array
@@ -5681,7 +5823,8 @@ export default function Unit({
                 damage,
                 position: position.clone(),
                 isCritical: isCritical || false,
-                isRaze: true
+                isRaze: true,
+                createdAt: Date.now()
               }]);
             }
           }}
@@ -5714,7 +5857,8 @@ export default function Unit({
                     damage,
                     position: enemy.position.clone(),
                     isCritical: false,
-                    isBoneclaw: true // Green color
+                    isBoneclaw: true, // Green color
+                    createdAt: Date.now()
                   }]);
                 }
               }

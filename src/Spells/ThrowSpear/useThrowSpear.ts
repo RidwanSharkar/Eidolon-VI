@@ -302,7 +302,8 @@ export function useThrowSpear({
                     damage: finalDamage,
                     position: enemy.position.clone(),
                     isCritical: false,
-                    isThrowSpear: true
+                    isThrowSpear: true,
+                    createdAt: Date.now() // MEMORY FIX: Required for cleanup
                   }]);
 
                   // Refresh cooldown on stunned hit ONLY (use the pre-damage stunned status)
@@ -384,7 +385,8 @@ export function useThrowSpear({
                     damage: finalDamage,
                     position: enemy.position.clone(),
                     isCritical: false,
-                    isThrowSpear: true
+                    isThrowSpear: true,
+                    createdAt: Date.now() // MEMORY FIX: Required for cleanup
                   }]);
 
                   // Refresh cooldown on stunned hit ONLY (use the pre-damage stunned status)

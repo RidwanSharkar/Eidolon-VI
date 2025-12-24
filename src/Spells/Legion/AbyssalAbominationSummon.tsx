@@ -149,7 +149,8 @@ export default function AbyssalAbominationSummon({
         damage: actualDamage,
         position: impactPosition.clone(),
         isCritical: false,
-        isSummon: true
+        isSummon: true,
+        createdAt: Date.now() // MEMORY FIX: Required for cleanup
       }]);
     }, DAMAGE_DELAY);
 

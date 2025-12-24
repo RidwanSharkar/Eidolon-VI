@@ -1,7 +1,10 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+
+// Pre-allocated vector for wave offset - avoids per-render allocations
+const tempWaveOffset = new THREE.Vector3();
 
 interface ChainLightningEffectProps {
   startPosition: Vector3;
@@ -53,6 +56,14 @@ const ChainLightningEffect: React.FC<ChainLightningEffectProps> = ({
     ));
   }, []);
 
+  // Cleanup geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
+    };
+  }, [geometries, materials]);
+
   useFrame((_, delta) => {
     timeRef.current = Math.min(timeRef.current + delta, duration);
     flickerRef.current = Math.random() * 0.5 + 0.5;
@@ -77,10 +88,12 @@ const ChainLightningEffect: React.FC<ChainLightningEffectProps> = ({
             {Array(segments).fill(0).map((_, i) => {
               const segmentProgress = i / segments;
               const baseOffset = baseOffsets[i % baseOffsets.length];
+              // Reuse temp vector for wave offset
+              tempWaveOffset.set(0, Math.sin(segmentProgress * Math.PI) * 0.5, 0);
               const pos = startPos.clone()
                 .lerp(targetPos, segmentProgress)
                 .add(baseOffset)
-                .add(new Vector3(0, Math.sin(segmentProgress * Math.PI) * 0.5, 0));
+                .add(tempWaveOffset);
               
               const thickness = Math.random() * 0.025 + 0.04;
 

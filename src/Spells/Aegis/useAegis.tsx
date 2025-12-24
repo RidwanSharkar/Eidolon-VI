@@ -155,7 +155,8 @@ export const useAegis = ({
                   damage,
                   position: targetEnemy.position.clone(),
                   isCritical: false,
-                  isAegis: true
+                  isAegis: true,
+                  createdAt: Date.now() // MEMORY FIX: Required for cleanup
                 }]);
               }
 
@@ -236,7 +237,8 @@ export const useAegis = ({
                     damage,
                     position: targetEnemy.position.clone(),
                     isCritical: false,
-                    isAegis: true
+                    isAegis: true,
+                    createdAt: Date.now() // MEMORY FIX: Required for cleanup
                   }]);
                 }
 

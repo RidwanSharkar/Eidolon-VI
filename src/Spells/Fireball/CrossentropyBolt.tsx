@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { Mesh, Vector3, Clock, Color, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import CrossentropyBoltTrail from './CrossentropyBoltTrail';
@@ -19,7 +19,7 @@ export default function CrossentropyBolt({ position, direction, onImpact }: Cros
   const currentPosition = useRef(position.clone());
   const { scene } = useThree();
   const size = 0.28;
-  const color = new Color('#00ff44');
+  const color = useMemo(() => new Color('#00ff44'), []);
   const impactGroup = useRef<Group>(null);
   const explosionStartTime = useRef<number | null>(null);
   const explosionRef = useRef<Group>(null);
@@ -28,11 +28,18 @@ export default function CrossentropyBolt({ position, direction, onImpact }: Cros
   const spiralRadius = 0.35;
   const spiralSpeed = 5; // rotations per second
   const time = useRef(0);
+  
+  // Reusable raycaster and vectors to avoid allocations every frame
+  const raycasterRef = useRef(new THREE.Raycaster());
+  const rayDirectionRef = useRef(new THREE.Vector3());
+  const spiralOffset1Ref = useRef(new Vector3());
+  const spiralOffset2Ref = useRef(new Vector3());
+  const rightRef = useRef(new Vector3());
+  const upRef = useRef(new Vector3(0, 1, 0));
 
   const checkCollision = (nextPosition: Vector3): boolean => {
-    const raycaster = new THREE.Raycaster();
-    const rayDirection = nextPosition.clone().sub(currentPosition.current).normalize();
-    raycaster.set(currentPosition.current, rayDirection);
+    rayDirectionRef.current.subVectors(nextPosition, currentPosition.current).normalize();
+    raycasterRef.current.set(currentPosition.current, rayDirectionRef.current);
 
     const collidableObjects = scene.children.filter(child => 
       (child.name === 'mountain' && child instanceof THREE.Group) ||
@@ -49,7 +56,7 @@ export default function CrossentropyBolt({ position, direction, onImpact }: Cros
       return meshes;
     });
 
-    const intersects = raycaster.intersectObjects(allMeshes, true);
+    const intersects = raycasterRef.current.intersectObjects(allMeshes, true);
 
     if (intersects.length > 0) {
       const hit = intersects[0];
@@ -94,32 +101,34 @@ export default function CrossentropyBolt({ position, direction, onImpact }: Cros
     } else {
       currentPosition.current.copy(nextPosition);
       
-      // Calculate spiral positions for the two fireballs
+      // Calculate spiral positions for the two fireballs - reusing refs
       const spiralAngle = time.current * spiralSpeed * Math.PI * 2;
-      const spiralOffset1 = new Vector3(
+      spiralOffset1Ref.current.set(
         Math.cos(spiralAngle) * spiralRadius,
         Math.sin(spiralAngle * 0.5) * spiralRadius * 0.3,
         0
       );
-      const spiralOffset2 = new Vector3(
+      spiralOffset2Ref.current.set(
         Math.cos(spiralAngle + Math.PI) * spiralRadius,
         Math.sin((spiralAngle + Math.PI) * 0.5) * spiralRadius * 0.3,
         0
       );
 
-      // Apply spiral offsets to the main direction
-      const right = new Vector3();
-      const up = new Vector3(0, 1, 0);
-      right.crossVectors(direction, up).normalize();
-      up.crossVectors(right, direction).normalize();
+      // Apply spiral offsets to the main direction - reusing refs
+      upRef.current.set(0, 1, 0);
+      rightRef.current.crossVectors(direction, upRef.current).normalize();
+      upRef.current.crossVectors(rightRef.current, direction).normalize();
 
-      const finalOffset1 = right.clone().multiplyScalar(spiralOffset1.x)
-        .add(up.clone().multiplyScalar(spiralOffset1.y));
-      const finalOffset2 = right.clone().multiplyScalar(spiralOffset2.x)
-        .add(up.clone().multiplyScalar(spiralOffset2.y));
+      // Calculate final positions without allocating new vectors
+      fireball1Ref.current.position.copy(currentPosition.current);
+      fireball1Ref.current.position.x += rightRef.current.x * spiralOffset1Ref.current.x + upRef.current.x * spiralOffset1Ref.current.y;
+      fireball1Ref.current.position.y += rightRef.current.y * spiralOffset1Ref.current.x + upRef.current.y * spiralOffset1Ref.current.y;
+      fireball1Ref.current.position.z += rightRef.current.z * spiralOffset1Ref.current.x + upRef.current.z * spiralOffset1Ref.current.y;
 
-      fireball1Ref.current.position.copy(currentPosition.current.clone().add(finalOffset1));
-      fireball2Ref.current.position.copy(currentPosition.current.clone().add(finalOffset2));
+      fireball2Ref.current.position.copy(currentPosition.current);
+      fireball2Ref.current.position.x += rightRef.current.x * spiralOffset2Ref.current.x + upRef.current.x * spiralOffset2Ref.current.y;
+      fireball2Ref.current.position.y += rightRef.current.y * spiralOffset2Ref.current.x + upRef.current.y * spiralOffset2Ref.current.y;
+      fireball2Ref.current.position.z += rightRef.current.z * spiralOffset2Ref.current.x + upRef.current.z * spiralOffset2Ref.current.y;
     }
   });
 

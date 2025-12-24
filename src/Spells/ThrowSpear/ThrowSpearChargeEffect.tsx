@@ -3,6 +3,10 @@ import { useFrame } from '@react-three/fiber';
 import { Group } from 'three';
 import * as THREE from 'three';
 
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const LIGHTNING_COLOR = new THREE.Color(0xFF0000); // Red lightning
+const CORE_COLOR = new THREE.Color(0xFFFF00); // Yellow core
+
 interface ThrowSpearChargeEffectProps {
   parentRef: React.RefObject<Group>;
   isActive: boolean;
@@ -73,8 +77,6 @@ export default function ThrowSpearChargeEffect({
 
   // Color intensity based on charge progress
   const baseIntensity = 1 + chargeProgress * 3;
-  const lightningColor = new THREE.Color(0xFF0000); // Red lightning
-  const coreColor = new THREE.Color(0xFFFF00); // Yellow core
 
   return (
     <group ref={effectGroupRef}>
@@ -82,8 +84,8 @@ export default function ThrowSpearChargeEffect({
       <mesh position={[0, 0, 0]}>
         <sphereGeometry args={[0.2 + chargeProgress * 0.3, 16, 16]} />
         <meshStandardMaterial
-          color={coreColor}
-          emissive={coreColor}
+          color={CORE_COLOR}
+          emissive={CORE_COLOR}
           emissiveIntensity={baseIntensity * 2}
           transparent
           opacity={0.8}
@@ -96,8 +98,8 @@ export default function ThrowSpearChargeEffect({
       <mesh position={[0, 0, 0]}>
         <sphereGeometry args={[0.4 + chargeProgress * 0.5, 12, 12]} />
         <meshStandardMaterial
-          color={lightningColor}
-          emissive={lightningColor}
+          color={LIGHTNING_COLOR}
+          emissive={LIGHTNING_COLOR}
           emissiveIntensity={baseIntensity}
           transparent
           opacity={0.4 + chargeProgress * 0.3}
@@ -116,8 +118,8 @@ export default function ThrowSpearChargeEffect({
         >
           <sphereGeometry args={[0.08, 8, 8]} />
           <meshStandardMaterial
-            color={lightningColor}
-            emissive={lightningColor}
+            color={LIGHTNING_COLOR}
+            emissive={LIGHTNING_COLOR}
             emissiveIntensity={baseIntensity * 1.5}
             transparent
             opacity={0.7}
@@ -144,8 +146,8 @@ export default function ThrowSpearChargeEffect({
         >
           <cylinderGeometry args={[0.02, 0.02, 0.5 + Math.random() * 0.5, 4]} />
           <meshStandardMaterial
-            color={lightningColor}
-            emissive={lightningColor}
+            color={LIGHTNING_COLOR}
+            emissive={LIGHTNING_COLOR}
             emissiveIntensity={baseIntensity * 2}
             transparent
             opacity={0.6}
@@ -164,8 +166,8 @@ export default function ThrowSpearChargeEffect({
         >
           <torusGeometry args={[0.8 + i * 0.3 + chargeProgress * 0.5, 0.05, 8, 16]} />
           <meshStandardMaterial
-            color={lightningColor}
-            emissive={lightningColor}
+            color={LIGHTNING_COLOR}
+            emissive={LIGHTNING_COLOR}
             emissiveIntensity={baseIntensity}
             transparent
             opacity={0.5 - i * 0.1}
@@ -177,7 +179,7 @@ export default function ThrowSpearChargeEffect({
 
       {/* Point light for scene illumination */}
       <pointLight 
-        color={lightningColor}
+        color={LIGHTNING_COLOR}
         intensity={chargeProgress * 4 + 1}
         distance={5}
         decay={2}

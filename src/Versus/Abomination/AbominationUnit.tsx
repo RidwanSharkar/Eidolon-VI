@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import { HEALTHBAR_GEOMETRIES, HEALTHBAR_MATERIALS } from '@/Versus/HealthBarResources';
 import CustomAbomination from './CustomAbomination';
 import { AbominationProps } from './AbominationProps';
 import { Enemy } from '../enemy';
@@ -507,6 +508,15 @@ export default function AbominationUnit({
       setShowDeathEffect(true);
       // Remove from aggro system when enemy dies
       globalAggroSystem.removeEnemy(id);
+      
+      // MEMORY FIX: Clear all active effects immediately on death to prevent memory accumulation
+      setIsLeaping(false);
+      setLeapPhase('idle');
+      setShowLeapIndicator(false);
+      setShowShockwave(false);
+      setLeapHeight(0);
+      isLeapBlocked.current = false;
+      
       if (enemyRef.current) {
         enemyRef.current.visible = true;
       }
@@ -583,14 +593,18 @@ export default function AbominationUnit({
         >
           {currentHealth.current > 0 && (
             <>
-              <mesh position={[0, 0, 0]}>
-                <planeGeometry args={[2.0, 0.25]} />
-                <meshBasicMaterial color="#333333" opacity={0.8} transparent />
-              </mesh>
-              <mesh position={[-1.0 + (currentHealth.current / maxHealth), 0, 0.001]}>
-                <planeGeometry args={[(currentHealth.current / maxHealth) * 2.0, 0.23]} />
-                <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
-              </mesh>
+              {/* MEMORY FIX: Use cached geometries and materials */}
+              <mesh 
+                position={[0, 0, 0]}
+                geometry={HEALTHBAR_GEOMETRIES.background}
+                material={HEALTHBAR_MATERIALS.background}
+              />
+              <mesh 
+                position={[-1.0 + (currentHealth.current / maxHealth), 0, 0.001]}
+                scale={[(currentHealth.current / maxHealth) * 2.0, 1, 1]}
+                geometry={HEALTHBAR_GEOMETRIES.fill}
+                material={HEALTHBAR_MATERIALS.fill}
+              />
               <Text
                 position={[0, 0, 0.002]}
                 fontSize={0.2}

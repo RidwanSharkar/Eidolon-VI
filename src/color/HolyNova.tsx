@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -49,6 +49,14 @@ export default function HolyNova({ position, isActive, intensity = 1 }: HolyNova
       blending: THREE.AdditiveBlending
     })
   }), []);
+
+  // Dispose geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
+    };
+  }, [geometries, materials]);
 
   // Pre-calculate floating particle positions
   const particlePositions = useMemo(() => 

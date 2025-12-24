@@ -5,6 +5,7 @@ import BonePlate from '../../gear/BonePlate';
 import { useRef, useState, useEffect, useMemo } from 'react';
 import AbominationTrailEffect from './AbominationTrailEffect';
 import DragonSkull from '@/gear/DragonSkull';
+import { registerGlobalSharedResource } from '../../Scene/EffectPools';
 
 // Add at top of file after imports
 const tempMatrix = new Matrix4();
@@ -34,7 +35,30 @@ const SHARED_GEOMETRIES = {
   vertebrae: new CylinderGeometry(0.0225, 0.0225, 0.03, 6),
   eye: new SphereGeometry(0.02, 8, 8),
   eyeGlow: new SphereGeometry(0.035, 8, 8),
-  eyeOuterGlow: new SphereGeometry(0.05, 6.5, 2)
+  eyeOuterGlow: new SphereGeometry(0.05, 6.5, 2),
+  // Claw geometries
+  clawJoint: new SphereGeometry(0.12, 12, 12),
+  clawCone: new ConeGeometry(0.03, 0.3, 6),
+  handBase: new BoxGeometry(0.2, 0.15, 0.08),
+  // Leg geometries
+  legBase: new CylinderGeometry(0.06, 0.06, 0.115, 4),
+  legMid: new CylinderGeometry(0.04, 0.03, 0.12, 4),
+  legTip: new ConeGeometry(0.04, 0.175, 4),
+  legRidge: new BoxGeometry(0.01, 0.12, 0.02),
+  // Shoulder geometries
+  shoulderPlate: new CylinderGeometry(0.185, 0.2, 0.225, 4, 1),
+  shoulderSeg: new CylinderGeometry(0.07, 0.0644, 0.1, 4),
+  shoulderRidge: new BoxGeometry(0.028, 0.11, 0.014),
+  // Skull geometries
+  cranium: new SphereGeometry(0.22, 8, 8),
+  facePlate: new BoxGeometry(0.28, 0.28, 0.1),
+  eyeSocket: new BoxGeometry(0.08, 0.12, 0.15),
+  jaw: new CylinderGeometry(0.08, 0.08, 0.2, 5),
+  toothLarge: new ConeGeometry(0.03, 0.075, 3),
+  toothSmall: new ConeGeometry(0.01, 0.08, 3),
+  // Pelvis geometries
+  pelvis: new CylinderGeometry(0.35, 0.34, 0.27, 8),
+  pelvisJoint: new SphereGeometry(0.075, 8, 8)
 };
 
 // Create shared materials
@@ -48,6 +72,11 @@ const SHARED_MATERIALS = {
     color: "#d4d4d4",
     roughness: 0.3,
     metalness: 0.4
+  }),
+  lightBone: new MeshStandardMaterial({
+    color: "#d8d8d8",
+    roughness: 0.5,
+    metalness: 0.2
   }),
   eyeCore: new MeshStandardMaterial({
     color: "#00BFFF",
@@ -70,6 +99,21 @@ const SHARED_MATERIALS = {
   })
 };
 
+// Lazy registration of global shared resources (client-side only)
+let registeredAbominationResources = false;
+const registerAbominationResources = () => {
+  if (registeredAbominationResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      Object.values(SHARED_GEOMETRIES).forEach(geo => geo.dispose());
+      Object.values(SHARED_MATERIALS).forEach(mat => mat.dispose());
+    }, 'CustomAbomination');
+    registeredAbominationResources = true;
+  } catch (error) {
+    console.warn('Failed to register Abomination resources:', error);
+  }
+};
+
 // Create instanced components
 function VertebraeInstances() {
   const instances = useMemo(() => {
@@ -86,6 +130,16 @@ function VertebraeInstances() {
       setMatrixAt(instances, i, tempPosition, tempRotation, tempScale);
     });
     instances.instanceMatrix.needsUpdate = true;
+  }, [instances]);
+
+  // MEMORY FIX: Dispose instanced mesh on unmount
+  useEffect(() => {
+    return () => {
+      if (instances) {
+        instances.geometry?.dispose();
+        instances.dispose();
+      }
+    };
   }, [instances]);
 
   return <primitive object={instances} />;
@@ -247,14 +301,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
         {createParallelBones(1.3, 0.15)}
         
         <group position={[0.25, -0.85, 0.21]}> 
-          <mesh>
-            <sphereGeometry args={[0.12, 12, 12]} />
-            <meshStandardMaterial 
-              color="#e8e8e8"
-              roughness={0.4}
-              metalness={0.3}
-            />
-          </mesh>
+          <mesh geometry={SHARED_GEOMETRIES.clawJoint} material={SHARED_MATERIALS.standardBone} />
           
           <group rotation={[-0.7, -0, Math.PI / 5]}>
             {createParallelBones(0.8, 0.12)}
@@ -313,46 +360,18 @@ function ShoulderPlate() {
   const createSpike = (scale = 1) => (
     <group scale={[scale, scale, scale]} position={[0, -0.125, 0]}>
       {/* Base segment */}
-      <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.06, 0.06, 0.115, 4]} />
-        <meshStandardMaterial 
-          color="#e8e8e8"
-          roughness={0.4}
-          metalness={0.3}
-        />
-      </mesh>
+      <mesh position={[0, 0, 0]} geometry={SHARED_GEOMETRIES.legBase} material={SHARED_MATERIALS.standardBone} />
 
       {/* Middle segment with slight curve */}
-      <mesh position={[0, 0.1, 0.0275]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[0.04, 0.03, 0.12, 4]} />
-        <meshStandardMaterial 
-          color="#e8e8e8"
-          roughness={0.4}
-          metalness={0.3}
-        />
-      </mesh>
+      <mesh position={[0, 0.1, 0.0275]} rotation={[0, 0, 0]} geometry={SHARED_GEOMETRIES.legMid} material={SHARED_MATERIALS.standardBone} />
 
       {/* Sharp tip */}
-      <mesh position={[0, 0.2, 0.04]} rotation={[0.2, 0, 0]}>
-        <coneGeometry args={[0.04, 0.175, 4]} />
-        <meshStandardMaterial 
-          color="#d4d4d4"
-          roughness={0.3}
-          metalness={0.5}
-        />
-      </mesh>
+      <mesh position={[0, 0.2, 0.04]} rotation={[0.2, 0, 0]} geometry={SHARED_GEOMETRIES.legTip} material={SHARED_MATERIALS.darkBone} />
 
       {/* Decorative ridges */}
       {[0, Math.PI/2, Math.PI, Math.PI*3/2].map((angle, i) => (
         <group key={i} rotation={[0, angle, 0]}>
-          <mesh position={[0.04, 0.05, 0]}>
-            <boxGeometry args={[0.01, 0.12, 0.02]} />
-            <meshStandardMaterial 
-              color="#d4d4d4"
-              roughness={0.5}
-              metalness={0.3}
-            />
-          </mesh>
+          <mesh position={[0.04, 0.05, 0]} geometry={SHARED_GEOMETRIES.legRidge} material={SHARED_MATERIALS.darkBone} />
         </group>
       ))}
     </group>
@@ -361,14 +380,7 @@ function ShoulderPlate() {
   return (
     <group>
       {/* Main shoulder plate */}
-      <mesh>
-        <cylinderGeometry args={[0.185, 0.2, 0.225, 4, 1]} />
-        <meshStandardMaterial 
-          color="#e8e8e8"
-          roughness={0.4}
-          metalness={0.3}
-        />
-      </mesh>
+      <mesh geometry={SHARED_GEOMETRIES.shoulderPlate} material={SHARED_MATERIALS.standardBone} />
       
       {/* Enhanced spikes with different sizes and angles */}
       <group position={[0, 0.25, 0]} rotation={[Math.PI*2, Math.PI/3, 0]}>
@@ -449,6 +461,11 @@ function CustomHorn({ isLeft = false }: { isLeft?: boolean }) {
 }
 
 export default function CustomAbomination({ position, isAttacking, isWalking }: CustomAbominationProps) {
+  // Register shared resources on first use
+  useEffect(() => {
+    registerAbominationResources();
+  }, []);
+
   const groupRef = useRef<Group>(null);
   const [walkCycle, setWalkCycle] = useState(0);
   const [attackCycle, setAttackCycle] = useState(0);
@@ -705,52 +722,28 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
         {/* Main skull shape */}
         <group>
           {/* Back of cranium */}
-          <mesh position={[0, 0, -0.05]}>
-            <sphereGeometry args={[0.22, 8, 8]} />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-          </mesh>
+          <mesh position={[0, 0, -0.05]} geometry={SHARED_GEOMETRIES.cranium} material={SHARED_MATERIALS.standardBone} />
           
           {/* Front face plate */}
-          <mesh position={[0, -0.02, 0.12]}>
-            <boxGeometry args={[0.28, 0.28, 0.1]} />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-          </mesh>
+          <mesh position={[0, -0.02, 0.12]} geometry={SHARED_GEOMETRIES.facePlate} material={SHARED_MATERIALS.standardBone} />
 
           {/* Cheekbones */}
           <group>
-            <mesh position={[0.12, -0.08, 0.1]}>
-              <boxGeometry args={[0.08, 0.12, 0.15]} />
-              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-            </mesh>
-            <mesh position={[-0.12, -0.08, 0.1]}>
-              <boxGeometry args={[0.08, 0.12, 0.15]} />
-              <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-            </mesh>
+            <mesh position={[0.12, -0.08, 0.1]} geometry={SHARED_GEOMETRIES.eyeSocket} material={SHARED_MATERIALS.standardBone} />
+            <mesh position={[-0.12, -0.08, 0.1]} geometry={SHARED_GEOMETRIES.eyeSocket} material={SHARED_MATERIALS.standardBone} />
           </group>
 
           {/* Jaw structure */}
           <group position={[0, -0.15, 0.05]}>
-
-            
             {/* Lower jaw - more angular and pointed */}
-            <mesh position={[0, -0.08, 0.08]} rotation={[0, Math.PI/5, 0]}>
-              <cylinderGeometry args={[0.08, 0.08, 0.2, 5]} />
-              <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
-            </mesh>
+            <mesh position={[0, -0.08, 0.08]} rotation={[0, Math.PI/5, 0]} geometry={SHARED_GEOMETRIES.jaw} material={SHARED_MATERIALS.lightBone} />
           </group>
 
           {/* Upper teeth row */}
           <group position={[0.025, -0.25, 0.2175]} >
             {[-0.03, -0.06, -0.09, -0, 0.03].map((offset, i) => (
               <group key={i} position={[offset, 0, 0]} rotation={[0.5, 0, 0]}>
-                <mesh>
-                  <coneGeometry args={[0.03, 0.075, 3]} />
-                  <meshStandardMaterial 
-                    color="#e8e8e8"
-                    roughness={0.3}
-                    metalness={0.4}
-                  />
-                </mesh>
+                <mesh geometry={SHARED_GEOMETRIES.toothLarge} material={SHARED_MATERIALS.standardBone} />
               </group>
             ))}
           </group>
@@ -759,14 +752,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
           <group position={[0, -0.18, 0.2]}>
             {[-0.06, -0.02, 0.02, 0.06].map((offset, i) => (
               <group key={i} position={[offset, 0, 0]} rotation={[2.5, 0, 0]}>
-                <mesh>
-                  <coneGeometry args={[0.01, 0.08, 3]} />
-                  <meshStandardMaterial 
-                    color="#e8e8e8"
-                    roughness={0.3}
-                    metalness={0.4}
-                  />
-                </mesh>
+                <mesh geometry={SHARED_GEOMETRIES.toothSmall} material={SHARED_MATERIALS.standardBone} />
               </group>
             ))}
           </group>
@@ -867,10 +853,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
       {/* Pelvis structure */}
       <group position={[0, 0.5, -0.25]} scale={[1.9, 1, 1.75]}>
         {/* Main pelvic bowl */}
-        <mesh>
-          <cylinderGeometry args={[0.35, 0.34, 0.27, 8]} />
-          <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
-        </mesh>
+        <mesh geometry={SHARED_GEOMETRIES.pelvis} material={SHARED_MATERIALS.lightBone} />
 
         {/* Sacral vertebrae */}
         <group position={[0, 0.15, -0.16]} rotation={[0.1, 0, 0]}>
@@ -880,10 +863,7 @@ export default function CustomAbomination({ position, isAttacking, isWalking }: 
         {/* Pelvic joints */}
         {[-1, 1].map((side) => (
           <group key={side} position={[0.15 * side, -0.1, 0]}>
-            <mesh>
-              <sphereGeometry args={[0.075, 8, 8]} />
-              <meshStandardMaterial color="#d8d8d8" roughness={0.5} metalness={0.2} />
-            </mesh>
+            <mesh geometry={SHARED_GEOMETRIES.pelvisJoint} material={SHARED_MATERIALS.lightBone} />
           </group>
         ))}
       </group>

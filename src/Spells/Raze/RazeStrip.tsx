@@ -1,8 +1,15 @@
 // src/Spells/Raze/RazeStrip.tsx
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, BufferGeometry, BufferAttribute, PointLight } from 'three';
 import * as THREE from 'three';
+
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const FLAME_COLOR = new THREE.Color("#ff6600");
+const FLAME_EMISSIVE = new THREE.Color("#ff3300");
+const GLOW_COLOR = new THREE.Color("#ff8800");
+const LIGHT_COLOR = new THREE.Color("#ff6600");
+const AMBIENT_LIGHT_COLOR = new THREE.Color("#ff8833");
 
 interface RazeStripProps {
   startPosition: Vector3;
@@ -96,8 +103,8 @@ export default function RazeStrip({
 
     // Enhanced flame material with better fire effect
     const flameMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color("#ff6600"),
-      emissive: new THREE.Color("#ff3300"),
+      color: FLAME_COLOR,
+      emissive: FLAME_EMISSIVE,
       emissiveIntensity: 3.0,
       transparent: true,
       opacity: 0.9,
@@ -166,7 +173,7 @@ export default function RazeStrip({
 
     // Glow material
     const glowMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color("#ff8800"),
+      color: GLOW_COLOR,
       transparent: true,
       opacity: 0.4,
       side: THREE.DoubleSide,
@@ -187,7 +194,7 @@ export default function RazeStrip({
       lightPos.y = 0.5; // Slightly above ground
       
       const light = new PointLight(
-        new THREE.Color("#ff6600"), // Orange-red color
+        LIGHT_COLOR.clone(), // Clone to avoid shared mutation
         2.0,                        // Intensity
         4.0,                        // Distance
         2.0                         // Decay
@@ -208,7 +215,7 @@ export default function RazeStrip({
       ambientPos.y = 1.0; // Higher up for broader coverage
       
       const ambientLight = new PointLight(
-        new THREE.Color("#ff8833"), // Slightly warmer ambient color
+        AMBIENT_LIGHT_COLOR.clone(), // Clone to avoid shared mutation
         0.8,                        // Lower intensity
         8.0,                        // Larger distance
         1.5                         // Gentler decay
@@ -228,6 +235,19 @@ export default function RazeStrip({
       pointLights: lights
     };
   }, [startPosition, direction, maxDistance, width]);
+
+  // Cleanup geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      flameGeometry.dispose();
+      flameMaterial.dispose();
+      emberGeometry.dispose();
+      emberMaterial.dispose();
+      glowGeometry.dispose();
+      glowMaterial.dispose();
+      // Point lights don't need explicit disposal
+    };
+  }, [flameGeometry, flameMaterial, emberGeometry, emberMaterial, glowGeometry, glowMaterial]);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;

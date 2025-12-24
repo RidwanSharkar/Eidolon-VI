@@ -1,7 +1,18 @@
-import React, { useRef, useCallback, useEffect } from 'react';
+import React, { useRef, useCallback, useEffect, useMemo } from 'react';
 import { Group, Vector3 } from 'three';
 import * as THREE from 'three';
 import { SynchronizedEffect } from '@/Multiplayer/MultiplayerContext';
+
+// Pre-allocated rotation matrices for icicle angles to avoid per-shot allocations
+const ICICLE_ROTATION_MATRICES = {
+  center: new THREE.Matrix4().makeRotationY(0),
+  left30: new THREE.Matrix4().makeRotationY(Math.PI / 6),
+  right30: new THREE.Matrix4().makeRotationY(-Math.PI / 6),
+  left11: new THREE.Matrix4().makeRotationY(Math.PI / 16),
+  right11: new THREE.Matrix4().makeRotationY(-Math.PI / 16),
+  left22: new THREE.Matrix4().makeRotationY(Math.PI / 8),
+  right22: new THREE.Matrix4().makeRotationY(-Math.PI / 8),
+} as const;
 
 export interface IcicleCharge {
   id: number;
@@ -200,29 +211,28 @@ export default function IcicleOrbitals({
       .applyQuaternion(parentRef.current.quaternion)
       .normalize();
 
-    // Define angles based on combo step
-    let angles: number[] = [];
+    // Define rotation matrices based on combo step - use pre-allocated matrices
+    let rotationMatrices: readonly THREE.Matrix4[] = [];
     switch (comboStep) {
       case 1:
         // 1st hit: 1 icicle straight forward
-        angles = [0];
+        rotationMatrices = [ICICLE_ROTATION_MATRICES.center];
         break;
       case 2:
         // 2nd hit: 2 icicles in an arc (left and right)
-        angles = [Math.PI / 16, -Math.PI / 16]; // 30°, -30°
+        rotationMatrices = [ICICLE_ROTATION_MATRICES.left11, ICICLE_ROTATION_MATRICES.right11];
         break;
       case 3:
         // 3rd hit: 3 icicles in an arc (center, left, right)
-        angles = [0, Math.PI / 8, -Math.PI / 8]; // 0°, 30°, -30°
+        rotationMatrices = [ICICLE_ROTATION_MATRICES.center, ICICLE_ROTATION_MATRICES.left22, ICICLE_ROTATION_MATRICES.right22];
         break;
       default:
-        angles = [0];
+        rotationMatrices = [ICICLE_ROTATION_MATRICES.center];
     }
     
-    angles.forEach(angle => {
+    rotationMatrices.forEach(rotationMatrix => {
       // Rotate the base direction by the specified angle around the Y axis
       const direction = baseDirection.clone();
-      const rotationMatrix = new THREE.Matrix4().makeRotationY(angle);
       direction.applyMatrix4(rotationMatrix);
 
       const projectile: IcicleProjectile = {
@@ -245,10 +255,9 @@ export default function IcicleOrbitals({
 
     // Send icicle projectile effects to other players in multiplayer
     if (isInRoom && isPlayer && sendEffect) {
-      angles.forEach(angle => {
+      rotationMatrices.forEach((rotationMatrix, index) => {
         // Rotate the base direction by the specified angle around the Y axis
         const direction = baseDirection.clone();
-        const rotationMatrix = new THREE.Matrix4().makeRotationY(angle);
         direction.applyMatrix4(rotationMatrix);
 
         sendEffect({
@@ -260,7 +269,7 @@ export default function IcicleOrbitals({
           weaponType: 'sabres',
           subclass: 'frost',
           comboStep: comboStep,
-          projectileId: `icicle-${nextProjectileId.current - angles.length + angles.indexOf(angle)}`
+          projectileId: `icicle-${nextProjectileId.current - rotationMatrices.length + index}`
         });
       });
     }
@@ -348,7 +357,8 @@ export default function IcicleOrbitals({
               damage: finalDamage,
               position: enemy.position.clone(),
               isCritical: isFrozen, // Show as critical if frozen (tripled damage)
-              isIcicle: true
+              isIcicle: true,
+              createdAt: Date.now() // MEMORY FIX: Required for cleanup
             }]);
 
             // Apply slow effect to hit enemies (like QuickShot for Elemental Bow at level 3+)

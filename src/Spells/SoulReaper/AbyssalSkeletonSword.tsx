@@ -3,6 +3,12 @@ import React from 'react';
 import { Shape } from 'three';
 import * as THREE from 'three';
 
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const COLORS = {
+  malachiteGreen: new THREE.Color(0x17CE54),
+  darkGreen: new THREE.Color(0x0d2818),
+} as const;
+
 export default function AbyssalSkeletonSword() {
   // Create custom sword blade shape - larger version
   const createBladeShape = () => {
@@ -130,8 +136,8 @@ export default function AbyssalSkeletonSword() {
           <mesh>
             <sphereGeometry args={[0.248, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0x17CE54)}         // Scythe malachite green
-              emissive={new THREE.Color(0x17CE54)}      // Scythe malachite green emission
+              color={COLORS.malachiteGreen}
+              emissive={COLORS.malachiteGreen}
               emissiveIntensity={1.5}
               transparent
               opacity={1}
@@ -142,8 +148,8 @@ export default function AbyssalSkeletonSword() {
           <mesh>
             <sphereGeometry args={[0.16, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0x17CE54)}
-              emissive={new THREE.Color(0x17CE54)}
+              color={COLORS.malachiteGreen}
+              emissive={COLORS.malachiteGreen}
               emissiveIntensity={25}
               transparent
               opacity={0.8}
@@ -153,8 +159,8 @@ export default function AbyssalSkeletonSword() {
           <mesh>
             <sphereGeometry args={[0.232, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0x17CE54)}
-              emissive={new THREE.Color(0x17CE54)}
+              color={COLORS.malachiteGreen}
+              emissive={COLORS.malachiteGreen}
               emissiveIntensity={20}
               transparent
               opacity={0.6}
@@ -164,8 +170,8 @@ export default function AbyssalSkeletonSword() {
           <mesh>
             <sphereGeometry args={[0.28, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0x17CE54)}
-              emissive={new THREE.Color(0x17CE54)}
+              color={COLORS.malachiteGreen}
+              emissive={COLORS.malachiteGreen}
               emissiveIntensity={15}
               transparent
               opacity={0.4}
@@ -174,7 +180,7 @@ export default function AbyssalSkeletonSword() {
 
           {/* Bright malachite green point light matching Scythe */}
           <pointLight 
-            color={new THREE.Color(0x17CE54)}
+            color={COLORS.malachiteGreen}
             intensity={1.5}
             distance={1.2}
             decay={2}
@@ -187,8 +193,8 @@ export default function AbyssalSkeletonSword() {
           <mesh>
             <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0x0d2818)}  // Very dark green base
-              emissive={new THREE.Color(0x17CE54)} // Scythe malachite green emission
+              color={COLORS.darkGreen}
+              emissive={COLORS.malachiteGreen}
               emissiveIntensity={1.8}
               metalness={0.6}
               roughness={0.2}
@@ -199,8 +205,8 @@ export default function AbyssalSkeletonSword() {
           <mesh>
             <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0x17CE54)}  // Scythe malachite green
-              emissive={new THREE.Color(0x17CE54)} // Scythe malachite green emission
+              color={COLORS.malachiteGreen}
+              emissive={COLORS.malachiteGreen}
               emissiveIntensity={3}
               metalness={0.4}
               roughness={0.2}
@@ -215,8 +221,8 @@ export default function AbyssalSkeletonSword() {
           <mesh>
             <sphereGeometry args={[1.2, 12, 12]} />
             <meshStandardMaterial
-              color={new THREE.Color(0x0d2818)}
-              emissive={new THREE.Color(0x17CE54)}
+              color={COLORS.darkGreen}
+              emissive={COLORS.malachiteGreen}
               emissiveIntensity={0.8}
               transparent
               opacity={0.1}

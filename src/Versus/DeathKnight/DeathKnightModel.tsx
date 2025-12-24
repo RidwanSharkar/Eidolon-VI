@@ -1,6 +1,6 @@
 // src/Versus/DeathKnight/DeathKnightModel.tsx
 import React, { useRef, useState, useEffect } from 'react';
-import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry } from 'three';
+import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, BoxGeometry, TorusGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '@/gear/BonePlate';
 import DeathKnightSword from './DeathKnightSword';
@@ -17,35 +17,74 @@ interface DeathKnightModelProps {
   onFrostStrikeStart?: () => void;
 }
 
-// Reuse Materials - light purple theme
-const standardBoneMaterial = new MeshStandardMaterial({
-  color: "#d0d0d0", // Keep bone color neutral
-  roughness: 0.5,
-  metalness: 0.4
+// CACHED MATERIALS
+const MATERIALS = {
+  standardBone: new MeshStandardMaterial({ color: "#d0d0d0", roughness: 0.5, metalness: 0.4 }),
+  darkBone: new MeshStandardMaterial({ color: "#b8b8b8", roughness: 0.4, metalness: 0.5 }),
+  lightPurpleBoot: new MeshStandardMaterial({ color: "#DDA0DD", roughness: 0.3, metalness: 0.8 }),
+  darkPurpleBoot: new MeshStandardMaterial({ color: "#DA70D6", roughness: 0.2, metalness: 0.9 }),
+  bootSole: new MeshStandardMaterial({ color: "#DA70D6", roughness: 0.8, metalness: 0.4 }),
+  shoulderMain: new MeshStandardMaterial({ color: "#DDA0DD", roughness: 0.3, metalness: 0.8 }),
+  shoulderTrim: new MeshStandardMaterial({ color: "#DA70D6", roughness: 0.2, metalness: 0.9 }),
+  shoulderAccent: new MeshStandardMaterial({ color: "#D8BFD8", roughness: 0.1, metalness: 0.95 }),
+  pelvis: new MeshStandardMaterial({ color: "#c0c0c0", roughness: 0.6, metalness: 0.3 }),
+  girdle: new MeshStandardMaterial({ color: "#DDA0DD", roughness: 0.3, metalness: 0.8 }),
+  eye: new MeshStandardMaterial({ color: "#DDA0DD", emissive: "#DDA0DD", emissiveIntensity: 4 }),
+  helmet: new MeshStandardMaterial({ color: "#DDA0DD", roughness: 0.3, metalness: 0.8 }),
+};
+
+// CACHED GEOMETRIES
+const GEOMETRIES = {
+  joint: new SphereGeometry(0.066, 8, 8),
+  largeBone: new CylinderGeometry(0.044, 0.035, 1.1, 6),
+  claw: new ConeGeometry(0.022, 0.165, 6),
+  knee: new SphereGeometry(0.088, 12, 12),
+  bootMain: new BoxGeometry(0.175, 0.21, 0.55),
+  bootForward: new BoxGeometry(0.15, 0.225, 0.055),
+  bootTop: new BoxGeometry(0.14, 0.25, 0.018),
+  bootSole: new BoxGeometry(0.175, 0.325, 0.044),
+  bootSide: new BoxGeometry(0.0175, 0.40, 0.14),
+  handSphere: new SphereGeometry(0.132, 12, 12),
+  handBox: new BoxGeometry(0.22, 0.165, 0.088),
+  shoulderSphere: new SphereGeometry(0.22, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.9),
+  shoulderPlate1: new BoxGeometry(0.1, 0.165, 0.033),
+  shoulderPlate2: new BoxGeometry(0.1, 0.154, 0.033),
+  shoulderPlate3: new BoxGeometry(0.1, 0.143, 0.033),
+  shoulderPlate4: new BoxGeometry(0.1, 0.132, 0.033),
+  shoulderPlate5: new BoxGeometry(0.1, 0.121, 0.033),
+  shoulderPlate6: new BoxGeometry(0.1, 0.110, 0.033),
+  shoulderRing1: new TorusGeometry(0.165, 0.016, 6, 12),
+  shoulderRing2: new TorusGeometry(0.198, 0.022, 8, 16),
+  shoulderRing3: new TorusGeometry(0.22, 0.018, 8, 16),
+  shoulderGuard: new BoxGeometry(0.088, 0.132, 0.055),
+  shoulderGuardTrim: new BoxGeometry(0.099, 0.143, 0.011),
+  cranium: new SphereGeometry(0.26, 8, 8),
+  facePlate: new BoxGeometry(0.34, 0.34, 0.12),
+  eye: new SphereGeometry(0.025, 8, 8),
+  helmet: new SphereGeometry(0.25, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.6),
+  pelvisCylinder: new CylinderGeometry(0.22, 0.20, 0.18, 8),
+  pelvisJoint: new SphereGeometry(0.08, 8, 8),
+  girdle: new CylinderGeometry(0.275, 0.275, 0.08, 16),
+  kiltPlate: new BoxGeometry(0.25, 0.375, 0.02),
+  kiltTrim: new BoxGeometry(0.09, 0.18, 0.01),
+  neck: new CylinderGeometry(0.066, 0.066, 0.165, 6),
+};
+
+// Mark all as shared
+Object.values(GEOMETRIES).forEach(geo => {
+  geo.userData = { shared: true };
 });
-
-const darkBoneMaterial = new MeshStandardMaterial({
-  color: "#b8b8b8", // Keep bone color neutral
-  roughness: 0.4,
-  metalness: 0.5
+Object.values(MATERIALS).forEach(mat => {
+  mat.userData = { shared: true };
 });
-
-// Cache geometries that are reused frequently (scaled for death knight)
-const jointGeometry = new SphereGeometry(0.066, 8, 8); // 1.1x larger than skeleton
-jointGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
-const largeBoneGeometry = new CylinderGeometry(0.044, 0.035, 1.1, 6); // 1.1x larger than skeleton
-largeBoneGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
-const clawGeometry = new ConeGeometry(0.022, 0.165, 6); // 1.1x larger than skeleton
-clawGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
-
 
 function DeathKnightLegModel() {
   const createBoneSegment = (length: number, width: number) => (
-    <mesh geometry={largeBoneGeometry} material={standardBoneMaterial} scale={[width/0.044, length/1.1, width/0.044]} />
+    <mesh geometry={GEOMETRIES.largeBone} material={MATERIALS.standardBone} scale={[width/0.044, length/1.1, width/0.044]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.066, size/0.066, size/0.066]} />
+    <mesh geometry={GEOMETRIES.joint} material={MATERIALS.standardBone} scale={[size/0.066, size/0.066, size/0.066]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -73,10 +112,7 @@ function DeathKnightLegModel() {
         
         {/* Knee joint */}
         <group position={[0, -0.385, 0]}>
-          <mesh>
-            <sphereGeometry args={[0.088, 12, 12]} />
-            <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-          </mesh>
+          <mesh geometry={GEOMETRIES.knee} material={MATERIALS.standardBone} />
           
           {/* Lower leg */}
           <group position={[0, -0.165, 0]}>
@@ -95,55 +131,20 @@ function DeathKnightLegModel() {
                 {/* Light purple boots with proper orientation */}
                 <group position={[0, 0, 0]}>
                   {/* Main boot body - light purple */}
-                  <mesh position={[0, 0.044, 0.055]}>
-                    <boxGeometry args={[0.175, 0.21, 0.55]} />
-                    <meshStandardMaterial 
-                      color="#DDA0DD" 
-                      roughness={0.3} 
-                      metalness={0.8}
-                    />
-                  </mesh>
+                  <mesh position={[0, 0.044, 0.055]} geometry={GEOMETRIES.bootMain} material={MATERIALS.lightPurpleBoot} />
 
                   {/* Forward extending foot portion - scaled smaller and lowered */}
-                  <mesh position={[0, 0.325, 0.25]} rotation={[0.65, 0, 0]}>
-                    <boxGeometry args={[0.15, 0.225, 0.055]} />
-                    <meshStandardMaterial 
-                      color="#DDA0DD" 
-                      roughness={0.3} 
-                      metalness={0.8}
-                    />
-                  </mesh>
+                  <mesh position={[0, 0.325, 0.25]} rotation={[0.65, 0, 0]} geometry={GEOMETRIES.bootForward} material={MATERIALS.lightPurpleBoot} />
 
                   {/* Foot top plate for better definition - adjusted to match smaller foot */}
-                  <mesh position={[0, 0.23, 0.25]}>
-                    <boxGeometry args={[0.14, 0.25, 0.018]} />
-                    <meshStandardMaterial 
-                      color="#DA70D6" 
-                      roughness={0.2} 
-                      metalness={0.9}
-                    />
-                  </mesh>
+                  <mesh position={[0, 0.23, 0.25]} geometry={GEOMETRIES.bootTop} material={MATERIALS.darkPurpleBoot} />
 
                   {/* Enhanced boot sole with treads - corrected to extend along foot length */}
-                  <mesh position={[0, 0.25, 0.35]}>
-                    <boxGeometry args={[0.175, 0.325, 0.044]} />
-                    <meshStandardMaterial 
-                      color="#DA70D6" 
-                      roughness={0.8} 
-                      metalness={0.4}
-                    />
-                  </mesh>
+                  <mesh position={[0, 0.25, 0.35]} geometry={GEOMETRIES.bootSole} material={MATERIALS.bootSole} />
 
                   {/* Side armor reinforcement - corrected to run along foot length */}
                   {[-1, 1].map((side) => (
-                    <mesh key={side} position={[side * 0.1125, 0.125, 0.275]}>
-                      <boxGeometry args={[0.0175, 0.40, 0.14]} />
-                      <meshStandardMaterial 
-                        color="#DA70D6" 
-                        roughness={0.2} 
-                        metalness={0.9}
-                      />
-                    </mesh>
+                    <mesh key={side} position={[side * 0.1125, 0.125, 0.275]} geometry={GEOMETRIES.bootSide} material={MATERIALS.darkPurpleBoot} />
                   ))}
                 </group>
               </group>
@@ -157,11 +158,11 @@ function DeathKnightLegModel() {
 
 function DeathKnightClawModel() {
   const createBoneSegment = (length: number, width: number) => (
-    <mesh geometry={largeBoneGeometry} material={standardBoneMaterial} scale={[width/0.044, length/1.1, width/0.044]} />
+    <mesh geometry={GEOMETRIES.largeBone} material={MATERIALS.standardBone} scale={[width/0.044, length/1.1, width/0.044]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh geometry={jointGeometry} material={standardBoneMaterial} scale={[size/0.066, size/0.066, size/0.066]} />
+    <mesh geometry={GEOMETRIES.joint} material={MATERIALS.standardBone} scale={[size/0.066, size/0.066, size/0.066]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -187,14 +188,7 @@ function DeathKnightClawModel() {
         {createParallelBones(1.43, 0.165)} {/* 1.1x scale */}
         
         <group position={[0.275, -0.935, 0.231]}> 
-          <mesh>
-            <sphereGeometry args={[0.132, 12, 12]} />
-            <meshStandardMaterial 
-              color="#d0d0d0"
-              roughness={0.5}
-              metalness={0.4}
-            />
-          </mesh>
+          <mesh geometry={GEOMETRIES.handSphere} material={MATERIALS.standardBone} />
           
           <group rotation={[-0.7, -0, Math.PI / 5]}>
             {createParallelBones(0.88, 0.132)}
@@ -203,10 +197,7 @@ function DeathKnightClawModel() {
               {createJoint(0.099)}
               
               <group position={[0, -0.11, 0]}>
-                <mesh>
-                  <boxGeometry args={[0.22, 0.165, 0.088]} />
-                  <meshStandardMaterial color="#d0d0d0" roughness={0.5} />
-                </mesh>
+                <mesh geometry={GEOMETRIES.handBox} material={MATERIALS.standardBone} />
                 
                 {/* Three fingers */}
                 {[-0.088, 0, 0.088].map((offset, i) => (
@@ -217,7 +208,7 @@ function DeathKnightClawModel() {
                   >
                     {createBoneSegment(0.55, 0.022)}
                     <group position={[0.0275, -0.33, 0]} rotation={[0, 0, Math.PI + Math.PI / 16]}>
-                      <mesh geometry={clawGeometry} material={darkBoneMaterial} />
+                      <mesh geometry={GEOMETRIES.claw} material={MATERIALS.darkBone} />
                     </group>
                   </group>
                 ))}
@@ -235,84 +226,44 @@ function DeathKnightShoulderPlate({ }: { isLeftShoulder?: boolean }) {
     <group>
       <group>
         {/* Main shoulder pauldron - light purple theme */}
-        <mesh>
-          <sphereGeometry args={[0.22, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.9]} />
-          <meshStandardMaterial 
-            color="#DDA0DD"
-            roughness={0.3}
-            metalness={0.8}
-          />
-        </mesh>
+        <mesh geometry={GEOMETRIES.shoulderSphere} material={MATERIALS.shoulderMain} />
 
         {/* Layered armor plates - light purple style */}
         {[0, 1, 2, 3, 4, 5].map((i) => {
           const angle = (i /7) * Math.PI * 2;
           const radius = 0.18 + (i % 2) * 0.02;
+          
+          // Select correct geometry based on index to avoid scaling
+          const geometry = i === 0 ? GEOMETRIES.shoulderPlate1 :
+                          i === 1 ? GEOMETRIES.shoulderPlate2 :
+                          i === 2 ? GEOMETRIES.shoulderPlate3 :
+                          i === 3 ? GEOMETRIES.shoulderPlate4 :
+                          i === 4 ? GEOMETRIES.shoulderPlate5 :
+                          GEOMETRIES.shoulderPlate6;
+                          
           return (
             <group key={i} rotation={[0, angle, 0]}>
-              <mesh position={[radius, -0.033 * i, 0]} rotation={[0.1, 0, 0]}>
-                <boxGeometry args={[0.1, 0.165 - i * 0.011, 0.033]} />
-                <meshStandardMaterial 
-                  color={i % 2 === 0 ? "#DDA0DD" : "#DA70D6"}
-                  roughness={0.3}
-                  metalness={0.8}
-                />
-              </mesh>
+              <mesh position={[radius, -0.033 * i, 0]} rotation={[0.1, 0, 0]} geometry={geometry} material={i % 2 === 0 ? MATERIALS.shoulderMain : MATERIALS.shoulderTrim} />
             </group>
           );
         })}
 
 
         {/* Decorative trim rings - light purple */}
-        <mesh position={[0, 0.165, 0]} rotation={[Math.PI/2, 0, 0]}>
-          <torusGeometry args={[0.165, 0.016, 6, 12]} />
-          <meshStandardMaterial 
-            color="#DA70D6"
-            roughness={0.2}
-            metalness={0.9}
-          />
-        </mesh>
+        <mesh position={[0, 0.165, 0]} rotation={[Math.PI/2, 0, 0]} geometry={GEOMETRIES.shoulderRing1} material={MATERIALS.shoulderTrim} />
 
-        <mesh position={[0, 0.055, 0]} rotation={[Math.PI/2, 0, 0]}>
-          <torusGeometry args={[0.198, 0.022, 8, 16]} />
-          <meshStandardMaterial 
-            color="#D8BFD8"
-            roughness={0.1}
-            metalness={0.95}
-          />
-        </mesh>
+        <mesh position={[0, 0.055, 0]} rotation={[Math.PI/2, 0, 0]} geometry={GEOMETRIES.shoulderRing2} material={MATERIALS.shoulderAccent} />
 
-        <mesh position={[0, -0.066, 0]} rotation={[Math.PI/2, 0, 0]}>
-          <torusGeometry args={[0.22, 0.018, 8, 16]} />
-          <meshStandardMaterial 
-            color="#DA70D6"
-            roughness={0.2}
-            metalness={0.9}
-          />
-        </mesh>
+        <mesh position={[0, -0.066, 0]} rotation={[Math.PI/2, 0, 0]} geometry={GEOMETRIES.shoulderRing3} material={MATERIALS.shoulderTrim} />
 
  
         {/* Shoulder guard extensions */}
         {[-1, 1].map((side) => (
           <group key={side} position={[side * 0.165, -0.044, 0]} rotation={[0, side * Math.PI/8, side * 0.1]}>
-            <mesh>
-              <boxGeometry args={[0.088, 0.132, 0.055]} />
-              <meshStandardMaterial 
-                color="#DDA0DD"
-                roughness={0.3}
-                metalness={0.8}
-              />
-            </mesh>
+            <mesh geometry={GEOMETRIES.shoulderGuard} material={MATERIALS.shoulderMain} />
             
             {/* Guard trim */}
-            <mesh position={[0, 0, 0.028]}>
-              <boxGeometry args={[0.099, 0.143, 0.011]} />
-              <meshStandardMaterial 
-                color="#DA70D6"
-                roughness={0.2}
-                metalness={0.9}
-              />
-            </mesh>
+            <mesh position={[0, 0, 0.028]} geometry={GEOMETRIES.shoulderGuardTrim} material={MATERIALS.shoulderTrim} />
           </group>
         ))}
 
@@ -714,16 +665,10 @@ export default function DeathKnightModel({
         {/* Main skull shape */}
         <group>
           {/* Back of cranium */}
-          <mesh position={[0, 0, -0.05]}>
-            <sphereGeometry args={[0.26, 8, 8]} />
-            <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-          </mesh>
+          <mesh position={[0, 0, -0.05]} geometry={GEOMETRIES.cranium} material={MATERIALS.standardBone} />
 
           {/* Front face plate */}
-          <mesh position={[0, -0.02, 0.12]}>
-            <boxGeometry args={[0.34, 0.34, 0.12]} />
-            <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-          </mesh>
+          <mesh position={[0, -0.02, 0.12]} geometry={GEOMETRIES.facePlate} material={MATERIALS.standardBone} />
 
 
 
@@ -731,10 +676,7 @@ export default function DeathKnightModel({
           <group position={[0, 0.05, 0.14]}>
             {/* Left eye */}
             <group position={[-0.09, 0, 0]}>
-              <mesh>
-                <sphereGeometry args={[0.025, 8, 8]} />
-                <meshStandardMaterial color="#DDA0DD" emissive="#DDA0DD" emissiveIntensity={4} />
-              </mesh>
+              <mesh geometry={GEOMETRIES.eye} material={MATERIALS.eye} />
               <pointLight
                 color="#DDA0DD"
                 intensity={0.8}
@@ -745,10 +687,7 @@ export default function DeathKnightModel({
 
             {/* Right eye */}
             <group position={[0.09, 0, 0]}>
-              <mesh>
-                <sphereGeometry args={[0.025, 8, 8]} />
-                <meshStandardMaterial color="#DDA0DD" emissive="#DDA0DD" emissiveIntensity={4} />
-              </mesh>
+              <mesh geometry={GEOMETRIES.eye} material={MATERIALS.eye} />
               <pointLight
                 color="#DDA0DD"
                 intensity={0.8}
@@ -761,14 +700,7 @@ export default function DeathKnightModel({
           {/* Light purple helmet */}
           <group position={[0, 0.1, 0]}>
             {/* Main helmet bowl */}
-            <mesh position={[0, 0.05, -0.02]}>
-              <sphereGeometry args={[0.25, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
-              <meshStandardMaterial
-                color="#DDA0DD"
-                roughness={0.3}
-                metalness={0.8}
-              />
-            </mesh>
+            <mesh position={[0, 0.05, -0.02]} geometry={GEOMETRIES.helmet} material={MATERIALS.helmet} />
 
  
 
@@ -819,32 +751,19 @@ export default function DeathKnightModel({
 
       {/* Pelvis structure - death knight proportions with light purple kilt */}
       <group position={[0, 0.625, +0.05]} scale={[1.1, 1.1, 1.1]} rotation={[0.1, 0, 0]}>
-        <mesh>
-          <cylinderGeometry args={[0.22, 0.20, 0.18, 8]} />
-          <meshStandardMaterial color="#c0c0c0" roughness={0.6} metalness={0.3} />
-        </mesh>
+        <mesh geometry={GEOMETRIES.pelvisCylinder} material={MATERIALS.pelvis} />
 
         {/* Pelvic joints */}
         {[-1, 1].map((side) => (
           <group key={side} position={[0.18 * side, -0.09, 0]}>
-            <mesh>
-              <sphereGeometry args={[0.08, 8, 8]} />
-              <meshStandardMaterial color="#c0c0c0" roughness={0.6} metalness={0.3} />
-            </mesh>
+            <mesh geometry={GEOMETRIES.pelvisJoint} material={MATERIALS.pelvis} />
           </group>
         ))}
 
         {/* Plate mail girdle with light purple armored kilt */}
         <group position={[0, 0, 0]}>
           {/* Main girdle belt */}
-          <mesh position={[0, 0.05, 0]}>
-            <cylinderGeometry args={[0.275, 0.275, 0.08, 16]} />
-            <meshStandardMaterial
-              color="#DDA0DD"
-              roughness={0.3}
-              metalness={0.8}
-            />
-          </mesh>
+          <mesh position={[0, 0.05, 0]} geometry={GEOMETRIES.girdle} material={MATERIALS.girdle} />
 
           {/* Armored kilt plates - arranged in a circle */}
           {Array.from({ length: 8 }, (_, i) => {
@@ -854,24 +773,10 @@ export default function DeathKnightModel({
             return (
               <group key={i} position={[x, -0.06, z]} rotation={[0, -angle, 0]}>
                 {/* Individual kilt plate */}
-                <mesh position={[0, 0.05, 0]} rotation={[0.1, 0, 0]}>
-                  <boxGeometry args={[0.25, 0.375, 0.02]} />
-                  <meshStandardMaterial
-                    color="#DDA0DD"
-                    roughness={0.3}
-                    metalness={0.8}
-                  />
-                </mesh>
+                <mesh position={[0, 0.05, 0]} rotation={[0.1, 0, 0]} geometry={GEOMETRIES.kiltPlate} material={MATERIALS.girdle} />
 
                 {/* Plate trim */}
-                <mesh position={[0, -0.15, 0.01]} rotation={[0.1, 0, 0]}>
-                  <boxGeometry args={[0.09, 0.18, 0.01]} />
-                  <meshStandardMaterial
-                    color="#DA70D6"
-                    roughness={0.2}
-                    metalness={0.9}
-                  />
-                </mesh>
+                <mesh position={[0, -0.15, 0.01]} rotation={[0.1, 0, 0]} geometry={GEOMETRIES.kiltTrim} material={MATERIALS.shoulderTrim} />
               </group>
             );
           })}
@@ -888,10 +793,7 @@ export default function DeathKnightModel({
 
       {/* Neck connection - death knight proportions */}
       <group position={[0, 1.408, 0.176]}>
-        <mesh>
-          <cylinderGeometry args={[0.066, 0.066, 0.165, 6]} />
-          <meshStandardMaterial color="#d0d0d0" roughness={0.5} metalness={0.4} />
-        </mesh>
+        <mesh geometry={GEOMETRIES.neck} material={MATERIALS.standardBone} />
       </group>
     </group>
   );

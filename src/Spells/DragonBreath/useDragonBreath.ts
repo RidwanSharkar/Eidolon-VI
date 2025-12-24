@@ -66,7 +66,8 @@ export function useDragonBreath({
         damage: hit.damage,
         position: hit.position.clone().add(new Vector3(0, 2, 0)),
         isCritical: hit.isCritical,
-        isDragonBreath: true
+        isDragonBreath: true,
+        createdAt: Date.now() // MEMORY FIX: Required for cleanup
       }]);
     });
 

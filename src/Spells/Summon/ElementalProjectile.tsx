@@ -4,6 +4,9 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import ElementalTrail from './ElementalTrail';
 
+// Pre-allocated color for performance - avoids new THREE.Color() on every render
+const ELEMENTAL_TRAIL_COLOR = new THREE.Color("#4FC3F7");
+
 interface ElementalProjectileProps {
   id: number;
   position: Vector3;
@@ -104,7 +107,7 @@ export default function ElementalProjectile({
         <>
           {/* Elemental trail effect - outside the moving group to avoid coordinate conflicts */}
           <ElementalTrail
-            color={new THREE.Color("#4FC3F7")}
+            color={ELEMENTAL_TRAIL_COLOR}
             size={0.35}
             meshRef={projectileRef}
             opacity={0.9}

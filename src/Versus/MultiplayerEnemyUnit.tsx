@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import { HEALTHBAR_GEOMETRIES, HEALTHBAR_MATERIALS } from '@/Versus/HealthBarResources';
 
 // Import visual models only (not full unit components)
 import CustomSkeleton from '@/Versus/CustomSkeleton';
@@ -698,14 +699,18 @@ export default function MultiplayerEnemyUnit({
         >
           {enemy.health > 0 && (
             <>
-              <mesh position={[0, 0, 0]}>
-                <planeGeometry args={[2.0, 0.25]} />
-                <meshBasicMaterial color="#333333" opacity={0.8} transparent />
-              </mesh>
-              <mesh position={[-1.0 + (enemy.health / enemy.maxHealth), 0, 0.001]}>
-                <planeGeometry args={[(enemy.health / enemy.maxHealth) * 2.0, 0.23]} />
-                <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
-              </mesh>
+              {/* MEMORY FIX: Use cached geometries and materials */}
+              <mesh 
+                position={[0, 0, 0]}
+                geometry={HEALTHBAR_GEOMETRIES.background}
+                material={HEALTHBAR_MATERIALS.background}
+              />
+              <mesh 
+                position={[-1.0 + (enemy.health / enemy.maxHealth), 0, 0.001]}
+                scale={[(enemy.health / enemy.maxHealth) * 2.0, 1, 1]}
+                geometry={HEALTHBAR_GEOMETRIES.fill}
+                material={HEALTHBAR_MATERIALS.fill}
+              />
               <Text
                 position={[0, 0, 0.002]}
                 fontSize={0.2}

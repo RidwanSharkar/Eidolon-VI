@@ -30,6 +30,14 @@ export default function InstancedVegetation() {
     });
   }, []);
 
+  // Cleanup geometry and material on unmount
+  useEffect(() => {
+    return () => {
+      leafGeometry.dispose();
+      leafMaterial.dispose();
+    };
+  }, [leafGeometry, leafMaterial]);
+
   useEffect(() => {
     if (!instancedMeshRef.current) return;
 

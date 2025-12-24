@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -45,6 +45,14 @@ const CrusaderHealingEffect: React.FC<CrusaderHealingEffectProps> = ({ position,
   const particleAngles = useMemo(() => 
     Array(12).fill(0).map((_, i) => (i / 12) * Math.PI * 2),
   []);
+
+  // Cleanup geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
+    };
+  }, [geometries, materials]);
 
   useFrame((_, delta) => {
     timeRef.current += delta;

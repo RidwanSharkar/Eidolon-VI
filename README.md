@@ -3,12 +3,7 @@
 ![EVI](https://github.com/user-attachments/assets/96123c93-4537-458a-a911-212da4645b8b)
 
 **GAMEPLAY:** <br>
-- **Vengeance Sword: https://www.youtube.com/watch?v=cwTIyLSqpi4** <br>
-- **Chaos Scythe: https://www.youtube.com/watch?v=usb8Tlarjbg** <br>
-- **Assassin Sabres: https://www.youtube.com/watch?v=0ZwcVTIkejU** <br>
-- **Elemental Bow: https://www.youtube.com/watch?v=KRHCzUpWfw0** <br>
-- **Venom Bow: https://www.youtube.com/watch?v=yt6pAWwUE1c** <br>
-- **Everything Else: https://www.youtube.com/watch?v=ySSPUj44glw**
+- **https://www.youtube.com/watch?v=ySSPUj44glw**
 
 **NEW FEATURES:** <br>
 - **Introduced 2 subclasses per weapon choice with unique playstyles and new innate abilities** <br>
@@ -21,10 +16,6 @@
 ![ScytheX](https://github.com/user-attachments/assets/e5cebe2a-e549-4768-834c-385ed08983be)
 
 ![SwordX](https://github.com/user-attachments/assets/c15da9df-8966-46bb-8b13-6e47fddfb8fe)
-
----
-
-**Last Eidolon version due to performance bottlenecks, moving to Avernus**
 
 ---
 

@@ -1,5 +1,6 @@
 import { Vector3 } from 'three';
 import * as THREE from 'three';
+import { useMemo, useEffect } from 'react';
 import { WeaponSubclass } from '@/Weapons/weapons';
 
 interface BoneArrowProps {
@@ -12,20 +13,29 @@ interface BoneArrowProps {
 
 export default function BoneArrow({ position, direction, opacity = 1, currentSubclass, level = 1 }: BoneArrowProps) {
   // Determine arrow color based on subclass and level
-  const getArrowColor = () => {
+  const arrowColor = useMemo(() => {
     if (currentSubclass === WeaponSubclass.VENOM) return "#90ff90"; // Green for Venom
     if (currentSubclass === WeaponSubclass.ELEMENTAL && level >= 3) return "#80d9ff"; // Icy blue for Elemental level 3+
     return "#d6cfc7"; // Default bone color
-  };
+  }, [currentSubclass, level]);
   
-  // Shared materials with subclass-specific colors
-  const boneMaterial = new THREE.MeshStandardMaterial({
-    color: getArrowColor(),
-    roughness: 0.9,
-    metalness: 0.1,
-    transparent: true,
-    opacity: opacity
-  });
+  // Shared materials with subclass-specific colors - properly memoized with cleanup
+  const boneMaterial = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: arrowColor,
+      roughness: 0.9,
+      metalness: 0.1,
+      transparent: true,
+      opacity: opacity
+    });
+  }, [arrowColor, opacity]);
+
+  // Cleanup material on unmount
+  useEffect(() => {
+    return () => {
+      boneMaterial.dispose();
+    };
+  }, [boneMaterial]);
 
   return (
     <group

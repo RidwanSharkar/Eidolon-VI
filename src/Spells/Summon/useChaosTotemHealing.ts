@@ -49,7 +49,8 @@ export function useChaosTotemHealing({
           damage: 2,
           position: parentRef.current!.position.clone().add(new Vector3(0, 2, 0)),
           isCritical: false,
-          isHealing: true
+          isHealing: true,
+          createdAt: Date.now() // MEMORY FIX: Required for cleanup
         }]);
       }
 

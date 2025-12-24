@@ -6,6 +6,9 @@
 
   import * as THREE from 'three';
 
+  // Pre-allocated color for performance - avoids new THREE.Color() on every render
+  const SABRE_TRAIL_COLOR = new THREE.Color("#0088ff");
+
   const lerp = (start: number, end: number, t: number) => {
     return start * (1 - t) + end * t;
   };
@@ -419,7 +422,7 @@
                   
                   <FireballTrail
                     meshRef={leftOrbRef}
-                    color={new THREE.Color("#0088ff")}
+                    color={SABRE_TRAIL_COLOR}
                     size={0.04}
                     opacity={0.6}
                   />
@@ -505,7 +508,7 @@
                   
                   <FireballTrail
                     meshRef={rightOrbRef}
-                    color={new THREE.Color("#0088ff")}
+                    color={SABRE_TRAIL_COLOR}
                     size={0.04}
                     opacity={0.6}
                   />

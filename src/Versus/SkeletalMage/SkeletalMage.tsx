@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import { HEALTHBAR_GEOMETRIES, HEALTHBAR_MATERIALS } from '@/Versus/HealthBarResources';
 import CustomSkeletonMage from '@/Versus/SkeletalMage/CustomSkeletonMage';
 import BoneVortex2 from '@/color/SpawnAnimation';
 import { Enemy } from '@/Versus/enemy';
@@ -368,6 +369,9 @@ export default function SkeletalMage({
     }
   }, [playerStunRef, isCastingLightning, isDead, getTargetPlayerPosition, getLatestPlayerPosition, onAttackPlayer, id, allPlayers, playerPosition, getCurrentPlayerPosition]);
 
+  // MEMORY FIX: Reusable vector for wander target
+  const tempWanderTarget = useRef(new Vector3());
+  
   // Add the getNewWanderTarget function after the constants
   const getNewWanderTarget = useCallback(() => {
     if (!enemyRef.current) return null;
@@ -375,11 +379,14 @@ export default function SkeletalMage({
     const angle = Math.random() * Math.PI * 2;
     const distance = Math.random() * WANDER_RADIUS;
     
-    return new Vector3(
+    // MEMORY FIX: Reuse tempWanderTarget instead of creating new Vector3
+    tempWanderTarget.current.set(
       currentPosition.current.x + Math.cos(angle) * distance,
       0,
       currentPosition.current.z + Math.sin(angle) * distance
     );
+    
+    return tempWanderTarget.current.clone();
   }, []);
 
   // Update frame logic
@@ -403,16 +410,17 @@ export default function SkeletalMage({
         if (!wanderTarget.current) {
           wanderTarget.current = getNewWanderTarget();
         } else {
-          // Smoothly transition to new target
-          const currentDir = new Vector3()
+          // MEMORY FIX: Reuse tempVector1 for direction calculation instead of creating new Vector3
+          tempVector1.current
             .subVectors(wanderTarget.current, currentPosition.current)
             .normalize();
           
-          const newTarget = new Vector3()
+          // MEMORY FIX: Reuse tempWanderTarget for new target instead of creating new Vector3
+          tempWanderTarget.current
             .copy(currentPosition.current)
-            .add(currentDir.multiplyScalar(WANDER_RADIUS));
+            .add(tempVector1.current.multiplyScalar(WANDER_RADIUS));
           
-          wanderTarget.current = newTarget;
+          wanderTarget.current = tempWanderTarget.current.clone();
         }
         wanderStartTime.current = now;
       }
@@ -609,6 +617,13 @@ export default function SkeletalMage({
       setShowDeathEffect(true);
       // Remove from aggro system when enemy dies
       globalAggroSystem.removeEnemy(id);
+      
+      // MEMORY FIX: Clear all effect arrays immediately on death to prevent memory accumulation
+      setActiveFireballs([]);
+      setActiveLightningWarnings([]);
+      setActiveLightningStrikes([]);
+      setActiveEffects([]);
+      
       if (enemyRef.current) {
         enemyRef.current.visible = true;
       }
@@ -636,7 +651,14 @@ export default function SkeletalMage({
       // Use the captured ref value from when effect was created
       currentTimeouts.forEach(timeout => clearTimeout(timeout));
       currentTimeouts.clear();
-      console.log(`🧹 SkeletalMage ${id} cleanup: All timeouts cleared`);
+      
+      // MEMORY FIX: Clear all effect arrays on unmount
+      setActiveFireballs([]);
+      setActiveLightningWarnings([]);
+      setActiveLightningStrikes([]);
+      setActiveEffects([]);
+      
+      console.log(`🧹 SkeletalMage ${id} cleanup: All timeouts and effects cleared`);
     };
   }, [id]);
 
@@ -748,14 +770,18 @@ export default function SkeletalMage({
         >
           {currentHealth.current > 0 && (
             <>
-              <mesh position={[0, 0, 0]}>
-                <planeGeometry args={[2.0, 0.25]} />
-                <meshBasicMaterial color="#333333" opacity={0.8} transparent />
-              </mesh>
-              <mesh position={[-1.0 + (currentHealth.current / maxHealth), 0, 0.001]}>
-                <planeGeometry args={[(currentHealth.current / maxHealth) * 2.0, 0.23]} />
-                <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
-              </mesh>
+              {/* MEMORY FIX: Use cached geometries and materials */}
+              <mesh 
+                position={[0, 0, 0]}
+                geometry={HEALTHBAR_GEOMETRIES.background}
+                material={HEALTHBAR_MATERIALS.background}
+              />
+              <mesh 
+                position={[-1.0 + (currentHealth.current / maxHealth), 0, 0.001]}
+                scale={[(currentHealth.current / maxHealth) * 2.0, 1, 1]}
+                geometry={HEALTHBAR_GEOMETRIES.fill}
+                material={HEALTHBAR_MATERIALS.fill}
+              />
               <Text
                 position={[0, 0, 0.002]}
                 fontSize={0.2}

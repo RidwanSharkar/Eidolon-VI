@@ -5,6 +5,30 @@ import { Group, Shape } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const SHIELD_COLORS = {
+  // Base shield colors
+  darkGoldenrod: new THREE.Color(0xB8860B),
+  darkGoldEmissive: new THREE.Color(0x4A4A00),
+  darkerGold: new THREE.Color(0xDAA520),
+  darkerGoldEmissive: new THREE.Color(0x8B6914),
+  brightGold: new THREE.Color(0xFFD700),
+  brightOrange: new THREE.Color(0xFFA500),
+  bronze: new THREE.Color(0x8B4513),
+  darkBronzeEmissive: new THREE.Color(0xB8860B),
+  // State-based colors
+  activeGold: new THREE.Color(0xFFD700),
+  rechargingYellow: new THREE.Color(0xFFFF88),
+  brokenGray: new THREE.Color(0x666666),
+  brokenDarkGray: new THREE.Color(0x333333),
+  rechargingBright: new THREE.Color(0xFFFF00),
+  brokenRed: new THREE.Color(0xFF4500),
+  brokenDarkRed: new THREE.Color(0x8B0000),
+  rechargingDarkYellow: new THREE.Color(0x8B8B00),
+  cornsilk: new THREE.Color(0xFFF8DC),
+  progressBarGray: new THREE.Color(0x444444),
+} as const;
+
 interface ShieldProps {
   // No props needed for now, but can add customization later
   className?: string;
@@ -213,10 +237,10 @@ export default function Shield({
           <mesh>
             <extrudeGeometry args={[createShieldShape(), shieldExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xB8860B)}  // Dark goldenrod
+              color={SHIELD_COLORS.darkGoldenrod}  // Dark goldenrod
               metalness={0.95}
               roughness={0.05}
-              emissive={new THREE.Color(0x4A4A00)}
+              emissive={SHIELD_COLORS.darkGoldEmissive}
               emissiveIntensity={0.1}
             />
           </mesh>
@@ -225,10 +249,10 @@ export default function Shield({
           <mesh position={[0, 0, 0.008]}>
             <extrudeGeometry args={[createInnerShieldShape(), innerExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xDAA520)}  // Darker gold
+              color={SHIELD_COLORS.darkerGold}  // Darker gold
               metalness={0.9}
               roughness={0.02}
-              emissive={new THREE.Color(0x8B6914)}
+              emissive={SHIELD_COLORS.darkerGoldEmissive}
               emissiveIntensity={0.15}
             />
           </mesh>
@@ -237,10 +261,10 @@ export default function Shield({
           <mesh position={[0, 0, 0.012]}>
             <extrudeGeometry args={[createCrossPattern(), crossExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xFFD700)}  // Bright gold
+              color={SHIELD_COLORS.brightGold}  // Bright gold
               metalness={0.85}
               roughness={0.03}
-              emissive={new THREE.Color(0xFFA500)}
+              emissive={SHIELD_COLORS.brightOrange}
               emissiveIntensity={0.2}
             />
           </mesh>
@@ -249,10 +273,10 @@ export default function Shield({
           <mesh position={[0, 0, 0.012]}>
             <extrudeGeometry args={[createHorizontalCross(), crossExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0xFFD700)}  // Bright gold
+              color={SHIELD_COLORS.brightGold}  // Bright gold
               metalness={0.85}
               roughness={0.03}
-              emissive={new THREE.Color(0xFFA500)}
+              emissive={SHIELD_COLORS.brightOrange}
               emissiveIntensity={0.2}
             />
           </mesh>
@@ -261,8 +285,8 @@ export default function Shield({
           <mesh position={[0, 0, 0.015]}>
             <extrudeGeometry args={[createGemShape(), gemExtrudeSettings]} />
             <meshStandardMaterial
-              color={new THREE.Color(isShieldActive ? 0xFFD700 : isRecharging ? 0x8B8B00 : 0x8B0000)}   // Gold when active, yellow-brown when recharging, dark red when broken
-              emissive={new THREE.Color(isShieldActive ? 0xFFD700 : isRecharging ? 0xFFFF00 : 0xFF4500)} // Divine gold when active, yellow when recharging, orange-red when broken
+              color={isShieldActive ? SHIELD_COLORS.activeGold : isRecharging ? SHIELD_COLORS.rechargingDarkYellow : SHIELD_COLORS.brokenDarkRed}   // Gold when active, yellow-brown when recharging, dark red when broken
+              emissive={isShieldActive ? SHIELD_COLORS.activeGold : isRecharging ? SHIELD_COLORS.rechargingBright : SHIELD_COLORS.brokenRed} // Divine gold when active, yellow when recharging, orange-red when broken
               emissiveIntensity={glowIntensity.current * (isShieldActive ? 1.0 : isRecharging ? 0.6 : 0.4)} // Reduced from 2.0/1.2/0.8
               transparent
               opacity={isShieldActive ? 0.85 : isRecharging ? 0.6 + (rechargeProgress * 0.2) : 0.4} // Reduced opacity
@@ -283,7 +307,7 @@ export default function Shield({
             >
               <cylinderGeometry args={[0.008, 0.012, 0.015, 6]} />
               <meshStandardMaterial 
-                color={new THREE.Color(0x8B4513)}  // Bronze
+                color={SHIELD_COLORS.bronze}  // Bronze
                 metalness={0.8}
                 roughness={0.2}
               />
@@ -303,10 +327,10 @@ export default function Shield({
             >
               <coneGeometry args={[0.012, 0.04, 4]} />
               <meshStandardMaterial 
-                color={new THREE.Color(0xFFD700)}
+                color={SHIELD_COLORS.brightGold}
                 metalness={0.9}
                 roughness={0.05}
-                emissive={new THREE.Color(0xB8860B)}
+                emissive={SHIELD_COLORS.darkBronzeEmissive}
                 emissiveIntensity={0.15}
               />
             </mesh>
@@ -316,8 +340,8 @@ export default function Shield({
           <mesh>
             <extrudeGeometry args={[createShieldShape(), { ...shieldExtrudeSettings, depth: 0.006 }]} />
             <meshStandardMaterial
-              color={new THREE.Color(isShieldActive ? 0xFFD700 : isRecharging ? 0xFFFF88 : 0x666666)}
-              emissive={new THREE.Color(isShieldActive ? 0xFFD700 : isRecharging ? 0xFFFF00 : 0x333333)}
+              color={isShieldActive ? SHIELD_COLORS.activeGold : isRecharging ? SHIELD_COLORS.rechargingYellow : SHIELD_COLORS.brokenGray}
+              emissive={isShieldActive ? SHIELD_COLORS.activeGold : isRecharging ? SHIELD_COLORS.rechargingBright : SHIELD_COLORS.brokenDarkGray}
               emissiveIntensity={glowIntensity.current * (isShieldActive ? 0.25 : isRecharging ? 0.15 : 0.05)} // Reduced from 0.5/0.3/0.1
               transparent
               opacity={isShieldActive ? 0.2 : isRecharging ? 0.1 + (rechargeProgress * 0.1) : 0.03} // Reduced opacity
@@ -332,8 +356,8 @@ export default function Shield({
               <mesh>
                 <sphereGeometry args={[0.125, 12, 12]} />
                 <meshStandardMaterial
-                  color={new THREE.Color(0xFFF8DC)}
-                  emissive={new THREE.Color(0xFFD700)}
+                  color={SHIELD_COLORS.cornsilk}
+                  emissive={SHIELD_COLORS.activeGold}
                   emissiveIntensity={glowIntensity.current * 0.2} // Reduced from 0.4
                   transparent
                   opacity={0.06} // Reduced from 0.1
@@ -353,8 +377,8 @@ export default function Shield({
                 >
                   <sphereGeometry args={[0.012, 6, 6]} /> {/* Smaller particles */}
                   <meshStandardMaterial
-                    color={new THREE.Color(0xFFD700)}
-                    emissive={new THREE.Color(0xFFD700)}
+                    color={SHIELD_COLORS.activeGold}
+                    emissive={SHIELD_COLORS.activeGold}
                     emissiveIntensity={glowIntensity.current * 1.0} // Reduced from 2.0
                     transparent
                     opacity={0.5} // Reduced from 0.8
@@ -370,7 +394,7 @@ export default function Shield({
             <mesh position={[0, 0.95, 0.02]}>
               <boxGeometry args={[0.3, 0.02, 0.01]} />
               <meshStandardMaterial
-                color={new THREE.Color(0x444444)}
+                color={SHIELD_COLORS.progressBarGray}
                 transparent
                 opacity={0.7}
               />
@@ -378,8 +402,8 @@ export default function Shield({
               <mesh position={[-0.15 + (rechargeProgress * 0.15), 0, 0.005]}>
                 <boxGeometry args={[rechargeProgress * 0.3, 0.015, 0.005]} />
                 <meshStandardMaterial
-                  color={new THREE.Color(0xFFD700)}
-                  emissive={new THREE.Color(0xFFD700)}
+                  color={SHIELD_COLORS.brightGold}
+                  emissive={SHIELD_COLORS.brightGold}
                   emissiveIntensity={0.5}
                   transparent
                   opacity={0.9}
@@ -390,7 +414,7 @@ export default function Shield({
 
           {/* Point light for divine glow */}
           <pointLight 
-            color={new THREE.Color(isShieldActive ? 0xFFD700 : isRecharging ? 0xFFFF88 : 0xFF4500)}
+            color={isShieldActive ? SHIELD_COLORS.activeGold : isRecharging ? SHIELD_COLORS.rechargingYellow : SHIELD_COLORS.brokenRed}
             intensity={glowIntensity.current * (isShieldActive ? 0.35 : isRecharging ? 0.2 : 0.1)} // Reduced from 0.75/0.45/0.225
             distance={isShieldActive ? 1.5 : 1.0} // Reduced distance
             decay={2}

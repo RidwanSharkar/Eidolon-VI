@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -93,6 +93,14 @@ export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentPro
 
     return { geometry, material };
   }, []);
+
+  // Cleanup particle system on unmount
+  useEffect(() => {
+    return () => {
+      particleSystem.geometry.dispose();
+      particleSystem.material.dispose();
+    };
+  }, [particleSystem]);
 
   useFrame((state) => {
     if (!isEmpowered) return;

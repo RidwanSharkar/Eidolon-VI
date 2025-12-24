@@ -5,6 +5,18 @@ import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const COLORS = {
+  electricBlue: new THREE.Color(0x4444FF),
+  blueEmission: new THREE.Color(0x2222FF),
+  lightBlue: new THREE.Color(0x8888FF),
+  blueEmissionLight: new THREE.Color(0x6666FF),
+  electricYellow: new THREE.Color(0xFFFF44),
+  cyan: new THREE.Color(0x44DDFF),
+  pointLight: new THREE.Color(0x4488FF),
+  white: new THREE.Color(0xFFFFFF),
+} as const;
+
 interface ConcussiveStunEffectProps {
   position: Vector3;
   duration?: number;
@@ -63,8 +75,8 @@ export default function ConcussiveStunEffect({
       <mesh>
         <sphereGeometry args={[0.25, 8, 8]} />
         <meshStandardMaterial
-          color={new THREE.Color(0x4444FF)}        // Electric blue
-          emissive={new THREE.Color(0x2222FF)}     // Blue emission
+          color={COLORS.electricBlue}
+          emissive={COLORS.blueEmission}
           emissiveIntensity={intensity * 3}
           transparent
           opacity={fadeProgress * 0.9}
@@ -75,8 +87,8 @@ export default function ConcussiveStunEffect({
       <mesh>
         <sphereGeometry args={[0.175, 8, 8]} />
         <meshStandardMaterial
-          color={new THREE.Color(0x8888FF)}
-          emissive={new THREE.Color(0x6666FF)}
+          color={COLORS.lightBlue}
+          emissive={COLORS.blueEmissionLight}
           emissiveIntensity={intensity * 5}
           transparent
           opacity={fadeProgress * 0.7}
@@ -89,8 +101,8 @@ export default function ConcussiveStunEffect({
           <mesh position={[0.6, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.02, 0.02, 1.2, 4]} />
             <meshStandardMaterial
-              color={new THREE.Color(0xFFFF44)}      // Electric yellow
-              emissive={new THREE.Color(0xFFFF44)}
+              color={COLORS.electricYellow}
+              emissive={COLORS.electricYellow}
               emissiveIntensity={intensity * 4}
               transparent
               opacity={fadeProgress * 0.8}
@@ -110,8 +122,8 @@ export default function ConcussiveStunEffect({
               rotation={[0, 0, 0]}>
           <cylinderGeometry args={[0.015, 0.015, 2, 4]} />
           <meshStandardMaterial
-            color={new THREE.Color(0x44DDFF)}       // Cyan
-            emissive={new THREE.Color(0x44DDFF)}
+            color={COLORS.cyan}
+            emissive={COLORS.cyan}
             emissiveIntensity={intensity * 3}
             transparent
             opacity={fadeProgress * 0.6}
@@ -123,8 +135,8 @@ export default function ConcussiveStunEffect({
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.8, 0.05, 8, 16]} />
         <meshStandardMaterial
-          color={new THREE.Color(0x4444FF)}
-          emissive={new THREE.Color(0x4444FF)}
+          color={COLORS.electricBlue}
+          emissive={COLORS.electricBlue}
           emissiveIntensity={intensity * 5}
           transparent
           opacity={fadeProgress * 0.5}
@@ -133,7 +145,7 @@ export default function ConcussiveStunEffect({
 
       {/* Point light for illumination */}
       <pointLight 
-        color={new THREE.Color(0x4488FF)}
+        color={COLORS.pointLight}
         intensity={intensity * 3}
         distance={3}
         decay={2}
@@ -149,8 +161,8 @@ export default function ConcussiveStunEffect({
               ]}>
           <sphereGeometry args={[0.03, 4, 4]} />
           <meshStandardMaterial
-            color={new THREE.Color(0xFFFFFF)}       // White sparks
-            emissive={new THREE.Color(0xFFFFFF)}
+            color={COLORS.white}
+            emissive={COLORS.white}
             emissiveIntensity={intensity * 6}
             transparent
             opacity={fadeProgress * Math.random() * 0.8}

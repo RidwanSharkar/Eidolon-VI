@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import { TITAN_HEALTHBAR_GEOMETRIES, TITAN_HEALTHBAR_MATERIALS } from '@/Versus/HealthBarResources';
 import FallenTitanModel from './FallenTitanModel';
 import BoneVortex2 from '@/color/SpawnAnimation';
 import BoneVortex from '@/color/DeathAnimation';
@@ -430,14 +431,18 @@ export default function FallenTitanUnit({
         >
           {currentHealth.current > 0 && (
             <>
-              <mesh position={[0, 0, 0]}>
-                <planeGeometry args={[4.0, 0.4]} />
-                <meshBasicMaterial color="#333333" opacity={0.8} transparent />
-              </mesh>
-              <mesh position={[-2.0 + (currentHealth.current / maxHealth) * 2.0, 0, 0.001]}>
-                <planeGeometry args={[(currentHealth.current / maxHealth) * 4.0, 0.36]} />
-                <meshBasicMaterial color="#cc2222" opacity={0.9} transparent />
-              </mesh>
+              {/* MEMORY FIX: Use cached geometries and materials */}
+              <mesh 
+                position={[0, 0, 0]}
+                geometry={TITAN_HEALTHBAR_GEOMETRIES.background}
+                material={TITAN_HEALTHBAR_MATERIALS.background}
+              />
+              <mesh 
+                position={[-2.0 + (currentHealth.current / maxHealth) * 2.0, 0, 0.001]}
+                scale={[(currentHealth.current / maxHealth) * 4.0, 1, 1]}
+                geometry={TITAN_HEALTHBAR_GEOMETRIES.fill}
+                material={TITAN_HEALTHBAR_MATERIALS.fill}
+              />
               <Text
                 position={[0, 0, 0.002]}
                 fontSize={0.3}

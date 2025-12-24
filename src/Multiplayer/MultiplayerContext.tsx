@@ -720,9 +720,16 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({
             scale: data.effect.scale
           };
 
+          // MEMORY FIX: Limit effects per player when adding new ones
+          const MAX_EFFECTS = 15;
+          let newEffects = [...player.activeEffects, synchronizedEffect];
+          if (newEffects.length > MAX_EFFECTS) {
+            newEffects = newEffects.slice(-MAX_EFFECTS); // Keep most recent
+          }
+          
           newPlayers.set(data.playerId, {
             ...player,
-            activeEffects: [...player.activeEffects, synchronizedEffect]
+            activeEffects: newEffects
           });
 
           // Clean up effect after its duration or a default timeout
@@ -1197,7 +1204,8 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({
       });
     });
 
-    // Periodic cleanup for expired effects
+    // MEMORY FIX: More aggressive periodic cleanup for expired effects
+    const MAX_EFFECTS_PER_PLAYER = 15; // Hard limit per player
     const effectCleanupInterval = setInterval(() => {
       const now = Date.now();
       setPlayers(prev => {
@@ -1205,11 +1213,16 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({
         let hasChanges = false;
         
         for (const [playerId, player] of newPlayers) {
-          const cleanedEffects = player.activeEffects.filter(effect => {
+          let cleanedEffects = player.activeEffects.filter(effect => {
             const effectAge = now - effect.startTime;
-            const maxAge = effect.duration || 10000; // Default 10 second max age
+            const maxAge = effect.duration || 5000; // MEMORY FIX: Reduced default max age to 5 seconds
             return effectAge < maxAge;
           });
+          
+          // MEMORY FIX: Enforce hard limit per player
+          if (cleanedEffects.length > MAX_EFFECTS_PER_PLAYER) {
+            cleanedEffects = cleanedEffects.slice(-MAX_EFFECTS_PER_PLAYER);
+          }
           
           if (cleanedEffects.length !== player.activeEffects.length) {
             newPlayers.set(playerId, {
@@ -1220,17 +1233,13 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({
           }
         }
         
-        if (hasChanges) {
-          console.log('🧹 Multiplayer effect cleanup completed');
-        }
-        
         // Update performance monitor with multiplayer metrics
         const totalEffects = Array.from(newPlayers.values()).reduce((sum, player) => sum + player.activeEffects.length, 0);
         performanceMonitor.updateObjectCount('projectiles', totalEffects);
         
         return hasChanges ? newPlayers : prev;
       });
-    }, 5000); // Clean up every 5 seconds
+    }, 2000); // MEMORY FIX: Clean up every 2 seconds instead of 5
 
     setSocket(newSocket);
 

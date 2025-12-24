@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import { useWhirlwindManager } from './useWhirlwindManager';
 import { ReigniteRef } from '../Reignite/Reignite';
 
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const WHIRLWIND_RED = new THREE.Color(0xFF0000);
 
 interface WhirlwindProps {
   parentRef: React.RefObject<Group>;
@@ -363,7 +365,8 @@ export default function Whirlwind({
             id: nextDamageNumberId.current++,
             damage,
             position: enemy.position.clone(),
-            isCritical
+            isCritical,
+            createdAt: Date.now() // MEMORY FIX: Required for cleanup
           }]);
           
           lastHitTime.current[enemy.id] = now;
@@ -389,8 +392,8 @@ export default function Whirlwind({
               <mesh key={i} position={[0, -0.25, 0]} rotation={[Math.PI / 2, 0, 0]}>
                 <torusGeometry args={[radius * 1.75, 0.1, 16, 32]} />
                 <meshStandardMaterial
-                  color={new THREE.Color(0xFF0000)}
-                  emissive={new THREE.Color(0xFF0000)}
+                  color={WHIRLWIND_RED}
+                  emissive={WHIRLWIND_RED}
                   emissiveIntensity={4}
                   transparent
                   opacity={0.6 - i * 0.15}
@@ -408,8 +411,8 @@ export default function Whirlwind({
               >
                 <planeGeometry args={[5.1, 0.25]} />
                 <meshStandardMaterial
-                  color={new THREE.Color(0xFF0000)}
-                  emissive={new THREE.Color(0xFF0000)}
+                  color={WHIRLWIND_RED}
+                  emissive={WHIRLWIND_RED}
                   emissiveIntensity={4}
                   transparent
                   opacity={0.4}

@@ -30,7 +30,7 @@ const DraconicWingJets: React.FC<WingJetProps> = ({
   );
 
   // Wing bone positions (matching BoneWings.tsx)
-  const wingBonePositions = [
+  const wingBonePositions = React.useMemo(() => [
     // Main central arm bone
     { 
       pos: new Vector3(isLeftWing ? -0.3 : 0.3, 0.275, 0), 
@@ -76,7 +76,7 @@ const DraconicWingJets: React.FC<WingJetProps> = ({
       rot: new Euler(0.2, 0, isLeftWing ? -Math.PI / -0.45 : Math.PI / -0.45), 
       scale: 0.8 
     },
-  ];
+  ], [isLeftWing]);
 
   useFrame((_, delta) => {
     if (!isActive || !jetGroupRef.current) return;

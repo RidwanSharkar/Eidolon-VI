@@ -122,7 +122,8 @@ export function useLavaLash({
             damage: finalDamage,
             position: enemy.position.clone(),
             isCritical,
-            isLavaLash: true // Add LavaLash flag for damage number styling
+            isLavaLash: true, // Add LavaLash flag for damage number styling
+            createdAt: Date.now() // MEMORY FIX: Required for cleanup
           }]);
         }
       }

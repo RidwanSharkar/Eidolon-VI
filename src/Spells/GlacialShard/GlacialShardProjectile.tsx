@@ -4,6 +4,9 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import FrostTrail from './FrostTrail';
 
+// Pre-allocated color for performance - avoids new THREE.Color() on every render
+const FROST_TRAIL_COLOR = new THREE.Color("#4DDDFF");
+
 interface GlacialShardProjectileProps {
   id: number;
   position: Vector3;
@@ -86,7 +89,7 @@ export default function GlacialShardProjectile({
         <>
           {/* Frost trail effect - completely outside the moving group to avoid coordinate conflicts */}
           <FrostTrail
-            color={new THREE.Color("#4DDDFF")}
+            color={FROST_TRAIL_COLOR}
             size={0.4}
             meshRef={shardRef}
             opacity={0.9}

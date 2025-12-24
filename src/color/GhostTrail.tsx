@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Vector3, Color } from 'three';
 import * as THREE from 'three';
@@ -113,6 +113,8 @@ export default function GhostTrail({ parentRef, weaponType, weaponSubclass, targ
     });
   });
 
+  const trailColor = useMemo(() => new Color(getTrailColor()), [weaponType, weaponSubclass]);
+
   // Only render trails after initialization
   if (!isInitialized) return null;
 
@@ -127,7 +129,7 @@ export default function GhostTrail({ parentRef, weaponType, weaponSubclass, targ
         >
           <sphereGeometry args={[0.43, 8, 8]} />
           <meshBasicMaterial
-            color={new Color(getTrailColor())}
+            color={trailColor}
             transparent
             opacity={0.3}
             depthWrite={false}

@@ -4,6 +4,12 @@ import { useFrame } from '@react-three/fiber';
 import { Enemy } from '@/Versus/enemy';
 import * as THREE from 'three';
 
+// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+const COLORS = {
+  blueViolet: new THREE.Color(0x8A2BE2),
+  mediumPurple: new THREE.Color(0x9370DB),
+} as const;
+
 interface SoulReaperSwordProps {
   targetId: string;
   enemyData: Enemy[];
@@ -247,8 +253,8 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
             <mesh>
               <sphereGeometry args={[0.155, 16, 16]} />
               <meshStandardMaterial
-                color={new THREE.Color(0x8A2BE2)}         
-                emissive={new THREE.Color(0x9370DB)}      
+                color={COLORS.blueViolet}         
+                emissive={COLORS.mediumPurple}      
                 emissiveIntensity={1.5}                    
                 transparent
                 opacity={1}
@@ -259,8 +265,8 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
             <mesh>
               <sphereGeometry args={[0.1, 16, 16]} />
               <meshStandardMaterial
-                color={new THREE.Color(0x8A2BE2)}
-                emissive={new THREE.Color(0x9370DB)}
+                color={COLORS.blueViolet}
+                emissive={COLORS.mediumPurple}
                 emissiveIntensity={2}
                 transparent
                 opacity={0.8}
@@ -270,8 +276,8 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
             <mesh>
               <sphereGeometry args={[0.145, 16, 16]} />
               <meshStandardMaterial
-                color={new THREE.Color(0x8A2BE2)}
-                emissive={new THREE.Color(0x9370DB)}
+                color={COLORS.blueViolet}
+                emissive={COLORS.mediumPurple}
                 emissiveIntensity={1.8}
                 transparent
                 opacity={0.6}
@@ -280,7 +286,7 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
 
             {/* Enhanced point light */}
             <pointLight 
-              color={new THREE.Color(0x8A2BE2)}
+              color={COLORS.blueViolet}
               intensity={1.5}
               distance={6}
               decay={2}
@@ -293,8 +299,8 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
             <mesh>
               <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
               <meshStandardMaterial 
-                color={new THREE.Color(0x8A2BE2)}  
-                emissive={new THREE.Color(0x8A2BE2)}
+                color={COLORS.blueViolet}  
+                emissive={COLORS.blueViolet}
                 emissiveIntensity={1.8}
                 metalness={0.3}
                 roughness={0.1}
@@ -305,8 +311,8 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
             <mesh>
               <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
               <meshStandardMaterial 
-                color={new THREE.Color(0x9370DB)}  
-                emissive={new THREE.Color(0x9370DB)}
+                color={COLORS.mediumPurple}  
+                emissive={COLORS.mediumPurple}
                 emissiveIntensity={3}
                 metalness={0.2}
                 roughness={0.1}

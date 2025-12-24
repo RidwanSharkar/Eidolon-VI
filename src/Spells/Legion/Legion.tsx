@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import LegionMeteorTrail from './LegionMeteorTrail';
@@ -34,89 +34,14 @@ const METEOR_DAMAGE = 650;
 const WARNING_RING_SEGMENTS = 32;
 const FIRE_PARTICLES_COUNT = 12;
 
-// Reusable geometries and materials (green themed)
-const meteorGeometry = new THREE.SphereGeometry(0.75, 16, 16);
-const meteorMaterial = new THREE.MeshBasicMaterial({ color: "#00ff44" });
-const warningRingGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
-const pulsingRingGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.8, DAMAGE_RADIUS - 0.6, WARNING_RING_SEGMENTS);
-const outerGlowGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.25, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
-const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
 
 // Reusable vectors to avoid allocations
 const tempPlayerGroundPos = new THREE.Vector3();
 const tempTargetGroundPos = new THREE.Vector3();
+const tempEnemyGroundPos = new THREE.Vector3();
+const tempDamageNumberOffset = new THREE.Vector3(0, 2, 0);
+const LEGION_GREEN_COLOR = new THREE.Color("#00ff44");
 
-const createLegionImpactEffect = (position: THREE.Vector3, startTime: number, onComplete: () => void) => {
-  const elapsed = (Date.now() - startTime) / 1000;
-  const fade = Math.max(0, 1 - (elapsed / IMPACT_DURATION));
-  
-  if (fade <= 0) {
-    onComplete();
-    return null;
-  }
-
-  return (
-    <group position={position}>
-      {/* Core explosion sphere - green themed */}
-      <mesh>
-        <sphereGeometry args={[0.4 * (2 + elapsed), 32, 32]} />
-        <meshStandardMaterial
-          color="#00ff22"
-          emissive="#00ff44"
-          emissiveIntensity={2 * fade}
-          transparent
-          opacity={1.8 * fade}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-      
-      {/* Inner energy sphere - green themed */}
-      <mesh>
-        <sphereGeometry args={[0.75, 24, 24]} />
-        <meshStandardMaterial
-          color="#00ff88"
-          emissive="#ffffff"
-          emissiveIntensity={2 * fade}
-          transparent
-          opacity={1.9 * fade}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-
-      {/* Multiple expanding rings - green themed */}
-      {[1.0, 1.15, 1.3, 1.45, 1.6].map((size, i) => (
-        <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-          <torusGeometry args={[size * (1.125 + elapsed * 2), 0.225, 4, 32]} />
-          <meshStandardMaterial  
-            color="#00ff22"
-            emissive="#00ff44"
-            emissiveIntensity={0.7 * fade}
-            transparent
-            opacity={0.95 * fade * (1 - i * 0.1)}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </mesh>
-      ))}
-
-      {/* Dynamic lights with fade - green themed */}
-      <pointLight
-        color="#00ff22"
-        intensity={0.8 * fade}
-        distance={8 * (1 + elapsed)}
-        decay={2}
-      />
-      <pointLight
-        color="#00ff88"
-        intensity={0.8 * fade}
-        distance={12}
-        decay={1}
-      />
-    </group>
-  );
-};
 
 export default function Legion({ 
   targetPosition, 
@@ -131,6 +56,101 @@ export default function Legion({
 }: LegionProps) {
   const meteorGroupRef = useRef<THREE.Group>(null);
   const meteorMeshRef = useRef<THREE.Mesh>(null);
+
+  // Create geometries and materials with proper disposal
+  const geometries = useMemo(() => ({
+    meteorGeometry: new THREE.SphereGeometry(0.75, 16, 16),
+    warningRingGeometry: new THREE.RingGeometry(DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
+    pulsingRingGeometry: new THREE.RingGeometry(DAMAGE_RADIUS - 0.8, DAMAGE_RADIUS - 0.6, WARNING_RING_SEGMENTS),
+    outerGlowGeometry: new THREE.RingGeometry(DAMAGE_RADIUS - 0.25, DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
+    particleGeometry: new THREE.SphereGeometry(0.1, 8, 8),
+    impactSphereGeometry: new THREE.SphereGeometry(1, 32, 32)
+  }), []);
+
+  const materials = useMemo(() => ({
+    meteorMaterial: new THREE.MeshBasicMaterial({ color: "#00ff44" })
+  }), []);
+
+  // Impact effect component
+  const createLegionImpactEffect = (position: THREE.Vector3, startTime: number, onComplete: () => void) => {
+    const elapsed = (Date.now() - startTime) / 1000;
+    const fade = Math.max(0, 1 - (elapsed / IMPACT_DURATION));
+
+    if (fade <= 0) {
+      onComplete();
+      return null;
+    }
+
+    return (
+      <group position={position}>
+        {/* Core explosion sphere - green themed */}
+        <mesh scale={0.4 * (2 + elapsed)}>
+          <primitive object={geometries.impactSphereGeometry} />
+          <meshStandardMaterial
+            color="#00ff22"
+            emissive="#00ff44"
+            emissiveIntensity={2 * fade}
+            transparent
+            opacity={1.8 * fade}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+
+        {/* Inner energy sphere - green themed */}
+        <mesh scale={0.75}>
+          <primitive object={geometries.impactSphereGeometry} />
+          <meshStandardMaterial
+            color="#00ff88"
+            emissive="#ffffff"
+            emissiveIntensity={2 * fade}
+            transparent
+            opacity={1.9 * fade}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+
+        {/* Multiple expanding rings - green themed */}
+        {[1.0, 1.15, 1.3, 1.45, 1.6].map((size, i) => (
+          <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
+            <torusGeometry args={[size * (1.125 + elapsed * 2), 0.225, 4, 32]} />
+            <meshStandardMaterial
+              color="#00ff22"
+              emissive="#00ff44"
+              emissiveIntensity={0.7 * fade}
+              transparent
+              opacity={0.95 * fade * (1 - i * 0.1)}
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        ))}
+
+        {/* Dynamic lights with fade - green themed */}
+        <pointLight
+          color="#00ff22"
+          intensity={0.8 * fade}
+          distance={8 * (1 + elapsed)}
+          decay={2}
+        />
+        <pointLight
+          color="#00ff88"
+          intensity={0.8 * fade}
+          distance={12}
+          decay={1}
+        />
+      </group>
+    );
+  };
+
+  // Dispose geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(geo => geo.dispose());
+      Object.values(materials).forEach(mat => mat.dispose());
+    };
+  }, [geometries, materials]);
 
   // useMemo for initial calculations
   const [initialTargetPos, startPos, trajectory] = React.useMemo(() => {
@@ -188,19 +208,22 @@ export default function Legion({
         enemyData.forEach(enemy => {
           if (enemy.health <= 0 || enemy.isDying) return;
           
-          const enemyGroundPos = new THREE.Vector3(enemy.position.x, 0, enemy.position.z);
-          const distance = enemyGroundPos.distanceTo(tempTargetGroundPos);
+          // Reuse temp vector to avoid allocations
+          tempEnemyGroundPos.set(enemy.position.x, 0, enemy.position.z);
+          const distance = tempEnemyGroundPos.distanceTo(tempTargetGroundPos);
           
           if (distance <= DAMAGE_RADIUS) {
             onHit(enemy.id, METEOR_DAMAGE);
             
             // Add damage number with green color (isLegion: true)
+            // Use clone() + add with temp offset to minimize allocations
             setDamageNumbers(prev => [...prev, {
               id: nextDamageNumberId.current++,
               damage: METEOR_DAMAGE,
-              position: enemy.position.clone().add(new THREE.Vector3(0, 2, 0)),
+              position: enemy.position.clone().add(tempDamageNumberOffset),
               isCritical: false,
-              isLegion: true
+              isLegion: true,
+              createdAt: Date.now() // MEMORY FIX: Required for cleanup
             }]);
           }
         });
@@ -221,7 +244,7 @@ export default function Legion({
       <group position={[initialTargetPos.x, 0.1, initialTargetPos.z]}>
         {/* Warning rings using shared geometries - green themed */}
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <primitive object={warningRingGeometry} />
+          <primitive object={geometries.warningRingGeometry} />
           <meshBasicMaterial color="#00ff22" transparent opacity={0.4} side={THREE.DoubleSide} />
         </mesh>
         
@@ -230,7 +253,7 @@ export default function Legion({
           rotation={[-Math.PI / 2, 0, 0]}
           scale={getPulsingScale()}
         >
-          <primitive object={pulsingRingGeometry} />
+          <primitive object={geometries.pulsingRingGeometry} />
           <meshBasicMaterial 
             color="#00ff44"
             transparent 
@@ -243,7 +266,7 @@ export default function Legion({
         <mesh
           rotation={[-Math.PI / 2, Date.now() * 0.0035, 0]}
         >
-          <primitive object={outerGlowGeometry} />
+          <primitive object={geometries.outerGlowGeometry} />
           <meshBasicMaterial 
             color="#00ff33"
             transparent
@@ -262,7 +285,7 @@ export default function Legion({
               Math.cos(Date.now() * 0.001 + i) * (DAMAGE_RADIUS - 0.5)
             ]}
           >
-            <primitive object={particleGeometry} />
+            <primitive object={geometries.particleGeometry} />
             <meshBasicMaterial
               color="#00ff33"
               transparent
@@ -276,12 +299,12 @@ export default function Legion({
       {state.showMeteor && (
         <group ref={meteorGroupRef} position={startPos}>
           <mesh ref={meteorMeshRef}>
-            <primitive object={meteorGeometry} />
-            <primitive object={meteorMaterial} />
+            <primitive object={geometries.meteorGeometry} />
+            <primitive object={materials.meteorMaterial} />
             <pointLight color="#00ff44" intensity={5} distance={8} />
             <LegionMeteorTrail 
               meshRef={meteorMeshRef} 
-              color={new THREE.Color("#00ff44")}
+              color={LEGION_GREEN_COLOR}
               size={0.09}
             />
           </mesh>

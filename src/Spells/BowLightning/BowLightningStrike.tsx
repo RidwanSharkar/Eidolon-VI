@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -109,7 +109,10 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
   // Create geometries and materials
   const geometries = useMemo(() => ({
     bolt: new THREE.SphereGeometry(1, 8, 8),
-    impact: new THREE.SphereGeometry(0.8, 16, 16)
+    impact: new THREE.SphereGeometry(0.8, 16, 16),
+    ring1: new THREE.RingGeometry(0.5, 0.625, 32),
+    ring2: new THREE.RingGeometry(0.75, 0.875, 32),
+    ring3: new THREE.RingGeometry(1.0, 1.125, 32)
   }), []);
   
   const materials = useMemo(() => ({
@@ -130,8 +133,22 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
       emissive: new Color('#B6EAFF'),
       emissiveIntensity: 6,
       transparent: true
+    }),
+    ring: new THREE.MeshBasicMaterial({
+      color: '#80D9FF',
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending
     })
   }), []);
+
+  // Cleanup geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
+    };
+  }, [geometries, materials]);
   
   useFrame(() => {
     const elapsed = (Date.now() - startTimeRef.current) / 1000;
@@ -147,6 +164,7 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
     materials.coreBolt.opacity = fadeOut;
     materials.secondaryBolt.opacity = fadeOut * 0.8;
     materials.impact.opacity = fadeOut * 0.9;
+    materials.ring.opacity = 0.8 * (1 - progress);
   });
   
   return (
@@ -175,21 +193,22 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
           position={[0, 0, 0]}
         />
         
-        {/* Impact rings */}
-        {[0.5, 0.75, 1.0].map((size, i) => (
-          <mesh 
-            key={i} 
-            rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
-          >
-            <ringGeometry args={[size, size + 0.125, 32]} />
-            <meshBasicMaterial
-              color="#80D9FF"
-              transparent
-              opacity={(0.8 - (i * 0.15)) * (1 - (Date.now() - startTimeRef.current) / (duration * 1000))}
-              blending={THREE.AdditiveBlending}
-            />
-          </mesh>
-        ))}
+        {/* Impact rings - using memoized geometries and shared material */}
+        <mesh 
+          rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
+          geometry={geometries.ring1}
+          material={materials.ring}
+        />
+        <mesh 
+          rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
+          geometry={geometries.ring2}
+          material={materials.ring}
+        />
+        <mesh 
+          rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
+          geometry={geometries.ring3}
+          material={materials.ring}
+        />
         
         {/* Enhanced lighting */}
         <pointLight

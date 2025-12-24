@@ -13,6 +13,7 @@ import { FrostExplosion } from '@/Spells/Avalanche/FrostExplosion';
 import { stealthManager } from '../Spells/Stealth/StealthManager';
 import { globalAggroSystem, PlayerInfo, TargetInfo, isSummonedUnit } from './AggroSystem';
 import { EnemyUnitProps } from './EnemyUnitProps';
+import { HEALTHBAR_GEOMETRIES, HEALTHBAR_MATERIALS } from './HealthBarResources';
 
 // Define DamageSource interface locally since it doesn't exist in the damage module
 interface DamageSource {
@@ -72,6 +73,9 @@ export default function EnemyUnit({
   const tempVector1 = useRef(new Vector3());
   const tempVector2 = useRef(new Vector3());
   const tempVector3 = useRef(new Vector3());
+  // MEMORY FIX: Additional reusable vectors for wander and attack logic
+  const tempWanderTarget = useRef(new Vector3());
+  const tempAttackDirection = useRef(new Vector3());
   
   // Track timeouts for cleanup
   const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
@@ -123,14 +127,14 @@ export default function EnemyUnit({
     const angle = Math.random() * Math.PI * 2;
     const distance = Math.random() * WANDER_RADIUS;
     
-    // Calculate new position
-    const newTarget = new Vector3(
+    // MEMORY FIX: Reuse tempWanderTarget instead of creating new Vector3
+    tempWanderTarget.current.set(
       currentPosition.current.x + Math.cos(angle) * distance,
       0,
       currentPosition.current.z + Math.sin(angle) * distance
     );
     
-    return newTarget;
+    return tempWanderTarget.current.clone(); // Clone only when returning
   }, []);
 
   // Sync health changes
@@ -210,16 +214,17 @@ export default function EnemyUnit({
         if (!wanderTarget.current) {
           wanderTarget.current = getNewWanderTarget();
         } else {
-          // Smoothly transition to new target by keeping current direction for a while
-          const currentDir = new Vector3()
+          // MEMORY FIX: Reuse tempVector1 for direction calculation instead of creating new Vector3
+          tempVector1.current
             .subVectors(wanderTarget.current, currentPosition.current)
             .normalize();
           
-          const newTarget = new Vector3()
+          // MEMORY FIX: Reuse tempWanderTarget for new target instead of creating new Vector3
+          tempWanderTarget.current
             .copy(currentPosition.current)
-            .add(currentDir.multiplyScalar(WANDER_RADIUS));
+            .add(tempVector1.current.multiplyScalar(WANDER_RADIUS));
           
-          wanderTarget.current = newTarget;
+          wanderTarget.current = tempWanderTarget.current.clone();
         }
         wanderStartTime.current = now;
       }
@@ -351,8 +356,8 @@ export default function EnemyUnit({
         chargeTargetPosition.current = targetPlayerPosition.clone();
         lastAttackTime.current = currentTime;
         
-        // Calculate attack direction
-        const attackDirection = new Vector3()
+        // MEMORY FIX: Reuse tempAttackDirection instead of creating new Vector3
+        tempAttackDirection.current
           .subVectors(targetPlayerPosition, currentPosition.current)
           .normalize();
         
@@ -360,7 +365,7 @@ export default function EnemyUnit({
         setChargingIndicator({
           id: `charging-${currentTime}`,
           position: currentPosition.current.clone(),
-          direction: attackDirection
+          direction: tempAttackDirection.current.clone()
         });
       }
     }
@@ -458,6 +463,13 @@ export default function EnemyUnit({
       setShowDeathEffect(true);
       // Remove from aggro system when enemy dies
       globalAggroSystem.removeEnemy(id);
+      
+      // MEMORY FIX: Clear all active effects immediately on death to prevent memory accumulation
+      setChargingIndicator(null);
+      setIsCharging(false);
+      setIsAttacking(false);
+      chargeTargetPosition.current = null;
+      
       if (enemyRef.current) {
         enemyRef.current.visible = true;
       }
@@ -485,7 +497,13 @@ export default function EnemyUnit({
       // Use the captured ref value from when effect was created
       currentTimeouts.forEach(timeout => clearTimeout(timeout));
       currentTimeouts.clear();
-      console.log(`🧹 EnemyUnit ${id} cleanup: All timeouts cleared`);
+      
+      // MEMORY FIX: Clear charging indicator on unmount
+      setChargingIndicator(null);
+      setIsCharging(false);
+      chargeTargetPosition.current = null;
+      
+      console.log(`🧹 EnemyUnit ${id} cleanup: All timeouts and effects cleared`);
     };
   }, [id]);
 
@@ -527,14 +545,18 @@ export default function EnemyUnit({
         >
           {currentHealth.current > 0 && (
             <>
-              <mesh position={[0, 0, 0]}>
-                <planeGeometry args={[2.0, 0.25]} />
-                <meshBasicMaterial color="#333333" opacity={0.8} transparent />
-              </mesh>
-              <mesh position={[-1.0 + (currentHealth.current / maxHealth), 0, 0.001]}>
-                <planeGeometry args={[(currentHealth.current / maxHealth) * 2.0, 0.23]} />
-                <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
-              </mesh>
+              {/* MEMORY FIX: Use cached geometries and materials */}
+              <mesh 
+                position={[0, 0, 0]}
+                geometry={HEALTHBAR_GEOMETRIES.background}
+                material={HEALTHBAR_MATERIALS.background}
+              />
+              <mesh 
+                position={[-1.0 + (currentHealth.current / maxHealth), 0, 0.001]}
+                scale={[(currentHealth.current / maxHealth) * 2.0, 1, 1]}
+                geometry={HEALTHBAR_GEOMETRIES.fill}
+                material={HEALTHBAR_MATERIALS.fill}
+              />
               <Text
                 position={[0, 0, 0.002]}
                 fontSize={0.2}

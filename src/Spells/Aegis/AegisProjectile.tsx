@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3, Shape } from 'three';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -152,6 +152,14 @@ export default function AegisProjectile({
       blending: THREE.AdditiveBlending
     })
   }), [opacity]);
+
+  // Cleanup geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
+    };
+  }, [geometries, materials]);
 
   // Apply external rotation if provided (removed spinning animation)
   useFrame(() => {

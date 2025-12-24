@@ -100,7 +100,8 @@ export default function SummonedHandler({
         damage,
         position: impactPosition.clone(),
         isCritical: false,
-        isSummon: true
+        isSummon: true,
+        createdAt: Date.now() // MEMORY FIX: Required for cleanup
       },
       effect: {
         id: effectId,

@@ -102,7 +102,8 @@ export function useSoulReaper({
       damage: constants.DAMAGE,
       position: state.targetPosition!.clone().add(new Vector3(0, 1, 0)),
       isCritical: false,
-      isSoulReaper: true
+      isSoulReaper: true,
+      createdAt: Date.now() // MEMORY FIX: Required for cleanup
     }]);
 
     // Check if enemy was killed and summon skeleton

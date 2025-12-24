@@ -7,6 +7,7 @@ export interface DamageNumber {
   damage: number;
   position: Vector3;
   isCritical: boolean;
+  createdAt?: number; // MEMORY FIX: Track creation time for proper cleanup. ALWAYS SET THIS to Date.now() when creating damage numbers!
   isLightning?: boolean;
   isHealing?: boolean;
   isBlizzard?: boolean;
@@ -43,6 +44,7 @@ export interface DamageNumber {
   isLavaLash?: boolean;
   isDragonBreath?: boolean;
   isLegionEmpoweredScythe?: boolean;
+  isViperSting?: boolean;
 }
 
 export function useDamageNumbers() {

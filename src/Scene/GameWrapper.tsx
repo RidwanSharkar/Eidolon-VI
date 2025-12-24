@@ -219,6 +219,48 @@ function GameContent({
     };
   }, [sceneProps.unitProps.controlsRef]);
 
+  // MEMORY FIX: Comprehensive cleanup on page unload to prevent tab-closing lag
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Dispatch game reset event to trigger cleanup in Scene.tsx
+      window.dispatchEvent(new Event('gameReset'));
+      
+      // Clear Three.js cache
+      THREE.Cache.clear();
+      
+      // Dispose of shared resources
+      if (typeof window !== 'undefined' && (window as typeof window & { disposeEffectPools?: () => void }).disposeEffectPools) {
+        (window as typeof window & { disposeEffectPools?: () => void }).disposeEffectPools?.();
+      }
+      
+      // Force garbage collection hint (helps in some browsers)
+      if (typeof window !== 'undefined' && 'gc' in window) {
+        try {
+          (window as typeof window & { gc?: () => void }).gc?.();
+        } catch {
+          // GC not available
+        }
+      }
+    };
+
+    // Also cleanup on visibility change (tab switch)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab is hidden - reduce memory pressure
+        THREE.Cache.clear();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      handleBeforeUnload(); // Also cleanup on component unmount
+    };
+  }, []);
+
   // Handle eviscerate charges changes
   const handleEviscerateLashesChange = useCallback((charges: Array<{ id: number; available: boolean; cooldownStartTime: number | null }>) => {
     setEviscerateLashes(charges);

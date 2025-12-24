@@ -2,6 +2,27 @@ import { useRef, useState } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import React from 'react';
+import * as THREE from 'three';
+
+// MEMORY FIX: Cached geometries - created once at module load
+const CACHED_GEOMETRIES = {
+  vertebra: new THREE.CylinderGeometry(0.04, 0.055, 0.125, 6),
+  topSpike: new THREE.ConeGeometry(0.02, 0.06, 4),
+  sideSpikeLarge: new THREE.ConeGeometry(0.015, 0.25, 4),
+  sideSpikeMedium: new THREE.ConeGeometry(0.015, 0.2, 4),
+  sideSpikeMedium2: new THREE.ConeGeometry(0.0125, 0.04, 4),
+  sideSpikeSmall: new THREE.ConeGeometry(0.015, 0.04, 4),
+  joint: new THREE.SphereGeometry(0.025, 6, 6)
+};
+
+// MEMORY FIX: Cached material - created once at module load
+const CACHED_MATERIAL = new THREE.MeshStandardMaterial({
+  color: "#ffffff",
+  emissive: "#304040",
+  emissiveIntensity: 0.6,
+  roughness: 0.3,
+  metalness: 0.4
+});
 
 interface BoneTailProps {
   movementDirection?: Vector3;
@@ -81,103 +102,31 @@ const BoneTail: React.FC<BoneTailProps> = ({ movementDirection = new Vector3() }
           0
         ]}
       >
-        {/* Main vertebra */}
-        <mesh rotation={[Math.PI/-4, 0, 0]}>
-          <cylinderGeometry args={[0.04, 0.055, 0.125, 6]} />
-          <meshStandardMaterial 
-            color="#ffffff"
-            emissive="#304040"
-            emissiveIntensity={0.6}
-            roughness={0.3}
-            metalness={0.4}
-          />
-        </mesh>
+        {/* Main vertebra - MEMORY FIX: Use cached geometry and material */}
+        <mesh rotation={[Math.PI/-4, 0, 0]} geometry={CACHED_GEOMETRIES.vertebra} material={CACHED_MATERIAL} />
 
         {/* Vertebra spikes */}
         <group rotation={[Math.PI / 2, 0, Math.PI / 2]}>
           {/* Top spike */}
-          <mesh position={[0, 0.08, 0]}>
-            <coneGeometry args={[0.02, 0.06, 4]} />
-            <meshStandardMaterial 
-              color="#ffffff"
-              emissive="#304040"
-              emissiveIntensity={0.6}
-              roughness={0.3}
-              metalness={0.4}
-            />
-          </mesh>
+          <mesh position={[0, 0.08, 0]} geometry={CACHED_GEOMETRIES.topSpike} material={CACHED_MATERIAL} />
           
           {/* Side spikes */}
-          <mesh position={[0.08, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <coneGeometry args={[0.015, 0.25,  4]} />
-            <meshStandardMaterial 
-              color="#ffffff"
-              emissive="#304040"
-              emissiveIntensity={0.6}
-              roughness={0.3}
-              metalness={0.4}
-            />
-          </mesh>
-          <mesh position={[-0.085, 0, 0]} rotation={[0, 0, Math.PI / -2]}>
-            <coneGeometry args={[0.015, 0.2, 4]} />
-            <meshStandardMaterial 
-              color="#ffffff"
-              emissive="#304040"
-              emissiveIntensity={0.6}
-              roughness={0.3}
-              metalness={0.4}
-            />
-          </mesh>
+          <mesh position={[0.08, 0, 0]} rotation={[0, 0, Math.PI / 2]} geometry={CACHED_GEOMETRIES.sideSpikeLarge} material={CACHED_MATERIAL} />
+          <mesh position={[-0.085, 0, 0]} rotation={[0, 0, Math.PI / -2]} geometry={CACHED_GEOMETRIES.sideSpikeMedium} material={CACHED_MATERIAL} />
         </group>
 
         {/* Vertebra spikes */}
         <group rotation={[Math.PI / 24, 0, -Math.PI / 2]}>
           {/* Top spike */}
-          <mesh position={[0, 0.08, 0]}>
-            <coneGeometry args={[0.02, 0.06, 4]} />
-            <meshStandardMaterial 
-              color="#ffffff"
-              emissive="#304040"
-              emissiveIntensity={0.6}
-              roughness={0.3}
-              metalness={0.4}
-            />
-          </mesh>
+          <mesh position={[0, 0.08, 0]} geometry={CACHED_GEOMETRIES.topSpike} material={CACHED_MATERIAL} />
           
           {/* Side spikes */}
-          <mesh position={[0.05, 0, 0]} rotation={[0, 0, Math.PI*2]}>
-            <coneGeometry args={[0.0125, 0.04, 4]} />
-            <meshStandardMaterial 
-              color="#ffffff"
-              emissive="#304040"
-              emissiveIntensity={0.6}
-              roughness={0.3}
-              metalness={0.4}
-            />
-          </mesh>
-          <mesh position={[-0.085, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <coneGeometry args={[0.015, 0.04, 4]} />
-            <meshStandardMaterial 
-              color="#ffffff"
-              emissive="#304040"
-              emissiveIntensity={0.6}
-              roughness={0.3}
-              metalness={0.4}
-            />
-          </mesh>
+          <mesh position={[0.05, 0, 0]} rotation={[0, 0, Math.PI*2]} geometry={CACHED_GEOMETRIES.sideSpikeMedium2} material={CACHED_MATERIAL} />
+          <mesh position={[-0.085, 0, 0]} rotation={[0, 0, Math.PI / 2]} geometry={CACHED_GEOMETRIES.sideSpikeSmall} material={CACHED_MATERIAL} />
         </group>
 
         {/* Connecting joint */}
-        <mesh position={[0, 0.025, +0.06]} rotation={[Math.PI / 2, 0, 0]}>
-          <sphereGeometry args={[0.025, 6, 6]} />
-          <meshStandardMaterial 
-            color="#ffffff"
-            emissive="#304040"
-            emissiveIntensity={0.6}
-            roughness={0.3}
-            metalness={0.4}
-          />
-        </mesh>
+        <mesh position={[0, 0.025, +0.06]} rotation={[Math.PI / 2, 0, 0]} geometry={CACHED_GEOMETRIES.joint} material={CACHED_MATERIAL} />
       </group>
     );
   };
@@ -197,4 +146,4 @@ const BoneTail: React.FC<BoneTailProps> = ({ movementDirection = new Vector3() }
   );
 };
 
-export default BoneTail; 
+export default BoneTail;

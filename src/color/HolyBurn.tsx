@@ -75,8 +75,8 @@ export default function HolyBurn({
       <mesh position={[0, 1.5, 0]}>
         <sphereGeometry args={[0.3, 16, 16]} />
         <meshStandardMaterial
-          color={new THREE.Color(0xFFD700)}
-          emissive={new THREE.Color(0xFFA500)}
+          color="#FFD700"
+          emissive="#FFA500"
           emissiveIntensity={2}
           transparent
           opacity={0.8}
@@ -88,8 +88,8 @@ export default function HolyBurn({
       <mesh position={[0, 1.5, 0]}>
         <sphereGeometry args={[0.15, 12, 12]} />
         <meshStandardMaterial
-          color={new THREE.Color(0xFFFF00)}
-          emissive={new THREE.Color(0xFFFF00)}
+          color="#FFFF00"
+          emissive="#FFFF00"
           emissiveIntensity={4}
           transparent
           opacity={0.9}
@@ -109,8 +109,8 @@ export default function HolyBurn({
         >
           <sphereGeometry args={[0.05, 8, 8]} />
           <meshStandardMaterial
-            color={new THREE.Color(0xFFF8DC)}
-            emissive={new THREE.Color(0xFFD700)}
+            color="#FFF8DC"
+            emissive="#FFD700"
             emissiveIntensity={3}
             transparent
             opacity={0.7}
@@ -123,8 +123,8 @@ export default function HolyBurn({
       <mesh position={[0, 1.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.5, 0.1, 16, 32]} />
         <meshStandardMaterial
-          color={new THREE.Color(0xFFD700)}
-          emissive={new THREE.Color(0xFFA500)}
+          color="#FFD700"
+          emissive="#FFA500"
           emissiveIntensity={1.5}
           transparent
           opacity={0.6}
@@ -134,7 +134,7 @@ export default function HolyBurn({
       
       {/* Outer holy light */}
       <pointLight 
-        color={new THREE.Color(0xFFD700)}
+        color="#FFD700"
         intensity={2}
         distance={3}
         decay={2}

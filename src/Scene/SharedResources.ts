@@ -16,6 +16,7 @@ export const sharedGeometries = {
   // Add any other shared geometries
 };
 
+
 // Shared materials across all scenes
 export const sharedMaterials = {
   skeleton: null as THREE.Material | null,
@@ -50,7 +51,7 @@ export function initializeSharedResources() {
 export function disposeSharedResources() {
   // Dispose effect pools first
   disposeEffectPools();
-  
+
   Object.values(sharedGeometries).forEach(geo => geo?.dispose());
   Object.values(sharedMaterials).forEach(mat => mat?.dispose());
 }

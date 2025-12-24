@@ -245,7 +245,7 @@ export const SUBCLASS_ABILITIES: SubclassInfo = {
     q: { type: 'q', key: 'q', cooldown: 0.8, currentCooldown: 0, icon: 'icons/ChaosScytheQ.png', maxCooldown: 1, name: 'Scythe', isUnlocked: true, unlockLevel: 1 },
     e: { type: 'e', key: 'e', cooldown: 0.6, currentCooldown: 0, icon: 'icons/ChaosScytheE.png', maxCooldown: 0.6675, name: 'Entropic Bolt', isUnlocked: true, unlockLevel: 1 },
     r: { type: 'r', key: 'r', cooldown: 0, currentCooldown: 0, icon: 'icons/ChaosScytheR.png', maxCooldown: 0, name: 'Dragon Claw', isUnlocked: false, unlockLevel: 3 },
-    passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: 'icons/ChaosScythePassive.png', maxCooldown: 0, name: 'Cross Entropy', isUnlocked: false, unlockLevel: 2 },
+    passive: { type: 'passive', key: '1', cooldown: 0.725, currentCooldown: 0, icon: 'icons/ChaosScythePassive.png', maxCooldown: 0, name: 'Crossentropy', isUnlocked: false, unlockLevel: 2 },
     active: { type: 'active', key: '2', cooldown: 3.0, currentCooldown: 0, icon: 'icons/ChaosScythe2.png', maxCooldown: 3.0, name: 'Dragon Breath', isUnlocked: false, unlockLevel: 4 },
     special: { type: 'special', key: '3', cooldown: 12.0, currentCooldown: 0, icon: 'icons/ChaosScythePassive.png', maxCooldown: 12.0, name: 'Unused', isUnlocked: false, unlockLevel: 99 },
     vault: { type: 'vault', key: 's', cooldown: 0, currentCooldown: 0, icon: 'icons/r5.svg', maxCooldown: 0, name: 'Vault', isUnlocked: true, unlockLevel: 1 },

@@ -5,6 +5,9 @@ import * as THREE from 'three';
 import PyroclastExplosion from './PyroclastExplosion';
 import PyroclastTrail from './PyroclastTrail';
 
+// Pre-allocated color for performance - avoids new THREE.Color() on every render
+const PYROCLAST_TRAIL_COLOR = new THREE.Color("#FF2200");
+
 interface PyroclastMissileProps {
   id: number;
   position: Vector3;
@@ -114,7 +117,7 @@ export default function PyroclastMissile({
         <>
           {/* Pyroclast trail effect - completely outside the moving group to avoid coordinate conflicts */}
           <PyroclastTrail
-            color={new THREE.Color("#FF2200")} // Deep fire red color
+            color={PYROCLAST_TRAIL_COLOR} // Deep fire red color
             size={0.225}
             meshRef={missileRef}
             opacity={opacity * 0.9} // Apply dynamic opacity to trail

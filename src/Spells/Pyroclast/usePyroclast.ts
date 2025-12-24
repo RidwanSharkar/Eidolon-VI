@@ -292,9 +292,10 @@ export function usePyroclast({
           damage,
           position: enemyPosition,
           isCritical,
-          isPyroclast: true
+          isPyroclast: true,
+          createdAt: Date.now() // MEMORY FIX: Required for cleanup
         }]);
-        
+
         anyHits = true;
         collisionOccurred = true;
         
@@ -347,9 +348,10 @@ export function usePyroclast({
               damage,
               position: enemyPosition,
               isCritical,
-              isPyroclast: true
+              isPyroclast: true,
+              createdAt: Date.now() // MEMORY FIX: Required for cleanup
             }]);
-            
+
             anyHits = true;
             collisionOccurred = true;
             

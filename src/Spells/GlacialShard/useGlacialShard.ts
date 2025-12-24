@@ -360,7 +360,8 @@ export function useGlacialShard({
           damage,
           position: enemyPosition,
           isCritical,
-          isGlacialShard: true
+          isGlacialShard: true,
+          createdAt: Date.now() // MEMORY FIX: Required for cleanup
         }]);
         
         collisionOccurred = true;

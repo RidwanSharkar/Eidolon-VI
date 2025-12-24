@@ -3,6 +3,19 @@ import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+// MEMORY FIX: Import shared geometries to avoid creating new geometry objects on every render
+import { 
+  SPHERE_GEOMETRIES, 
+  CYLINDER_GEOMETRIES, 
+  TORUS_GEOMETRIES, 
+  PLANE_GEOMETRIES, 
+  CONE_GEOMETRIES,
+  RING_GEOMETRIES,
+  BOX_GEOMETRIES,
+  MULTIPLAYER_EFFECT_GEOMETRIES,
+  MODEL_GEOMETRIES
+} from '@/Scene/SharedGeometries';
+
 // Import weapon components
 import Scythe from '@/Weapons/Scythe';
 import Sword from '@/Weapons/Sword';
@@ -225,8 +238,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
             return (
               <group key={effect.id} position={effect.collisionPosition}>
                 {/* Core explosion sphere */}
-                <mesh>
-                  <sphereGeometry args={[0.3 * (1 + collisionElapsed * 2), 32, 32]} />
+                <mesh scale={0.3 * (1 + collisionElapsed * 2)} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.explosionSphere}>
                   <meshStandardMaterial
                     color="#00ff44"
                     emissive="#33ff66"
@@ -239,8 +251,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 </mesh>
                 
                 {/* Inner energy sphere */}
-                <mesh>
-                  <sphereGeometry args={[0.2 * (1 + collisionElapsed * 3), 24, 24]} />
+                <mesh scale={0.2 * (1 + collisionElapsed * 3)} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.explosionInner}>
                   <meshStandardMaterial
                     color="#66ff88"
                     emissive="#ffffff"
@@ -254,8 +265,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
 
                 {/* Multiple expanding rings */}
                 {[0.4, 0.6, 0.8].map((size, i) => (
-                  <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-                    <torusGeometry args={[size * (1 + collisionElapsed * 3), 0.045, 16, 32]} />
+                  <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]} scale={size * (1 + collisionElapsed * 3)} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.explosionRing}>
                     <meshStandardMaterial
                       color="#00ff44"
                       emissive="#33ff66"
@@ -280,8 +290,9 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                         Math.cos(angle) * radius,
                         0
                       ]}
+                      geometry={MULTIPLAYER_EFFECT_GEOMETRIES.explosionSpark}
+                      scale={0.05}
                     >
-                      <sphereGeometry args={[0.05, 8, 8]} />
                       <meshStandardMaterial
                         color="#66ff88"
                         emissive="#ffffff"
@@ -325,8 +336,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
 
           return (
             <group key={effect.id}>
-              <mesh position={currentFireballPosition}>
-                <sphereGeometry args={[0.28, 32, 32]} />
+              <mesh position={currentFireballPosition} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.fireballCore}>
                 <meshStandardMaterial
                   color="#00ff44"
                   emissive="#33ff66"
@@ -347,8 +357,9 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     <mesh
                       key={`trail-${i}`}
                       position={trailPosition}
+                      geometry={MULTIPLAYER_EFFECT_GEOMETRIES.fireballTrail}
+                      scale={1 - i * 0.1}
                     >
-                      <sphereGeometry args={[0.28 * (1 - i * 0.1), 16, 16]} />
                       <meshStandardMaterial
                         color="#00ff44"
                         emissive="#33ff66"
@@ -378,8 +389,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position}>
               {/* Core explosion sphere */}
-              <mesh>
-                <sphereGeometry args={[0.3 * (1 + explosionElapsed * 2), 32, 32]} />
+              <mesh scale={0.3 * (1 + explosionElapsed * 2)} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.explosionSphere}>
                 <meshStandardMaterial
                   color="#00ff44"
                   emissive="#33ff66"
@@ -392,8 +402,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
               </mesh>
               
               {/* Inner energy sphere */}
-              <mesh>
-                <sphereGeometry args={[0.2 * (1 + explosionElapsed * 3), 24, 24]} />
+              <mesh scale={0.2 * (1 + explosionElapsed * 3)} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.explosionInner}>
                 <meshStandardMaterial
                   color="#66ff88"
                   emissive="#ffffff"
@@ -407,8 +416,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
 
               {/* Multiple expanding rings */}
               {[0.4, 0.6, 0.8].map((size, i) => (
-                <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-                  <torusGeometry args={[size * (1 + explosionElapsed * 3), 0.045, 16, 32]} />
+                <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]} scale={size * (1 + explosionElapsed * 3)} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.explosionRing}>
                   <meshStandardMaterial
                     color="#00ff44"
                     emissive="#33ff66"
@@ -433,8 +441,9 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       Math.cos(angle) * radius,
                       0
                     ]}
+                    geometry={MULTIPLAYER_EFFECT_GEOMETRIES.explosionSpark}
+                    scale={0.05}
                   >
-                    <sphereGeometry args={[0.05, 8, 8]} />
                     <meshStandardMaterial
                       color="#66ff88"
                       emissive="#ffffff"
@@ -493,8 +502,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 ]}
               >
                 {/* Base arrow */}
-                <mesh rotation={[Math.PI/2, 0, 0]}>
-                  <cylinderGeometry args={[0.03, 0.125, 2.1, 6]} />
+                <mesh rotation={[Math.PI/2, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.arrowBody}>
                   <meshStandardMaterial
                     color="#00ffff"
                     emissive="#00ffff"
@@ -510,8 +518,9 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     key={`ring-${i}`}
                     position={[0, 0, -i * 0.45 + 0.5]}
                     rotation={[Math.PI, 0, timeElapsed * 0.003 + i * Math.PI / 3]}
+                    geometry={MULTIPLAYER_EFFECT_GEOMETRIES.arrowRing}
+                    scale={1 + i * 0.32}
                   >
-                    <torusGeometry args={[0.125 + i * 0.04, 0.05, 6, 12]} />
                     <meshStandardMaterial
                       color="#00ffff"
                       emissive="#00ffff"
@@ -557,13 +566,9 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
               <mesh 
                 rotation={[-Math.PI / 2, 0, 0]}
                 position={[0, 0.15, (chargeProgress * 15 - 4.5)]}
+                geometry={MULTIPLAYER_EFFECT_GEOMETRIES.chargeArea}
+                scale={[0.4, chargeProgress * 30 - 4, 1]}
               >
-                <planeGeometry 
-                  args={[
-                    0.4,
-                    chargeProgress * 30 - 4,
-                  ]} 
-                />
                 <meshStandardMaterial
                   color="#C18C4B"
                   emissive="#C18C4B"
@@ -591,8 +596,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={groupRef.current?.position || [0, 0, 0]}>
               {/* Whirlwind visual effect - simplified version */}
-              <mesh>
-                <torusGeometry args={[3, 0.3, 8, 32]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.whirlwindRing}>
                 <meshStandardMaterial
                   color="#FF544E"
                   emissive="#FF544E"
@@ -616,8 +620,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Oathstrike arc effect */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[3, 0.8, 8, 32, Math.PI]} />
+              <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.slashArc}>
                 <meshStandardMaterial
                   color="#FF9748"
                   emissive="#FF6F00"
@@ -639,8 +642,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Aegis projectile - simplified shield shape */}
-              <mesh>
-                <cylinderGeometry args={[0.2, 0.15, 0.6, 6]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.aegisProjectile}>
                 <meshStandardMaterial
                   color="#FFD700"
                   emissive="#FFD700"
@@ -662,8 +664,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Lightning strike effect */}
-              <mesh>
-                <cylinderGeometry args={[0.1, 0.1, 20, 8]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.lightningBolt} scale={[1, 20, 1]}>
                 <meshStandardMaterial
                   color="#FFD700"
                   emissive="#FFD700"
@@ -685,8 +686,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={groupRef.current?.position || [0, 0, 0]}>
               {/* Crusader aura rings */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                <ringGeometry args={[0.85, 1.0, 32]} />
+              <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.auraRing}>
                 <meshStandardMaterial
                   color="#ffaa00"
                   emissive="#ff8800"
@@ -702,8 +702,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={groupRef.current?.position || [0, 0, 0]}>
               {/* Divine shield bubble */}
-              <mesh scale={1.2}>
-                <sphereGeometry args={[0.8, 16, 16]} />
+              <mesh scale={1.2} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.shieldBubble}>
                 <meshStandardMaterial
                   color="#FFD700"
                   emissive="#FFD700"
@@ -733,8 +732,9 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       Math.atan2(target.x - effect.position.x, target.z - effect.position.z),
                       0
                     ]}
+                    geometry={MULTIPLAYER_EFFECT_GEOMETRIES.lightningBolt}
+                    scale={[0.5, effect.position.distanceTo(target), 0.5]}
                   >
-                    <cylinderGeometry args={[0.05, 0.05, effect.position.distanceTo(target), 6]} />
                     <meshStandardMaterial
                       color="#FFD700"
                       emissive="#FFD700"
@@ -745,8 +745,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   </mesh>
                   
                   {/* Lightning impact at target */}
-                  <mesh position={[target.x, target.y + 1, target.z]}>
-                    <sphereGeometry args={[0.3, 8, 8]} />
+                  <mesh position={[target.x, target.y + 1, target.z]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.lightningImpact}>
                     <meshStandardMaterial
                       color="#FFFFFF"
                       emissive="#FFD700"
@@ -760,8 +759,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
               ))}
               
               {/* Source lightning effect */}
-              <mesh>
-                <sphereGeometry args={[0.4, 12, 12]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.lightningSource}>
                 <meshStandardMaterial
                   color="#FFFFFF"
                   emissive="#FFD700"
@@ -788,8 +786,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={groupRef.current?.position || [0, 0, 0]}>
               {/* Sword combo visual indicator */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
-                <ringGeometry args={[1.2, 1.5, 32]} />
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.comboRing}>
                 <meshStandardMaterial
                   color={comboStep === 3 ? "#FF4444" : "#FFD700"}
                   emissive={comboStep === 3 ? "#FF2222" : "#FFB300"}
@@ -809,8 +806,8 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     0.2,
                     Math.sin((i / 3) * Math.PI * 2) * 0.8
                   ]}
+                  geometry={MULTIPLAYER_EFFECT_GEOMETRIES.comboOrb}
                 >
-                  <sphereGeometry args={[0.1, 8, 8]} />
                   <meshStandardMaterial
                     color={comboStep === 3 ? "#FF6666" : "#FFD700"}
                     emissive={comboStep === 3 ? "#FF4444" : "#FFB300"}
@@ -835,8 +832,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Dragon breath cone */}
-              <mesh rotation={[0, Math.atan2(effect.direction.x, effect.direction.z), 0]}>
-                <coneGeometry args={[4, 8, 8]} />
+              <mesh rotation={[0, Math.atan2(effect.direction.x, effect.direction.z), 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.breathCone}>
                 <meshStandardMaterial
                   color="#00ff44"
                   emissive="#00ff44"
@@ -858,8 +854,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Dragon claw slash effect */}
-              <mesh>
-                <planeGeometry args={[6, 1]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.clawSlash}>
                 <meshStandardMaterial
                   color="#ff4444"
                   emissive="#ff4444"
@@ -876,8 +871,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Totem summoning effect */}
-              <mesh>
-                <cylinderGeometry args={[0.5, 0.5, 4, 8]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.totemPillar}>
                 <meshStandardMaterial
                   color="#8B4513"
                   emissive="#ff6600"
@@ -899,8 +893,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* CrossEntropy bolt effect */}
-              <mesh>
-                <sphereGeometry args={[0.28, 8, 8]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.crossEntropyBolt}>
                 <meshStandardMaterial
                   color="#00ff44"
                   emissive="#00ff44"
@@ -922,8 +915,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={groupRef.current?.position || [0, 0, 0]}>
               {/* Dual wield indicator - second scythe glow */}
-              <mesh position={[0.5, 0, 0]}>
-                <cylinderGeometry args={[0.1, 0.1, 2, 8]} />
+              <mesh position={[0.5, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.dualWieldGlow}>
                 <meshStandardMaterial
                   color="#8B008B"
                   emissive="#8B008B"
@@ -939,8 +931,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Soul Reaper main effect */}
-              <mesh>
-                <sphereGeometry args={[2, 16, 16]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.soulOrb}>
                 <meshStandardMaterial
                   color="#8B008B"
                   emissive="#8B008B"
@@ -965,8 +956,8 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       Math.cos(angle + timeElapsed * 0.002) * radius
                     ]}
                     rotation={[timeElapsed * 0.01, timeElapsed * 0.01, 0]}
+                    geometry={MULTIPLAYER_EFFECT_GEOMETRIES.soulParticle}
                   >
-                    <sphereGeometry args={[0.15, 8, 8]} />
                     <meshStandardMaterial
                       color="#AA44AA"
                       emissive="#AA44AA"
@@ -994,8 +985,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={[effect.position.x, effect.position.y + 0.1, effect.position.z]}>
               {/* Soul Reaper mark circle */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                <ringGeometry args={[1.2, 1.5, 32]} />
+              <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.soulReaperMarkOuter}>
                 <meshStandardMaterial
                   color="#8B008B"
                   emissive="#8B008B"
@@ -1007,8 +997,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
               </mesh>
               
               {/* Inner mark */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                <ringGeometry args={[0.6, 0.8, 32]} />
+              <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.soulReaperMarkInner}>
                 <meshStandardMaterial
                   color="#AA44AA"
                   emissive="#AA44AA"
@@ -1029,8 +1018,8 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     Math.sin((Math.PI * 2 * i) / 8) * 1.0
                   ]}
                   rotation={[0, (Math.PI * 2 * i) / 8, 0]}
+                  geometry={MULTIPLAYER_EFFECT_GEOMETRIES.soulReaperSymbol}
                 >
-                  <boxGeometry args={[0.1, 0.1, 0.3]} />
                   <meshStandardMaterial
                     color="#8B008B"
                     emissive="#8B008B"
@@ -1057,8 +1046,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={[effect.position.x, swordY, effect.position.z]}>
               {/* Soul Reaper sword */}
-              <mesh rotation={[0, 0, 0]}>
-                <cylinderGeometry args={[0.1, 0.05, 3, 8]} />
+              <mesh rotation={[0, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.soulReaperBlade}>
                 <meshStandardMaterial
                   color="#444444"
                   emissive="#8B008B"
@@ -1069,8 +1057,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
               </mesh>
               
               {/* Sword blade glow */}
-              <mesh rotation={[0, 0, 0]}>
-                <cylinderGeometry args={[0.15, 0.1, 3.2, 8]} />
+              <mesh rotation={[0, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.soulReaperGlow}>
                 <meshStandardMaterial
                   color="#8B008B"
                   emissive="#8B008B"
@@ -1084,8 +1071,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
               
               {/* Sword trail as it falls */}
               {swordProgress < 1 && (
-                <mesh position={[0, 2, 0]} rotation={[0, 0, 0]}>
-                  <cylinderGeometry args={[0.2, 0.05, 4, 8]} />
+                <mesh position={[0, 2, 0]} rotation={[0, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.soulReaperTrail}>
                   <meshStandardMaterial
                     color="#8B008B"
                     emissive="#8B008B"
@@ -1116,8 +1102,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
               {/* Main slash arc - green theme like AbyssalSlashEffect */}
               <group position={[0, 0.1, 2]} rotation={[-Math.PI / 2, 0, 0]} scale={[1.0, 1.0, 0.5]}>
                 {/* Core slash */}
-                <mesh>
-                  <torusGeometry args={[3, 0.8, 8, 32, Math.PI]} />
+                <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.slashArc}>
                   <meshStandardMaterial
                     color="#17CE54"
                     emissive="#00ff44"
@@ -1128,8 +1113,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 </mesh>
 
                 {/* Inner glow */}
-                <mesh>
-                  <torusGeometry args={[3, 0.4, 16, 32, Math.PI]} />
+                <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.slashInner}>
                   <meshStandardMaterial
                     color="#17CE54"
                     emissive="#00ff44"
@@ -1140,8 +1124,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 </mesh>
 
                 {/* Outer glow */}
-                <mesh>
-                  <torusGeometry args={[2, 0.9, 16, 32, Math.PI]} />
+                <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.slashOuter}>
                   <meshStandardMaterial
                     color="#17CE54"
                     emissive="#00ff44"
@@ -1160,8 +1143,8 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       Math.sin((i * Math.PI) / 6) * 1.5,
                       0
                     ]}
+                    geometry={MULTIPLAYER_EFFECT_GEOMETRIES.soulParticle}
                   >
-                    <sphereGeometry args={[0.15, 8, 8]} />
                     <meshStandardMaterial
                       color="#17CE54"
                       emissive="#00ff44"
@@ -1188,8 +1171,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
               {/* Rotating inner elements - green theme */}
               <group rotation={[0, timeElapsed * 0.0008, 0]} position={[0, 0.005, 0]}>
                 {[0, Math.PI/2, Math.PI, Math.PI*1.5].map((rotation, i) => (
-                  <mesh key={i} rotation={[-Math.PI / 2, 0, rotation]}>
-                    <ringGeometry args={[0.85, 1.0, 3]} />
+                  <mesh key={i} rotation={[-Math.PI / 2, 0, rotation]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.frenzyRing}>
                     <meshStandardMaterial
                       color="#0BDA51"
                       emissive="#0BDA51"
@@ -1203,8 +1185,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
               </group>
 
               {/* Pulsing outer glow */}
-              <mesh position={[0, 0.05, 0]}>
-                <cylinderGeometry args={[0.5, 0.8, -0.1, 32]} />
+              <mesh position={[0, 0.05, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.frenzyGlow}>
                 <meshStandardMaterial
                   color="#0BDA51"
                   emissive="#0BDA51"
@@ -1222,8 +1203,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Firebeam effect */}
-              <mesh>
-                <cylinderGeometry args={[0.1, 0.3, 8, 8]} />
+              <mesh geometry={CYLINDER_GEOMETRIES.beam}>
                 <meshStandardMaterial
                   color="#FF4444"
                   emissive="#FF2222"
@@ -1245,8 +1225,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Glacial Shard projectile */}
-              <mesh>
-                <coneGeometry args={[0.3, 1.5, 6]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.glacialShard}>
                 <meshStandardMaterial
                   color="#88DDFF"
                   emissive="#44AADD"
@@ -1268,8 +1247,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Frost trail effect */}
-              <mesh>
-                <sphereGeometry args={[0.8, 8, 8]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.glacialTrail}>
                 <meshStandardMaterial
                   color="#AAEEFF"
                   emissive="#66CCFF"
@@ -1285,8 +1263,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={groupRef.current?.position || [0, 0, 0]}>
               {/* Glacial Shield effect */}
-              <mesh>
-                <sphereGeometry args={[2.5, 12, 12]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.glacialShield}>
                 <meshStandardMaterial
                   color="#CCFFFF"
                   emissive="#88DDFF"
@@ -1303,8 +1280,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Deep Freeze effect */}
-              <mesh>
-                <icosahedronGeometry args={[1.5, 1]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.icosahedron}>
                 <meshStandardMaterial
                   color="#FFFFFF"
                   emissive="#AAEEFF"
@@ -1326,8 +1302,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Stealth Strike effect */}
-              <mesh>
-                <sphereGeometry args={[1, 8, 8]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.stealthStrike}>
                 <meshStandardMaterial
                   color="#8844FF"
                   emissive="#6622DD"
@@ -1343,8 +1318,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={groupRef.current?.position || [0, 0, 0]}>
               {/* Stealth Mist effect */}
-              <mesh>
-                <sphereGeometry args={[3, 16, 16]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.stealthMist}>
                 <meshStandardMaterial
                   color="#4444AA"
                   emissive="#2222AA"
@@ -1360,8 +1334,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={groupRef.current?.position || [0, 0, 0]}>
               {/* Blizzard effect */}
-              <mesh>
-                <cylinderGeometry args={[6, 6, 0.5, 16]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.blizzardArea}>
                 <meshStandardMaterial
                   color="#FFFFFF"
                   emissive="#AAEEFF"
@@ -1398,8 +1371,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 ]}
               >
                 {/* Icicle projectile */}
-                <mesh>
-                  <coneGeometry args={[0.075, 0.3, 6]} />
+                <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.icicle}>
                   <meshStandardMaterial
                     color="#CCFFFF"
                     emissive="#CCFFFF"
@@ -1414,8 +1386,9 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   <mesh
                     key={`trail-${i}`}
                     position={[0, -i * 0.2 - 0.2, 0]}
+                    geometry={MULTIPLAYER_EFFECT_GEOMETRIES.icicleSmall}
+                    scale={1 - i * 0.2}
                   >
-                    <coneGeometry args={[0.05 * (1 - i * 0.2), 0.15, 6]} />
                     <meshStandardMaterial
                       color="#CCFFFF"
                       emissive="#CCFFFF"
@@ -1443,8 +1416,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Pyroclast missile */}
-              <mesh>
-                <sphereGeometry args={[0.5, 8, 8]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.pyroclastCore}>
                 <meshStandardMaterial
                   color="#FF6600"
                   emissive="#FF4400"
@@ -1466,8 +1438,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Pyroclast trail */}
-              <mesh>
-                <sphereGeometry args={[0.3, 6, 6]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.pyroclastTrail}>
                 <meshStandardMaterial
                   color="#FF8844"
                   emissive="#FF6622"
@@ -1483,8 +1454,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Pyroclast explosion */}
-              <mesh>
-                <sphereGeometry args={[3, 12, 12]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.pyroclastExplosion}>
                 <meshStandardMaterial
                   color="#FFAA00"
                   emissive="#FF6600"
@@ -1506,8 +1476,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Reignite effect */}
-              <mesh>
-                <cylinderGeometry args={[0.5, 1, 2, 8]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.reigniteColumn}>
                 <meshStandardMaterial
                   color="#FF2200"
                   emissive="#FF1100"
@@ -1529,8 +1498,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Breach effect */}
-              <mesh>
-                <torusGeometry args={[2, 0.5, 8, 16]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.breachTorus}>
                 <meshStandardMaterial
                   color="#00FFFF"
                   emissive="#00DDDD"
@@ -1567,8 +1535,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 ]}
               >
                 {/* Main fireball core */}
-                <mesh>
-                  <sphereGeometry args={[0.25, 16, 16]} />
+                <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.lavaCore}>
                   <meshStandardMaterial
                     color="#FF6600"
                     emissive="#FF6600"
@@ -1579,8 +1546,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 </mesh>
 
                 {/* Inner fire core */}
-                <mesh>
-                  <sphereGeometry args={[0.2, 12, 12]} />
+                <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.lavaInner}>
                   <meshStandardMaterial
                     color="#FFAA00"
                     emissive="#FFAA00"
@@ -1593,8 +1559,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 </mesh>
 
                 {/* Outer fire aura */}
-                <mesh>
-                  <sphereGeometry args={[0.35, 12, 12]} />
+                <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.lavaOuter}>
                   <meshStandardMaterial
                     color="#FF4500"
                     emissive="#FF4500"
@@ -1611,8 +1576,9 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   <mesh
                     key={`fire-ring-${i}`}
                     rotation={[Math.PI/2, 0, timeElapsed * 0.003 + i * Math.PI]}
+                    geometry={MULTIPLAYER_EFFECT_GEOMETRIES.lavaRing}
+                    scale={1 + i * 0.27}
                   >
-                    <torusGeometry args={[0.375 + i * 0.1, 0.04, 6, 12]} />
                     <meshStandardMaterial
                       color="#FF6600"
                       emissive="#FF6600"
@@ -1639,8 +1605,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Lava trail effect */}
-              <mesh>
-                <sphereGeometry args={[0.205, 12, 12]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.lavaTrail}>
                 <meshStandardMaterial
                   color="#FF4500"
                   emissive="#FF4500"
@@ -1714,8 +1679,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 ]}
               >
                 {/* Core beam */}
-                <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-                  <cylinderGeometry args={[isPerfect ? 0.035 : 0.025, isPerfect ? 0.035 : 0.025, 20, 8]} />
+                <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.beamCore} scale={[isPerfect ? 1.4 : 1, 1, isPerfect ? 1.4 : 1]}>
                   <meshStandardMaterial
                     color={powershotColors.core}
                     emissive={powershotColors.emissive}
@@ -1726,8 +1690,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 </mesh>
 
                 {/* Inner glow */}
-                <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]}>
-                  <cylinderGeometry args={[isPerfect ? 0.08 : 0.0625, isPerfect ? 0.08 : 0.0625, 20, 8]} />
+                <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 10]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.beamGlow} scale={[isPerfect ? 1.28 : 1, 1, isPerfect ? 1.28 : 1]}>
                   <meshStandardMaterial
                     color={powershotColors.core}
                     emissive={powershotColors.emissive}
@@ -1758,8 +1721,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                           Math.cos(angle + timeElapsed * 0.01) * radius,
                           10 + Math.sin(timeElapsed * 0.005 + i) * 2
                         ]}>
-                          <mesh>
-                            <sphereGeometry args={[0.02, 4, 4]} />
+                          <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.beamSpark}>
                             <meshStandardMaterial
                               color="#ffffff"
                               emissive="#ffffff"
@@ -1825,8 +1787,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 ]}
               >
                 {/* Base arrow */}
-                <mesh rotation={[Math.PI/2, 0, 0]}>
-                  <cylinderGeometry args={[0.03, 0.125, 2.1, 6]} />
+                <mesh rotation={[Math.PI/2, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.arrowBody}>
                   <meshStandardMaterial
                     color={quickShotColors.core}
                     emissive={quickShotColors.core}
@@ -1842,8 +1803,9 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     key={`ring-${i}`}
                     position={[0, 0, -i * 0.45 + 0.5]}
                     rotation={[Math.PI, 0, timeElapsed * 0.003 + i * Math.PI / 3]}
+                    geometry={MULTIPLAYER_EFFECT_GEOMETRIES.arrowRing}
+                    scale={1 + i * 0.32}
                   >
-                    <torusGeometry args={[0.125 + i * 0.04, 0.05, 6, 12]} />
                     <meshStandardMaterial
                       color={quickShotColors.core}
                       emissive={quickShotColors.core}
@@ -1884,8 +1846,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                 ]}
               >
                 {/* Barrage arrow - larger and more powerful looking */}
-                <mesh rotation={[Math.PI/2, 0, 0]}>
-                  <cylinderGeometry args={[0.04, 0.15, 2.5, 6]} />
+                <mesh rotation={[Math.PI/2, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.barrageArrow}>
                   <meshStandardMaterial
                     color="#ffaa00"
                     emissive="#ff8800"
@@ -1901,8 +1862,9 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     key={`ring-${i}`}
                     position={[0, 0, -i * 0.5 + 0.75]}
                     rotation={[Math.PI, 0, timeElapsed * 0.004 + i * Math.PI / 4]}
+                    geometry={MULTIPLAYER_EFFECT_GEOMETRIES.barrageRing}
+                    scale={1 + i * 0.33}
                   >
-                    <torusGeometry args={[0.15 + i * 0.05, 0.06, 6, 12]} />
                     <meshStandardMaterial
                       color="#ffaa00"
                       emissive="#ff8800"
@@ -1932,8 +1894,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={[effect.position.x, effect.position.y + 1, effect.position.z]} scale={[eagleEyeScale, eagleEyeScale, eagleEyeScale]}>
               {/* Eagle Eye Symbol - Circular Aura */}
-              <mesh rotation={[Math.PI/2, 0, 0]}>
-                <ringGeometry args={[0.6, 0.8, 32]} />
+              <mesh rotation={[Math.PI/2, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.eagleEyeOuter}>
                 <meshStandardMaterial 
                   color="#ffcc00" 
                   emissive="#ffcc00"
@@ -1946,8 +1907,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
               </mesh>
               
               {/* Inner Eye Symbol */}
-              <mesh rotation={[Math.PI/2, 0, 0]}>
-                <ringGeometry args={[0.2, 0.3, 32]} />
+              <mesh rotation={[Math.PI/2, 0, 0]} geometry={MULTIPLAYER_EFFECT_GEOMETRIES.eagleEyeInner}>
                 <meshStandardMaterial 
                   color="#ffffff" 
                   emissive="#ffffff"
@@ -1972,8 +1932,8 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     Math.sin((Math.PI * 2 * i) / 8) * 0.4
                   ]}
                   rotation={[0, 0, (Math.PI * 2 * i) / 8]}
+                  geometry={MULTIPLAYER_EFFECT_GEOMETRIES.eagleEyeLine}
                 >
-                  <boxGeometry args={[0.05, 0.05, 0.4]} />
                   <meshStandardMaterial 
                     color="#ffcc00" 
                     emissive="#ffcc00"
@@ -1995,8 +1955,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           return (
             <group key={effect.id} position={effect.position.toArray()}>
               {/* Venom cloud effect */}
-              <mesh>
-                <sphereGeometry args={[1.5 * (1 + venomProgress), 16, 16]} />
+              <mesh geometry={MULTIPLAYER_EFFECT_GEOMETRIES.venomCloud} scale={1 + venomProgress}>
                 <meshStandardMaterial
                   color="#00ff40"
                   emissive="#00aa20"
@@ -2020,8 +1979,8 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       Math.cos(angle) * radius * 0.3,
                       Math.cos(angle + Math.PI/3) * radius * 0.3
                     ]}
+                    geometry={MULTIPLAYER_EFFECT_GEOMETRIES.venomParticle}
                   >
-                    <sphereGeometry args={[0.1, 8, 8]} />
                     <meshStandardMaterial
                       color="#00ff60"
                       emissive="#00ff60"
@@ -2064,8 +2023,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
       </group>
 
       {/* Outer glow sphere layer */}
-      <mesh scale={1.085}>
-        <sphereGeometry args={[0.415, 32, 32]} />
+      <mesh scale={1.085} geometry={MODEL_GEOMETRIES.playerGlow}>
         <meshBasicMaterial
           color={playerColor}
           transparent
@@ -2116,16 +2074,14 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
 
       {/* Player name tag */}
       <Billboard position={[0, 2.2, 0]} lockX={false} lockY={false} lockZ={false}>
-        <mesh>
-          <planeGeometry args={[2, 0.3]} />
+        <mesh geometry={MODEL_GEOMETRIES.nameTagBg}>
           <meshBasicMaterial
             color="#000000"
             transparent
             opacity={0.7}
           />
         </mesh>
-        <mesh position={[0, 0, 0.001]}>
-          <planeGeometry args={[1.9, 0.25]} />
+        <mesh position={[0, 0, 0.001]} geometry={MODEL_GEOMETRIES.nameTagFill}>
           <meshBasicMaterial
             color={playerColor}
             transparent
@@ -2136,12 +2092,10 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
 
       {/* Health bar */}
       <Billboard position={[0, 1.8, 0]} lockX={false} lockY={false} lockZ={false}>
-        <mesh>
-          <planeGeometry args={[1, 0.1]} />
+        <mesh geometry={MODEL_GEOMETRIES.healthBarBg}>
           <meshBasicMaterial color="#333333" />
         </mesh>
-        <mesh position={[0.5 + (player.health / player.maxHealth) * 0.5, 0, 0.001]}>
-          <planeGeometry args={[(player.health / player.maxHealth), 0.08]} />
+        <mesh position={[0.5 + (player.health / player.maxHealth) * 0.5, 0, 0.001]} geometry={MODEL_GEOMETRIES.healthBarFill} scale={[player.health / player.maxHealth, 1, 1]}>
           <meshBasicMaterial 
             color={player.health > player.maxHealth * 0.5 ? "#4CAF50" : player.health > player.maxHealth * 0.25 ? "#FFA500" : "#FF4444"}
           />
@@ -2150,8 +2104,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
 
       {/* Connection indicator */}
       {!player.isConnected && (
-        <mesh position={[0.6, 1.6, 0]}>
-          <sphereGeometry args={[0.1, 8, 8]} />
+        <mesh position={[0.6, 1.6, 0]} geometry={MODEL_GEOMETRIES.disconnectIndicator}>
           <meshBasicMaterial 
             color="#FF4444"
             transparent

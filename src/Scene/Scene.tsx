@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useThree } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
 import Terrain from '../Environment/Terrain';
 import Unit from '../Unit/Unit';
@@ -142,6 +143,9 @@ export default function Scene({
   // TERRAIN
   const mountainData = useMemo(() => generateMountains(), []);
   const mushroomData = useMemo(() => generateMushrooms(), []);
+
+  // Renderer info for GPU memory tracking
+  const { gl } = useThree();
 
   // Add group pool with disposal
   const [groupPool] = useState(() => new ObjectPool<Group>(
@@ -1096,7 +1100,6 @@ export default function Scene({
 
     performanceMonitor.updateObjectCount('enemies', enemies.length);
     performanceMonitor.updateObjectCount('statusEffects', statusEffectCount);
-    performanceMonitor.updateObjectCount('activeEffects', deathKnightCount);
 
     // MEMORY FIX: Get memory usage for pressure detection
     const memoryUsage = typeof performance !== 'undefined' && 'memory' in performance
@@ -1118,6 +1121,10 @@ export default function Scene({
       
       // Clear previous enemy states map
       previousEnemyStates.current.clear();
+
+      // Aggressively dispose pooled effects/geometries
+      disposeEffectPools();
+      groupPool.clear();
       
       // Force garbage collection hint (helps in some browsers)
       if (typeof window !== 'undefined' && 'gc' in window) {
@@ -1130,9 +1137,15 @@ export default function Scene({
     }
 
     // MEMORY FIX: Clear aggro system for dead enemies periodically
-    if (Math.random() < 0.02) { // 2% chance each update
+    if (Math.random() < 0.05) { // 5% chance each update (increased from 2%)
+      // Build set of alive enemy IDs
+      const aliveEnemyIds = new Set(
+        isInRoom
+          ? Array.from(multiplayerEnemies.keys())
+          : localEnemies.filter(e => e.health > 0 && !e.isDying).map(e => e.id)
+      );
       // Clean up aggro entries for dead enemies
-      globalAggroSystem.getAggroInfo('cleanup-check'); // Dummy call to trigger internal cleanup
+      globalAggroSystem.cleanupDeadEnemies(aliveEnemyIds);
     }
 
     // Reduced logging - only log when there are actual issues
@@ -1145,6 +1158,31 @@ export default function Scene({
       });
     }
   }, [MEMORY_CRITICAL_THRESHOLD,  MEMORY_WARNING_THRESHOLD,enemies.length, slowedEnemies, stunnedEnemies, knockbackEffects, frozenEnemyIds, summonedUnits.length, criticalRunes.length, critDamageRunes.length, groupPool, currentLevel, killCount, deathKnightCount, isInRoom, multiplayerEnemies, localEnemies]);
+
+  // Log live object counts to confirm caps remain stable during sessions
+  useEffect(() => {
+    const logCounts = () => {
+      const latest = performanceMonitor.getLatestMetrics();
+      console.log('📊 Live object counts', latest?.objectCounts ?? {
+        enemies: enemies.length,
+        activeEffects: undefined,
+        damageNumbers: undefined
+      });
+      if (gl?.info) {
+        console.log('🎛️ WebGL memory', {
+          geometries: gl.info.memory?.geometries,
+          textures: gl.info.memory?.textures,
+          programs: gl.info.programs?.length
+        });
+      } else {
+        console.log('🎛️ WebGL memory', 'gl.info not available');
+      }
+    };
+
+    logCounts();
+    const interval = setInterval(logCounts, 10000);
+    return () => clearInterval(interval);
+  }, [gl, enemies.length]);
 
   // Periodic cleanup of summoned units to prevent memory leaks
   useEffect(() => {
@@ -1784,7 +1822,7 @@ export default function Scene({
           )
         ))}
 
-        {enemies.map((enemy) => {
+        {enemies.filter(enemy => !enemy.isDying || !(enemy as any).deathStartTime || (Date.now() - (enemy as any).deathStartTime) < 3000).map((enemy) => {
           // Use multiplayer enemy component for multiplayer mode
           if (isInRoom) {
             // Find the actual multiplayer enemy data

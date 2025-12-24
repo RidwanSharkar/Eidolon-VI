@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { Mesh, Vector3, Clock, Color, Group } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import FireballTrail from '@/Spells/Fireball/FireballTrail';
@@ -12,37 +12,65 @@ interface FireballProps {
 
 export default function Fireball({ position, direction, onImpact }: FireballProps) {
   const fireballRef = useRef<Mesh>(null);
+  const disposedRef = useRef(false);
   const clock = useRef(new Clock());
   const speed = 0.275;
   const lifespan = 10;
   const currentPosition = useRef(position.clone());
   const { scene } = useThree();
   const size = 0.28;
-  const color = new Color('#00ff44');
+  const color = useMemo(() => new Color('#00ff44'), []);
   const impactGroup = useRef<Group>(null);
   const explosionStartTime = useRef<number | null>(null);
+  const collidableMeshesRef = useRef<THREE.Mesh[]>([]);
+  const tempMovementRef = useRef(new THREE.Vector3());
+  const rayDirectionRef = useRef(new THREE.Vector3());
+  // Reusable raycaster and direction vector to avoid allocations every frame
+  const raycasterRef = useRef(new THREE.Raycaster());
+
+  const geometry = useMemo(() => new THREE.SphereGeometry(size, 32, 32), [size]);
+  const material = useMemo(() => new THREE.MeshStandardMaterial({
+    emissive: color,
+    emissiveIntensity: 2,
+    toneMapped: false
+  }), [color]);
+
+  useEffect(() => {
+    const meshes: THREE.Mesh[] = [];
+    scene.traverse((child) => {
+      if (child instanceof THREE.Group && (child.name === 'mountain' || child.name === 'tree')) {
+        child.traverse((nested) => {
+          if (nested instanceof THREE.Mesh) {
+            meshes.push(nested);
+          }
+        });
+      }
+    });
+    collidableMeshesRef.current = meshes;
+  }, [scene]);
+
+  useEffect(() => () => {
+    if (disposedRef.current) return;
+    disposedRef.current = true;
+    geometry.dispose();
+    material.dispose();
+  }, [geometry, material]);
+
+  const disposeFireball = () => {
+    if (disposedRef.current) return;
+    disposedRef.current = true;
+    if (fireballRef.current) {
+      fireballRef.current.removeFromParent();
+    }
+    geometry.dispose();
+    material.dispose();
+  };
 
   const checkCollision = (nextPosition: Vector3): boolean => {
-    const raycaster = new THREE.Raycaster();
-    const rayDirection = nextPosition.clone().sub(currentPosition.current).normalize();
-    raycaster.set(currentPosition.current, rayDirection);
+    rayDirectionRef.current.subVectors(nextPosition, currentPosition.current).normalize();
+    raycasterRef.current.set(currentPosition.current, rayDirectionRef.current);
 
-    const collidableObjects = scene.children.filter(child => 
-      (child.name === 'mountain' && child instanceof THREE.Group) ||
-      (child.name === 'tree' && child instanceof THREE.Group)
-    );
-
-    const allMeshes = collidableObjects.flatMap(group => {
-      const meshes: THREE.Mesh[] = [];
-      group.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          meshes.push(child);
-        }
-      });
-      return meshes;
-    });
-
-    const intersects = raycaster.intersectObjects(allMeshes, true);
+    const intersects = raycasterRef.current.intersectObjects(collidableMeshesRef.current, true);
 
     if (intersects.length > 0) {
       const hit = intersects[0];
@@ -64,18 +92,16 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
     if (!fireballRef.current) return;
 
     if (clock.current.getElapsedTime() > lifespan) {
-      fireballRef.current.removeFromParent();
+      disposeFireball();
       return;
     }
 
-    const movement = direction.clone().multiplyScalar(speed * delta * 60);
+    const movement = tempMovementRef.current.copy(direction).multiplyScalar(speed * delta * 60);
     const nextPosition = currentPosition.current.clone().add(movement);
 
     if (checkCollision(nextPosition)) {
-      if (fireballRef.current) {
-        createExplosionEffect();
-        fireballRef.current.removeFromParent();
-      }
+      createExplosionEffect();
+      disposeFireball();
       onImpact();
     } else {
       currentPosition.current.copy(nextPosition);
@@ -87,13 +113,12 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
 
   return (
     <group name="fireball-group">
-      <mesh ref={fireballRef} position={currentPosition.current}>
-        <sphereGeometry args={[size, 32, 32]} />
-        <meshStandardMaterial
-          emissive={color}
-          emissiveIntensity={2}
-          toneMapped={false}
-        />
+      <mesh
+        ref={fireballRef}
+        position={currentPosition.current}
+        geometry={geometry}
+        material={material}
+      >
         <pointLight color={color} intensity={5} distance={12} />
       </mesh>
       <group ref={impactGroup} visible={false}>

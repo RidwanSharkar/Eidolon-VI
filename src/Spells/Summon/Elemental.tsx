@@ -194,7 +194,8 @@ export default function Elemental({
             damage,
             position: impactPosition.clone(),
             isCritical: false,
-            isSummon: true
+            isSummon: true,
+            createdAt: Date.now() // MEMORY FIX: Required for cleanup
           }]);
           
           // Create explosion effect

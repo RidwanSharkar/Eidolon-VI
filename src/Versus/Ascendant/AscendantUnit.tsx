@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import { BOSS_HEALTHBAR_GEOMETRIES, BOSS_HEALTHBAR_MATERIALS } from '@/Versus/HealthBarResources';
 import AscendantModel from './AscendantModel';
 import ArchonLightning from './ArchonLightning';
 import AscendantForcePulse from './AscendantForcePulse';
@@ -668,6 +669,17 @@ export default function AscendantUnit({
       setShowDeathEffect(true);
       // Remove from aggro system when enemy dies
       globalAggroSystem.removeEnemy(id);
+      
+      // MEMORY FIX: Clear all active effects immediately on death to prevent memory accumulation
+      setActiveLightning(null);
+      setActiveForcePulse(null);
+      setActiveBlink(null);
+      setChargingIndicator(null);
+      setIsCharging(false);
+      setIsAttacking(false);
+      setAttackingHand(null);
+      setIsBlinking(false);
+      
       if (ascendantRef.current) {
         ascendantRef.current.visible = true;
       }
@@ -705,6 +717,13 @@ export default function AscendantUnit({
     return () => {
       timeouts.forEach(timeout => clearTimeout(timeout));
       timeouts.clear();
+      
+      // MEMORY FIX: Clear all effect states on unmount
+      setActiveLightning(null);
+      setActiveForcePulse(null);
+      setActiveBlink(null);
+      setChargingIndicator(null);
+      setIsBlinking(false);
     };
   }, []);
 
@@ -735,14 +754,18 @@ export default function AscendantUnit({
         >
           {currentHealth.current > 0 && (
             <>
-              <mesh position={[0, 0, 0]}>
-                <planeGeometry args={[2.5, 0.3]} />
-                <meshBasicMaterial color="#333333" opacity={0.8} transparent />
-              </mesh>
-              <mesh position={[-1.25 + (currentHealth.current / maxHealth) * 1.25, 0, 0.001]}>
-                <planeGeometry args={[(currentHealth.current / maxHealth) * 2.5, 0.28]} />
-                <meshBasicMaterial color="#cc4444" opacity={0.9} transparent />
-              </mesh>
+              {/* MEMORY FIX: Use cached geometries and materials */}
+              <mesh 
+                position={[0, 0, 0]}
+                geometry={BOSS_HEALTHBAR_GEOMETRIES.background}
+                material={BOSS_HEALTHBAR_MATERIALS.background}
+              />
+              <mesh 
+                position={[-1.25 + (currentHealth.current / maxHealth) * 1.25, 0, 0.001]}
+                scale={[(currentHealth.current / maxHealth) * 2.5, 1, 1]}
+                geometry={BOSS_HEALTHBAR_GEOMETRIES.fill}
+                material={BOSS_HEALTHBAR_MATERIALS.fill}
+              />
               <Text
                 position={[0, 0, 0.002]}
                 fontSize={0.18}

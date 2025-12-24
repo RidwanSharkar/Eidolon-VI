@@ -8,6 +8,7 @@ import React, {
 import { Group, Vector3 } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import { HEALTHBAR_GEOMETRIES, HEALTHBAR_MATERIALS } from '@/Versus/HealthBarResources';
 import ReaperModel from './ReaperModel';
 import { Enemy } from '../enemy';
 import ReaperAttackIndicator from './ReaperAttackIndicator';
@@ -217,6 +218,13 @@ export default function ReaperUnit({
       setIsDead(true);
       // Remove from aggro system when enemy dies
       globalAggroSystem.removeEnemy(id);
+      
+      // MEMORY FIX: Clear all effect arrays immediately on death to prevent memory accumulation
+      setMistEffects([]);
+      setSubmergeEffects([]);
+      setIsReEmerging(false);
+      setReEmergePhase('idle');
+      isReEmergeBlocked.current = false;
     }
   }, [health, id, isDead]);
 
@@ -234,6 +242,45 @@ export default function ReaperUnit({
       setMistEffects([]);
       isReEmergeBlocked.current = false;
     };
+  }, []);
+
+  // MEMORY FIX: Periodic cleanup for expired mist and submerge effects
+  useEffect(() => {
+    const effectCleanupInterval = setInterval(() => {
+      const now = Date.now();
+      
+      // Clean expired mist effects (max 2 seconds old)
+      setMistEffects(prev => {
+        const filtered = prev.filter(effect => {
+          const effectId = effect.id;
+          // Extract timestamp from id (format: "sink-mist-{timestamp}" or "emerge-mist-{timestamp}")
+          const timestampMatch = effectId.match(/\d+$/);
+          if (timestampMatch) {
+            const timestamp = parseInt(timestampMatch[0], 10);
+            return now - timestamp < 2000; // 2 second max lifetime
+          }
+          return true; // Keep effects without parseable timestamp
+        });
+        // Hard limit
+        return filtered.length > 4 ? filtered.slice(-4) : filtered;
+      });
+      
+      // Clean expired submerge effects
+      setSubmergeEffects(prev => {
+        const filtered = prev.filter(effect => {
+          const effectId = effect.id;
+          const timestampMatch = effectId.match(/\d+$/);
+          if (timestampMatch) {
+            const timestamp = parseInt(timestampMatch[0], 10);
+            return now - timestamp < 2000;
+          }
+          return true;
+        });
+        return filtered.length > 4 ? filtered.slice(-4) : filtered;
+      });
+    }, 1000); // Check every second
+    
+    return () => clearInterval(effectCleanupInterval);
   }, []);
 
   // Helper for your hitbox logic (updated to use current position)
@@ -399,11 +446,15 @@ export default function ReaperUnit({
     const originalPosition = currentPosition.current.clone();
     originalPosition.y = 0; // Ground level for mist effect
     const sinkMistId = `sink-mist-${Date.now()}`;
-    setMistEffects(prev => [...prev, {
-      id: sinkMistId,
-      position: originalPosition,
-      duration: 1000 // 1 second mist effect
-    }]);
+    // MEMORY FIX: Limit mist effects and clean old ones
+    setMistEffects(prev => {
+      const newEffects = [...prev, {
+        id: sinkMistId,
+        position: originalPosition,
+        duration: 1000 // 1 second mist effect
+      }];
+      return newEffects.length > 4 ? newEffects.slice(-4) : newEffects;
+    });
 
     // Phase 1: Sink into ground (800ms)
     const startY = reaperRef.current?.position.y || 0;
@@ -470,11 +521,15 @@ export default function ReaperUnit({
               const emergeMistId = `emerge-mist-${Date.now()}`;
               const emergePosition = behindPosition.clone();
               emergePosition.y = 0; // Ground level for mist effect
-              setMistEffects(prev => [...prev, {
-                id: emergeMistId,
-                position: emergePosition,
-                duration: 1000 // 1 second mist effect
-              }]);
+              // MEMORY FIX: Limit mist effects
+              setMistEffects(prev => {
+                const newEffects = [...prev, {
+                  id: emergeMistId,
+                  position: emergePosition,
+                  duration: 1000 // 1 second mist effect
+                }];
+                return newEffects.length > 4 ? newEffects.slice(-4) : newEffects;
+              });
               
               // Start aggressive behavior after re-emerging
               setIsPostEmergeAggressive(true);
@@ -705,14 +760,18 @@ export default function ReaperUnit({
         >
           {currentHealth.current > 0 && (
             <>
-              <mesh position={[0, 0, 0]}>
-                <planeGeometry args={[2.0, 0.25]} />
-                <meshBasicMaterial color="#333333" opacity={0.8} transparent />
-              </mesh>
-              <mesh position={[-1.0 + (currentHealth.current / maxHealth), 0, 0.001]}>
-                <planeGeometry args={[(currentHealth.current / maxHealth) * 2.0, 0.23]} />
-                <meshBasicMaterial color="#ff3333" opacity={0.9} transparent />
-              </mesh>
+              {/* MEMORY FIX: Use cached geometries and materials */}
+              <mesh 
+                position={[0, 0, 0]}
+                geometry={HEALTHBAR_GEOMETRIES.background}
+                material={HEALTHBAR_MATERIALS.background}
+              />
+              <mesh 
+                position={[-1.0 + (currentHealth.current / maxHealth), 0, 0.001]}
+                scale={[(currentHealth.current / maxHealth) * 2.0, 1, 1]}
+                geometry={HEALTHBAR_GEOMETRIES.fill}
+                material={HEALTHBAR_MATERIALS.fill}
+              />
               <Text
                 position={[0, 0, 0.002]}
                 fontSize={0.25}

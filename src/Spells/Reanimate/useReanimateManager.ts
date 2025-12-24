@@ -76,7 +76,8 @@ export function useReanimateManager({
         damage: HEAL_AMOUNT,
         position: currentRef.position.clone().add(healingPosition),
         isCritical: false,
-        isHealing: true
+        isHealing: true,
+        createdAt: Date.now() // MEMORY FIX: Required for cleanup
       }]);
     }
 

@@ -135,7 +135,8 @@ export default function AbysalSkeletonSummon({
       damage: actualDamage,
       position: impactPosition.clone(),
       isCritical: false,
-      isSummon: true
+      isSummon: true,
+      createdAt: Date.now() // MEMORY FIX: Required for cleanup
     }]);
 
     // Set attacking animation

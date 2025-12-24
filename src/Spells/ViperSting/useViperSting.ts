@@ -1,6 +1,7 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { Vector3, Group } from 'three';
 import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
+import { DamageNumber } from '../../Unit/useDamageNumbers';
 
 interface ViperStingProjectile {
   id: number;
@@ -35,13 +36,7 @@ interface UseViperStingProps {
     health: number;
     isDying?: boolean;
   }>;
-  setDamageNumbers: React.Dispatch<React.SetStateAction<Array<{
-    id: number;
-    damage: number;
-    position: Vector3;
-    isCritical: boolean;
-    isViperSting?: boolean;
-  }>>>;
+  setDamageNumbers: React.Dispatch<React.SetStateAction<DamageNumber[]>>;
   nextDamageNumberId: React.MutableRefObject<number>;
   onHealthChange?: (deltaHealth: number) => void;
   createBeamEffect?: (position: Vector3, direction: Vector3, isReturning?: boolean) => void;
@@ -258,7 +253,8 @@ export function useViperSting({
                   damage: DAMAGE,
                   position: enemy.position.clone(),
                   isCritical: false,
-                  isViperSting: true
+                  isViperSting: true,
+                  createdAt: Date.now() // MEMORY FIX: Required for cleanup
                 }]);
 
                 // Create soul steal effect at enemy position
@@ -323,7 +319,8 @@ export function useViperSting({
                   damage: DAMAGE,
                   position: enemy.position.clone(),
                   isCritical: false,
-                  isViperSting: true
+                  isViperSting: true,
+                  createdAt: Date.now() // MEMORY FIX: Required for cleanup
                 }]);
 
                 // Create soul steal effect at enemy position

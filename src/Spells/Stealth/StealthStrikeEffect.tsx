@@ -126,8 +126,11 @@ export default function StealthStrikeEffect({ position, direction, onComplete, p
     return () => {
       reset();
       onComplete();
+      // Dispose geometries and materials
+      Object.values(geometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
     };
-  }, [reset, onComplete]);
+  }, [reset, onComplete, geometries, materials]);
 
   return (
     <group
