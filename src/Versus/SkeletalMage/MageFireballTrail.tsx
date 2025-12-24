@@ -1,11 +1,19 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  Color,
+  Group,
+  Material,
+  Mesh,
+  Points,
+  Vector3
+} from 'three';
 
 interface MageFireballTrailProps {
-  color: THREE.Color;
+  color: Color;
   size: number;
-  meshRef: React.RefObject<THREE.Mesh | THREE.Group>;
+  meshRef: React.RefObject<Mesh | Group>;
   opacity?: number;
 }
 
@@ -16,20 +24,20 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
   opacity = 1
 }) => {
   const particlesCount = 14;
-  const particlesRef = useRef<THREE.Points>(null);
+  const particlesRef = useRef<Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const scalesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const isInitialized = useRef(false);
   
   // ref to store the last known position for smoother updates
-  const lastKnownPosition = useRef(new THREE.Vector3());
+  const lastKnownPosition = useRef(new Vector3());
 
   // Initialize positions only once when mesh is available
   useEffect(() => {
     if (meshRef.current && !isInitialized.current) {
       // Get world position to handle coordinate space correctly
-      const worldPosition = new THREE.Vector3();
+      const worldPosition = new Vector3();
       meshRef.current.getWorldPosition(worldPosition);
       const { x, y, z } = worldPosition;
       lastKnownPosition.current.set(x, y, z);
@@ -50,7 +58,7 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
     if (!particlesRef.current?.parent || !meshRef.current || !isInitialized.current) return;
 
     // Get world position to handle coordinate space correctly
-    const worldPosition = new THREE.Vector3();
+    const worldPosition = new Vector3();
     meshRef.current.getWorldPosition(worldPosition);
     
     // Only update if position has changed significantly
@@ -95,7 +103,7 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
       if (particles) {
         const geometry = particles.geometry;
         geometry.dispose();
-        const material = particles.material as THREE.Material;
+        const material = particles.material as Material;
         material.dispose();
       }
     };
@@ -126,7 +134,7 @@ const MageFireballTrail: React.FC<MageFireballTrailProps> = ({
       <shaderMaterial
         transparent
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
+        blending={AdditiveBlending}
         vertexShader={`
           attribute float opacity;
           attribute float scale;

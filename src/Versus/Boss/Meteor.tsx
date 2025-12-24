@@ -1,19 +1,29 @@
 // src/versus/Boss/Meteor.tsx
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  DoubleSide,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  RingGeometry,
+  SphereGeometry,
+  Vector3
+} from 'three';
 import MeteorTrail from './MeteorTrail';
 import { Enemy } from '@/Versus/enemy';
 import { calculateDamage } from '@/Weapons/damage';
+import { SHARED_SPHERE_GEOMETRY_MEDIUM, SHARED_SPHERE_GEOMETRY_HIGH, SHARED_COLOR_METEOR_RED } from '../../SharedGeometries';
 
 interface MeteorProps {
   targetId: string;
-  initialTargetPosition: THREE.Vector3;
+  initialTargetPosition: Vector3;
   onImpact: (damage: number) => void;
   onComplete: () => void;
-  playerPosition: THREE.Vector3;
+  playerPosition: Vector3;
   enemyData: Enemy[];
-  onHit?: (targetId: string, damage: number, isCritical: boolean, position: THREE.Vector3) => void;
+  onHit?: (targetId: string, damage: number, isCritical: boolean, position: Vector3) => void;
 }
 
 const DAMAGE_RADIUS = 2.99;
@@ -24,19 +34,19 @@ const WARNING_RING_SEGMENTS = 32; // Reduced from 64
 const FIRE_PARTICLES_COUNT = 12;  // Reduced from 15
 
 // Reusable geometries and materials
-const meteorGeometry = new THREE.SphereGeometry(0.75, 16, 16); // 20% smaller (0.75 * 0.8)
-const meteorMaterial = new THREE.MeshBasicMaterial({ color: "#ff4400" });
+const meteorGeometry = new SphereGeometry(0.75, 16, 16); // 20% smaller (0.75 * 0.8)
+const meteorMaterial = new MeshBasicMaterial({ color: "#ff4400" });
 // Warning indicators scaled by half
-const warningRingGeometry = new THREE.RingGeometry((DAMAGE_RADIUS - 0.2) * 0.5, DAMAGE_RADIUS * 0.5, WARNING_RING_SEGMENTS);
-const pulsingRingGeometry = new THREE.RingGeometry((DAMAGE_RADIUS - 0.8) * 0.5, (DAMAGE_RADIUS - 0.6) * 0.5, WARNING_RING_SEGMENTS);
-const outerGlowGeometry = new THREE.RingGeometry((DAMAGE_RADIUS - 0.25) * 0.5, DAMAGE_RADIUS * 0.5, WARNING_RING_SEGMENTS);
-const particleGeometry = new THREE.SphereGeometry(0.05, 8, 8); // Half size for particles (0.1 * 0.5)
+const warningRingGeometry = new RingGeometry((DAMAGE_RADIUS - 0.2) * 0.5, DAMAGE_RADIUS * 0.5, WARNING_RING_SEGMENTS);
+const pulsingRingGeometry = new RingGeometry((DAMAGE_RADIUS - 0.8) * 0.5, (DAMAGE_RADIUS - 0.6) * 0.5, WARNING_RING_SEGMENTS);
+const outerGlowGeometry = new RingGeometry((DAMAGE_RADIUS - 0.25) * 0.5, DAMAGE_RADIUS * 0.5, WARNING_RING_SEGMENTS);
+const particleGeometry = new SphereGeometry(0.05, 8, 8); // Half size for particles (0.1 * 0.5)
 
 // Reusable vectors to avoid allocations
-const tempPlayerGroundPos = new THREE.Vector3();
-const tempTargetGroundPos = new THREE.Vector3();
+const tempPlayerGroundPos = new Vector3();
+const tempTargetGroundPos = new Vector3();
 
-const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, onComplete: () => void) => {
+const createMeteorImpactEffect = (position: Vector3, startTime: number, onComplete: () => void) => {
   const elapsed = (Date.now() - startTime) / 1000;
   const fade = Math.max(0, 1 - (elapsed / IMPACT_DURATION));
   
@@ -57,7 +67,7 @@ const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, on
           transparent
           opacity={1.8 * fade}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
       
@@ -71,7 +81,7 @@ const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, on
           transparent
           opacity={1.9 * fade}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
 
@@ -86,7 +96,7 @@ const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, on
             transparent
             opacity={0.95 * fade * (1 - i * 0.1)}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       ))}
@@ -110,16 +120,16 @@ const createMeteorImpactEffect = (position: THREE.Vector3, startTime: number, on
 };
 
 export default function Meteor({ targetId, initialTargetPosition, onImpact, onComplete, playerPosition, enemyData, onHit }: MeteorProps) {
-  const meteorGroupRef = useRef<THREE.Group>(null);
-  const meteorMeshRef = useRef<THREE.Mesh>(null);
+  const meteorGroupRef = useRef<Group>(null);
+  const meteorMeshRef = useRef<Mesh>(null);
 
   // State for tracking current target position
   const [currentTargetPosition, setCurrentTargetPosition] = useState(initialTargetPosition);
   
   // useMemo for initial calculations
   const [, startPos] = React.useMemo(() => {
-    const initTarget = new THREE.Vector3(initialTargetPosition.x, -5, initialTargetPosition.z);
-    const start = new THREE.Vector3(initialTargetPosition.x, 60, initialTargetPosition.z);
+    const initTarget = new Vector3(initialTargetPosition.x, -5, initialTargetPosition.z);
+    const start = new Vector3(initialTargetPosition.x, 60, initialTargetPosition.z);
     return [initTarget, start];
   }, [initialTargetPosition]);
 
@@ -153,14 +163,14 @@ export default function Meteor({ targetId, initialTargetPosition, onImpact, onCo
     }
 
     const currentPos = meteorGroupRef.current.position;
-    const currentTargetGroundPos = new THREE.Vector3(currentTargetPosition.x, -5, currentTargetPosition.z);
+    const currentTargetGroundPos = new Vector3(currentTargetPosition.x, -5, currentTargetPosition.z);
     const distanceToTarget = currentPos.distanceTo(currentTargetGroundPos);
 
     if (distanceToTarget < DAMAGE_RADIUS || currentPos.y <= 0.1) {
       setState(prev => ({ ...prev, impactOccurred: true, impactStartTime: Date.now() }));
       
       // Apply damage to all enemies within radius on impact
-      const impactPosition = new THREE.Vector3(currentTargetPosition.x, 0, currentTargetPosition.z);
+      const impactPosition = new Vector3(currentTargetPosition.x, 0, currentTargetPosition.z);
       
       // Calculate damage once for all enemies hit by this meteor
       const { damage: meteorDamage, isCritical: meteorCrit } = calculateDamage(METEOR_DAMAGE);
@@ -170,7 +180,7 @@ export default function Meteor({ targetId, initialTargetPosition, onImpact, onCo
           // Only damage living enemies
           if (enemy.health <= 0 || enemy.isDying) return;
 
-          const enemyPos = new THREE.Vector3(enemy.position.x, 0, enemy.position.z);
+          const enemyPos = new Vector3(enemy.position.x, 0, enemy.position.z);
           const distance = enemyPos.distanceTo(impactPosition);
 
           if (distance <= DAMAGE_RADIUS) {
@@ -206,7 +216,7 @@ export default function Meteor({ targetId, initialTargetPosition, onImpact, onCo
         {/* Warning rings using shared geometries */}
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <primitive object={warningRingGeometry} />
-          <meshBasicMaterial color="#ff2200" transparent opacity={0.4} side={THREE.DoubleSide} />
+          <meshBasicMaterial color="#ff2200" transparent opacity={0.4} side={DoubleSide} />
         </mesh>
         
         {/* Pulsing inner ring */}
@@ -219,7 +229,7 @@ export default function Meteor({ targetId, initialTargetPosition, onImpact, onCo
             color="#ff4400"
             transparent 
             opacity={0.4 + Math.sin(Date.now() * 0.003) * 0.2}
-            side={THREE.DoubleSide}
+            side={DoubleSide}
           />
         </mesh>
 
@@ -233,7 +243,7 @@ export default function Meteor({ targetId, initialTargetPosition, onImpact, onCo
             color="#ff3300"
             transparent
             opacity={0.25}
-            side={THREE.DoubleSide}
+            side={DoubleSide}
           />
         </mesh>
 
@@ -266,9 +276,9 @@ export default function Meteor({ targetId, initialTargetPosition, onImpact, onCo
             <primitive object={meteorGeometry} />
             <primitive object={meteorMaterial} />
             <pointLight color="#ff4400" intensity={5} distance={8} />
-            <MeteorTrail 
-              meshRef={meteorMeshRef} 
-              color={new THREE.Color("#ff4400")}
+            <MeteorTrail
+              meshRef={meteorMeshRef}
+              color={SHARED_COLOR_METEOR_RED}
               size={0.052}
             />
           </mesh>
@@ -277,7 +287,7 @@ export default function Meteor({ targetId, initialTargetPosition, onImpact, onCo
 
       {/* Add impact effect */}
       {state.impactStartTime && createMeteorImpactEffect(
-        meteorGroupRef.current?.position || new THREE.Vector3(currentTargetPosition.x, 0, currentTargetPosition.z),
+        meteorGroupRef.current?.position || new Vector3(currentTargetPosition.x, 0, currentTargetPosition.z),
         state.impactStartTime,
         onComplete
       )}

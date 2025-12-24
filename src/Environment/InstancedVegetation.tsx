@@ -1,30 +1,41 @@
 import React, { useRef, useEffect, useMemo } from 'react';
-import * as THREE from 'three';
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  DoubleSide,
+  Euler,
+  InstancedMesh,
+  Matrix4,
+  MeshStandardMaterial,
+  Quaternion,
+  Vector3
+} from 'three';
 
 const VEGETATION_COUNT = 100; // Number of vegetation patches (reduced from 400)
 const LEAVES_PER_PATCH = 7; // Number of leaves per patch
 
 export default function InstancedVegetation() {
-  const instancedMeshRef = useRef<THREE.InstancedMesh>(null);
+  const instancedMeshRef = useRef<InstancedMesh>(null);
 
   // Create a simple leaf shape using a triangle
   const leafGeometry = useMemo(() => {
-    const geometry = new THREE.BufferGeometry();
+    const geometry = new BufferGeometry();
     const vertices = new Float32Array([
       -0.2, 0, 0,    // left point
       0.2, 0, 0,     // right point
       0, 0.4, 0      // top point
     ]);
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geometry.setAttribute('position', new BufferAttribute(vertices, 3));
     geometry.computeVertexNormals();
     return geometry;
   }, []);
 
   // Material for the leaves with slight variation in color
   const leafMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#1a4d1a'),
-      side: THREE.DoubleSide,
+    return new MeshStandardMaterial({
+      color: new Color('#1a4d1a'),
+      side: DoubleSide,
       roughness: 0.8,
       metalness: 0.1,
     });
@@ -42,11 +53,11 @@ export default function InstancedVegetation() {
     if (!instancedMeshRef.current) return;
 
     const mesh = instancedMeshRef.current;
-    const matrix = new THREE.Matrix4();
-    const position = new THREE.Vector3();
-    const rotation = new THREE.Euler();
-    const quaternion = new THREE.Quaternion();
-    const scale = new THREE.Vector3();
+    const matrix = new Matrix4();
+    const position = new Vector3();
+    const rotation = new Euler();
+    const quaternion = new Quaternion();
+    const scale = new Vector3();
 
     // Create patches of vegetation
     for (let i = 0; i < VEGETATION_COUNT; i++) {
@@ -66,7 +77,7 @@ export default function InstancedVegetation() {
         const patchIndex = i * LEAVES_PER_PATCH + j;
         
         // Random offset within the patch
-        const patchOffset = new THREE.Vector3(
+        const patchOffset = new Vector3(
           (Math.random() - 0.5) * 0.5,
           0,
           (Math.random() - 0.5) * 0.5

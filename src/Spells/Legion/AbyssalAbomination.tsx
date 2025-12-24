@@ -1,5 +1,5 @@
 import { BoxGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, Shape, SphereGeometry, InstancedMesh, Matrix4, Vector3, Euler, Quaternion } from 'three';
-import * as THREE from 'three';
+import { DoubleSide, DynamicDrawUsage } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../../gear/BonePlate';
 import { useRef, useState, useEffect, useMemo } from 'react';
@@ -118,7 +118,7 @@ const registerAbyssalResources = () => {
 function VertebraeInstances() {
   const instances = useMemo(() => {
     const mesh = new InstancedMesh(SHARED_GEOMETRIES.vertebrae, SHARED_MATERIALS.standardBone, 5);
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.instanceMatrix.setUsage(DynamicDrawUsage);
     return mesh;
   }, []);
 
@@ -316,7 +316,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
                       roughness={0.1}
                       opacity={1}
                       transparent
-                      side={THREE.DoubleSide}
+                      side={DoubleSide}
                     />
                   </mesh>
                   

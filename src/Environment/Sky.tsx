@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import * as THREE from 'three';
+import { Color, BackSide } from 'three';
 
 interface SkyProps {
   level?: number;
@@ -19,7 +19,7 @@ const getLevelColors = (level: number) => {
 
 const createSkyShader = (level: number) => {
   const levelColors = getLevelColors(level);
-  const baseColor = new THREE.Color(levelColors.color);
+  const baseColor = new Color(levelColors.color);
   //const emissiveColor = new THREE.Color(levelColors.emissive);
   
   // Create gradient colors based on level
@@ -28,7 +28,7 @@ const createSkyShader = (level: number) => {
   // Middle: level color with some saturation (made paler)
   const middleColor = baseColor.clone().multiplyScalar(0.85);
   // Bottom: lighter, more neutral version (made paler)
-  const bottomColor = baseColor.clone().lerp(new THREE.Color('#87CEEB'), 0.6);
+  const bottomColor = baseColor.clone().lerp(new Color('#87CEEB'), 0.6);
   
   return {
     uniforms: {
@@ -74,7 +74,7 @@ const CustomSky: React.FC<SkyProps> = ({ level = 1 }) => {
       uniforms: skyShader.uniforms,
       vertexShader: skyShader.vertexShader,
       fragmentShader: skyShader.fragmentShader,
-      side: THREE.BackSide,
+      side: BackSide,
     };
   }, [level]);
 

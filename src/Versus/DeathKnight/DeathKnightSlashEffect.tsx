@@ -2,7 +2,7 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending } from 'three';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
 
 interface DeathKnightSlashEffectProps {
@@ -67,7 +67,7 @@ export default function DeathKnightSlashEffect({
     Array(6).fill(0).map((_, i) => { // Reduced from 10 to 6 particles
       const angle = (i / 5) * Math.PI * 0.9 - Math.PI * 0.45; // Arc from -45% to 45% of PI
       return {
-        position: new THREE.Vector3(
+        position: new Vector3(
           Math.cos(angle) * 1.4,
           Math.sin(angle) * 1.4,
           0
@@ -82,7 +82,7 @@ export default function DeathKnightSlashEffect({
     Array(5).fill(0).map((_, i) => { // Reduced from 8 to 5 trail segments
       const angle = (i / 4) * Math.PI * 0.9 - Math.PI * 0.45;
       return {
-        position: new THREE.Vector3(
+        position: new Vector3(
           Math.cos(angle) * 1.0,
           Math.sin(angle) * 1.0,
           -0.1
@@ -191,7 +191,7 @@ export default function DeathKnightSlashEffect({
               emissiveIntensity={2.0}
               transparent
               opacity={0.6}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         );

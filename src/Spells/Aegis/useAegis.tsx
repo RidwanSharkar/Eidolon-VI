@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { Vector3 } from 'three';
-import * as THREE from 'three';
+import { Vector3, Group } from 'three';
 import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
 
 interface AegisProjectileData {
@@ -21,7 +20,7 @@ interface AegisProjectileData {
 
 interface AegisControllerProps {
   onHit: (targetId: string, damage: number) => void;
-  parentRef: React.RefObject<THREE.Group>;
+  parentRef: React.RefObject<Group>;
   enemyData: Array<{
     id: string;
     position: Vector3;

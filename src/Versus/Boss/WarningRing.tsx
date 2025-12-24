@@ -1,15 +1,15 @@
 // src/versus/Boss/WarningRing.tsx
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { DoubleSide, Mesh, MeshBasicMaterial, Vector3 } from 'three';
 
 interface WarningRingProps {
-  position: THREE.Vector3;
+  position: Vector3;
   duration: number;
 }
 
 export default function WarningRing({ position, duration }: WarningRingProps) {
-  const ringRef = useRef<THREE.Mesh>(null);
+  const ringRef = useRef<Mesh>(null);
   const startTime = useRef(Date.now());
 
   useFrame(() => {
@@ -25,7 +25,7 @@ export default function WarningRing({ position, duration }: WarningRingProps) {
     // Fade out near the end
     if (progress > 0.8) {
       const opacity = 1 - ((progress - 0.8) / 0.2);
-      (ringRef.current.material as THREE.MeshBasicMaterial).opacity = opacity;
+      (ringRef.current.material as MeshBasicMaterial).opacity = opacity;
     }
   });
 
@@ -40,7 +40,7 @@ export default function WarningRing({ position, duration }: WarningRingProps) {
         color="#ff0000" 
         transparent 
         opacity={0.5}
-        side={THREE.DoubleSide}
+        side={DoubleSide}
       />
     </mesh>
   );

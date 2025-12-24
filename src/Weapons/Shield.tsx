@@ -1,32 +1,31 @@
 // src/Weapons/Shield.tsx
 
 import { useRef } from 'react';
-import { Group, Shape } from 'three';
+import { Group, Shape, Color, AdditiveBlending } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 
 // Pre-allocated colors for performance - avoids new THREE.Color() on every render
 const SHIELD_COLORS = {
   // Base shield colors
-  darkGoldenrod: new THREE.Color(0xB8860B),
-  darkGoldEmissive: new THREE.Color(0x4A4A00),
-  darkerGold: new THREE.Color(0xDAA520),
-  darkerGoldEmissive: new THREE.Color(0x8B6914),
-  brightGold: new THREE.Color(0xFFD700),
-  brightOrange: new THREE.Color(0xFFA500),
-  bronze: new THREE.Color(0x8B4513),
-  darkBronzeEmissive: new THREE.Color(0xB8860B),
+  darkGoldenrod: new Color(0xB8860B),
+  darkGoldEmissive: new Color(0x4A4A00),
+  darkerGold: new Color(0xDAA520),
+  darkerGoldEmissive: new Color(0x8B6914),
+  brightGold: new Color(0xFFD700),
+  brightOrange: new Color(0xFFA500),
+  bronze: new Color(0x8B4513),
+  darkBronzeEmissive: new Color(0xB8860B),
   // State-based colors
-  activeGold: new THREE.Color(0xFFD700),
-  rechargingYellow: new THREE.Color(0xFFFF88),
-  brokenGray: new THREE.Color(0x666666),
-  brokenDarkGray: new THREE.Color(0x333333),
-  rechargingBright: new THREE.Color(0xFFFF00),
-  brokenRed: new THREE.Color(0xFF4500),
-  brokenDarkRed: new THREE.Color(0x8B0000),
-  rechargingDarkYellow: new THREE.Color(0x8B8B00),
-  cornsilk: new THREE.Color(0xFFF8DC),
-  progressBarGray: new THREE.Color(0x444444),
+  activeGold: new Color(0xFFD700),
+  rechargingYellow: new Color(0xFFFF88),
+  brokenGray: new Color(0x666666),
+  brokenDarkGray: new Color(0x333333),
+  rechargingBright: new Color(0xFFFF00),
+  brokenRed: new Color(0xFF4500),
+  brokenDarkRed: new Color(0x8B0000),
+  rechargingDarkYellow: new Color(0x8B8B00),
+  cornsilk: new Color(0xFFF8DC),
+  progressBarGray: new Color(0x444444),
 } as const;
 
 interface ShieldProps {
@@ -345,7 +344,7 @@ export default function Shield({
               emissiveIntensity={glowIntensity.current * (isShieldActive ? 0.25 : isRecharging ? 0.15 : 0.05)} // Reduced from 0.5/0.3/0.1
               transparent
               opacity={isShieldActive ? 0.2 : isRecharging ? 0.1 + (rechargeProgress * 0.1) : 0.03} // Reduced opacity
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
 
@@ -361,7 +360,7 @@ export default function Shield({
                   emissiveIntensity={glowIntensity.current * 0.2} // Reduced from 0.4
                   transparent
                   opacity={0.06} // Reduced from 0.1
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
 
@@ -382,7 +381,7 @@ export default function Shield({
                     emissiveIntensity={glowIntensity.current * 1.0} // Reduced from 2.0
                     transparent
                     opacity={0.5} // Reduced from 0.8
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                   />
                 </mesh>
               ))}

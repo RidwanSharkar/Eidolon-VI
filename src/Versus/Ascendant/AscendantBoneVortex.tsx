@@ -1,8 +1,7 @@
 // src/versus/Reaper/ReaperBoneVortex.tsx
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Group, } from 'three';
-import * as THREE from 'three';
+import { Mesh, Group, MeshStandardMaterial } from 'three';
 
 interface AscendantBoneVortexProps {
   parentRef: React.RefObject<Group>;
@@ -70,7 +69,7 @@ export default function AscendantBoneVortex({ parentRef }: AscendantBoneVortexPr
       // Update material opacity
       const meshChild = piece.children[0] as Mesh;
       if (meshChild && meshChild.material) {
-        const material = meshChild.material as THREE.MeshStandardMaterial;
+        const material = meshChild.material as MeshStandardMaterial;
         material.opacity = Math.max(0.1, 1 - (heightOffset * 2));
       }
     });

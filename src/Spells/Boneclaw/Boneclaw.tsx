@@ -3,7 +3,14 @@ import { Group, Vector3, Shape, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { calculateBoneclawHits } from '@/Spells/Boneclaw/BoneclawDamage';
 import BoneclawScratch from '@/Spells/Boneclaw/BoneClawScratch';
-import * as THREE from 'three';
+import {
+  BoxGeometry,
+  ConeGeometry,
+  CylinderGeometry,
+  Matrix4,
+  MeshStandardMaterial,
+  SphereGeometry
+} from 'three';
 
 interface BoneclawProps {
   position: Vector3;
@@ -18,19 +25,19 @@ interface BoneclawProps {
 }
 
 const sharedGeometries = {
-  cylinder: new THREE.CylinderGeometry(0.06, 0.02, 0.12, 6),
-  sphere: new THREE.SphereGeometry(0.12, 12, 12),
-  box: new THREE.BoxGeometry(0.2, 0.15, 0.08),
-  cone: new THREE.ConeGeometry(0.03, 0.3, 6)
+  cylinder: new CylinderGeometry(0.06, 0.02, 0.12, 6),
+  sphere: new SphereGeometry(0.12, 12, 12),
+  box: new BoxGeometry(0.2, 0.15, 0.08),
+  cone: new ConeGeometry(0.03, 0.3, 6)
 };
 
 const sharedMaterials = {
-  bone: new THREE.MeshStandardMaterial({
+  bone: new MeshStandardMaterial({
     color: "#d6cfc7",
     roughness: 0.9,
     metalness: 0.1
   }),
-  spectral: new THREE.MeshStandardMaterial({
+  spectral: new MeshStandardMaterial({
     color: "#39ff14",
     emissive: "#39ff14",
     emissiveIntensity: 1.3,
@@ -49,9 +56,9 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
   const showScratchRef = useRef(false);
   const hitEnemiesRef = useRef(new Set<string>());
 
-  const rotationMatrixRef = useRef(new THREE.Matrix4());
-  const tempVector = useRef(new THREE.Vector3());
-  const tempPosition = useRef(new THREE.Vector3());
+  const rotationMatrixRef = useRef(new Matrix4());
+  const tempVector = useRef(new Vector3());
+  const tempPosition = useRef(new Vector3());
 
   const createBoneSegment = (length: number, width: number) => (
     <mesh

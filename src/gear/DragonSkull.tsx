@@ -1,40 +1,40 @@
-import * as THREE from 'three';
+import { CylinderGeometry, ConeGeometry, MeshStandardMaterial } from 'three';
 
 // MEMORY FIX: Cached geometries - created once at module load
 const CACHED_GEOMETRIES = {
-  mainHorn: new THREE.CylinderGeometry(0.08, 0.0125, 1, 8),
-  midSection: new THREE.CylinderGeometry(0.08, 0.008, 0.8, 16),
-  upperSection: new THREE.CylinderGeometry(0.07, 0.0075, 0.6, 5),
-  ridgeSpike: new THREE.ConeGeometry(0.0325, 0.1, 16),
-  toothSmall: new THREE.ConeGeometry(0.02, 0.075, 3),
-  toothLarge: new THREE.ConeGeometry(0.025, 0.095, 3),
-  toothFang: new THREE.ConeGeometry(0.0325, 0.1425, 3)
+  mainHorn: new CylinderGeometry(0.08, 0.0125, 1, 8),
+  midSection: new CylinderGeometry(0.08, 0.008, 0.8, 16),
+  upperSection: new CylinderGeometry(0.07, 0.0075, 0.6, 5),
+  ridgeSpike: new ConeGeometry(0.0325, 0.1, 16),
+  toothSmall: new ConeGeometry(0.02, 0.075, 3),
+  toothLarge: new ConeGeometry(0.025, 0.095, 3),
+  toothFang: new ConeGeometry(0.0325, 0.1425, 3)
 };
 
 // MEMORY FIX: Cached materials - created once at module load
 const CACHED_MATERIALS = {
-  horn: new THREE.MeshStandardMaterial({
+  horn: new MeshStandardMaterial({
     color: "#d4d4d4",
     roughness: 0.4,
     metalness: 0.3,
     transparent: true,
     opacity: 0.95
   }),
-  midSection: new THREE.MeshStandardMaterial({
+  midSection: new MeshStandardMaterial({
     color: "#c4c4c4",
     roughness: 0.4,
     metalness: 0.3,
     transparent: true,
     opacity: 0.95
   }),
-  spike: new THREE.MeshStandardMaterial({
+  spike: new MeshStandardMaterial({
     color: "#b4b4b4",
     roughness: 0.4,
     metalness: 0.3,
     transparent: true,
     opacity: 0.95
   }),
-  tooth: new THREE.MeshStandardMaterial({
+  tooth: new MeshStandardMaterial({
     color: "#e8e8e8",
     roughness: 0.4,
     metalness: 0.3,

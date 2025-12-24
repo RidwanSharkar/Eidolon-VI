@@ -1,26 +1,36 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  Color,
+  DoubleSide,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  RingGeometry,
+  SphereGeometry,
+  Vector3
+} from 'three';
 import LegionMeteorTrail from './LegionMeteorTrail';
 import { calculateDamage } from '@/Weapons/damage';
 
 interface LegionProps {
-  targetPosition: THREE.Vector3;
+  targetPosition: Vector3;
   onImpact: (damage: number) => void;
   onComplete: () => void;
-  playerPosition: THREE.Vector3;
-  enemyData?: Array<{ id: string; position: THREE.Vector3; health: number; isDying?: boolean }>;
+  playerPosition: Vector3;
+  enemyData?: Array<{ id: string; position: Vector3; health: number; isDying?: boolean }>;
   onHit?: (targetId: string, damage: number) => void;
   setDamageNumbers?: (callback: (prev: Array<{
     id: number;
     damage: number;
-    position: THREE.Vector3;
+    position: Vector3;
     isCritical: boolean;
     isLegion?: boolean;
   }>) => Array<{
     id: number;
     damage: number;
-    position: THREE.Vector3;
+    position: Vector3;
     isCritical: boolean;
     isLegion?: boolean;
   }>) => void;
@@ -37,11 +47,11 @@ const FIRE_PARTICLES_COUNT = 12;
 
 
 // Reusable vectors to avoid allocations
-const tempPlayerGroundPos = new THREE.Vector3();
-const tempTargetGroundPos = new THREE.Vector3();
-const tempEnemyGroundPos = new THREE.Vector3();
-const tempDamageNumberOffset = new THREE.Vector3(0, 2, 0);
-const LEGION_GREEN_COLOR = new THREE.Color("#00ff44");
+const tempPlayerGroundPos = new Vector3();
+const tempTargetGroundPos = new Vector3();
+const tempEnemyGroundPos = new Vector3();
+const tempDamageNumberOffset = new Vector3(0, 2, 0);
+const LEGION_GREEN_COLOR = new Color("#00ff44");
 
 
 export default function Legion({ 
@@ -55,25 +65,25 @@ export default function Legion({
   nextDamageNumberId,
   onPlayerEmpowerment
 }: LegionProps) {
-  const meteorGroupRef = useRef<THREE.Group>(null);
-  const meteorMeshRef = useRef<THREE.Mesh>(null);
+  const meteorGroupRef = useRef<Group>(null);
+  const meteorMeshRef = useRef<Mesh>(null);
 
   // Create geometries and materials with proper disposal
   const geometries = useMemo(() => ({
-    meteorGeometry: new THREE.SphereGeometry(0.75, 16, 16),
-    warningRingGeometry: new THREE.RingGeometry(DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
-    pulsingRingGeometry: new THREE.RingGeometry(DAMAGE_RADIUS - 0.8, DAMAGE_RADIUS - 0.6, WARNING_RING_SEGMENTS),
-    outerGlowGeometry: new THREE.RingGeometry(DAMAGE_RADIUS - 0.25, DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
-    particleGeometry: new THREE.SphereGeometry(0.1, 8, 8),
-    impactSphereGeometry: new THREE.SphereGeometry(1, 32, 32)
+    meteorGeometry: new SphereGeometry(0.75, 16, 16),
+    warningRingGeometry: new RingGeometry(DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
+    pulsingRingGeometry: new RingGeometry(DAMAGE_RADIUS - 0.8, DAMAGE_RADIUS - 0.6, WARNING_RING_SEGMENTS),
+    outerGlowGeometry: new RingGeometry(DAMAGE_RADIUS - 0.25, DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
+    particleGeometry: new SphereGeometry(0.1, 8, 8),
+    impactSphereGeometry: new SphereGeometry(1, 32, 32)
   }), []);
 
   const materials = useMemo(() => ({
-    meteorMaterial: new THREE.MeshBasicMaterial({ color: "#00ff44" })
+    meteorMaterial: new MeshBasicMaterial({ color: "#00ff44" })
   }), []);
 
   // Impact effect component
-  const createLegionImpactEffect = (position: THREE.Vector3, startTime: number, onComplete: () => void) => {
+  const createLegionImpactEffect = (position: Vector3, startTime: number, onComplete: () => void) => {
     const elapsed = (Date.now() - startTime) / 1000;
     const fade = Math.max(0, 1 - (elapsed / IMPACT_DURATION));
 
@@ -94,7 +104,7 @@ export default function Legion({
             transparent
             opacity={1.8 * fade}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
 
@@ -108,7 +118,7 @@ export default function Legion({
             transparent
             opacity={1.9 * fade}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
 
@@ -123,7 +133,7 @@ export default function Legion({
               transparent
               opacity={0.95 * fade * (1 - i * 0.1)}
               depthWrite={false}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         ))}
@@ -155,9 +165,9 @@ export default function Legion({
 
   // useMemo for initial calculations
   const [initialTargetPos, startPos, trajectory] = React.useMemo(() => {
-    const initTarget = new THREE.Vector3(targetPosition.x, -5, targetPosition.z);
-    const start = new THREE.Vector3(targetPosition.x, 60, targetPosition.z);
-    const traj = new THREE.Vector3().subVectors(initTarget, start).normalize();
+    const initTarget = new Vector3(targetPosition.x, -5, targetPosition.z);
+    const start = new Vector3(targetPosition.x, 60, targetPosition.z);
+    const traj = new Vector3().subVectors(initTarget, start).normalize();
     return [initTarget, start, traj];
   }, [targetPosition]);
 
@@ -250,7 +260,7 @@ export default function Legion({
         {/* Warning rings using shared geometries - green themed */}
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <primitive object={geometries.warningRingGeometry} />
-          <meshBasicMaterial color="#00ff22" transparent opacity={0.4} side={THREE.DoubleSide} />
+          <meshBasicMaterial color="#00ff22" transparent opacity={0.4} side={DoubleSide} />
         </mesh>
         
         {/* Pulsing inner ring - green themed */}
@@ -263,7 +273,7 @@ export default function Legion({
             color="#00ff44"
             transparent 
             opacity={0.4 + Math.sin(Date.now() * 0.003) * 0.2}
-            side={THREE.DoubleSide}
+            side={DoubleSide}
           />
         </mesh>
 
@@ -276,7 +286,7 @@ export default function Legion({
             color="#00ff33"
             transparent
             opacity={0.25}
-            side={THREE.DoubleSide}
+            side={DoubleSide}
           />
         </mesh>
 

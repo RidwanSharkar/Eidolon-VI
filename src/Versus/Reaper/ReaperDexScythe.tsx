@@ -1,8 +1,7 @@
 // src/versus/Reaper/ReaperDexScythe.tsx
 import { useRef } from 'react';
-import { Group, Shape } from 'three';
+import { Group, Shape, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 
 interface ReaperScytheProps {
   isSwinging: boolean;
@@ -165,7 +164,7 @@ export default function ReaperDexScythe({ isSwinging, onSwingComplete }: ReaperS
             roughness={0.1}
             opacity={0.5}
             transparent
-            side={THREE.DoubleSide}
+            side={DoubleSide}
           />
         </mesh>
       </group>

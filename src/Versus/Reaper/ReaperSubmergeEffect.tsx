@@ -2,10 +2,10 @@
 import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, AdditiveBlending } from 'three';
-import * as THREE from 'three';
+import { Material, MeshStandardMaterial, SphereGeometry, Vector3 } from 'three';
 
 interface ReaperSubmergeEffectProps {
-  position: THREE.Vector3;
+  position: Vector3;
   duration?: number;
   onComplete?: () => void;
 }
@@ -24,8 +24,8 @@ export default function ReaperSubmergeEffect({
     // Initialize 40 particle meshes for a more dramatic effect
     particles.current = Array(40).fill(null).map(() => {
       const mesh = new Mesh(
-        new THREE.SphereGeometry(0.25, 12, 12), // Larger particles
-        new THREE.MeshStandardMaterial({
+        new SphereGeometry(0.25, 12, 12), // Larger particles
+        new MeshStandardMaterial({
           color: '#8B0000', // Dark red for better visibility
           emissive: '#FF4500', // Bright orange-red emissive
           transparent: true,
@@ -50,7 +50,7 @@ export default function ReaperSubmergeEffect({
     return () => {
       particles.current.forEach(particle => {
         particle.geometry.dispose();
-        (particle.material as THREE.Material).dispose();
+        (particle.material as Material).dispose();
       });
     };
   }, []);
@@ -72,7 +72,7 @@ export default function ReaperSubmergeEffect({
       particle.position.y = Math.max(particle.position.y - 0.015, 0.1); // Sink slower, don't go below ground
 
       // Fade out more gradually
-      const material = particle.material as THREE.MeshStandardMaterial;
+      const material = particle.material as MeshStandardMaterial;
       material.opacity = 0.9 * (1 - currentProgress * 0.8); // Stay visible longer
       
       // Scale up more dramatically as they disperse

@@ -1,8 +1,7 @@
 // src/Versus/Ascendant/AscendantBlink.tsx
 import React, { useRef, useEffect, useState } from 'react';
-import { Vector3 } from 'three';
+import { Vector3, AdditiveBlending } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 
 interface AscendantBlinkProps {
   startPosition: Vector3;
@@ -62,7 +61,7 @@ export default function AscendantBlink({
             transparent
             opacity={startOpacity * 0.7}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
 
@@ -76,7 +75,7 @@ export default function AscendantBlink({
             transparent 
             opacity={startOpacity * 0.8}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
 
@@ -89,7 +88,7 @@ export default function AscendantBlink({
             transparent 
             opacity={startOpacity * 0.6}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
 
@@ -115,7 +114,7 @@ export default function AscendantBlink({
                 transparent 
                 opacity={startOpacity}
                 depthWrite={false}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
               />
             </mesh>
           );
@@ -142,7 +141,7 @@ export default function AscendantBlink({
             transparent
             opacity={endOpacity * 0.7}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
 
@@ -159,7 +158,7 @@ export default function AscendantBlink({
             transparent 
             opacity={endOpacity * 0.8}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
 
@@ -175,7 +174,7 @@ export default function AscendantBlink({
             transparent 
             opacity={endOpacity * 0.6}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
 
@@ -201,7 +200,7 @@ export default function AscendantBlink({
                 transparent 
                 opacity={endOpacity}
                 depthWrite={false}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
               />
             </mesh>
           );
@@ -225,7 +224,7 @@ export default function AscendantBlink({
             transparent 
             opacity={endOpacity * 0.5}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       </group>
@@ -254,7 +253,7 @@ export default function AscendantBlink({
                   transparent 
                   opacity={trailOpacity}
                   depthWrite={false}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             );

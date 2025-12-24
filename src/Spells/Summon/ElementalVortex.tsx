@@ -1,8 +1,7 @@
 // src/Spells/Summon/ElementalVortex.tsx
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Group, AdditiveBlending } from 'three';
-import * as THREE from 'three';
+import { Mesh, Group, AdditiveBlending, MeshStandardMaterial } from 'three';
 
 interface ElementalVortexProps {
   parentRef: React.RefObject<Group>;
@@ -64,7 +63,7 @@ export default function ElementalVortex({ parentRef }: ElementalVortexProps) {
       // Fade particles as they rise (like mist)
       const meshChild = piece.children[0] as Mesh;
       if (meshChild && meshChild.material) {
-        const material = meshChild.material as THREE.MeshStandardMaterial;
+        const material = meshChild.material as MeshStandardMaterial;
         const fadeProgress = heightOffset / 1.5;
         material.opacity = Math.max(0.1, 0.6 * (1 - fadeProgress));
         

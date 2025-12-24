@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Group, } from 'three';
-import * as THREE from 'three';
+import { Mesh, Group, MeshStandardMaterial, AdditiveBlending } from 'three';
 import { WeaponType, WeaponSubclass } from '@/Weapons/weapons';
  
 
@@ -128,7 +127,7 @@ export default function BoneVortex({ parentRef, weaponType, weaponSubclass }: Bo
       // Update material opacity
       const meshChild = piece.children[0] as Mesh;
       if (meshChild && meshChild.material) {
-        const material = meshChild.material as THREE.MeshStandardMaterial;
+        const material = meshChild.material as MeshStandardMaterial;
         material.opacity = Math.max(0.1, 1 - (heightOffset * 2));
       }
     });
@@ -143,7 +142,7 @@ export default function BoneVortex({ parentRef, weaponType, weaponSubclass }: Bo
           color={getVortexColor(weaponType, weaponSubclass)}
           transparent
           opacity={0.15}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -155,7 +154,7 @@ export default function BoneVortex({ parentRef, weaponType, weaponSubclass }: Bo
           color={getVortexColor(weaponType, weaponSubclass)}
           transparent
           opacity={0.06}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>

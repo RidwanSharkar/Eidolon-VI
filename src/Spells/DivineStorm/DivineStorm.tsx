@@ -1,8 +1,7 @@
 import { useRef } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
 import DivineStormShard from '@/color/DivineStormShard';
-import * as THREE from 'three';
 
 interface DivineStormProps {
   position: Vector3;
@@ -100,7 +99,7 @@ export default function DivineStorm({
 
       {/* Divine light */}
       <pointLight 
-        color={new THREE.Color(0xFFD700)}
+        color={new Color(0xFFD700)}
         intensity={1}
         distance={4}
         decay={1}

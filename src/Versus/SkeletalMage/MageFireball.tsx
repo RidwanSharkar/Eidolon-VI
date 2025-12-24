@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Color } from 'three';
-import * as THREE from 'three';
+import { AdditiveBlending, Material, Mesh } from 'three';
 import MageFireballTrail from './MageFireballTrail';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
 
@@ -35,7 +35,7 @@ export default function MageFireball({
   getCurrentPlayerPosition 
 }: FireballProps) {
   const fireballRef = useRef<Group>(null);
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
   const initialDirection = target.clone().sub(position).normalize();
   const speed = 0.225
   const hitRadius = 1.2;
@@ -128,7 +128,7 @@ export default function MageFireball({
           mesh.geometry.dispose();
         }
         if (mesh.material) {
-          const material = mesh.material as THREE.Material;
+          const material = mesh.material as Material;
           material.dispose();
         }
       }
@@ -187,7 +187,7 @@ export default function MageFireball({
                     transparent
                     opacity={0.8 * fade}
                     depthWrite={false}
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                   />
                 </mesh>
                 
@@ -201,7 +201,7 @@ export default function MageFireball({
                     transparent
                     opacity={0.9 * fade}
                     depthWrite={false}
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                   />
                 </mesh>
 
@@ -216,7 +216,7 @@ export default function MageFireball({
                       transparent
                       opacity={0.5 * fade * (1 - i * 0.2)}
                       depthWrite={false}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 ))}

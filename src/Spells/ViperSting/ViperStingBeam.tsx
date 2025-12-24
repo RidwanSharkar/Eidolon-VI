@@ -1,8 +1,7 @@
 // src/Spells/ViperSting/ViperStingBeam.tsx
 import React, { useRef } from 'react';
-import { Vector3, Group } from 'three';
+import { Vector3, Group, AdditiveBlending } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 
 interface ViperStingBeamProps {
   position: Vector3;
@@ -122,7 +121,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
                   emissiveIntensity={2.5 * ringFade}
                   transparent
                   opacity={0.45 * ringFade * (1 - ringProgress * 0.4)}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
               
@@ -138,7 +137,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
                   emissiveIntensity={1.8 * ringFade}
                   transparent
                   opacity={0.35 * ringFade * (1 - ringProgress * 0.25)}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             </group>
@@ -164,7 +163,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
                   emissiveIntensity={6 * fadeProgress}
                   transparent
                   opacity={0.7 * fadeProgress}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             </group>
@@ -201,7 +200,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
                       emissiveIntensity={10 * fadeProgress}
                       transparent
                       opacity={0.9 * fadeProgress}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 </group>
@@ -217,7 +216,7 @@ const ViperStingBeam: React.FC<ViperStingBeamProps> = ({
                 emissiveIntensity={3 * fadeProgress}
                 transparent
                 opacity={0.4 * fadeProgress}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
               />
             </mesh>
           </>

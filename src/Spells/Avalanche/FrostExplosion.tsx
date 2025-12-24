@@ -1,6 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { Vector3 } from 'three';
-import * as THREE from 'three';
+import { Vector3, AdditiveBlending } from 'three';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface FrostExplosionProps {
@@ -99,7 +98,7 @@ export const FrostExplosion: React.FC<FrostExplosionProps> = ({ position, onComp
             transparent
             opacity={particle.life * 0.45}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       ))}

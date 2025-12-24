@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Group, Mesh } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { Euler, Vector3 } from 'three';
 
 interface BoneAuraTotemProps {
   parentRef: React.RefObject<Group>;
@@ -20,7 +20,7 @@ const createBonePiece = () => (
     </mesh>
     
     {/* Bone joints */}
-    <mesh position={new THREE.Vector3(0, 0.5, 0)} rotation={new THREE.Euler(0, 0, Math.PI / 6)}>
+    <mesh position={new Vector3(0, 0.5, 0)} rotation={new Euler(0, 0, Math.PI / 6)}>
       <sphereGeometry args={[0.12, 8, 8]} />
       <meshStandardMaterial 
         color="#ffffff"
@@ -29,7 +29,7 @@ const createBonePiece = () => (
       />
     </mesh>
 
-    <mesh position={new THREE.Vector3(0, 0.15, 0)} rotation={new THREE.Euler(0, 0, -Math.PI / 6)}>
+    <mesh position={new Vector3(0, 0.15, 0)} rotation={new Euler(0, 0, -Math.PI / 6)}>
       <sphereGeometry args={[0.12, 8, 8]} />
       <meshStandardMaterial 
         color="#a4a4a4"

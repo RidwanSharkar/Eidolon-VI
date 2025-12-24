@@ -1,7 +1,6 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
 
 interface EnemySlashEffectProps {
@@ -66,7 +65,7 @@ export default function EnemySlashEffect({
     Array(8).fill(0).map((_, i) => {
       const angle = (i / 7) * Math.PI * 0.8 - Math.PI * 0.4; // Arc from -40% to 40% of PI
       return {
-        position: new THREE.Vector3(
+        position: new Vector3(
           Math.cos(angle) * 1.2,
           Math.sin(angle) * 1.2,
           0
@@ -81,7 +80,7 @@ export default function EnemySlashEffect({
     Array(6).fill(0).map((_, i) => {
       const angle = (i / 5) * Math.PI * 0.8 - Math.PI * 0.4;
       return {
-        position: new THREE.Vector3(
+        position: new Vector3(
           Math.cos(angle) * 0.8,
           Math.sin(angle) * 0.8,
           -0.1

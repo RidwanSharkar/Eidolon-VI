@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, Mesh, MeshStandardMaterial, AdditiveBlending } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 
 interface HolyBurnProps {
   position: Vector3;
@@ -60,8 +59,8 @@ export default function HolyBurn({
     
     // Update material opacity for all children
     groupRef.current.children.forEach(child => {
-      if (child instanceof THREE.Mesh && child.material) {
-        const material = child.material as THREE.MeshStandardMaterial;
+      if (child instanceof Mesh && child.material) {
+        const material = child.material as MeshStandardMaterial;
         if (material.opacity !== undefined) {
           material.opacity = fade;
         }
@@ -80,7 +79,7 @@ export default function HolyBurn({
           emissiveIntensity={2}
           transparent
           opacity={0.8}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
       
@@ -93,7 +92,7 @@ export default function HolyBurn({
           emissiveIntensity={4}
           transparent
           opacity={0.9}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
       
@@ -114,7 +113,7 @@ export default function HolyBurn({
             emissiveIntensity={3}
             transparent
             opacity={0.7}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       ))}
@@ -128,7 +127,7 @@ export default function HolyBurn({
           emissiveIntensity={1.5}
           transparent
           opacity={0.6}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
       

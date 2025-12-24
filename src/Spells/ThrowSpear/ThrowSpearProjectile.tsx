@@ -1,16 +1,16 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, Shape } from 'three';
-import * as THREE from 'three';
+import { AdditiveBlending, Color, DoubleSide } from 'three';
 
-// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+// Pre-allocated colors for performance - avoids new Color() on every render
 const COLORS = {
   // Going out colors (red)
-  spearRed: new THREE.Color(0xFF544E),
-  lightningRed: new THREE.Color(0xFF544E),
+  spearRed: new Color(0xFF544E),
+  lightningRed: new Color(0xFF544E),
   // Returning colors (cyan/blue)
-  spearBlue: new THREE.Color(0x0088FF),
-  lightningCyan: new THREE.Color(0x00FFFF),
+  spearBlue: new Color(0x0088FF),
+  lightningCyan: new Color(0x00FFFF),
 };
 
 interface ThrowSpearProjectileProps {
@@ -260,7 +260,7 @@ export default function ThrowSpearProjectile({
                     roughness={0.1}
                     opacity={opacity * 0.8}
                     transparent
-                    side={THREE.DoubleSide}
+                    side={DoubleSide}
                   />
                 </mesh>
               </group>
@@ -279,7 +279,7 @@ export default function ThrowSpearProjectile({
                     roughness={0.1}
                     opacity={opacity * 0.8}
                     transparent
-                    side={THREE.DoubleSide}
+                    side={DoubleSide}
                   />
                 </mesh>
               </group>
@@ -297,7 +297,7 @@ export default function ThrowSpearProjectile({
                     roughness={0.1}
                     opacity={opacity * 0.8}
                     transparent
-                    side={THREE.DoubleSide}
+                    side={DoubleSide}
                   />
                 </mesh>
               </group>
@@ -358,7 +358,7 @@ export default function ThrowSpearProjectile({
                 emissiveIntensity={chargeIntensity * 4 + 2}
                 transparent
                 opacity={trailOpacity}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
                 depthWrite={false}
               />
             </mesh>
@@ -372,7 +372,7 @@ export default function ThrowSpearProjectile({
                 emissiveIntensity={chargeIntensity * 2 + 1}
                 transparent
                 opacity={trailOpacity * 0.5}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
                 depthWrite={false}
               />
             </mesh>
@@ -393,7 +393,7 @@ export default function ThrowSpearProjectile({
               emissiveIntensity={baseEmissiveIntensity + chargeIntensity}
               transparent
               opacity={opacity * 0.7}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
               depthWrite={false}
             />
           </mesh>

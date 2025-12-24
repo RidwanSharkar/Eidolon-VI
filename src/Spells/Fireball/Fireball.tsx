@@ -1,8 +1,7 @@
 import React, { useRef, useMemo, useEffect } from 'react';
-import { Mesh, Vector3, Clock, Color, Group } from 'three';
+import { Mesh, Vector3, Clock, Color, Group, Raycaster, SphereGeometry, MeshStandardMaterial } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import FireballTrail from '@/Spells/Fireball/FireballTrail';
-import * as THREE from 'three'
 
 interface FireballProps {
   position: Vector3;
@@ -22,25 +21,25 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
   const color = useMemo(() => new Color('#00ff44'), []);
   const impactGroup = useRef<Group>(null);
   const explosionStartTime = useRef<number | null>(null);
-  const collidableMeshesRef = useRef<THREE.Mesh[]>([]);
-  const tempMovementRef = useRef(new THREE.Vector3());
-  const rayDirectionRef = useRef(new THREE.Vector3());
+  const collidableMeshesRef = useRef<Mesh[]>([]);
+  const tempMovementRef = useRef(new Vector3());
+  const rayDirectionRef = useRef(new Vector3());
   // Reusable raycaster and direction vector to avoid allocations every frame
-  const raycasterRef = useRef(new THREE.Raycaster());
+  const raycasterRef = useRef(new Raycaster());
 
-  const geometry = useMemo(() => new THREE.SphereGeometry(size, 32, 32), [size]);
-  const material = useMemo(() => new THREE.MeshStandardMaterial({
+  const geometry = useMemo(() => new SphereGeometry(size, 32, 32), [size]);
+  const material = useMemo(() => new MeshStandardMaterial({
     emissive: color,
     emissiveIntensity: 2,
     toneMapped: false
   }), [color]);
 
   useEffect(() => {
-    const meshes: THREE.Mesh[] = [];
+    const meshes: Mesh[] = [];
     scene.traverse((child) => {
-      if (child instanceof THREE.Group && (child.name === 'mountain' || child.name === 'tree')) {
+      if (child instanceof Group && (child.name === 'mountain' || child.name === 'tree')) {
         child.traverse((nested) => {
-          if (nested instanceof THREE.Mesh) {
+          if (nested instanceof Mesh) {
             meshes.push(nested);
           }
         });

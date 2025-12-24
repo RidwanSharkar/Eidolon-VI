@@ -1,8 +1,7 @@
 import React, { useRef } from 'react';
-import { Group } from 'three';
+import { Group, DoubleSide, AdditiveBlending } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { WeaponType, WeaponSubclass } from '../Weapons/weapons';
-import * as THREE from 'three';
 
 export interface ChargeStatus {
   id: number;
@@ -134,8 +133,8 @@ export default function ChargedOrbitals({
                 transparent
                 opacity={chargeStatus?.available ? 0.4 : 0.15}
                 depthWrite={false}
-                side={THREE.DoubleSide}
-                blending={THREE.AdditiveBlending}
+                side={DoubleSide}
+                blending={AdditiveBlending}
               />
             </mesh>
           </group>

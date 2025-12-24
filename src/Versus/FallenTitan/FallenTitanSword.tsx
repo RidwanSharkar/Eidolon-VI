@@ -1,7 +1,7 @@
 // src/Versus/FallenTitan/FallenTitanSword.tsx
 import React from 'react';
 import { Shape } from 'three';
-import * as THREE from 'three';
+import { AdditiveBlending, Color } from 'three';
 
 export default function FallenTitanSword() {
   // Create custom sword blade shape - larger version
@@ -130,8 +130,8 @@ export default function FallenTitanSword() {
           <mesh>
             <sphereGeometry args={[0.248, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0x8B0000)}         // Dark red
-              emissive={new THREE.Color(0x4B0000)}      // Dark red emission
+              color={new Color(0x8B0000)}         // Dark red
+              emissive={new Color(0x4B0000)}      // Dark red emission
               emissiveIntensity={1.5}
               transparent
               opacity={1}
@@ -142,8 +142,8 @@ export default function FallenTitanSword() {
           <mesh>
             <sphereGeometry args={[0.16, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0x8B0000)}
-              emissive={new THREE.Color(0x8B0000)}
+              color={new Color(0x8B0000)}
+              emissive={new Color(0x8B0000)}
               emissiveIntensity={25}
               transparent
               opacity={0.8}
@@ -153,8 +153,8 @@ export default function FallenTitanSword() {
           <mesh>
             <sphereGeometry args={[0.232, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0x8B0000)}
-              emissive={new THREE.Color(0x4B0000)}
+              color={new Color(0x8B0000)}
+              emissive={new Color(0x4B0000)}
               emissiveIntensity={20}
               transparent
               opacity={0.6}
@@ -164,8 +164,8 @@ export default function FallenTitanSword() {
           <mesh>
             <sphereGeometry args={[0.28, 16, 16]} />
             <meshStandardMaterial
-              color={new THREE.Color(0x8B0000)}
-              emissive={new THREE.Color(0x4B0000)}
+              color={new Color(0x8B0000)}
+              emissive={new Color(0x4B0000)}
               emissiveIntensity={15}
               transparent
               opacity={0.4}
@@ -174,7 +174,7 @@ export default function FallenTitanSword() {
 
           {/* Dark red point light */}
           <pointLight 
-            color={new THREE.Color(0x8B0000)}
+            color={new Color(0x8B0000)}
             intensity={1.5}
             distance={1.2}
             decay={2}
@@ -187,8 +187,8 @@ export default function FallenTitanSword() {
           <mesh>
             <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0x2B0000)}  // Very dark red
-              emissive={new THREE.Color(0x4B0000)} // Dark red emission
+              color={new Color(0x2B0000)}  // Very dark red
+              emissive={new Color(0x4B0000)} // Dark red emission
               emissiveIntensity={1.8}
               metalness={0.6}
               roughness={0.2}
@@ -199,8 +199,8 @@ export default function FallenTitanSword() {
           <mesh>
             <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
             <meshStandardMaterial 
-              color={new THREE.Color(0x6B0000)}  // Dark red
-              emissive={new THREE.Color(0x4B0000)} // Dark red emission
+              color={new Color(0x6B0000)}  // Dark red
+              emissive={new Color(0x4B0000)} // Dark red emission
               emissiveIntensity={3}
               metalness={0.4}
               roughness={0.2}
@@ -215,12 +215,12 @@ export default function FallenTitanSword() {
           <mesh>
             <sphereGeometry args={[1.2, 12, 12]} />
             <meshStandardMaterial
-              color={new THREE.Color(0x1a0000)}
-              emissive={new THREE.Color(0x4B0000)}
+              color={new Color(0x1a0000)}
+              emissive={new Color(0x4B0000)}
               emissiveIntensity={0.8}
               transparent
               opacity={0.1}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         </group>

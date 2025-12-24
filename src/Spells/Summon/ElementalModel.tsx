@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, AdditiveBlending } from 'three';
-import * as THREE from 'three';
+import { MathUtils, Mesh } from 'three';
 import ElementalVortex from './ElementalVortex';
 
 interface ElementalModelProps {
@@ -25,7 +25,7 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
       }
       
       // Left arm attack animation - similar to Death Knight
-      const leftArm = groupRef.current.getObjectByName('LeftArm') as THREE.Mesh;
+      const leftArm = groupRef.current.getObjectByName('LeftArm') as Mesh;
       if (leftArm) {
         if (isAttacking) {
           // Raise left arm for spell casting (similar to Death Knight Frost Strike)
@@ -33,16 +33,16 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
           const currentRotation = leftArm.rotation.x;
           const lerpFactor = 8 * delta; // Fast animation speed
           
-          leftArm.rotation.x = THREE.MathUtils.lerp(currentRotation, targetRotation, lerpFactor);
-          leftArm.rotation.z = THREE.MathUtils.lerp(leftArm.rotation.z, 0.2, lerpFactor); // Slight outward rotation
+          leftArm.rotation.x = MathUtils.lerp(currentRotation, targetRotation, lerpFactor);
+          leftArm.rotation.z = MathUtils.lerp(leftArm.rotation.z, 0.2, lerpFactor); // Slight outward rotation
         } else {
           // Return to neutral position
           const currentRotation = leftArm.rotation.x;
           const currentZ = leftArm.rotation.z;
           const lerpFactor = 6 * delta; // Slightly slower return
           
-          leftArm.rotation.x = THREE.MathUtils.lerp(currentRotation, 0, lerpFactor);
-          leftArm.rotation.z = THREE.MathUtils.lerp(currentZ, 0, lerpFactor);
+          leftArm.rotation.x = MathUtils.lerp(currentRotation, 0, lerpFactor);
+          leftArm.rotation.z = MathUtils.lerp(currentZ, 0, lerpFactor);
         }
       }
     }

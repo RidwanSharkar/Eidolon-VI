@@ -1,11 +1,18 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  Color,
+  Group,
+  Mesh,
+  Points,
+  Vector3
+} from 'three';
 
 interface GuidedBoltTrailProps {
-  color: THREE.Color;
+  color: Color;
   size: number;
-  meshRef: React.RefObject<THREE.Mesh | THREE.Group>;
+  meshRef: React.RefObject<Mesh | Group>;
   opacity?: number;
 }
 
@@ -16,15 +23,15 @@ const GuidedBoltTrail: React.FC<GuidedBoltTrailProps> = ({
   opacity = 1
 }) => {
   const particlesCount = 12; 
-  const particlesRef = useRef<THREE.Points>(null);
+  const particlesRef = useRef<Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const scalesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const isInitialized = useRef(false);
   
   // Reusable vectors to avoid allocations in frame loop and effects
-  const lastKnownPosition = useRef(new THREE.Vector3());
-  const worldPositionRef = useRef(new THREE.Vector3());
+  const lastKnownPosition = useRef(new Vector3());
+  const worldPositionRef = useRef(new Vector3());
 
   // Initialize positions only once when mesh is available
   useEffect(() => {
@@ -114,7 +121,7 @@ const GuidedBoltTrail: React.FC<GuidedBoltTrailProps> = ({
       <shaderMaterial
         transparent
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
+        blending={AdditiveBlending}
         vertexShader={`
           attribute float opacity;
           attribute float scale;

@@ -1,32 +1,31 @@
 // src/color/DivineStormShard.tsx
 import { useRef } from 'react';
-import { Mesh, Vector3 } from 'three';
+import { Mesh, Vector3, TorusGeometry, SphereGeometry, MeshStandardMaterial, Color, AdditiveBlending } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 
 // Shared geometries for performance - match firestorm sizes
 export const divineStormGeometries = {
-  torus: new THREE.TorusGeometry(0.8, 0.075, 8, 32), // Match firestorm
-  tetrahedron: new THREE.SphereGeometry(0.0525, 16, 16) // Match firestorm
+  torus: new TorusGeometry(0.8, 0.075, 8, 32), // Match firestorm
+  tetrahedron: new SphereGeometry(0.0525, 16, 16) // Match firestorm
 };
 
 // Bright yellow materials for divine theme
 export const divineStormMaterials = {
-  storm: new THREE.MeshStandardMaterial({
-    color: new THREE.Color(0xFFD700), // Gold
-    emissive: new THREE.Color(0xFFFF00), // Bright yellow
+  storm: new MeshStandardMaterial({
+    color: new Color(0xFFD700), // Gold
+    emissive: new Color(0xFFFF00), // Bright yellow
     emissiveIntensity: 1,
     transparent: true,
     opacity: 0.7,
-    blending: THREE.AdditiveBlending
+    blending: AdditiveBlending
   }),
-  shard: new THREE.MeshStandardMaterial({
-    color: new THREE.Color(0xFFF8DC), // Cornsilk
-    emissive: new THREE.Color(0xFFD700), // Gold
+  shard: new MeshStandardMaterial({
+    color: new Color(0xFFF8DC), // Cornsilk
+    emissive: new Color(0xFFD700), // Gold
     emissiveIntensity: 1,
     transparent: true,
     opacity: 0.8,
-    blending: THREE.AdditiveBlending
+    blending: AdditiveBlending
   })
 };
 

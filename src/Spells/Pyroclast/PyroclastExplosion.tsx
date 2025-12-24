@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Vector3 } from 'three';
-import * as THREE from 'three';
+import { Vector3, AdditiveBlending } from 'three';
 
 interface PyroclastExplosionProps {
   position: Vector3;
@@ -71,7 +70,7 @@ export default function PyroclastExplosion({
           transparent
           opacity={0.9 * fade}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
       
@@ -85,7 +84,7 @@ export default function PyroclastExplosion({
           transparent
           opacity={0.95 * fade}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
 
@@ -100,7 +99,7 @@ export default function PyroclastExplosion({
             transparent
             opacity={0.7 * fade * (1 - i * 0.15)}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       ))}
@@ -129,7 +128,7 @@ export default function PyroclastExplosion({
               transparent
               opacity={0.9 * fade}
               depthWrite={false}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         );

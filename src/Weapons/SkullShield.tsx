@@ -1,23 +1,22 @@
 // src/Weapons/SkullShield.tsx
 
 import { useRef, useMemo } from 'react';
-import { Group, Shape } from 'three';
+import { Group, Shape, Color, ExtrudeGeometry, SphereGeometry, BoxGeometry, CylinderGeometry, MeshStandardMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 
 // Pre-allocated colors for performance - avoids new THREE.Color() on every render
 const SKULL_SHIELD_COLORS = {
   // Base colors
-  darkGrayBone: new THREE.Color(0x8B8B8B),
-  darkEmissive: new THREE.Color(0x2A2A2A),
-  veryDark: new THREE.Color(0x1A1A1A),
-  ivoryWhite: new THREE.Color(0xFFFFF0),
-  darkCrimsonEmissive: new THREE.Color(0x8B0000),
-  tanBone: new THREE.Color(0xD2B48C),
+  darkGrayBone: new Color(0x8B8B8B),
+  darkEmissive: new Color(0x2A2A2A),
+  veryDark: new Color(0x1A1A1A),
+  ivoryWhite: new Color(0xFFFFF0),
+  darkCrimsonEmissive: new Color(0x8B0000),
+  tanBone: new Color(0xD2B48C),
   // State-based colors
-  activeRed: new THREE.Color(0x8B0000),
-  rechargingRed: new THREE.Color(0x6B0000),
-  inactiveRed: new THREE.Color(0x4B0000),
+  activeRed: new Color(0x8B0000),
+  rechargingRed: new Color(0x6B0000),
+  inactiveRed: new Color(0x4B0000),
 } as const;
 
 // MEMORY FIX: Create shapes once at module level
@@ -141,43 +140,43 @@ const teethExtrudeSettings = {
 
 // MEMORY FIX: Cached geometries - created once at module load
 const CACHED_GEOMETRIES = {
-  skullShield: new THREE.ExtrudeGeometry(SKULL_SHAPE, shieldExtrudeSettings),
-  leftEyeSocket: new THREE.ExtrudeGeometry(LEFT_EYE_SHAPE, socketExtrudeSettings),
-  rightEyeSocket: new THREE.ExtrudeGeometry(RIGHT_EYE_SHAPE, socketExtrudeSettings),
-  nasalCavity: new THREE.ExtrudeGeometry(NASAL_SHAPE, socketExtrudeSettings),
-  teeth: new THREE.ExtrudeGeometry(TEETH_SHAPE, teethExtrudeSettings),
-  eyeOrb: new THREE.SphereGeometry(0.025, 8, 8),
-  crackBox: new THREE.BoxGeometry(0.002, 0.08, 0.005),
-  boneStud: new THREE.CylinderGeometry(0.006, 0.010, 0.012, 6)
+  skullShield: new ExtrudeGeometry(SKULL_SHAPE, shieldExtrudeSettings),
+  leftEyeSocket: new ExtrudeGeometry(LEFT_EYE_SHAPE, socketExtrudeSettings),
+  rightEyeSocket: new ExtrudeGeometry(RIGHT_EYE_SHAPE, socketExtrudeSettings),
+  nasalCavity: new ExtrudeGeometry(NASAL_SHAPE, socketExtrudeSettings),
+  teeth: new ExtrudeGeometry(TEETH_SHAPE, teethExtrudeSettings),
+  eyeOrb: new SphereGeometry(0.025, 8, 8),
+  crackBox: new BoxGeometry(0.002, 0.08, 0.005),
+  boneStud: new CylinderGeometry(0.006, 0.010, 0.012, 6)
 };
 
 // MEMORY FIX: Cached materials - created once at module load
 const CACHED_MATERIALS = {
-  skullBody: new THREE.MeshStandardMaterial({
+  skullBody: new MeshStandardMaterial({
     color: SKULL_SHIELD_COLORS.darkGrayBone,
     metalness: 0.3,
     roughness: 0.6,
     emissive: SKULL_SHIELD_COLORS.darkEmissive,
     emissiveIntensity: 0.1
   }),
-  socketDark: new THREE.MeshStandardMaterial({
+  socketDark: new MeshStandardMaterial({
     color: SKULL_SHIELD_COLORS.veryDark,
     metalness: 0.1,
     roughness: 0.9
   }),
-  teeth: new THREE.MeshStandardMaterial({
+  teeth: new MeshStandardMaterial({
     color: SKULL_SHIELD_COLORS.ivoryWhite,
     metalness: 0.1,
     roughness: 0.3,
     emissive: SKULL_SHIELD_COLORS.darkCrimsonEmissive,
     emissiveIntensity: 0.2
   }),
-  crack: new THREE.MeshStandardMaterial({
+  crack: new MeshStandardMaterial({
     color: SKULL_SHIELD_COLORS.darkEmissive,
     metalness: 0.1,
     roughness: 0.9
   }),
-  boneStud: new THREE.MeshStandardMaterial({
+  boneStud: new MeshStandardMaterial({
     color: SKULL_SHIELD_COLORS.tanBone,
     metalness: 0.2,
     roughness: 0.7
@@ -232,7 +231,7 @@ export default function SkullShield({
         ? SKULL_SHIELD_COLORS.rechargingRed 
         : SKULL_SHIELD_COLORS.inactiveRed;
     
-    return new THREE.MeshStandardMaterial({
+    return new MeshStandardMaterial({
       color: color,
       emissive: color,
       emissiveIntensity: isShieldActive ? 2.0 : isRecharging ? 1.2 : 0.8,

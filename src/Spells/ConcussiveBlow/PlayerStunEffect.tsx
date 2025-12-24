@@ -1,20 +1,19 @@
 // src/Spells/ConcussiveBlow/PlayerStunEffect.tsx
 
 import { useRef, useEffect, useState } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 
-// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+// Pre-allocated colors for performance - avoids new Color() on every render
 const COLORS = {
-  brightBlue: new THREE.Color(0x6666FF),
-  blueEmission: new THREE.Color(0x4444FF),
-  lightBlue: new THREE.Color(0xAAAAFF),
-  lightBlueEmission: new THREE.Color(0x8888FF),
-  brightYellow: new THREE.Color(0xFFFF66),
-  brightCyan: new THREE.Color(0x66EEFF),
-  pointLight: new THREE.Color(0x6699FF),
-  white: new THREE.Color(0xFFFFFF),
+  brightBlue: new Color(0x6666FF),
+  blueEmission: new Color(0x4444FF),
+  lightBlue: new Color(0xAAAAFF),
+  lightBlueEmission: new Color(0x8888FF),
+  brightYellow: new Color(0xFFFF66),
+  brightCyan: new Color(0x66EEFF),
+  pointLight: new Color(0x6699FF),
+  white: new Color(0xFFFFFF),
 } as const;
 
 interface PlayerStunEffectProps {

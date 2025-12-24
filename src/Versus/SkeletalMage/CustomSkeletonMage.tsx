@@ -3,7 +3,12 @@ import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, In
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '@/gear/BonePlate';
 import ArchmageCrest from './ArchmageCrest';
-import * as THREE from 'three';
+import {
+  BoxGeometry,
+  ConeGeometry,
+  DynamicDrawUsage,
+  TorusGeometry
+} from 'three';
 import { useEffect, useRef, useState } from 'react';
 import { useMemo } from 'react';
 
@@ -62,67 +67,67 @@ const sphereGeometry = new SphereGeometry(0.02, 8, 8);
 const cylinderGeometry = new CylinderGeometry(0.03, 0.04, 2.8, 8);
 
 const sharedGeometries = {
-  tooth: new THREE.ConeGeometry(0.03, 0.075, 3),
-  lowerTooth: new THREE.ConeGeometry(0.01, 0.08, 3),
-  eye: new THREE.SphereGeometry(0.02, 8, 8),
-  eyeGlow: new THREE.SphereGeometry(0.035, 8, 8),
-  eyeOuterGlow: new THREE.SphereGeometry(0.05, 6.5, 2),
-  vertebrae: new THREE.CylinderGeometry(0.0225, 0.0225, 0.03, 6),
-  particle: new THREE.SphereGeometry(0.01, 6, 6),
+  tooth: new ConeGeometry(0.03, 0.075, 3),
+  lowerTooth: new ConeGeometry(0.01, 0.08, 3),
+  eye: new SphereGeometry(0.02, 8, 8),
+  eyeGlow: new SphereGeometry(0.035, 8, 8),
+  eyeOuterGlow: new SphereGeometry(0.05, 6.5, 2),
+  vertebrae: new CylinderGeometry(0.0225, 0.0225, 0.03, 6),
+  particle: new SphereGeometry(0.01, 6, 6),
   // MEMORY FIX: Additional cached geometries
-  skull: new THREE.SphereGeometry(0.22, 8, 8),
-  facePlate: new THREE.BoxGeometry(0.28, 0.28, 0.1),
-  cheekbone: new THREE.BoxGeometry(0.08, 0.12, 0.15),
-  jaw: new THREE.CylinderGeometry(0.08, 0.08, 0.2, 5),
-  pelvis: new THREE.CylinderGeometry(0.21, 0.20, 0.2, 8),
-  pelvisJoint: new THREE.SphereGeometry(0.075, 8, 8),
-  footPlate: new THREE.BoxGeometry(0.15, 0.02, 0.4),
-  shoulderBase: new THREE.CylinderGeometry(0.123, 0.19, 0.175, 6),
-  armorPlate: new THREE.BoxGeometry(0.12, 0.19, 0.02),
-  armorRidge: new THREE.BoxGeometry(0.035, 0.24, 0.015),
-  robeBody: new THREE.CylinderGeometry(0.17, 0.45, 1.85, 6),
-  robeTrim: new THREE.CylinderGeometry(0.285, 0.285, 0.135, 8),
-  robeSleeve: new THREE.CylinderGeometry(0.1, 0.125, 0.3, 6),
-  neck: new THREE.CylinderGeometry(0.04, 0.04, 0.2, 6),
-  rimHover: new THREE.TorusGeometry(0.2, 0.035, 3, 5),
-  rimBottom: new THREE.TorusGeometry(0.16, 0.02, 4, 5),
-  rimBottomLarge: new THREE.TorusGeometry(0.20, 0.02, 4, 5),
-  rimMid: new THREE.TorusGeometry(0.175, 0.0175, 6, 6),
-  beltRing: new THREE.TorusGeometry(0.075, 0.03, 3, 16),
-  kneeJoint: new THREE.SphereGeometry(0.12, 12, 12)
+  skull: new SphereGeometry(0.22, 8, 8),
+  facePlate: new BoxGeometry(0.28, 0.28, 0.1),
+  cheekbone: new BoxGeometry(0.08, 0.12, 0.15),
+  jaw: new CylinderGeometry(0.08, 0.08, 0.2, 5),
+  pelvis: new CylinderGeometry(0.21, 0.20, 0.2, 8),
+  pelvisJoint: new SphereGeometry(0.075, 8, 8),
+  footPlate: new BoxGeometry(0.15, 0.02, 0.4),
+  shoulderBase: new CylinderGeometry(0.123, 0.19, 0.175, 6),
+  armorPlate: new BoxGeometry(0.12, 0.19, 0.02),
+  armorRidge: new BoxGeometry(0.035, 0.24, 0.015),
+  robeBody: new CylinderGeometry(0.17, 0.45, 1.85, 6),
+  robeTrim: new CylinderGeometry(0.285, 0.285, 0.135, 8),
+  robeSleeve: new CylinderGeometry(0.1, 0.125, 0.3, 6),
+  neck: new CylinderGeometry(0.04, 0.04, 0.2, 6),
+  rimHover: new TorusGeometry(0.2, 0.035, 3, 5),
+  rimBottom: new TorusGeometry(0.16, 0.02, 4, 5),
+  rimBottomLarge: new TorusGeometry(0.20, 0.02, 4, 5),
+  rimMid: new TorusGeometry(0.175, 0.0175, 6, 6),
+  beltRing: new TorusGeometry(0.075, 0.03, 3, 16),
+  kneeJoint: new SphereGeometry(0.12, 12, 12)
 };
 
 const sharedMaterials = {
-  bone: new THREE.MeshStandardMaterial({
+  bone: new MeshStandardMaterial({
     color: "#e8e8e8",
     roughness: 0.4,
     metalness: 0.3
   }),
-  darkBone: new THREE.MeshStandardMaterial({
+  darkBone: new MeshStandardMaterial({
     color: "#d8d8d8",
     roughness: 0.5,
     metalness: 0.2
   }),
-  eyeCore: new THREE.MeshStandardMaterial({
+  eyeCore: new MeshStandardMaterial({
     color: "#2FFF00",
     emissive: "#2FFF00",
     emissiveIntensity: 3
   }),
-  eyeGlow: new THREE.MeshStandardMaterial({
+  eyeGlow: new MeshStandardMaterial({
     color: "#2FFF00",
     emissive: "#2FFF00",
     emissiveIntensity: 1,
     transparent: true,
     opacity: 0.75
   }),
-  eyeOuterGlow: new THREE.MeshStandardMaterial({
+  eyeOuterGlow: new MeshStandardMaterial({
     color: "#2FFF00",
     emissive: "#2FFF00",
     emissiveIntensity: 1,
     transparent: true,
     opacity: 0.7
   }),
-  particleGlow: new THREE.MeshStandardMaterial({
+  particleGlow: new MeshStandardMaterial({
     color: "#4169E1",
     emissive: "#4169E1",
     emissiveIntensity: 2,
@@ -453,8 +458,8 @@ function MageRobe() {
 
 function VertebraeInstances() {
   const instances = useMemo(() => {
-    const mesh = new THREE.InstancedMesh(sharedGeometries.vertebrae, sharedMaterials.bone, 5);
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    const mesh = new InstancedMesh(sharedGeometries.vertebrae, sharedMaterials.bone, 5);
+    mesh.instanceMatrix.setUsage(DynamicDrawUsage);
     return mesh;
   }, []);
 

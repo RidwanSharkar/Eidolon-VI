@@ -1,6 +1,5 @@
 import { useRef, useMemo, useEffect } from 'react';
-import { Group, Vector3, Euler, Shape, ExtrudeGeometry, MeshStandardMaterial } from 'three';
-import * as THREE from 'three';
+import { Group, Vector3, Euler, Shape, ExtrudeGeometry, MeshStandardMaterial, DoubleSide } from 'three';
 
 interface WingSegment {
   pos: Vector3;
@@ -66,7 +65,7 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
       emissiveIntensity: 0.3,
       metalness: 0.1,
       roughness: 0.6,
-      side: THREE.DoubleSide
+      side: DoubleSide
     }),
     redMarking: new MeshStandardMaterial({
       color: "#FF0000",
@@ -76,7 +75,7 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
       roughness: 0.2,
       opacity: 0.9,
       transparent: true,
-      side: THREE.DoubleSide
+      side: DoubleSide
     }),
     wingBone: new MeshStandardMaterial({
       color: "#E8E8E8",

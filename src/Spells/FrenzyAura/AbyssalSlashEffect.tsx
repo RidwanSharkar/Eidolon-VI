@@ -1,12 +1,18 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3, Object3D, Material } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  Mesh,
+  MeshStandardMaterial,
+  Quaternion,
+  SphereGeometry,
+  TorusGeometry
+} from 'three';
 
 // Pre-allocated vectors and quaternions to avoid per-frame allocations
-const tempForward = new THREE.Vector3();
-const tempAxisX = new THREE.Vector3(-1, 0, 0);
-const tempFlatRotation = new THREE.Quaternion();
+const tempForward = new Vector3();
+const tempAxisX = new Vector3(-1, 0, 0);
+const tempFlatRotation = new Quaternion();
 
 interface AbyssalSlashEffectProps {
   startPosition: Vector3;
@@ -31,36 +37,36 @@ export default function AbyssalSlashEffect({
 
   // Cache geometries - using OathStrike structure with green theme
   const geometries = useMemo(() => ({
-    mainArc: new THREE.TorusGeometry(3, 0.8, 8, 32, Math.PI),
-    innerGlow: new THREE.TorusGeometry(3, 0.4, 16, 32, Math.PI),
-    outerGlow: new THREE.TorusGeometry(2, 0.9, 16, 32, Math.PI),
-    particle: new THREE.SphereGeometry(0.15, 8, 8)
+    mainArc: new TorusGeometry(3, 0.8, 8, 32, Math.PI),
+    innerGlow: new TorusGeometry(3, 0.4, 16, 32, Math.PI),
+    outerGlow: new TorusGeometry(2, 0.9, 16, 32, Math.PI),
+    particle: new SphereGeometry(0.15, 8, 8)
   }), []);
 
   // Green materials matching Scythe theme
   const materials = useMemo(() => ({
-    mainFlame: new THREE.MeshStandardMaterial({
+    mainFlame: new MeshStandardMaterial({
       color: "#17CE54", // Scythe green
       emissive: "#00ff44", // Bright green
       emissiveIntensity: 2,
       transparent: true,
       opacity: 0.9
     }),
-    innerGlow: new THREE.MeshStandardMaterial({
+    innerGlow: new MeshStandardMaterial({
       color: "#17CE54",
       emissive: "#00ff44",
       emissiveIntensity: 1,
       transparent: true,
       opacity: 0.7
     }),
-    outerGlow: new THREE.MeshStandardMaterial({
+    outerGlow: new MeshStandardMaterial({
       color: "#17CE54",
       emissive: "#00ff44",
       emissiveIntensity: 1.3,
       transparent: true,
       opacity: 0.5
     }),
-    particle: new THREE.MeshStandardMaterial({
+    particle: new MeshStandardMaterial({
       color: "#17CE54",
       emissive: "#00ff44",
       emissiveIntensity: 1.5,
@@ -72,7 +78,7 @@ export default function AbyssalSlashEffect({
   // Pre-calculate particle positions (same as OathStrike)
   const particlePositions = useMemo(() => 
     Array(12).fill(0).map((_, i) => ({
-      position: new THREE.Vector3(
+      position: new Vector3(
         Math.cos((i * Math.PI) / 6) * 1.5,
         Math.sin((i * Math.PI) / 6) * 1.5,
         0
@@ -131,7 +137,7 @@ export default function AbyssalSlashEffect({
       effectRef.current.scale.set(scale, scale, scale * 0.5);
 
       effectRef.current.traverse((child: Object3D) => {
-        const material = (child as THREE.Mesh).material as Material & { opacity?: number };
+        const material = (child as Mesh).material as Material & { opacity?: number };
         if (material?.opacity !== undefined) {
           material.opacity = Math.sin(progress * Math.PI);
         }

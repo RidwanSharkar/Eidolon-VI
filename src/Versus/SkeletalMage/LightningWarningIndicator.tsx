@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { DoubleSide, RingGeometry, SphereGeometry } from 'three';
 
 interface LightningWarningIndicatorProps {
   position: Vector3;
@@ -14,10 +14,10 @@ const WARNING_RING_SEGMENTS = 32;
 const FIRE_PARTICLES_COUNT = 8;
 
 // Reusable geometries
-const warningRingGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
-const pulsingRingGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.6, DAMAGE_RADIUS - 0.4, WARNING_RING_SEGMENTS);
-const outerGlowGeometry = new THREE.RingGeometry(DAMAGE_RADIUS - 0.15, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
-const particleGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+const warningRingGeometry = new RingGeometry(DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
+const pulsingRingGeometry = new RingGeometry(DAMAGE_RADIUS - 0.6, DAMAGE_RADIUS - 0.4, WARNING_RING_SEGMENTS);
+const outerGlowGeometry = new RingGeometry(DAMAGE_RADIUS - 0.15, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
+const particleGeometry = new SphereGeometry(0.08, 8, 8);
 
 export default function LightningWarningIndicator({ position, duration, onComplete }: LightningWarningIndicatorProps) {
   const startTimeRef = useRef(Date.now());
@@ -41,7 +41,7 @@ export default function LightningWarningIndicator({ position, duration, onComple
       {/* Main warning ring - blue theme */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <primitive object={warningRingGeometry} />
-        <meshBasicMaterial color="#0088ff" transparent opacity={0.5} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#0088ff" transparent opacity={0.5} side={DoubleSide} />
       </mesh>
       
       {/* Pulsing inner ring */}
@@ -54,7 +54,7 @@ export default function LightningWarningIndicator({ position, duration, onComple
           color="#00bbff"
           transparent 
           opacity={0.4 + Math.sin(Date.now() * 0.006) * 0.2}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
         />
       </mesh>
 
@@ -67,7 +67,7 @@ export default function LightningWarningIndicator({ position, duration, onComple
           color="#0099dd"
           transparent
           opacity={0.3}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
         />
       </mesh>
 

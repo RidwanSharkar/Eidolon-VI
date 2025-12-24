@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group } from 'three';
-import * as THREE from 'three';
 
 interface BoneAuraProps {
   parentRef: React.RefObject<Group>;

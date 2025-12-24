@@ -1,12 +1,12 @@
 import { useRef, useEffect, useState } from 'react';
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, Color, Group } from 'three';
 import PyroclastExplosion from './PyroclastExplosion';
 import PyroclastTrail from './PyroclastTrail';
 
-// Pre-allocated color for performance - avoids new THREE.Color() on every render
-const PYROCLAST_TRAIL_COLOR = new THREE.Color("#FF2200");
+// Pre-allocated color for performance - avoids new Color() on every render
+const PYROCLAST_TRAIL_COLOR = new Color("#FF2200");
 
 interface PyroclastMissileProps {
   id: number;
@@ -25,7 +25,7 @@ export default function PyroclastMissile({
   onImpact,
   checkCollisions
 }: PyroclastMissileProps) {
-  const missileRef = useRef<THREE.Group>(null);
+  const missileRef = useRef<Group>(null);
   const startPosition = useRef(position.clone());
   const hasCollided = useRef(false);
   const [showExplosion, setShowExplosion] = useState(false);
@@ -156,7 +156,7 @@ export default function PyroclastMissile({
                   emissiveIntensity={intensity * (1 - i * 0.2) * opacity}
                   transparent
                   opacity={(0.7 - (i * 0.15)) * opacity}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             ))}

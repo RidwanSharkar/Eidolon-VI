@@ -1,6 +1,11 @@
  import { useRef, useEffect, useMemo } from 'react';
 import { Group, Vector3 } from 'three';
-import * as THREE from 'three';
+import {
+  BufferGeometry,
+  Float32BufferAttribute,
+  MeshStandardMaterial,
+  SphereGeometry
+} from 'three';
 import { useOathstrikeAnimation } from '@/Spells/Oathstrike/useOathstrikeAnimation';
 
 interface StealthStrikeEffectProps {
@@ -17,7 +22,7 @@ export default function StealthStrikeEffect({ position, direction, onComplete, p
   const geometries = useMemo(() => {
     // Create custom oval-shaped geometry
     const createOvalArc = (majorRadius: number, minorRadius: number, tubeRadius: number, segments: number = 32) => {
-      const geometry = new THREE.BufferGeometry();
+      const geometry = new BufferGeometry();
       const vertices = [];
       const normals = [];
       const uvs = [];
@@ -55,9 +60,9 @@ export default function StealthStrikeEffect({ position, direction, onComplete, p
       }
 
       geometry.setIndex(indices);
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-      geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-      geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+      geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
+      geometry.setAttribute('normal', new Float32BufferAttribute(normals, 3));
+      geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
       
       return geometry;
     };
@@ -66,34 +71,34 @@ export default function StealthStrikeEffect({ position, direction, onComplete, p
       mainArc: createOvalArc(2.25, 0.75, 0.1), // Taller and narrower oval (major=height, minor=width)
       innerGlow: createOvalArc(1.75, 0.6, 0.2),
       outerGlow: createOvalArc(1.4, 0.4, 0.3),
-      particle: new THREE.SphereGeometry(0.08, 8, 8)
+      particle: new SphereGeometry(0.08, 8, 8)
     };
   }, []);
 
   // Cache materials with stealth colors
   const materials = useMemo(() => ({
-    mainFlame: new THREE.MeshStandardMaterial({
+    mainFlame: new MeshStandardMaterial({
       color: "#9b4dff", // Purple
       emissive: "#4d2bff", // Deep purple
       emissiveIntensity: 2,
       transparent: true,
       opacity: 0.9
     }),
-    innerGlow: new THREE.MeshStandardMaterial({
+    innerGlow: new MeshStandardMaterial({
       color: "#4d8eff", // Blue
       emissive: "#2b4dff", // Deep blue
       emissiveIntensity: 1,
       transparent: true,
       opacity: 0.7
     }),
-    outerGlow: new THREE.MeshStandardMaterial({
+    outerGlow: new MeshStandardMaterial({
       color: "#9b4dff", // Purple
       emissive: "#4d2bff", // Deep purple
       emissiveIntensity: 1.3,
       transparent: true,
       opacity: 0.5
     }),
-    particle: new THREE.MeshStandardMaterial({
+    particle: new MeshStandardMaterial({
       color: "#4d8eff", // Blue
       emissive: "#2b4dff", // Deep blue
       emissiveIntensity: 1.5,
@@ -106,7 +111,7 @@ export default function StealthStrikeEffect({ position, direction, onComplete, p
     Array(12).fill(0).map((_, i) => {
       const angle = (i * Math.PI) / 6;
       return {
-        position: new THREE.Vector3(
+        position: new Vector3(
           Math.cos(angle) * 0.5, // Narrower horizontally to match oval
           Math.sin(angle) * 1.0, // Longer vertically to match oval
           0

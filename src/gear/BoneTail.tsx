@@ -1,22 +1,21 @@
 import { useRef, useState } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, CylinderGeometry, ConeGeometry, SphereGeometry, MeshStandardMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
 import React from 'react';
-import * as THREE from 'three';
 
 // MEMORY FIX: Cached geometries - created once at module load
 const CACHED_GEOMETRIES = {
-  vertebra: new THREE.CylinderGeometry(0.04, 0.055, 0.125, 6),
-  topSpike: new THREE.ConeGeometry(0.02, 0.06, 4),
-  sideSpikeLarge: new THREE.ConeGeometry(0.015, 0.25, 4),
-  sideSpikeMedium: new THREE.ConeGeometry(0.015, 0.2, 4),
-  sideSpikeMedium2: new THREE.ConeGeometry(0.0125, 0.04, 4),
-  sideSpikeSmall: new THREE.ConeGeometry(0.015, 0.04, 4),
-  joint: new THREE.SphereGeometry(0.025, 6, 6)
+  vertebra: new CylinderGeometry(0.04, 0.055, 0.125, 6),
+  topSpike: new ConeGeometry(0.02, 0.06, 4),
+  sideSpikeLarge: new ConeGeometry(0.015, 0.25, 4),
+  sideSpikeMedium: new ConeGeometry(0.015, 0.2, 4),
+  sideSpikeMedium2: new ConeGeometry(0.0125, 0.04, 4),
+  sideSpikeSmall: new ConeGeometry(0.015, 0.04, 4),
+  joint: new SphereGeometry(0.025, 6, 6)
 };
 
 // MEMORY FIX: Cached material - created once at module load
-const CACHED_MATERIAL = new THREE.MeshStandardMaterial({
+const CACHED_MATERIAL = new MeshStandardMaterial({
   color: "#ffffff",
   emissive: "#304040",
   emissiveIntensity: 0.6,

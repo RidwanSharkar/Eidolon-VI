@@ -1,17 +1,16 @@
 import React, { useRef, useCallback, useEffect, useMemo } from 'react';
-import { Group, Vector3 } from 'three';
-import * as THREE from 'three';
+import { Group, Vector3, Matrix4 } from 'three';
 import { SynchronizedEffect } from '@/Multiplayer/MultiplayerContext';
 
 // Pre-allocated rotation matrices for icicle angles to avoid per-shot allocations
 const ICICLE_ROTATION_MATRICES = {
-  center: new THREE.Matrix4().makeRotationY(0),
-  left30: new THREE.Matrix4().makeRotationY(Math.PI / 6),
-  right30: new THREE.Matrix4().makeRotationY(-Math.PI / 6),
-  left11: new THREE.Matrix4().makeRotationY(Math.PI / 16),
-  right11: new THREE.Matrix4().makeRotationY(-Math.PI / 16),
-  left22: new THREE.Matrix4().makeRotationY(Math.PI / 8),
-  right22: new THREE.Matrix4().makeRotationY(-Math.PI / 8),
+  center: new Matrix4().makeRotationY(0),
+  left30: new Matrix4().makeRotationY(Math.PI / 6),
+  right30: new Matrix4().makeRotationY(-Math.PI / 6),
+  left11: new Matrix4().makeRotationY(Math.PI / 16),
+  right11: new Matrix4().makeRotationY(-Math.PI / 16),
+  left22: new Matrix4().makeRotationY(Math.PI / 8),
+  right22: new Matrix4().makeRotationY(-Math.PI / 8),
 } as const;
 
 export interface IcicleCharge {
@@ -212,7 +211,7 @@ export default function IcicleOrbitals({
       .normalize();
 
     // Define rotation matrices based on combo step - use pre-allocated matrices
-    let rotationMatrices: readonly THREE.Matrix4[] = [];
+    let rotationMatrices: readonly Matrix4[] = [];
     switch (comboStep) {
       case 1:
         // 1st hit: 1 icicle straight forward

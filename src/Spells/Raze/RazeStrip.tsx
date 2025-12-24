@@ -2,14 +2,23 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, BufferGeometry, BufferAttribute, PointLight } from 'three';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  Color,
+  DoubleSide,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  Points,
+  PointsMaterial
+} from 'three';
 
-// Pre-allocated colors for performance - avoids new THREE.Color() on every render
-const FLAME_COLOR = new THREE.Color("#ff6600");
-const FLAME_EMISSIVE = new THREE.Color("#ff3300");
-const GLOW_COLOR = new THREE.Color("#ff8800");
-const LIGHT_COLOR = new THREE.Color("#ff6600");
-const AMBIENT_LIGHT_COLOR = new THREE.Color("#ff8833");
+// Pre-allocated colors for performance - avoids new Color() on every render
+const FLAME_COLOR = new Color("#ff6600");
+const FLAME_EMISSIVE = new Color("#ff3300");
+const GLOW_COLOR = new Color("#ff8800");
+const LIGHT_COLOR = new Color("#ff6600");
+const AMBIENT_LIGHT_COLOR = new Color("#ff8833");
 
 interface RazeStripProps {
   startPosition: Vector3;
@@ -31,9 +40,9 @@ export default function RazeStrip({
   isComplete
 }: RazeStripProps) {
   const groupRef = useRef<Group>(null);
-  const flameRef = useRef<THREE.Mesh>(null);
-  const embersRef = useRef<THREE.Points>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
+  const flameRef = useRef<Mesh>(null);
+  const embersRef = useRef<Points>(null);
+  const glowRef = useRef<Mesh>(null);
   const lightGroupRef = useRef<Group>(null);
   const startTimeRef = useRef(Date.now());
   const progressRef = useRef(0);
@@ -102,13 +111,13 @@ export default function RazeStrip({
     geometry.computeVertexNormals();
 
     // Enhanced flame material with better fire effect
-    const flameMat = new THREE.MeshStandardMaterial({
+    const flameMat = new MeshStandardMaterial({
       color: FLAME_COLOR,
       emissive: FLAME_EMISSIVE,
       emissiveIntensity: 3.0,
       transparent: true,
       opacity: 0.9,
-      side: THREE.DoubleSide,
+      side: DoubleSide,
       alphaTest: 0.1,
       roughness: 0.8,
       metalness: 0.0
@@ -150,12 +159,12 @@ export default function RazeStrip({
     emberGeo.setAttribute('color', new BufferAttribute(emberColors, 3));
     emberGeo.setAttribute('size', new BufferAttribute(emberSizes, 1));
 
-    const emberMat = new THREE.PointsMaterial({
+    const emberMat = new PointsMaterial({
       size: 0.08,
       transparent: true,
       opacity: 0.7,
       vertexColors: true,
-      blending: THREE.AdditiveBlending,
+      blending: AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true
     });
@@ -172,12 +181,12 @@ export default function RazeStrip({
     glowGeo.attributes.position.needsUpdate = true;
 
     // Glow material
-    const glowMat = new THREE.MeshBasicMaterial({
+    const glowMat = new MeshBasicMaterial({
       color: GLOW_COLOR,
       transparent: true,
       opacity: 0.4,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
+      side: DoubleSide,
+      blending: AdditiveBlending,
       depthWrite: false
     });
 
@@ -266,7 +275,7 @@ export default function RazeStrip({
 
     // Animate flame material and progressive reveal
     if (flameRef.current) {
-      const material = flameRef.current.material as THREE.MeshStandardMaterial;
+      const material = flameRef.current.material as MeshStandardMaterial;
       material.emissiveIntensity = 2.5 + Math.sin(elapsed * 8) * 0.8; // Enhanced flickering
       
       // Progressive reveal by modifying geometry draw range
@@ -282,7 +291,7 @@ export default function RazeStrip({
 
     // Animate glow effect
     if (glowRef.current) {
-      const glowMaterial = glowRef.current.material as THREE.MeshBasicMaterial;
+      const glowMaterial = glowRef.current.material as MeshBasicMaterial;
       glowMaterial.opacity = 0.3 + Math.sin(elapsed * 6) * 0.15; // Pulsing glow
       
       // Progressive reveal for glow
@@ -372,7 +381,7 @@ export default function RazeStrip({
       embersRef.current.geometry.attributes.color.needsUpdate = true;
       
       // Only show embers where the fire has reached
-      const emberMaterial = embersRef.current.material as THREE.PointsMaterial;
+      const emberMaterial = embersRef.current.material as PointsMaterial;
       emberMaterial.opacity = Math.min(currentDistance / maxDistance, 1) * 0.8;
     }
   });

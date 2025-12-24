@@ -1,13 +1,11 @@
 // src/weapons/Sabres.tsx
   import { useRef, useState, useEffect, useMemo } from 'react';
-  import { Group, Shape, Vector3, ExtrudeGeometry } from 'three';
+  import { Group, Shape, Vector3, ExtrudeGeometry, Color, Mesh, AdditiveBlending } from 'three';
   import { useFrame } from '@react-three/fiber';
   import FireballTrail from '../Spells/Fireball/FireballTrail';
 
-  import * as THREE from 'three';
-
   // Pre-allocated color for performance - avoids new THREE.Color() on every render
-  const SABRE_TRAIL_COLOR = new THREE.Color("#0088ff");
+  const SABRE_TRAIL_COLOR = new Color("#0088ff");
 
   const lerp = (start: number, end: number, t: number) => {
     return start * (1 - t) + end * t;
@@ -48,8 +46,8 @@
     const leftSwingDelay = useRef(0);
   
     // Refs for Orbs (Avalanche)
-    const leftOrbRef = useRef<THREE.Mesh>(null);
-    const rightOrbRef = useRef<THREE.Mesh>(null);
+    const leftOrbRef = useRef<Mesh>(null);
+    const rightOrbRef = useRef<Mesh>(null);
   
     // Modify the state management for explosions
     const [explosions, setExplosions] = useState<Array<{
@@ -579,7 +577,7 @@
               transparent
               opacity={particle.life * 0.7}
               depthWrite={false}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         ))}

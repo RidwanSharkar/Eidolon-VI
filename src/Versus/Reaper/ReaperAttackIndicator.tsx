@@ -1,16 +1,16 @@
 // src/versus/Reaper/ReaperAttackIndicator.tsx
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { DoubleSide, Mesh, MeshBasicMaterial, Vector3 } from 'three';
 
 interface ReaperAttackIndicatorProps {
-  position: THREE.Vector3;
+  position: Vector3;
   duration: number;
   range: number;
 }
 
 export default function ReaperAttackIndicator({ position, duration, range }: ReaperAttackIndicatorProps) {
-  const ringRef = useRef<THREE.Mesh>(null);
+  const ringRef = useRef<Mesh>(null);
   const startTime = useRef(Date.now());
 
   useFrame(() => {
@@ -26,7 +26,7 @@ export default function ReaperAttackIndicator({ position, duration, range }: Rea
     // Fade out near the end
     if (progress > 0.7) {
       const opacity = 1 - ((progress - 0.7) / 0.3);
-      (ringRef.current.material as THREE.MeshBasicMaterial).opacity = opacity * 0.6;
+      (ringRef.current.material as MeshBasicMaterial).opacity = opacity * 0.6;
     }
   });
 
@@ -42,7 +42,7 @@ export default function ReaperAttackIndicator({ position, duration, range }: Rea
           color="#00BBFF"
           transparent 
           opacity={0.35}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
         />
       </mesh>
 
@@ -55,7 +55,7 @@ export default function ReaperAttackIndicator({ position, duration, range }: Rea
           color="#66D9FF"
           transparent 
           opacity={0.35}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
         />
       </mesh>
     </group>

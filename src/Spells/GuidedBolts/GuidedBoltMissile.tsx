@@ -1,11 +1,11 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, Color, MeshStandardMaterial, PointLight } from 'three';
 import GuidedBoltTrail from './GuidedBoltTrail';
 
 // Pre-allocated color for trail - module level constant
-const TRAIL_COLOR = new THREE.Color("#4DC7FF");
+const TRAIL_COLOR = new Color("#4DC7FF");
 
 interface GuidedBoltMissileProps {
   position: Vector3;
@@ -21,7 +21,7 @@ export default function GuidedBoltMissile({ position, targetPosition, direction 
   
   // Shared material for the bone arrow with teal coloring - properly memoized
   const boneMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
+    return new MeshStandardMaterial({
       color: arrowColor,
       roughness: 0.8,
       metalness: 0.2,
@@ -61,7 +61,7 @@ export default function GuidedBoltMissile({ position, targetPosition, direction 
       const proximityGlow = Math.max(0.3, 1.0 - (distanceToTarget / 10));
       if (missileRef.current.children.length > 0) {
         const light = missileRef.current.children.find(child => child.type === 'PointLight');
-        if (light && light instanceof THREE.PointLight) {
+        if (light && light instanceof PointLight) {
           light.intensity = 1.5 * proximityGlow;
         }
       }
@@ -130,7 +130,7 @@ export default function GuidedBoltMissile({ position, targetPosition, direction 
             emissiveIntensity={0.5}
             transparent
             opacity={0.3}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
             depthWrite={false}
           />
         </mesh>

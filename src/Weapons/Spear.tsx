@@ -1,15 +1,14 @@
 // src/weapons/Spear.tsx
 
 import { useRef, useEffect } from 'react';
-import { Group, Shape, Vector3 } from 'three';
+import { Group, Shape, Vector3, Color, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 import { DamageNumber } from '@/Unit/useDamageNumbers';
 import { WeaponSubclass, getWeaponDamage, WeaponType } from '@/Weapons/weapons';
 import { calculateDamage } from '@/Weapons/damage';
 
 // Pre-allocated colors for performance - avoids new THREE.Color() on every render
-const SPEAR_COLOR = new THREE.Color(0xFF544E);
+const SPEAR_COLOR = new Color(0xFF544E);
 
 interface SpearProps {
   isSwinging: boolean;
@@ -547,7 +546,7 @@ export default function Spear({
                   roughness={0.1}
                   opacity={0.8}
                   transparent
-                  side={THREE.DoubleSide}
+                  side={DoubleSide}
                 />
               </mesh>
             </group>
@@ -565,7 +564,7 @@ export default function Spear({
                   roughness={0.1}
                   opacity={0.8}
                   transparent
-                  side={THREE.DoubleSide}
+                  side={DoubleSide}
                 />
               </mesh>
             </group>
@@ -583,7 +582,7 @@ export default function Spear({
                   roughness={0.1}
                   opacity={0.8}
                   transparent
-                  side={THREE.DoubleSide}
+                  side={DoubleSide}
                 />
               </mesh>
             </group>

@@ -1,10 +1,10 @@
 // src/Versus/DeathKnight/DeathKnightTrailEffect.tsx
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, Group, Points } from 'three';
 
 interface DeathKnightTrailEffectProps {
-  parentRef: React.RefObject<THREE.Group>;
+  parentRef: React.RefObject<Group>;
   isLeftShoulder?: boolean;
 }
 
@@ -13,7 +13,7 @@ const DeathKnightTrailEffect: React.FC<DeathKnightTrailEffectProps> = ({
   isLeftShoulder = false
 }) => {
   const particlesCount = 1; // Reduced from 2 to 1 for better performance
-  const particlesRef = useRef<THREE.Points>(null);
+  const particlesRef = useRef<Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const scalesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -80,7 +80,7 @@ const DeathKnightTrailEffect: React.FC<DeathKnightTrailEffectProps> = ({
       <shaderMaterial
         transparent
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
+        blending={AdditiveBlending}
         vertexShader={`
           attribute float opacity;
           attribute float scale;

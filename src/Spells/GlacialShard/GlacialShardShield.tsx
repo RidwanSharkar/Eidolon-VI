@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { DoubleSide, Mesh, MeshStandardMaterial } from 'three';
 
 interface GlacialShardShieldProps {
   parentRef: React.RefObject<Group>;
@@ -30,7 +30,7 @@ export default function GlacialShardShield({ parentRef, absorption }: GlacialSha
     
     // Update materials if needed (this is a simplified approach)
     shieldRef.current.children.forEach(child => {
-      if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+      if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
         child.material.opacity = opacityMultiplier * pulseIntensity * 0.6;
         child.material.emissiveIntensity = pulseIntensity * 1.5;
       }
@@ -51,7 +51,7 @@ export default function GlacialShardShield({ parentRef, absorption }: GlacialSha
           emissiveIntensity={0.4 * shieldStrength}
           transparent
           opacity={0.175 * shieldStrength}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
           depthWrite={false}
         />
       </mesh>
@@ -65,7 +65,7 @@ export default function GlacialShardShield({ parentRef, absorption }: GlacialSha
           emissiveIntensity={0.7 * shieldStrength}
           transparent
           opacity={0.125 * shieldStrength}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
           depthWrite={false}
         />
       </mesh>

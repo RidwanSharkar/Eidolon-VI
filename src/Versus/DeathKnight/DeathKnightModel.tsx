@@ -4,7 +4,7 @@ import { Group, Mesh, MeshStandardMaterial, SphereGeometry, CylinderGeometry, Co
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '@/gear/BonePlate';
 import DeathKnightSword from './DeathKnightSword';
-import * as THREE from 'three';
+import { Material, Object3D } from 'three';
 
 interface DeathKnightModelProps {
   position: [number, number, number];
@@ -628,8 +628,8 @@ export default function DeathKnightModel({
 
       // Dispose of Three.js resources to prevent memory leaks
       if (currentGroupRef) {
-        currentGroupRef.traverse((child: THREE.Object3D) => {
-          if (child instanceof THREE.Mesh) {
+        currentGroupRef.traverse((child: Object3D) => {
+          if (child instanceof Mesh) {
             // Dispose geometries (but not shared ones)
             if (child.geometry && !child.geometry.userData?.shared) {
               child.geometry.dispose();
@@ -638,9 +638,9 @@ export default function DeathKnightModel({
             // Dispose materials
             if (child.material) {
               if (Array.isArray(child.material)) {
-                child.material.forEach((material: THREE.Material) => material.dispose());
+                child.material.forEach((material: Material) => material.dispose());
               } else {
-                (child.material as THREE.Material).dispose();
+                (child.material as Material).dispose();
               }
             }
           }

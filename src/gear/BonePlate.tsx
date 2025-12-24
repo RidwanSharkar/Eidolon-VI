@@ -1,26 +1,25 @@
 import { useRef } from 'react';
-import { Group } from 'three';
-import * as THREE from 'three';
+import { Group, TorusGeometry, SphereGeometry, CylinderGeometry, BoxGeometry, MeshStandardMaterial } from 'three';
 
 // MEMORY FIX: Cached geometries - created once at module load, reused by all instances
 const CACHED_GEOMETRIES = {
-  rib: new THREE.TorusGeometry(0.2, 0.022, 8, 12, Math.PI * 1.1),
-  ribJointLarge: new THREE.SphereGeometry(0.0375, 8, 8),
-  ribJointSmall: new THREE.SphereGeometry(0.02, 4, 4),
-  ribConnection: new THREE.CylinderGeometry(0.06, 0.05, 0.075, 6),
-  spineColumn: new THREE.CylinderGeometry(0.04, 0.04, 0.9, 4),
-  vertebraCore: new THREE.CylinderGeometry(0.06, 0.06, 0.04, 6),
-  vertebraProtrusion: new THREE.BoxGeometry(0.0175, 0.06, 0.075)
+  rib: new TorusGeometry(0.2, 0.022, 8, 12, Math.PI * 1.1),
+  ribJointLarge: new SphereGeometry(0.0375, 8, 8),
+  ribJointSmall: new SphereGeometry(0.02, 4, 4),
+  ribConnection: new CylinderGeometry(0.06, 0.05, 0.075, 6),
+  spineColumn: new CylinderGeometry(0.04, 0.04, 0.9, 4),
+  vertebraCore: new CylinderGeometry(0.06, 0.06, 0.04, 6),
+  vertebraProtrusion: new BoxGeometry(0.0175, 0.06, 0.075)
 };
 
 // MEMORY FIX: Cached materials - created once at module load, reused by all instances
 const CACHED_MATERIALS = {
-  bone: new THREE.MeshStandardMaterial({
+  bone: new MeshStandardMaterial({
     color: "#e8e8e8",
     roughness: 0.4,
     metalness: 0.3
   }),
-  boneDark: new THREE.MeshStandardMaterial({
+  boneDark: new MeshStandardMaterial({
     color: "#d8d8d8",
     roughness: 0.5,
     metalness: 0.2

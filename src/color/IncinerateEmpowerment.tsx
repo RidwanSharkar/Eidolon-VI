@@ -1,17 +1,28 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  Vector3,
+  Group,
+  Points,
+  Mesh,
+  BufferGeometry,
+  BufferAttribute,
+  ShaderMaterial,
+  AdditiveBlending,
+  MeshBasicMaterial,
+  DoubleSide
+} from 'three';
 
 interface IncinerateEmpowermentProps {
-  position: THREE.Vector3;
+  position: Vector3;
   isEmpowered: boolean; // When true, show the empowerment effect
 }
 
 export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentProps) {
-  const groupRef = useRef<THREE.Group>(null);
-  const particlesRef = useRef<THREE.Points>(null);
-  const innerRingRef = useRef<THREE.Mesh>(null);
-  const outerRingRef = useRef<THREE.Mesh>(null);
+  const groupRef = useRef<Group>(null);
+  const particlesRef = useRef<Points>(null);
+  const innerRingRef = useRef<Mesh>(null);
+  const outerRingRef = useRef<Mesh>(null);
 
   // Create particle system for fiery effect
   const particleSystem = useMemo(() => {
@@ -40,12 +51,12 @@ export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentPro
       sizes[i] = 0.1 + Math.random() * 0.2;
     }
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new BufferAttribute(colors, 3));
+    geometry.setAttribute('size', new BufferAttribute(sizes, 1));
 
-    const material = new THREE.ShaderMaterial({
+    const material = new ShaderMaterial({
       uniforms: {
         time: { value: 0 },
         opacity: { value: 1.0 }
@@ -87,7 +98,7 @@ export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentPro
         }
       `,
       transparent: true,
-      blending: THREE.AdditiveBlending,
+      blending: AdditiveBlending,
       depthWrite: false
     });
 
@@ -109,19 +120,19 @@ export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentPro
 
     // Animate particles
     if (particlesRef.current) {
-      const material = particlesRef.current.material as THREE.ShaderMaterial;
+      const material = particlesRef.current.material as ShaderMaterial;
       material.uniforms.time.value = time;
     }
 
     // Animate rings
     if (innerRingRef.current) {
       innerRingRef.current.rotation.y = time * 2;
-      (innerRingRef.current.material as THREE.MeshBasicMaterial).opacity = 0.6 + Math.sin(time * 4) * 0.2;
+      (innerRingRef.current.material as MeshBasicMaterial).opacity = 0.6 + Math.sin(time * 4) * 0.2;
     }
 
     if (outerRingRef.current) {
       outerRingRef.current.rotation.y = -time * 1.5;
-      (outerRingRef.current.material as THREE.MeshBasicMaterial).opacity = 0.4 + Math.sin(time * 3) * 0.2;
+      (outerRingRef.current.material as MeshBasicMaterial).opacity = 0.4 + Math.sin(time * 3) * 0.2;
     }
   });
 
@@ -139,7 +150,7 @@ export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentPro
           color="#ff4500"
           transparent
           opacity={0.6}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
         />
       </mesh>
       
@@ -150,7 +161,7 @@ export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentPro
           color="#ff6600"
           transparent
           opacity={0.4}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
         />
       </mesh>
       

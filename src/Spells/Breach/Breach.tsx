@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { Vector3, Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { Mesh, MeshStandardMaterial } from 'three';
 import { ReigniteRef } from '../Reignite/Reignite';
 import { calculateDamage } from '@/Weapons/damage';
 
@@ -289,7 +289,7 @@ function distanceToLineSegment(lineStart: Vector3, lineEnd: Vector3, point: Vect
 
 // Fire particle component
 function FireParticle({ position }: { position: Vector3 }) {
-  const particleRef = useRef<THREE.Mesh>(null);
+  const particleRef = useRef<Mesh>(null);
   const lifetime = useRef(0.5 + Math.random() * 1.0); // Random lifetime between 0.5-1.5 seconds
   const startTime = useRef(Date.now());
   const initialScale = useRef(0.2 + Math.random() * 0.6); // Random initial scale
@@ -309,7 +309,7 @@ function FireParticle({ position }: { position: Vector3 }) {
       particleRef.current.scale.set(scale, scale, scale);
       
       // Fade out
-      const material = particleRef.current.material as THREE.MeshStandardMaterial;
+      const material = particleRef.current.material as MeshStandardMaterial;
       if (material) {
         material.opacity = 1 - progress;
       }

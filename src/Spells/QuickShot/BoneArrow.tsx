@@ -1,5 +1,4 @@
-import { Vector3 } from 'three';
-import * as THREE from 'three';
+import { Vector3, MeshStandardMaterial } from 'three';
 import { useMemo, useEffect } from 'react';
 import { WeaponSubclass } from '@/Weapons/weapons';
 
@@ -21,7 +20,7 @@ export default function BoneArrow({ position, direction, opacity = 1, currentSub
   
   // Shared materials with subclass-specific colors - properly memoized with cleanup
   const boneMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
+    return new MeshStandardMaterial({
       color: arrowColor,
       roughness: 0.9,
       metalness: 0.1,

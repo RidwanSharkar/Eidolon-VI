@@ -3,15 +3,15 @@
 // Pre-allocated colors for performance - avoids new THREE.Color() on every render
 const SWORD_COLORS = {
   // Chain lightning colors
-  chainLightningGold: new THREE.Color(0xFFD700),
-  chainLightningOrange: new THREE.Color(0xFFA500),
+  chainLightningGold: new Color(0xFFD700),
+  chainLightningOrange: new Color(0xFFA500),
   // Sword glow colors
-  swordYellow: new THREE.Color(0xFFFF00),
-  swordOrange: new THREE.Color(0xFF6F00),
-  swordBrightOrange: new THREE.Color(0xFFB700),
+  swordYellow: new Color(0xFFFF00),
+  swordOrange: new Color(0xFF6F00),
+  swordBrightOrange: new Color(0xFFB700),
   // Divine storm colors
-  divineGold: new THREE.Color(0xFFD700),
-  divineCornsilk: new THREE.Color(0xFFF8DC),
+  divineGold: new Color(0xFFD700),
+  divineCornsilk: new Color(0xFFF8DC),
 } as const;
 
 interface SwordProps {
@@ -115,7 +115,7 @@ interface SwordProps {
 import { useRef } from 'react';
 import { Group, Shape, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { Color, AdditiveBlending } from 'three';
 import { WeaponSubclass } from './weapons';
 
 export default function Sword({ 
@@ -680,7 +680,7 @@ export default function Sword({
                   emissiveIntensity={1.5}
                   transparent
                   opacity={0.3}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             </group>
@@ -699,7 +699,7 @@ export default function Sword({
                   emissiveIntensity={3 * spark.life}
                   transparent
                   opacity={spark.life * 0.6}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             ))}
@@ -866,7 +866,7 @@ export default function Sword({
                 emissiveIntensity={2}
                 transparent
                 opacity={0.3}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
               />
             </mesh>
 
@@ -879,7 +879,7 @@ export default function Sword({
                 emissiveIntensity={1}
                 transparent
                 opacity={0.15}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
               />
             </mesh>
 

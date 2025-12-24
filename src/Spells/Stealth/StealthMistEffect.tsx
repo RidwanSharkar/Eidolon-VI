@@ -3,7 +3,7 @@ import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, AdditiveBlending } from 'three';
 import { Group } from 'three';
-import * as THREE from 'three';
+import { Material, MeshStandardMaterial, SphereGeometry } from 'three';
 
 interface StealthMistEffectProps {
   parentRef: React.RefObject<Group>;
@@ -18,8 +18,8 @@ export default function StealthMistEffect({ parentRef }: StealthMistEffectProps)
     // Initialize 20 particle meshes
     particles.current = Array(20).fill(null).map(() => {
       const mesh = new Mesh(
-        new THREE.SphereGeometry(0.15, 8, 8),
-        new THREE.MeshStandardMaterial({
+        new SphereGeometry(0.15, 8, 8),
+        new MeshStandardMaterial({
           color: '#a8e6cf',
           emissive: '#a8e6cf',
           transparent: true,
@@ -44,7 +44,7 @@ export default function StealthMistEffect({ parentRef }: StealthMistEffectProps)
     return () => {
       particles.current.forEach(particle => {
         particle.geometry.dispose();
-        (particle.material as THREE.Material).dispose();
+        (particle.material as Material).dispose();
       });
     };
   }, []);
@@ -65,7 +65,7 @@ export default function StealthMistEffect({ parentRef }: StealthMistEffectProps)
       particle.position.y += 0.03;
 
       // Fade out
-      const material = particle.material as THREE.MeshStandardMaterial;
+      const material = particle.material as MeshStandardMaterial;
       material.opacity = 0.6 * (1 - progress);
       
       // Scale down

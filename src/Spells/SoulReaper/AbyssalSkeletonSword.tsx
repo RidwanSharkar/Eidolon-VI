@@ -1,12 +1,19 @@
 // src/Spells/SoulReaper/AbyssalSkeletonSword.tsx
 import React, { useMemo } from 'react';
 import { Shape } from 'three';
-import * as THREE from 'three';
+import { AdditiveBlending, Color } from 'three';
+import {
+  SHARED_SPHERE_GEOMETRY_WEAPON_SMALL,
+  SHARED_SPHERE_GEOMETRY_WEAPON_MEDIUM,
+  SHARED_SPHERE_GEOMETRY_WEAPON_LARGE,
+  SHARED_SPHERE_GEOMETRY_WEAPON_XL,
+  SHARED_SPHERE_GEOMETRY_WEAPON_EFFECT
+} from '../../SharedGeometries';
 
-// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+// Pre-allocated colors for performance - avoids new Color() on every render
 const COLORS = {
-  malachiteGreen: new THREE.Color(0x17CE54),
-  darkGreen: new THREE.Color(0x0d2818),
+  malachiteGreen: new Color(0x17CE54),
+  darkGreen: new Color(0x0d2818),
 } as const;
 
 export default function AbyssalSkeletonSword() {
@@ -134,7 +141,7 @@ export default function AbyssalSkeletonSword() {
           
           {/* CORE ORB - bright malachite green matching Scythe */}
           <mesh>
-            <sphereGeometry args={[0.248, 16, 16]} />
+            <primitive object={SHARED_SPHERE_GEOMETRY_WEAPON_LARGE} />
             <meshStandardMaterial
               color={COLORS.malachiteGreen}
               emissive={COLORS.malachiteGreen}
@@ -146,7 +153,7 @@ export default function AbyssalSkeletonSword() {
           
           {/* Multiple glow layers for depth - Scythe green theme */}
           <mesh>
-            <sphereGeometry args={[0.16, 16, 16]} />
+            <primitive object={SHARED_SPHERE_GEOMETRY_WEAPON_SMALL} />
             <meshStandardMaterial
               color={COLORS.malachiteGreen}
               emissive={COLORS.malachiteGreen}
@@ -157,7 +164,7 @@ export default function AbyssalSkeletonSword() {
           </mesh>
           
           <mesh>
-            <sphereGeometry args={[0.232, 16, 16]} />
+            <primitive object={SHARED_SPHERE_GEOMETRY_WEAPON_MEDIUM} />
             <meshStandardMaterial
               color={COLORS.malachiteGreen}
               emissive={COLORS.malachiteGreen}
@@ -166,9 +173,9 @@ export default function AbyssalSkeletonSword() {
               opacity={0.6}
             />
           </mesh>
-          
+
           <mesh>
-            <sphereGeometry args={[0.28, 16, 16]} />
+            <primitive object={SHARED_SPHERE_GEOMETRY_WEAPON_XL} />
             <meshStandardMaterial
               color={COLORS.malachiteGreen}
               emissive={COLORS.malachiteGreen}
@@ -219,14 +226,14 @@ export default function AbyssalSkeletonSword() {
         {/* Scythe malachite green energy aura around the weapon */}
         <group position={[0, 0.4, 0.56]}>
           <mesh>
-            <sphereGeometry args={[1.2, 12, 12]} />
+            <primitive object={SHARED_SPHERE_GEOMETRY_WEAPON_EFFECT} />
             <meshStandardMaterial
               color={COLORS.darkGreen}
               emissive={COLORS.malachiteGreen}
               emissiveIntensity={0.8}
               transparent
               opacity={0.1}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         </group>

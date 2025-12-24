@@ -2,7 +2,13 @@ import { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { WeaponType } from '../../Weapons/weapons';
-import * as THREE from 'three';
+import {
+  CylinderGeometry,
+  Euler,
+  MeshStandardMaterial,
+  SphereGeometry,
+  TorusGeometry
+} from 'three';
 
 interface SmiteProps {
   weaponType: WeaponType;
@@ -20,76 +26,76 @@ export default function Smite({ position, onComplete }: SmiteProps) {
 
   // useMemo for static geometries
   const cylinderGeometries = useMemo(() => ({
-    core: new THREE.CylinderGeometry(0.105, 0.105, 20, 16),
-    inner: new THREE.CylinderGeometry(0.25, 0.25, 20, 16),
-    outer: new THREE.CylinderGeometry(0.42, 0.42, 20, 16),
-    glow1: new THREE.CylinderGeometry(0.6, 0.6, 20, 16),
-    glow2: new THREE.CylinderGeometry(0.75, 0.6, 20, 16),
-    outerGlow: new THREE.CylinderGeometry(0.8, 0.9, 20, 16),
-    torus: new THREE.TorusGeometry(1.175, 0.1, 8, 32),
-    skyTorus: new THREE.TorusGeometry(1, 0.1, 32, 32),
-    sphere: new THREE.SphereGeometry(0.15, 8, 8)
+    core: new CylinderGeometry(0.105, 0.105, 20, 16),
+    inner: new CylinderGeometry(0.25, 0.25, 20, 16),
+    outer: new CylinderGeometry(0.42, 0.42, 20, 16),
+    glow1: new CylinderGeometry(0.6, 0.6, 20, 16),
+    glow2: new CylinderGeometry(0.75, 0.6, 20, 16),
+    outerGlow: new CylinderGeometry(0.8, 0.9, 20, 16),
+    torus: new TorusGeometry(1.175, 0.1, 8, 32),
+    skyTorus: new TorusGeometry(1, 0.1, 32, 32),
+    sphere: new SphereGeometry(0.15, 8, 8)
   }), []);
 
   // Use useMemo for static materials
   const materials = useMemo(() => ({
-    core: new THREE.MeshStandardMaterial({
+    core: new MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FFD500",
       emissiveIntensity: 50,
       transparent: true,
       opacity: 0.995
     }),
-    inner: new THREE.MeshStandardMaterial({
+    inner: new MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FFD500",
       emissiveIntensity: 30,
       transparent: true,
       opacity: 0.675
     }),
-    outer: new THREE.MeshStandardMaterial({
+    outer: new MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FFD500",
       emissiveIntensity: 20,
       transparent: true,
       opacity: 0.625
     }),
-    glow1: new THREE.MeshStandardMaterial({
+    glow1: new MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FFD500",
       emissiveIntensity: 4,
       transparent: true,
       opacity: 0.55
     }),
-    glow2: new THREE.MeshStandardMaterial({
+    glow2: new MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FF8812",
       emissiveIntensity: 3,
       transparent: true,
       opacity: 0.425
     }),
-    outerGlow: new THREE.MeshStandardMaterial({
+    outerGlow: new MeshStandardMaterial({
       color: "#FF7300",
       emissive: "#FF8812",
       emissiveIntensity: 1.5,
       transparent: true,
       opacity: 0.2
     }),
-    spiral: new THREE.MeshStandardMaterial({
+    spiral: new MeshStandardMaterial({
       color: "#FF0000",
       emissive: "#FF8812",
       emissiveIntensity: 10,
       transparent: true,
       opacity: 0.5
     }),
-    skySpiral: new THREE.MeshStandardMaterial({
+    skySpiral: new MeshStandardMaterial({
       color: "#FF0000",
       emissive: "#FF8812",
       emissiveIntensity: 10,
       transparent: true,
       opacity: 0.4
     }),
-    particle: new THREE.MeshStandardMaterial({
+    particle: new MeshStandardMaterial({
       color: "#FF0000",
       emissive: "#FF8812",
       emissiveIntensity: 10,
@@ -101,22 +107,22 @@ export default function Smite({ position, onComplete }: SmiteProps) {
   // Pre-calculate spiral positions
   const spiralPositions = useMemo(() => (
     Array(3).fill(0).map((_, i) => ({
-      rotation: new THREE.Euler(Math.PI / 4, (i * Math.PI) / 1.5, Math.PI)
+      rotation: new Euler(Math.PI / 4, (i * Math.PI) / 1.5, Math.PI)
     }))
   ), []);
 
   // Pre-calculate sky spiral positions
   const skySpiralPositions = useMemo(() => (
     Array(16).fill(0).map((_, i) => ({
-      rotation: new THREE.Euler(0, (i * Math.PI) / 1.5, 0),
-      position: new THREE.Vector3(0, 7.45, 0)
+      rotation: new Euler(0, (i * Math.PI) / 1.5, 0),
+      position: new Vector3(0, 7.45, 0)
     }))
   ), []);
 
   // Pre-calculate particle positions
   const particlePositions = useMemo(() => (
     Array(8).fill(0).map((_, i) => ({
-      position: new THREE.Vector3(
+      position: new Vector3(
         Math.cos((i * Math.PI) / 4) * 1.0,
         (i - 4) * 2,
         Math.sin((i * Math.PI) / 4) * 1.0

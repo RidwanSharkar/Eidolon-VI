@@ -1,19 +1,18 @@
 // src/Spells/Eviscerate/EvisceratestunEffect.tsx
 
 import { useRef, useEffect, useState } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 
-// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+// Pre-allocated colors for performance - avoids new Color() on every render
 const COLORS = {
-  purpleBlue: new THREE.Color(0x8844FF),
-  purpleEmission: new THREE.Color(0x6622FF),
-  lightPurple: new THREE.Color(0xCC88FF),
-  lightPurpleEmission: new THREE.Color(0xAA66FF),
-  pinkRed: new THREE.Color(0xFF4488),
-  magenta: new THREE.Color(0xDD44FF),
-  purpleWhite: new THREE.Color(0xFFCCFF),
+  purpleBlue: new Color(0x8844FF),
+  purpleEmission: new Color(0x6622FF),
+  lightPurple: new Color(0xCC88FF),
+  lightPurpleEmission: new Color(0xAA66FF),
+  pinkRed: new Color(0xFF4488),
+  magenta: new Color(0xDD44FF),
+  purpleWhite: new Color(0xFFCCFF),
 } as const;
 
 interface EvisceratestunEffectProps {

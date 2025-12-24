@@ -5,7 +5,7 @@ import LevelManager from '@/Scene/LevelManager';
 import Panel from '@/Interface/Panel';
 import HealthOrb from '@/Interface/HealthOrb';
 import { SceneProps } from '@/Scene/SceneProps';
-import * as THREE from 'three';
+import { Cache, MOUSE } from 'three';
 import { AbilityType, WeaponType, WeaponSubclass, WeaponInfo, SUBCLASS_ABILITIES } from '@/Weapons/weapons';
 import WeaponSelectionPanel from '../Interface/WeaponSelectionPanel';
 import Behavior from '@/Scene/Behavior';
@@ -215,7 +215,7 @@ function GameContent({
       if (sceneProps.unitProps.controlsRef.current) {
         sceneProps.unitProps.controlsRef.current.dispose();
       }
-      THREE.Cache.clear();
+      Cache.clear();
     };
   }, [sceneProps.unitProps.controlsRef]);
 
@@ -226,7 +226,7 @@ function GameContent({
       window.dispatchEvent(new Event('gameReset'));
       
       // Clear Three.js cache
-      THREE.Cache.clear();
+      Cache.clear();
       
       // Dispose of shared resources
       if (typeof window !== 'undefined' && (window as typeof window & { disposeEffectPools?: () => void }).disposeEffectPools) {
@@ -247,7 +247,7 @@ function GameContent({
     const handleVisibilityChange = () => {
       if (document.hidden) {
         // Tab is hidden - reduce memory pressure
-        THREE.Cache.clear();
+        Cache.clear();
       }
     };
 
@@ -398,7 +398,7 @@ function GameContent({
               mouseButtons={{
                 LEFT: undefined,
                 MIDDLE: undefined,
-                RIGHT: THREE.MOUSE.ROTATE
+                RIGHT: MOUSE.ROTATE
               }} 
               minDistance={11.5}
               rotateSpeed={0.8}

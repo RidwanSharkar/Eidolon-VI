@@ -1,7 +1,13 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  RingGeometry,
+  SphereGeometry
+} from 'three';
 
 interface BowLightningStrikeProps {
   position: Vector3;
@@ -108,37 +114,37 @@ const BowLightningStrike: React.FC<BowLightningStrikeProps> = ({
   
   // Create geometries and materials
   const geometries = useMemo(() => ({
-    bolt: new THREE.SphereGeometry(1, 8, 8),
-    impact: new THREE.SphereGeometry(0.8, 16, 16),
-    ring1: new THREE.RingGeometry(0.5, 0.625, 32),
-    ring2: new THREE.RingGeometry(0.75, 0.875, 32),
-    ring3: new THREE.RingGeometry(1.0, 1.125, 32)
+    bolt: new SphereGeometry(1, 8, 8),
+    impact: new SphereGeometry(0.8, 16, 16),
+    ring1: new RingGeometry(0.5, 0.625, 32),
+    ring2: new RingGeometry(0.75, 0.875, 32),
+    ring3: new RingGeometry(1.0, 1.125, 32)
   }), []);
   
   const materials = useMemo(() => ({
-    coreBolt: new THREE.MeshStandardMaterial({
+    coreBolt: new MeshStandardMaterial({
       color: new Color('#FFFFFF'),
       emissive: new Color('#80D9FF'),
       emissiveIntensity: 15,
       transparent: true
     }),
-    secondaryBolt: new THREE.MeshStandardMaterial({
+    secondaryBolt: new MeshStandardMaterial({
       color: new Color('#80D9FF'),
       emissive: new Color('#80D9FF'),
       emissiveIntensity: 8,
       transparent: true
     }),
-    impact: new THREE.MeshStandardMaterial({
+    impact: new MeshStandardMaterial({
       color: new Color('#FFFFFF'),
       emissive: new Color('#B6EAFF'),
       emissiveIntensity: 6,
       transparent: true
     }),
-    ring: new THREE.MeshBasicMaterial({
+    ring: new MeshBasicMaterial({
       color: '#80D9FF',
       transparent: true,
       opacity: 0.8,
-      blending: THREE.AdditiveBlending
+      blending: AdditiveBlending
     })
   }), []);
 

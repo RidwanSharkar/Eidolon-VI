@@ -2,7 +2,7 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Vector3, Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, DoubleSide } from 'three';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
 
 interface SkeletonChargingIndicatorProps {
@@ -126,8 +126,8 @@ const SkeletonChargingIndicator: React.FC<SkeletonChargingIndicatorProps> = ({
             color="#FF4444"
             transparent
             opacity={0.4 * currentIntensity}
-            blending={THREE.AdditiveBlending}
-            side={THREE.DoubleSide}
+            blending={AdditiveBlending}
+            side={DoubleSide}
           />
         </mesh>
         
@@ -137,8 +137,8 @@ const SkeletonChargingIndicator: React.FC<SkeletonChargingIndicatorProps> = ({
             color="#FF0000"
             transparent
             opacity={0.7 * currentIntensity}
-            blending={THREE.AdditiveBlending}
-            side={THREE.DoubleSide}
+            blending={AdditiveBlending}
+            side={DoubleSide}
             wireframe={true}
           />
         </mesh>

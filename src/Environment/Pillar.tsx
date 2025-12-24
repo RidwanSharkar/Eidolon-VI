@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import * as THREE from 'three';
+import { CylinderGeometry, SphereGeometry, MeshStandardMaterial } from 'three';
 
 interface PillarProps {
   position?: [number, number, number];
@@ -22,29 +22,29 @@ const Pillar: React.FC<PillarProps> = ({ position = [0, 0, 0], level = 1 }) => {
   // Create geometries and materials only once using useMemo
   const { pillarGeometries, materials } = useMemo(() => {
     // Base geometry
-    const baseGeometry = new THREE.CylinderGeometry(2, 2.2, 1, 8);
+    const baseGeometry = new CylinderGeometry(2, 2.2, 1, 8);
     
     // Main column geometry
-    const columnGeometry = new THREE.CylinderGeometry(1.5, 1.5, 8, 8);
+    const columnGeometry = new CylinderGeometry(1.5, 1.5, 8, 8);
     
     // Top geometry (decorative cap)
-    const topGeometry = new THREE.CylinderGeometry(2.2, 2, 1, 8);
+    const topGeometry = new CylinderGeometry(2.2, 2, 1, 8);
 
     // Shared material for all parts
-    const stoneMaterial = new THREE.MeshStandardMaterial({
+    const stoneMaterial = new MeshStandardMaterial({
       color: '#ffffff',
       roughness: 0.7,
       metalness: 0.2,
     });
 
     // Add sphere geometry for the orb
-    const orbGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const orbGeometry = new SphereGeometry(1, 32, 32);
 
     // Get level-based colors
     const levelColors = getLevelColors(level);
 
     // Add glowing material for the orb with level-based colors
-    const orbMaterial = new THREE.MeshStandardMaterial({
+    const orbMaterial = new MeshStandardMaterial({
       color: levelColors.color,
       emissive: levelColors.emissive,
       metalness: 1,

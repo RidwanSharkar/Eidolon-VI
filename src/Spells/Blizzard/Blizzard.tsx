@@ -4,22 +4,22 @@ import { useFrame } from '@react-three/fiber';
 import BlizzardShard from '@/Spells/Blizzard/BlizzardShard';
 import { calculateBlizzardDamage } from '@/Spells/Blizzard/BlizzardDamage';
 import BlizzardAura from '@/Spells/Blizzard/BlizzardAura';
-import * as THREE from 'three';
+import { MeshStandardMaterial, TetrahedronGeometry, TorusGeometry } from 'three';
 
 export const sharedGeometries = {
-  torus: new THREE.TorusGeometry(0.8, 0.075, 8, 32),
-  tetrahedron: new THREE.TetrahedronGeometry(0.075)
+  torus: new TorusGeometry(0.8, 0.075, 8, 32),
+  tetrahedron: new TetrahedronGeometry(0.075)
 };
 
 export const sharedMaterials = {
-  blizzard: new THREE.MeshStandardMaterial({
+  blizzard: new MeshStandardMaterial({
     color: "#80ffff",
     emissive: "#40a0ff",
     emissiveIntensity: 2,
     transparent: true,
     opacity: 0.3
   }),
-  shard: new THREE.MeshStandardMaterial({
+  shard: new MeshStandardMaterial({
     color: "#80ffff",
     emissive: "#40a0ff",
     emissiveIntensity: 1,

@@ -1,13 +1,12 @@
 import { useState, useCallback } from 'react';
-import { Vector3 } from 'three';
-import * as THREE from 'three';
+import { Vector3, Group } from 'three';
 import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
 import { calculateDamage } from '@/Weapons/damage';
 import { useHealing } from '@/Unit/useHealing';
 
 interface OathstrikeControllerProps {
   onHit: (targetId: string, damage: number) => void;
-  parentRef: React.RefObject<THREE.Group>;
+  parentRef: React.RefObject<Group>;
   charges: Array<{
     id: number;
     available: boolean;

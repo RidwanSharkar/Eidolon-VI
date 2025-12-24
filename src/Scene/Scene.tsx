@@ -16,7 +16,14 @@ import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
 import { generateRandomPosition, generateMountains, generateMushrooms } from '../Environment/terrainGenerators';
 import { Enemy } from '../Versus/enemy';
-import * as THREE from 'three';
+import {
+  BufferGeometry,
+  ConeGeometry,
+  Material,
+  Mesh,
+  MeshPhysicalMaterial,
+  Object3D
+} from 'three';
 import InstancedMountains from '../Environment/InstancedMountains';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
 import InstancedVegetation from '../Environment/InstancedVegetation';
@@ -51,7 +58,7 @@ interface AllSummonedUnitInfo {
 }
 
 // Interface for skeleton group with takeDamage method
-interface SkeletonGroup extends THREE.Object3D {
+interface SkeletonGroup extends Object3D {
   takeDamage: (damage: number) => void;
 }
 
@@ -154,16 +161,16 @@ export default function Scene({
     30, // Max pool size
     (group: Group) => {
       // Dispose function for groups
-      group.traverse((child: THREE.Object3D) => {
-        if (child instanceof THREE.Mesh) {
+      group.traverse((child: Object3D) => {
+        if (child instanceof Mesh) {
           if (child.geometry) {
             child.geometry.dispose();
           }
           if (child.material) {
             if (Array.isArray(child.material)) {
-              child.material.forEach((material: THREE.Material) => material.dispose());
+              child.material.forEach((material: Material) => material.dispose());
             } else {
-              (child.material as THREE.Material).dispose();
+              (child.material as Material).dispose();
             }
           }
         }
@@ -243,16 +250,16 @@ export default function Scene({
   const removeEnemy = useCallback((enemy: Enemy) => {
     if (enemy.ref?.current) {
       // Traverse and dispose of all geometries and materials in the group
-      enemy.ref.current.traverse((child: THREE.Object3D) => {
-        if (child instanceof THREE.Mesh) {
+      enemy.ref.current.traverse((child: Object3D) => {
+        if (child instanceof Mesh) {
           if (child.geometry) {
             child.geometry.dispose();
           }
           if (child.material) {
             if (Array.isArray(child.material)) {
-              child.material.forEach((material: THREE.Material) => material.dispose());
+              child.material.forEach((material: Material) => material.dispose());
             } else {
-              (child.material as THREE.Material).dispose();
+              (child.material as Material).dispose();
             }
           }
         }
@@ -277,17 +284,17 @@ export default function Scene({
     // Additional cleanup for enemies without refs (like multiplayer enemies)
     // Find and dispose of any remaining Three.js objects in the scene
     if (playerRef.current) {
-      const disposeEnemyObjects = (object: THREE.Object3D): void => {
+      const disposeEnemyObjects = (object: Object3D): void => {
         // Look for objects with enemy IDs in their userData or name
         if (object.userData?.enemyId === enemy.id || object.name?.includes(enemy.id)) {
-          object.traverse((child: THREE.Object3D) => {
-            if (child instanceof THREE.Mesh) {
+          object.traverse((child: Object3D) => {
+            if (child instanceof Mesh) {
               if (child.geometry) child.geometry.dispose();
               if (child.material) {
                 if (Array.isArray(child.material)) {
-                  child.material.forEach((material: THREE.Material) => material.dispose());
+                  child.material.forEach((material: Material) => material.dispose());
                 } else {
-                  (child.material as THREE.Material).dispose();
+                  (child.material as Material).dispose();
                 }
               }
             }
@@ -614,33 +621,31 @@ export default function Scene({
   const MAX_KNOCKBACK_EFFECTS = 4;
   const MAX_FROZEN_ENEMIES = 4;
 
-  // CRITICAL: EXTREME memory cleanup - run every 100ms for immediate cleanup
+  // CRITICAL: ULTRA-AGGRESSIVE memory cleanup - run every 50ms for immediate cleanup
   useEffect(() => {
-    const extremeMemoryCleanup = setInterval(() => {
+    const ultraAggressiveMemoryCleanup = setInterval(() => {
       const now = Date.now();
 
-      // Slowed enemies cleanup with HARD LIMIT
+      // Slowed enemies cleanup with ULTRA HARD LIMITS
       setSlowedEnemies(prev => {
         const entries = Object.entries(prev);
-        
-        // MEMORY FIX: Enforce hard limit first
-        if (entries.length > MAX_SLOWED_ENEMIES) {
+
+        // ULTRA AGGRESSIVE: Hard limit reduced from 6 to 4
+        if (entries.length > 4) {
           // Sort by expiration time and keep only the most recent
           const sorted = entries.sort((a, b) => b[1] - a[1]);
           const limited: Record<string, number> = {};
-          for (let i = 0; i < MAX_SLOWED_ENEMIES && i < sorted.length; i++) {
+          for (let i = 0; i < 4 && i < sorted.length; i++) {
             limited[sorted[i][0]] = sorted[i][1];
           }
           return limited;
         }
-        
+
         const newSlowed = { ...prev };
         let hasChanges = false;
         Object.keys(newSlowed).forEach(enemyId => {
-          if (enemyId.includes('death-knight')) {
-            delete newSlowed[enemyId];
-            hasChanges = true;
-          } else if (now > newSlowed[enemyId] + 500) {
+          // Aggressive cleanup: remove effects 100ms after expiration
+          if (now > newSlowed[enemyId] + 100) {
             delete newSlowed[enemyId];
             hasChanges = true;
           }
@@ -648,27 +653,25 @@ export default function Scene({
         return hasChanges ? newSlowed : prev;
       });
 
-      // Stunned enemies cleanup with HARD LIMIT
+      // Stunned enemies cleanup with ULTRA HARD LIMITS
       setStunnedEnemies(prev => {
         const entries = Object.entries(prev);
-        
-        // MEMORY FIX: Enforce hard limit first
-        if (entries.length > MAX_STUNNED_ENEMIES) {
+
+        // ULTRA AGGRESSIVE: Hard limit reduced from 6 to 4
+        if (entries.length > 4) {
           const sorted = entries.sort((a, b) => b[1] - a[1]);
           const limited: Record<string, number> = {};
-          for (let i = 0; i < MAX_STUNNED_ENEMIES && i < sorted.length; i++) {
+          for (let i = 0; i < 4 && i < sorted.length; i++) {
             limited[sorted[i][0]] = sorted[i][1];
           }
           return limited;
         }
-        
+
         const newStunned = { ...prev };
         let hasChanges = false;
         Object.keys(newStunned).forEach(enemyId => {
-          if (enemyId.includes('death-knight')) {
-            delete newStunned[enemyId];
-            hasChanges = true;
-          } else if (now > newStunned[enemyId] + 300) {
+          // Aggressive cleanup: remove effects 50ms after expiration
+          if (now > newStunned[enemyId] + 50) {
             delete newStunned[enemyId];
             hasChanges = true;
           }
@@ -676,28 +679,26 @@ export default function Scene({
         return hasChanges ? newStunned : prev;
       });
 
-      // Knockback effects cleanup with HARD LIMIT
+      // Knockback effects cleanup with ULTRA HARD LIMITS
       setKnockbackEffects(prev => {
         const entries = Object.entries(prev);
-        
-        // MEMORY FIX: Enforce hard limit first
-        if (entries.length > MAX_KNOCKBACK_EFFECTS) {
+
+        // ULTRA AGGRESSIVE: Hard limit reduced from 4 to 2
+        if (entries.length > 2) {
           const sorted = entries.sort((a, b) => b[1].startTime - a[1].startTime);
           const limited: Record<string, { direction: Vector3; distance: number; startTime: number; duration: number }> = {};
-          for (let i = 0; i < MAX_KNOCKBACK_EFFECTS && i < sorted.length; i++) {
+          for (let i = 0; i < 2 && i < sorted.length; i++) {
             limited[sorted[i][0]] = sorted[i][1];
           }
           return limited;
         }
-        
+
         const newKnockback = { ...prev };
         let hasChanges = false;
         Object.keys(newKnockback).forEach(enemyId => {
           const effect = newKnockback[enemyId];
-          if (enemyId.includes('death-knight')) {
-            delete newKnockback[enemyId];
-            hasChanges = true;
-          } else if (now > effect.startTime + effect.duration + 50) {
+          // Aggressive cleanup: remove effects 25ms after completion
+          if (now > effect.startTime + effect.duration + 25) {
             delete newKnockback[enemyId];
             hasChanges = true;
           }
@@ -705,16 +706,15 @@ export default function Scene({
         return hasChanges ? newKnockback : prev;
       });
 
-      // Frozen enemies cleanup with HARD LIMIT
+      // Frozen enemies cleanup with ULTRA HARD LIMITS
       setFrozenEnemyIds(prev => {
-        const filtered = prev.filter(id => !id.includes('death-knight'));
-        // MEMORY FIX: Enforce hard limit
-        return filtered.slice(0, MAX_FROZEN_ENEMIES);
+        // ULTRA AGGRESSIVE: Hard limit reduced from 4 to 2
+        return prev.slice(0, 2);
       });
 
-    }, 100);
+    }, 50); // Increased frequency from 100ms to 50ms
 
-    return () => clearInterval(extremeMemoryCleanup);
+    return () => clearInterval(ultraAggressiveMemoryCleanup);
   }, []);
   
   // CRITICAL: ULTRA-AGGRESSIVE DEAD ENEMY CLEANUP - run every 250ms
@@ -877,7 +877,7 @@ export default function Scene({
     // Find the summoned unit in the scene and call its takeDamage method
     // We need to traverse the scene to find the skeleton's group ref
     if (playerRef.current) {
-      const findSkeletonGroup = (object: THREE.Object3D): SkeletonGroup | null => {
+      const findSkeletonGroup = (object: Object3D): SkeletonGroup | null => {
         if ('takeDamage' in object && object.userData?.skeletonId === summonedUnitId) {
           return object as SkeletonGroup;
         }
@@ -915,16 +915,16 @@ export default function Scene({
 
               // Dispose of Three.js resources for dead units
               if (playerRef.current) {
-                const findAndDispose = (object: THREE.Object3D): void => {
+                const findAndDispose = (object: Object3D): void => {
                   if (object.userData?.skeletonId === summonedUnitId) {
-                    object.traverse((child: THREE.Object3D) => {
-                      if (child instanceof THREE.Mesh) {
+                    object.traverse((child: Object3D) => {
+                      if (child instanceof Mesh) {
                         if (child.geometry) child.geometry.dispose();
                         if (child.material) {
                           if (Array.isArray(child.material)) {
-                            child.material.forEach((material: THREE.Material) => material.dispose());
+                            child.material.forEach((material: Material) => material.dispose());
                           } else {
-                            (child.material as THREE.Material).dispose();
+                            (child.material as Material).dispose();
                           }
                         }
                       }
@@ -1087,9 +1087,9 @@ export default function Scene({
 
   // MEMORY FIX: Memory pressure detection and emergency cleanup
   const lastEmergencyCleanup = useRef(0);
-  const EMERGENCY_CLEANUP_COOLDOWN = 5000; // 5 seconds between emergency cleanups
-  const MEMORY_WARNING_THRESHOLD = 150 * 1024 * 1024; // 150MB warning
-  const MEMORY_CRITICAL_THRESHOLD = 250 * 1024 * 1024; // 250MB critical - trigger cleanup
+  const EMERGENCY_CLEANUP_COOLDOWN = 3000; // Reduced from 5s to 3s between emergency cleanups
+  const MEMORY_WARNING_THRESHOLD = 100 * 1024 * 1024; // Reduced from 150MB to 100MB warning
+  const MEMORY_CRITICAL_THRESHOLD = 150 * 1024 * 1024; // Reduced from 250MB to 150MB critical - trigger cleanup
 
   // CRITICAL: REAL-TIME performance monitoring with memory pressure handling
   useEffect(() => {
@@ -1113,18 +1113,25 @@ export default function Scene({
       console.error(`🚨 EMERGENCY: Memory pressure at ${Math.round(memoryUsage / 1024 / 1024)}MB - triggering cleanup`);
       lastEmergencyCleanup.current = now;
       
-      // Force clear all status effects
+      // ULTRA AGGRESSIVE: Force clear ALL accumulating state
       setSlowedEnemies({});
       setStunnedEnemies({});
       setKnockbackEffects({});
       setFrozenEnemyIds([]);
-      
+      setSummonedUnits([]);
+
       // Clear previous enemy states map
       previousEnemyStates.current.clear();
 
       // Aggressively dispose pooled effects/geometries
       disposeEffectPools();
       groupPool.clear();
+
+      // Force clear multiplayer effects if in room
+      if (isInRoom && players.size > 0) {
+        // Clear multiplayer player effects (this would need to be implemented in MultiplayerContext)
+        // For now, we'll just clear local state
+      }
       
       // Force garbage collection hint (helps in some browsers)
       if (typeof window !== 'undefined' && 'gc' in window) {
@@ -1148,8 +1155,52 @@ export default function Scene({
       globalAggroSystem.cleanupDeadEnemies(aliveEnemyIds);
     }
 
-    // Reduced logging - only log when there are actual issues
-    if (memoryUsage > MEMORY_WARNING_THRESHOLD && Math.random() < 0.1) {
+    // ULTRA AGGRESSIVE: Additional cleanup every few seconds to catch edge cases
+    if (Math.random() < 0.02) { // 2% chance each update (~every 50 updates)
+      // Force cleanup of any remaining expired effects that might have slipped through
+      const forceCleanupNow = Date.now();
+
+      // Check for any expired effects that should have been cleaned up
+      setSlowedEnemies(prev => {
+        const cleaned = { ...prev };
+        let changed = false;
+        Object.keys(cleaned).forEach(id => {
+          if (forceCleanupNow > cleaned[id] + 200) { // 200ms grace period
+            delete cleaned[id];
+            changed = true;
+          }
+        });
+        return changed ? cleaned : prev;
+      });
+
+      setStunnedEnemies(prev => {
+        const cleaned = { ...prev };
+        let changed = false;
+        Object.keys(cleaned).forEach(id => {
+          if (forceCleanupNow > cleaned[id] + 200) {
+            delete cleaned[id];
+            changed = true;
+          }
+        });
+        return changed ? cleaned : prev;
+      });
+
+      setKnockbackEffects(prev => {
+        const cleaned = { ...prev };
+        let changed = false;
+        Object.keys(cleaned).forEach(id => {
+          const effect = cleaned[id];
+          if (forceCleanupNow > effect.startTime + effect.duration + 100) {
+            delete cleaned[id];
+            changed = true;
+          }
+        });
+        return changed ? cleaned : prev;
+      });
+    }
+
+    // More aggressive logging - log warnings more frequently
+    if (memoryUsage > MEMORY_WARNING_THRESHOLD && Math.random() < 0.2) { // Increased from 0.1 to 0.2
       console.warn(`⚠️ Memory pressure: ${Math.round(memoryUsage / 1024 / 1024)}MB`, {
         enemies: enemies.length,
         effects: statusEffectCount,
@@ -1184,15 +1235,18 @@ export default function Scene({
     return () => clearInterval(interval);
   }, [gl, enemies.length]);
 
-  // Periodic cleanup of summoned units to prevent memory leaks
+  // ULTRA-AGGRESSIVE cleanup of summoned units to prevent memory leaks
   useEffect(() => {
-    const cleanupInterval = setInterval(() => {
+    const aggressiveCleanupInterval = setInterval(() => {
       const now = Date.now();
 
       setSummonedUnits(prev => {
-        const cleanedUnits = prev.filter(unit => {
-          // Remove units that have been dead for more than 2 seconds
-          if (unit.isDead && unit.deathTime && now - unit.deathTime > 2000) {
+        // ULTRA AGGRESSIVE: Hard limit of 6 summoned units total
+        let cleanedUnits = prev.slice(0, 6);
+
+        cleanedUnits = cleanedUnits.filter(unit => {
+          // ULTRA AGGRESSIVE: Remove dead units after only 500ms (was 2s)
+          if (unit.isDead && unit.deathTime && now - unit.deathTime > 500) {
             return false;
           }
           // Remove units with invalid health
@@ -1210,9 +1264,9 @@ export default function Scene({
 
         return cleanedUnits;
       });
-    }, 2000); // Check every 2 seconds
+    }, 1000); // Increased frequency from 2s to 1s
 
-    return () => clearInterval(cleanupInterval);
+    return () => clearInterval(aggressiveCleanupInterval);
   }, []);
 
   // Damage numbers system for summoned units
@@ -1602,8 +1656,8 @@ export default function Scene({
 
   useEffect(() => {
     const resources = {
-      geometries: [] as THREE.BufferGeometry[],
-      materials: [] as THREE.Material[]
+      geometries: [] as BufferGeometry[],
+      materials: [] as Material[]
     };
 
     return () => {
@@ -1757,8 +1811,8 @@ export default function Scene({
     initializeSharedResources();
     
     // Initialize specific geometries and materials
-    sharedGeometries.mountain = new THREE.ConeGeometry(23, 35, 12);
-    sharedMaterials.mountain = new THREE.MeshPhysicalMaterial({
+    sharedGeometries.mountain = new ConeGeometry(23, 35, 12);
+    sharedMaterials.mountain = new MeshPhysicalMaterial({
       color: "#2a2a2a",
       metalness: 0.1,
       roughness: 1,

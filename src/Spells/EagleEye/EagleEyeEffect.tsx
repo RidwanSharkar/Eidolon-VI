@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Group, Vector3 } from 'three';
-import * as THREE from 'three';
+import { AdditiveBlending, Mesh, MeshStandardMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
 
 interface EagleEyeEffectProps {
@@ -25,8 +25,8 @@ export default function EagleEyeEffect({ position, onComplete }: EagleEyeEffectP
     
     // Apply opacity
     groupRef.current.children.forEach(child => {
-      if (child instanceof THREE.Mesh) {
-        const material = child.material as THREE.MeshStandardMaterial;
+      if (child instanceof Mesh) {
+        const material = child.material as MeshStandardMaterial;
         if (material.opacity) {
           material.opacity = 1 - progress;
         }
@@ -51,7 +51,7 @@ export default function EagleEyeEffect({ position, onComplete }: EagleEyeEffectP
           transparent
           opacity={0.9}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
       
@@ -65,7 +65,7 @@ export default function EagleEyeEffect({ position, onComplete }: EagleEyeEffectP
           transparent
           opacity={0.9}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
       
@@ -91,7 +91,7 @@ export default function EagleEyeEffect({ position, onComplete }: EagleEyeEffectP
             transparent
             opacity={0.8}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       ))}

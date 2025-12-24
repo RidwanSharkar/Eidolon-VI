@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { MeshStandardMaterial, SphereGeometry, TorusGeometry } from 'three';
 
 interface CrusaderHealingEffectProps {
   position: Vector3;
@@ -14,26 +14,26 @@ const CrusaderHealingEffect: React.FC<CrusaderHealingEffectProps> = ({ position,
 
   // Cache geometries
   const geometries = useMemo(() => ({
-    ring: new THREE.TorusGeometry(0.75, 0.05, 16, 32),
-    sphere: new THREE.SphereGeometry(0.45, 32, 32),
-    particle: new THREE.SphereGeometry(0.08, 8, 8)
+    ring: new TorusGeometry(0.75, 0.05, 16, 32),
+    sphere: new SphereGeometry(0.45, 32, 32),
+    particle: new SphereGeometry(0.08, 8, 8)
   }), []);
 
   // Cache materials
   const materials = useMemo(() => ({
-    ring: new THREE.MeshStandardMaterial({
+    ring: new MeshStandardMaterial({
       color: "#ffaa00",
       emissive: "#ff8800",
       emissiveIntensity: 2,
       transparent: true
     }),
-    glow: new THREE.MeshStandardMaterial({
+    glow: new MeshStandardMaterial({
       color: "#ffaa00",
       emissive: "#ff8800",
       emissiveIntensity: 3,
       transparent: true
     }),
-    particle: new THREE.MeshStandardMaterial({
+    particle: new MeshStandardMaterial({
       color: "#ffaa00",
       emissive: "#ff8800",
       emissiveIntensity: 2,

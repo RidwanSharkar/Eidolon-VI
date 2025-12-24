@@ -1,6 +1,5 @@
 import { useRef, useMemo, useEffect } from 'react';
-import { Group, Vector3 } from 'three';
-import * as THREE from 'three';
+import { Group, Vector3, SphereGeometry, MeshStandardMaterial, DoubleSide, AdditiveBlending, PointLight } from 'three';
 import { useFrame } from '@react-three/fiber';
 
 interface HolyNovaProps {
@@ -15,38 +14,38 @@ export default function HolyNova({ position, isActive, intensity = 1 }: HolyNova
   
   // Cache geometries for the nova aura
   const geometries = useMemo(() => ({
-    aura: new THREE.SphereGeometry(1.25, 32, 32),
-    innerAura: new THREE.SphereGeometry(1.1, 32, 32),
-    particles: new THREE.SphereGeometry(0.0375, 8, 8)
+    aura: new SphereGeometry(1.25, 32, 32),
+    innerAura: new SphereGeometry(1.1, 32, 32),
+    particles: new SphereGeometry(0.0375, 8, 8)
   }), []);
 
   // Cache materials with holy aura colors
   const materials = useMemo(() => ({
-    aura: new THREE.MeshStandardMaterial({
+    aura: new MeshStandardMaterial({
       color: "#FFD700",
       emissive: "#FFD700",
       emissiveIntensity: 0.66,
       transparent: true,
       opacity: 0.05,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending
+      side: DoubleSide,
+      blending: AdditiveBlending
     }),
-    innerAura: new THREE.MeshStandardMaterial({
+    innerAura: new MeshStandardMaterial({
       color: "#FFF8DC",
       emissive: "#FFF8DC",
       emissiveIntensity: 0.4,
       transparent: true,
       opacity: 0.025,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending
+      side: DoubleSide,
+      blending: AdditiveBlending
     }),
-    particles: new THREE.MeshStandardMaterial({
+    particles: new MeshStandardMaterial({
       color: "#FFD700",
       emissive: "#FFD700",
       emissiveIntensity: 0.66,
       transparent: true,
       opacity: 0.08,
-      blending: THREE.AdditiveBlending
+      blending: AdditiveBlending
     })
   }), []);
 
@@ -64,7 +63,7 @@ export default function HolyNova({ position, isActive, intensity = 1 }: HolyNova
       const phi = Math.random() * Math.PI * 2;
       const theta = Math.random() * Math.PI;
       return {
-        basePosition: new THREE.Vector3(
+        basePosition: new Vector3(
           Math.sin(theta) * Math.cos(phi) * 1.5,
           Math.sin(theta) * Math.sin(phi) * 1.5,
           Math.cos(theta) * 1.5
@@ -113,7 +112,7 @@ export default function HolyNova({ position, isActive, intensity = 1 }: HolyNova
         
         // Rotate particles around the center
         const rotation = time * 0.5;
-        particleGroup.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation);
+        particleGroup.position.applyAxisAngle(new Vector3(0, 1, 0), rotation);
         
         materials.particles.opacity = 0.8 * fadeMultiplier * intensity * (0.7 + Math.sin(orbitTime * 3) * 0.3);
       }
@@ -123,7 +122,7 @@ export default function HolyNova({ position, isActive, intensity = 1 }: HolyNova
     const lights = effectRef.current.children.slice(-2); // Last 2 children are lights
     lights.forEach((light, i) => {
       if (light.type === 'PointLight') {
-        const pointLight = light as THREE.PointLight;
+        const pointLight = light as PointLight;
         const baseIntensity = i === 0 ? 0.15 : 0.05;
         pointLight.intensity = baseIntensity * fadeMultiplier * intensity * pulseFactor;
       }

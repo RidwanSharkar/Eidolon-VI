@@ -1,12 +1,12 @@
 import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, Object3D, Material } from 'three';
-import * as THREE from 'three';
+import { Mesh, Quaternion } from 'three';
 
 // Pre-allocated vectors and quaternions to avoid per-frame allocations
-const tempForward = new THREE.Vector3();
-const tempAxisX = new THREE.Vector3(-1, 0, 0);
-const tempFlatRotation = new THREE.Quaternion();
+const tempForward = new Vector3();
+const tempAxisX = new Vector3(-1, 0, 0);
+const tempFlatRotation = new Quaternion();
 
 interface OathstrikeAnimationProps {
   effectRef: React.RefObject<Group>;
@@ -65,7 +65,7 @@ export const useOathstrikeAnimation = ({
       effectRef.current.scale.set(scale, scale, scale * 0.5);
 
       effectRef.current.traverse((child: Object3D) => {
-        const material = (child as THREE.Mesh).material as Material & { opacity?: number };
+        const material = (child as Mesh).material as Material & { opacity?: number };
         if (material?.opacity !== undefined) {
           material.opacity = Math.sin(progress * Math.PI);
         }

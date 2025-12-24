@@ -1,10 +1,10 @@
-import * as THREE from 'three';
+import { CylinderGeometry, BoxGeometry, MeshStandardMaterial } from 'three';
 import { useMemo } from 'react';
 
 // MEMORY FIX: Cached geometries - created once at module load
 const CACHED_GEOMETRIES = {
-  hornSegment: new THREE.CylinderGeometry(1, 1.5, 1, 10), // Unit size, will be scaled
-  ridge: new THREE.BoxGeometry(1, 1, 1) // Unit size, will be scaled
+  hornSegment: new CylinderGeometry(1, 1.5, 1, 10), // Unit size, will be scaled
+  ridge: new BoxGeometry(1, 1, 1) // Unit size, will be scaled
 };
 
 // Pre-computed segment data to avoid recalculating on every render
@@ -36,7 +36,7 @@ export function DragonHorns({ isLeft = false }: { isLeft?: boolean }) {
   // Memoize materials since they depend on progress (color changes)
   const segmentMaterials = useMemo(() => {
     return SEGMENT_DATA.map(({ progress }) => 
-      new THREE.MeshStandardMaterial({
+      new MeshStandardMaterial({
         color: `rgb(${Math.round(139 - progress * 80)}, ${Math.round(0 + progress * 20)}, ${Math.round(0 + progress * 20)})`,
         roughness: 0.7,
         metalness: 0.4
@@ -46,7 +46,7 @@ export function DragonHorns({ isLeft = false }: { isLeft?: boolean }) {
 
   const ridgeMaterials = useMemo(() => {
     return SEGMENT_DATA.map(({ progress }) =>
-      new THREE.MeshStandardMaterial({
+      new MeshStandardMaterial({
         color: `rgb(${Math.round(159 - progress * 100)}, ${Math.round(20 + progress * 20)}, ${Math.round(20 + progress * 20)})`,
         roughness: 0.8,
         metalness: 0.3

@@ -1,13 +1,12 @@
 import { useCallback, useRef, useMemo } from 'react';
-import { Vector3, Group } from 'three';
-import * as THREE from 'three';
+import { Vector3, Group, Matrix4 } from 'three';
 import { ORBITAL_COOLDOWN } from '../../color/ChargedOrbitals';
 
 // Pre-allocated rotation matrices for barrage angles to avoid per-shot allocations
 const BARRAGE_ROTATION_MATRICES = [
-  new THREE.Matrix4().makeRotationY(0),           // Center (0°)
-  new THREE.Matrix4().makeRotationY(Math.PI / 6), // Left (30°)
-  new THREE.Matrix4().makeRotationY(-Math.PI / 6) // Right (-30°)
+  new Matrix4().makeRotationY(0),           // Center (0°)
+  new Matrix4().makeRotationY(Math.PI / 6), // Left (30°)
+  new Matrix4().makeRotationY(-Math.PI / 6) // Right (-30°)
 ] as const;
 
 interface BarrageProjectile {

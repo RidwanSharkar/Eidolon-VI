@@ -7,7 +7,13 @@ import AscendantBoneWings from './AscendantBoneWings';
 import AscendantBoneVortex from './AscendantBoneVortex';  
 import DragonSkull from '../../gear/DragonSkull';  
 import AscendantTrailEffect from './AscendantTrailEffect';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  Material,
+  MathUtils,
+  Mesh,
+  Object3D
+} from 'three';
 import AscendantBoneAura from './AscendantBoneAura';
 import AscendantWingJets from './AscendantWingJets';
 
@@ -50,7 +56,7 @@ function AscendantArm({ isRaised = false }: { isRaised?: boolean }) {
     const currentRotation = armRef.current.rotation.x;
     const lerpFactor = 5 * delta; // Animation speed
     
-    armRef.current.rotation.x = THREE.MathUtils.lerp(currentRotation, targetRotation, lerpFactor);
+    armRef.current.rotation.x = MathUtils.lerp(currentRotation, targetRotation, lerpFactor);
   });
 
   const createBoneSegment = (length: number, width: number) => (
@@ -184,8 +190,8 @@ export default function AscendantModel({
 
     return () => {
       if (currentGroupRef) {
-        currentGroupRef.traverse((child: THREE.Object3D) => {
-          if (child instanceof THREE.Mesh) {
+        currentGroupRef.traverse((child: Object3D) => {
+          if (child instanceof Mesh) {
             // Dispose geometries (but not shared ones)
             if (child.geometry && !child.geometry.userData?.shared) {
               child.geometry.dispose();
@@ -194,9 +200,9 @@ export default function AscendantModel({
             // Dispose materials
             if (child.material) {
               if (Array.isArray(child.material)) {
-                child.material.forEach((material: THREE.Material) => material.dispose());
+                child.material.forEach((material: Material) => material.dispose());
               } else {
-                (child.material as THREE.Material).dispose();
+                (child.material as Material).dispose();
               }
             }
           }
@@ -373,7 +379,7 @@ export default function AscendantModel({
             emissiveIntensity={0.5}
             transparent
             opacity={0.15}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       </group>

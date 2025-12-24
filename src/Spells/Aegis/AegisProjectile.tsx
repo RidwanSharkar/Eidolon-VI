@@ -1,6 +1,12 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3, Shape } from 'three';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  Color,
+  ExtrudeGeometry,
+  MeshStandardMaterial,
+  SphereGeometry
+} from 'three';
 import { useFrame } from '@react-three/fiber';
 import HolyTrail from './HolyTrail';
 
@@ -85,7 +91,7 @@ export default function AegisProjectile({
 
   // Cache geometries and materials
   const geometries = useMemo(() => ({
-    shield: new THREE.ExtrudeGeometry(createShieldShape, {
+    shield: new ExtrudeGeometry(createShieldShape, {
       steps: 1,
       depth: 0.02,
       bevelEnabled: true,
@@ -94,7 +100,7 @@ export default function AegisProjectile({
       bevelOffset: 0.001,
       bevelSegments: 3
     }),
-    cross: new THREE.ExtrudeGeometry(createCrossPattern, {
+    cross: new ExtrudeGeometry(createCrossPattern, {
       steps: 1,
       depth: 0.025,
       bevelEnabled: true,
@@ -103,7 +109,7 @@ export default function AegisProjectile({
       bevelOffset: 0.001,
       bevelSegments: 2
     }),
-    horizontalCross: new THREE.ExtrudeGeometry(createHorizontalCross, {
+    horizontalCross: new ExtrudeGeometry(createHorizontalCross, {
       steps: 1,
       depth: 0.025,
       bevelEnabled: true,
@@ -112,44 +118,44 @@ export default function AegisProjectile({
       bevelOffset: 0.001,
       bevelSegments: 2
     }),
-    gem: new THREE.SphereGeometry(0.025, 8, 8)
+    gem: new SphereGeometry(0.025, 8, 8)
   }), [createShieldShape, createCrossPattern, createHorizontalCross]);
 
   const materials = useMemo(() => ({
-    shield: new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0xB8860B),
+    shield: new MeshStandardMaterial({
+      color: new Color(0xB8860B),
       metalness: 0.95,
       roughness: 0.05,
-      emissive: new THREE.Color(0x4A4A00),
+      emissive: new Color(0x4A4A00),
       emissiveIntensity: 0.2,
       transparent: true,
       opacity: opacity
     }),
-    cross: new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0xFFD700),
+    cross: new MeshStandardMaterial({
+      color: new Color(0xFFD700),
       metalness: 0.85,
       roughness: 0.03,
-      emissive: new THREE.Color(0xFFA500),
+      emissive: new Color(0xFFA500),
       emissiveIntensity: 0.4,
       transparent: true,
       opacity: opacity
     }),
-    gem: new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0xFFD700),
-      emissive: new THREE.Color(0xFFD700),
+    gem: new MeshStandardMaterial({
+      color: new Color(0xFFD700),
+      emissive: new Color(0xFFD700),
       emissiveIntensity: 2.0,
       transparent: true,
       opacity: opacity * 0.9,
       metalness: 0.1,
       roughness: 0.05
     }),
-    glow: new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0xFFD700),
-      emissive: new THREE.Color(0xFFD700),
+    glow: new MeshStandardMaterial({
+      color: new Color(0xFFD700),
+      emissive: new Color(0xFFD700),
       emissiveIntensity: 1.0,
       transparent: true,
       opacity: opacity * 0.3,
-      blending: THREE.AdditiveBlending
+      blending: AdditiveBlending
     })
   }), [opacity]);
 
@@ -177,7 +183,7 @@ export default function AegisProjectile({
     <>
       {/* Holy Trail - outside the moving group to avoid coordinate conflicts */}
       <HolyTrail
-        color={new THREE.Color(0xFFD700)}
+        color={new Color(0xFFD700)}
         size={0.45}
         meshRef={projectileRef}
         opacity={opacity}
@@ -221,7 +227,7 @@ export default function AegisProjectile({
 
         {/* Point light for divine glow */}
         <pointLight 
-          color={new THREE.Color(0xFFD700)}
+          color={new Color(0xFFD700)}
           intensity={1.5}
           distance={3.0}
           decay={2}

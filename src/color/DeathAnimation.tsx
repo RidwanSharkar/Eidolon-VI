@@ -1,7 +1,6 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Group, Vector3 } from 'three';
-import * as THREE from 'three';
+import { Mesh, Group, Vector3, CylinderGeometry, MeshStandardMaterial } from 'three';
 import { WeaponType, WeaponSubclass } from '../Weapons/weapons';
 
 interface BoneVortexProps {
@@ -14,14 +13,14 @@ interface BoneVortexProps {
 }
 
 // MEMORY FIX: Shared geometry - created once, reused by all instances
-const SHARED_DEATH_GEOMETRY = new THREE.CylinderGeometry(0.03, 0.025, 0.3, 6); // Reduced segments
+const SHARED_DEATH_GEOMETRY = new CylinderGeometry(0.03, 0.025, 0.3, 6); // Reduced segments
 
 // MEMORY FIX: Pre-created material cache by color to avoid creating new materials
-const MATERIAL_CACHE = new Map<string, THREE.MeshStandardMaterial>();
+const MATERIAL_CACHE = new Map<string, MeshStandardMaterial>();
 
-const getOrCreateMaterial = (color: string): THREE.MeshStandardMaterial => {
+const getOrCreateMaterial = (color: string): MeshStandardMaterial => {
   if (!MATERIAL_CACHE.has(color)) {
-    const material = new THREE.MeshStandardMaterial({
+    const material = new MeshStandardMaterial({
       color: color,
       transparent: true,
       opacity: 0.525,

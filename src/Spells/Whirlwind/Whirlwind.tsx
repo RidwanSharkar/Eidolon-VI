@@ -1,12 +1,18 @@
 import { useRef, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  Color,
+  DoubleSide,
+  Mesh,
+  MeshStandardMaterial
+} from 'three';
 import { useWhirlwindManager } from './useWhirlwindManager';
 import { ReigniteRef } from '../Reignite/Reignite';
 
-// Pre-allocated colors for performance - avoids new THREE.Color() on every render
-const WHIRLWIND_RED = new THREE.Color(0xFF0000);
+// Pre-allocated colors for performance - avoids new Color() on every render
+const WHIRLWIND_RED = new Color(0xFF0000);
 
 interface WhirlwindProps {
   parentRef: React.RefObject<Group>;
@@ -47,7 +53,7 @@ interface WhirlwindProps {
 
 // WhirlwindFireEffect component
 function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.RefObject<Group>, rotationSpeed: React.RefObject<number> }) {
-  const flameParticlesRef = useRef<THREE.Group>(null);
+  const flameParticlesRef = useRef<Group>(null);
   const lastUpdateTime = useRef(0);
   const particleRefs = useRef<Array<{
     angle: number;
@@ -77,7 +83,7 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
       if (particles) {
         // Dispose of geometries and materials
         particles.children.forEach(child => {
-          const mesh = child as THREE.Mesh;
+          const mesh = child as Mesh;
           if (mesh.geometry) {
             mesh.geometry.dispose();
           }
@@ -112,7 +118,7 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
     const now = Date.now();
     if (now - lastUpdateTime.current > 50) {
       particleRefs.current.forEach((particle, i) => {
-        const child = flameParticlesRef.current!.children[i] as THREE.Mesh;
+        const child = flameParticlesRef.current!.children[i] as Mesh;
         if (!child) return;
 
         // Update particle position in a tight spiral pattern
@@ -138,7 +144,7 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
         child.scale.setScalar(speedScale);
 
         // Update material properties
-        const material = child.material as THREE.MeshStandardMaterial;
+        const material = child.material as MeshStandardMaterial;
         if (material) {
           material.opacity = 0.2 + ((rotationSpeed.current || 0) / 25) * 0.3;
           material.emissiveIntensity = 0.025 + ((rotationSpeed.current || 0) / 25) * 1.01;
@@ -160,7 +166,7 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
             emissiveIntensity={2}
             transparent
             opacity={0.3}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
             depthWrite={false}
           />
         </mesh>
@@ -175,9 +181,9 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
           emissiveIntensity={1.5}
           transparent
           opacity={0.3}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
         />
       </mesh>
 
@@ -397,7 +403,7 @@ export default function Whirlwind({
                   emissiveIntensity={4}
                   transparent
                   opacity={0.6 - i * 0.15}
-                  side={THREE.DoubleSide}
+                  side={DoubleSide}
                 />
               </mesh>
             ))}
@@ -416,8 +422,8 @@ export default function Whirlwind({
                   emissiveIntensity={4}
                   transparent
                   opacity={0.4}
-                  side={THREE.DoubleSide}
-                  blending={THREE.AdditiveBlending}
+                  side={DoubleSide}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             ))}

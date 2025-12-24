@@ -1,13 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Group, Vector3, Shape } from 'three';
+import { Group, Vector3, Shape, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Enemy } from '@/Versus/enemy';
-import * as THREE from 'three';
 
-// Pre-allocated colors for performance - avoids new THREE.Color() on every render
+// Pre-allocated colors for performance - avoids new Color() on every render
 const COLORS = {
-  blueViolet: new THREE.Color(0x8A2BE2),
-  mediumPurple: new THREE.Color(0x9370DB),
+  blueViolet: new Color(0x8A2BE2),
+  mediumPurple: new Color(0x9370DB),
 } as const;
 
 interface SoulReaperSwordProps {

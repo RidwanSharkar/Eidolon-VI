@@ -1,10 +1,10 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { MeshStandardMaterial, SphereGeometry } from 'three';
 
 // Pre-allocated vector for wave offset - avoids per-render allocations
-const tempWaveOffset = new THREE.Vector3();
+const tempWaveOffset = new Vector3();
 
 interface ChainLightningEffectProps {
   startPosition: Vector3;
@@ -21,25 +21,25 @@ const ChainLightningEffect: React.FC<ChainLightningEffectProps> = ({
 
   // Cache geometries
   const geometries = useMemo(() => ({
-    segment: new THREE.SphereGeometry(1, 8, 8), // Will be scaled per instance
-    impact: new THREE.SphereGeometry(0.4, 16, 16)
+    segment: new SphereGeometry(1, 8, 8), // Will be scaled per instance
+    impact: new SphereGeometry(0.4, 16, 16)
   }), []);
 
   // Cache materials
   const materials = useMemo(() => ({
-    core: new THREE.MeshStandardMaterial({
+    core: new MeshStandardMaterial({
       color: new Color('#FFD700'),
       emissive: new Color('#FFD700'),
       emissiveIntensity: 5,
       transparent: true
     }),
-    branch: new THREE.MeshStandardMaterial({
+    branch: new MeshStandardMaterial({
       color: new Color('#FFA500'),
       emissive: new Color('#FFA500'),
       emissiveIntensity: 4,
       transparent: true
     }),
-    impact: new THREE.MeshStandardMaterial({
+    impact: new MeshStandardMaterial({
       color: new Color('#FFD700'),
       emissive: new Color('#FFD700'),
       emissiveIntensity: 3,
@@ -49,7 +49,7 @@ const ChainLightningEffect: React.FC<ChainLightningEffectProps> = ({
 
   // Pre-calculate base offsets
   const baseOffsets = useMemo(() => {
-    return Array(32).fill(0).map(() => new THREE.Vector3(
+    return Array(32).fill(0).map(() => new Vector3(
       (Math.random() - 0.5) * 0.15,
       (Math.random() - 0.5) * 0.15 + 2,
       (Math.random() - 0.5) * 0.15

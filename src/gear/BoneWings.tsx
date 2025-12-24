@@ -1,15 +1,14 @@
 import { useRef } from 'react';
-import { Group, Vector3, Euler } from 'three';
-import * as THREE from 'three';
+import { Group, Vector3, Euler, CylinderGeometry, SphereGeometry, MeshStandardMaterial } from 'three';
 
 // MEMORY FIX: Cached geometries - created once at module load
 const CACHED_GEOMETRIES = {
-  boneShaft: new THREE.CylinderGeometry(0.023, 0.0175, 0.32, 3),
-  joint: new THREE.SphereGeometry(0.035, 4, 4)
+  boneShaft: new CylinderGeometry(0.023, 0.0175, 0.32, 3),
+  joint: new SphereGeometry(0.035, 4, 4)
 };
 
 // MEMORY FIX: Cached material - created once at module load
-const CACHED_MATERIAL = new THREE.MeshStandardMaterial({
+const CACHED_MATERIAL = new MeshStandardMaterial({
   color: "#ffffff",
   emissive: "#304040",
   emissiveIntensity: 0.6,
@@ -17,7 +16,7 @@ const CACHED_MATERIAL = new THREE.MeshStandardMaterial({
   metalness: 0.4
 });
 
-const CACHED_JOINT_MATERIAL = new THREE.MeshStandardMaterial({
+const CACHED_JOINT_MATERIAL = new MeshStandardMaterial({
   color: "#ffffff",
   emissive: "#304040",
   emissiveIntensity: 0.6,

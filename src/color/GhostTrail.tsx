@@ -1,11 +1,10 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Vector3, Color } from 'three';
-import * as THREE from 'three';
+import { Mesh, Vector3, Color, Group, MeshBasicMaterial } from 'three';
 import { WeaponType, WeaponSubclass } from '../Weapons/weapons';
 
 interface GhostTrailProps {
-  parentRef: React.RefObject<THREE.Group>;
+  parentRef: React.RefObject<Group>;
   weaponType: WeaponType;
   weaponSubclass?: WeaponSubclass;
   targetPosition?: Vector3; // Optional for multiplayer - if provided, use this instead of parentRef position
@@ -106,7 +105,7 @@ export default function GhostTrail({ parentRef, weaponType, weaponSubclass, targ
         const scale = 1 - (i / trailCount) * 0.6;
         trail.scale.setScalar(scale);
         
-        if (trail.material && trail.material instanceof THREE.MeshBasicMaterial) {
+        if (trail.material && trail.material instanceof MeshBasicMaterial) {
           trail.material.opacity = (1 - i / trailCount) * 0.2;
         }
       }

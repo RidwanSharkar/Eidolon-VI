@@ -1,8 +1,7 @@
 import React, { useRef, useMemo } from 'react';
-import { Mesh, Vector3, Clock, Color, Group } from 'three';
+import { Mesh, Vector3, Clock, Color, Group, Raycaster } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import CrossentropyBoltTrail from './CrossentropyBoltTrail';
-import * as THREE from 'three'
 
 interface CrossentropyBoltProps {
   position: Vector3;
@@ -30,8 +29,8 @@ export default function CrossentropyBolt({ position, direction, onImpact }: Cros
   const time = useRef(0);
   
   // Reusable raycaster and vectors to avoid allocations every frame
-  const raycasterRef = useRef(new THREE.Raycaster());
-  const rayDirectionRef = useRef(new THREE.Vector3());
+  const raycasterRef = useRef(new Raycaster());
+  const rayDirectionRef = useRef(new Vector3());
   const spiralOffset1Ref = useRef(new Vector3());
   const spiralOffset2Ref = useRef(new Vector3());
   const rightRef = useRef(new Vector3());
@@ -42,14 +41,14 @@ export default function CrossentropyBolt({ position, direction, onImpact }: Cros
     raycasterRef.current.set(currentPosition.current, rayDirectionRef.current);
 
     const collidableObjects = scene.children.filter(child => 
-      (child.name === 'mountain' && child instanceof THREE.Group) ||
-      (child.name === 'tree' && child instanceof THREE.Group)
+      (child.name === 'mountain' && child instanceof Group) ||
+      (child.name === 'tree' && child instanceof Group)
     );
 
     const allMeshes = collidableObjects.flatMap(group => {
-      const meshes: THREE.Mesh[] = [];
+      const meshes: Mesh[] = [];
       group.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
+        if (child instanceof Mesh) {
           meshes.push(child);
         }
       });

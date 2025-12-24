@@ -1,8 +1,7 @@
 // src/Versus/Ascendant/AscendantChargingIndicator.tsx
 import React, { useRef, useMemo, useEffect, useState } from 'react';
-import { Vector3, Group } from 'three';
+import { Vector3, Group, AdditiveBlending } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
 
 interface AscendantChargingIndicatorProps {
@@ -196,7 +195,7 @@ const AscendantChargingIndicator: React.FC<AscendantChargingIndicatorProps> = ({
             color="#FF4444"
             transparent
             opacity={0.5 * currentIntensity}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
         

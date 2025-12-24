@@ -1,8 +1,7 @@
 // src/weapons/EtherBow.tsx
 
 import { useRef } from 'react';
-import { Group, Vector3 } from 'three';
-import * as THREE from 'three';
+import { Group, Vector3, CatmullRomCurve3, CubicBezierCurve3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { WeaponSubclass } from '@/Weapons/weapons';
 
@@ -46,25 +45,25 @@ export default function EtherealBow({ chargeProgress, isCharging, onRelease, cur
 
   // Rest of the curve creation functions remain the same
   const createBowCurve = () => {
-    return new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.875, 0, 0),
-      new THREE.Vector3(-0.85, 0.2, 0),
-      new THREE.Vector3(-0.25, 0.5, 0),
-      new THREE.Vector3(-0.4, 0.35, 0),
-      new THREE.Vector3(0.4, 0.35, 0),
-      new THREE.Vector3(0.25, 0.5, 0),
-      new THREE.Vector3(0.85, 0.2, 0),
-      new THREE.Vector3(0.875, 0, 0)
+    return new CatmullRomCurve3([
+      new Vector3(-0.875, 0, 0),
+      new Vector3(-0.85, 0.2, 0),
+      new Vector3(-0.25, 0.5, 0),
+      new Vector3(-0.4, 0.35, 0),
+      new Vector3(0.4, 0.35, 0),
+      new Vector3(0.25, 0.5, 0),
+      new Vector3(0.85, 0.2, 0),
+      new Vector3(0.875, 0, 0)
     ]);
   };
 
   const createStringCurve = (drawAmount: number) => {
     const pullback = drawAmount * maxDrawDistance;
-    const curve = new THREE.CubicBezierCurve3(
-      new THREE.Vector3(-0.8, 0, 0),
-      new THREE.Vector3(0, 0, -pullback),
-      new THREE.Vector3(0, 0, -pullback),
-      new THREE.Vector3(0.8, 0, 0)
+    const curve = new CubicBezierCurve3(
+      new Vector3(-0.8, 0, 0),
+      new Vector3(0, 0, -pullback),
+      new Vector3(0, 0, -pullback),
+      new Vector3(0.8, 0, 0)
     );
     return curve;
   };

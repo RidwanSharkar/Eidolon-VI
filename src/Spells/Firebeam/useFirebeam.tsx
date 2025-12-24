@@ -1,10 +1,9 @@
 import { useCallback } from 'react';
-import { Vector3 } from 'three';
-import * as THREE from 'three';
+import { Vector3, Group } from 'three';
 
 interface FirebeamControllerProps {
   onHit: (targetId: string, damage: number) => void;
-  parentRef: React.RefObject<THREE.Group>;
+  parentRef: React.RefObject<Group>;
 }
 
 export const useFirebeam = ({ parentRef }: FirebeamControllerProps) => {

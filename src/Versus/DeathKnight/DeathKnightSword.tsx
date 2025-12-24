@@ -1,7 +1,6 @@
 // src/Versus/DeathKnight/DeathKnightSword.tsx
 import React from 'react';
-import { Shape } from 'three';
-import * as THREE from 'three';
+import { Shape, AdditiveBlending } from 'three';
 
 export default function DeathKnightSword() {
   // Create custom sword blade shape - larger version
@@ -220,7 +219,7 @@ export default function DeathKnightSword() {
               emissiveIntensity={0.8}
               transparent
               opacity={0.1}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         </group>

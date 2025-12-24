@@ -1,7 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Group, Vector3 } from 'three';
-import * as THREE from 'three';
+import { Mesh, Group, Vector3, CylinderGeometry, MeshStandardMaterial } from 'three';
 
 interface BoneVortexProps {
   position: Vector3;
@@ -11,8 +10,8 @@ interface BoneVortexProps {
 }
 
 // MEMORY FIX: Shared geometry and material - created once, reused by all instances
-const SHARED_VORTEX_GEOMETRY = new THREE.CylinderGeometry(0.03, 0.025, 0.3, 6); // Reduced segments from 8 to 6
-const SHARED_VORTEX_MATERIAL = new THREE.MeshStandardMaterial({
+const SHARED_VORTEX_GEOMETRY = new CylinderGeometry(0.03, 0.025, 0.3, 6); // Reduced segments from 8 to 6
+const SHARED_VORTEX_MATERIAL = new MeshStandardMaterial({
   color: "#F33FAE",
   transparent: true,
   opacity: 0.55,

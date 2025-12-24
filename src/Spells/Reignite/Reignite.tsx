@@ -1,6 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Group, Vector3 } from 'three';
-import * as THREE from 'three';
+import { AdditiveBlending, Mesh, MeshStandardMaterial } from 'three';
 import { useReigniteManager } from './useReigniteManager';
 import { ChargeStatus } from '@/color/ChargedOrbitals';
 import { useFrame } from '@react-three/fiber';
@@ -158,7 +158,7 @@ const Reignite = forwardRef<ReigniteRef, ReigniteProps>(({
             transparent
             opacity={1 - (explosionScaleRef.current / 3)} // Fade out as it expands
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       )}
@@ -190,7 +190,7 @@ Reignite.displayName = 'Reignite';
 
 // Flame particle component for upward fire effects
 function FlameParticle({ position, life }: { position: Vector3; life: number }) {
-  const particleRef = useRef<THREE.Mesh>(null);
+  const particleRef = useRef<Mesh>(null);
   const maxLife = useRef(life);
   
   useFrame(() => {
@@ -203,7 +203,7 @@ function FlameParticle({ position, life }: { position: Vector3; life: number }) 
     particleRef.current.scale.set(scale, scale, scale);
     
     // Fade out
-    const material = particleRef.current.material as THREE.MeshStandardMaterial;
+    const material = particleRef.current.material as MeshStandardMaterial;
     if (material) {
       material.opacity = Math.max(0, 1 - lifeProgress);
       
@@ -226,7 +226,7 @@ function FlameParticle({ position, life }: { position: Vector3; life: number }) 
         transparent={true}
         opacity={0.9}
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
+        blending={AdditiveBlending}
       />
     </mesh>
   );

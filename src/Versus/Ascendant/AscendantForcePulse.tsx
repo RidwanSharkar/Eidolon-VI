@@ -1,8 +1,7 @@
 // src/Versus/Ascendant/AscendantForcePulse.tsx
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { Vector3, Group } from 'three';
+import { Vector3, Group, AdditiveBlending } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
 
 interface AscendantForcePulseProps {
@@ -110,7 +109,7 @@ export default function AscendantForcePulse({
           transparent
           opacity={innerOpacity}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
 
@@ -126,7 +125,7 @@ export default function AscendantForcePulse({
           transparent
           opacity={opacity * 0.6}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
 
@@ -144,7 +143,7 @@ export default function AscendantForcePulse({
           transparent 
           opacity={opacity * 0.8}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
 
@@ -161,7 +160,7 @@ export default function AscendantForcePulse({
           transparent 
           opacity={opacity * 0.7}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
 
@@ -179,7 +178,7 @@ export default function AscendantForcePulse({
           transparent 
           opacity={opacity * 0.6}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
 
@@ -205,7 +204,7 @@ export default function AscendantForcePulse({
               transparent 
               opacity={opacity}
               depthWrite={false}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         );

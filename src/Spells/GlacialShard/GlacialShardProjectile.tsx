@@ -1,11 +1,11 @@
 import { useRef, useEffect, useState } from 'react';
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, Color, Group, Mesh } from 'three';
 import FrostTrail from './FrostTrail';
 
-// Pre-allocated color for performance - avoids new THREE.Color() on every render
-const FROST_TRAIL_COLOR = new THREE.Color("#4DDDFF");
+// Pre-allocated color for performance - avoids new Color() on every render
+const FROST_TRAIL_COLOR = new Color("#4DDDFF");
 
 interface GlacialShardProjectileProps {
   id: number;
@@ -22,8 +22,8 @@ export default function GlacialShardProjectile({
   onImpact,
   checkCollisions
 }: GlacialShardProjectileProps) {
-  const shardRef = useRef<THREE.Group>(null);
-  const shardMeshRef = useRef<THREE.Mesh>(null);
+  const shardRef = useRef<Group>(null);
+  const shardMeshRef = useRef<Mesh>(null);
   const startPosition = useRef(position.clone());
   const hasCollided = useRef(false);
   const [showImpact, setShowImpact] = useState(false);
@@ -127,7 +127,7 @@ export default function GlacialShardProjectile({
                 emissiveIntensity={1.2}
                 transparent
                 opacity={0.4}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
                 depthWrite={false}
               />
             </mesh>
@@ -141,7 +141,7 @@ export default function GlacialShardProjectile({
                 emissiveIntensity={0.6}
                 transparent
                 opacity={0.2}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
                 depthWrite={false}
               />
             </mesh>
@@ -159,7 +159,7 @@ export default function GlacialShardProjectile({
                   emissiveIntensity={1.5}
                   transparent
                   opacity={0.6 - i * 0.2}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             ))}
@@ -236,7 +236,7 @@ function GlacialShardImpact({ position, onComplete }: GlacialShardImpactProps) {
           emissiveIntensity={2.5 * fade}
           transparent
           opacity={0.7 * fade}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -250,7 +250,7 @@ function GlacialShardImpact({ position, onComplete }: GlacialShardImpactProps) {
           emissiveIntensity={3 * fade}
           transparent
           opacity={0.8 * fade}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -295,7 +295,7 @@ function GlacialShardImpact({ position, onComplete }: GlacialShardImpactProps) {
             emissiveIntensity={1.8 * fade}
             transparent
             opacity={0.6 * fade * (1 - i * 0.2)}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       ))}

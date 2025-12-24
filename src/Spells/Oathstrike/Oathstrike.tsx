@@ -1,6 +1,6 @@
 import { useRef, useEffect, useMemo } from 'react';
 import { Group, Vector3 } from 'three';
-import * as THREE from 'three';
+import { MeshStandardMaterial, SphereGeometry, TorusGeometry } from 'three';
 import { useOathstrikeAnimation } from '@/Spells/Oathstrike/useOathstrikeAnimation';
 
 
@@ -16,36 +16,36 @@ export default function Oathstrike({ position, direction, onComplete, parentRef 
   
   // Cache geometries
   const geometries = useMemo(() => ({
-    mainArc: new THREE.TorusGeometry(3, 0.8, 8, 32, Math.PI),
-    innerGlow: new THREE.TorusGeometry(3, 0.4, 16, 32, Math.PI),
-    outerGlow: new THREE.TorusGeometry(2, 0.9, 16, 32, Math.PI),
-    particle: new THREE.SphereGeometry(0.15, 8, 8)
+    mainArc: new TorusGeometry(3, 0.8, 8, 32, Math.PI),
+    innerGlow: new TorusGeometry(3, 0.4, 16, 32, Math.PI),
+    outerGlow: new TorusGeometry(2, 0.9, 16, 32, Math.PI),
+    particle: new SphereGeometry(0.15, 8, 8)
   }), []);
 
   // Cache materials
   const materials = useMemo(() => ({
-    mainFlame: new THREE.MeshStandardMaterial({
+    mainFlame: new MeshStandardMaterial({
       color: "#FF9748",
       emissive: "#FF6F00",
       emissiveIntensity: 2,
       transparent: true,
       opacity: 0.9
     }),
-    innerGlow: new THREE.MeshStandardMaterial({
+    innerGlow: new MeshStandardMaterial({
       color: "#FF9748",
       emissive: "#FF6F00",
       emissiveIntensity: 1,
       transparent: true,
       opacity: 0.7
     }),
-    outerGlow: new THREE.MeshStandardMaterial({
+    outerGlow: new MeshStandardMaterial({
       color: "#FF9748",
       emissive: "#FF6F00",
       emissiveIntensity: 1.3,
       transparent: true,
       opacity: 0.5
     }),
-    particle: new THREE.MeshStandardMaterial({
+    particle: new MeshStandardMaterial({
       color: "#FF9748",
       emissive: "#FF6F00",
       emissiveIntensity: 1.5,
@@ -57,7 +57,7 @@ export default function Oathstrike({ position, direction, onComplete, parentRef 
   // Pre-calculate particle positions
   const particlePositions = useMemo(() => 
     Array(12).fill(0).map((_, i) => ({
-      position: new THREE.Vector3(
+      position: new Vector3(
         Math.cos((i * Math.PI) / 6) * 1.5,
         Math.sin((i * Math.PI) / 6) * 1.5,
         0

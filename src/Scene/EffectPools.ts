@@ -1,4 +1,19 @@
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  BufferGeometry,
+  ConeGeometry,
+  CylinderGeometry,
+  DoubleSide,
+  Float32BufferAttribute,
+  Material,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  PlaneGeometry,
+  RingGeometry,
+  SphereGeometry,
+  Texture,
+  TorusGeometry
+} from 'three';
 
 // Generic object pool class
 class ObjectPool<T> {
@@ -41,7 +56,7 @@ class ObjectPool<T> {
     // Properly dispose of Three.js geometries and materials
     if (object && typeof object === 'object') {
       // Handle Three.js geometries
-      if (object instanceof THREE.BufferGeometry) {
+      if (object instanceof BufferGeometry) {
         try {
           object.dispose();
         } catch (e) {
@@ -49,22 +64,22 @@ class ObjectPool<T> {
         }
       }
       // Handle Three.js materials
-      else if (object instanceof THREE.Material) {
+      else if (object instanceof Material) {
         try {
           // Dispose all texture maps first
-          const material = object as THREE.Material & {
-            map?: THREE.Texture | THREE.Texture[];
-            normalMap?: THREE.Texture | THREE.Texture[];
-            roughnessMap?: THREE.Texture | THREE.Texture[];
-            metalnessMap?: THREE.Texture | THREE.Texture[];
-            emissiveMap?: THREE.Texture | THREE.Texture[];
-            aoMap?: THREE.Texture | THREE.Texture[];
-            displacementMap?: THREE.Texture | THREE.Texture[];
-            bumpMap?: THREE.Texture | THREE.Texture[];
-            lightMap?: THREE.Texture | THREE.Texture[];
+          const material = object as Material & {
+            map?: Texture | Texture[];
+            normalMap?: Texture | Texture[];
+            roughnessMap?: Texture | Texture[];
+            metalnessMap?: Texture | Texture[];
+            emissiveMap?: Texture | Texture[];
+            aoMap?: Texture | Texture[];
+            displacementMap?: Texture | Texture[];
+            bumpMap?: Texture | Texture[];
+            lightMap?: Texture | Texture[];
           };
 
-          const disposeTexture = (texture: THREE.Texture | THREE.Texture[] | undefined) => {
+          const disposeTexture = (texture: Texture | Texture[] | undefined) => {
             if (!texture) return;
             if (Array.isArray(texture)) {
               texture.forEach(tex => tex?.dispose?.());
@@ -112,78 +127,78 @@ class GeometryPools {
   private static instance: GeometryPools;
   
   // Skeleton slash effect geometries
-  public slashMainTorus: ObjectPool<THREE.TorusGeometry>;
-  public slashInnerGlow: ObjectPool<THREE.TorusGeometry>;
-  public slashOuterGlow: ObjectPool<THREE.TorusGeometry>;
-  public slashParticle: ObjectPool<THREE.SphereGeometry>;
-  public slashTrailSegment: ObjectPool<THREE.CylinderGeometry>;
+  public slashMainTorus: ObjectPool<TorusGeometry>;
+  public slashInnerGlow: ObjectPool<TorusGeometry>;
+  public slashOuterGlow: ObjectPool<TorusGeometry>;
+  public slashParticle: ObjectPool<SphereGeometry>;
+  public slashTrailSegment: ObjectPool<CylinderGeometry>;
   
   // Skeleton charging indicator geometries
-  public chargingAttackArea: ObjectPool<THREE.BufferGeometry>;
-  public chargingRing: ObjectPool<THREE.RingGeometry>;
-  public chargingOrb: ObjectPool<THREE.SphereGeometry>;
-  public chargingLine: ObjectPool<THREE.CylinderGeometry>;
+  public chargingAttackArea: ObjectPool<BufferGeometry>;
+  public chargingRing: ObjectPool<RingGeometry>;
+  public chargingOrb: ObjectPool<SphereGeometry>;
+  public chargingLine: ObjectPool<CylinderGeometry>;
   
   // Mage effect geometries
-  public mageFireballSphere: ObjectPool<THREE.SphereGeometry>;
-  public mageTrailSegment: ObjectPool<THREE.SphereGeometry>;
-  public mageLightningCylinder: ObjectPool<THREE.CylinderGeometry>;
-  public mageLightningRing: ObjectPool<THREE.RingGeometry>;
+  public mageFireballSphere: ObjectPool<SphereGeometry>;
+  public mageTrailSegment: ObjectPool<SphereGeometry>;
+  public mageLightningCylinder: ObjectPool<CylinderGeometry>;
+  public mageLightningRing: ObjectPool<RingGeometry>;
 
   // Reaper effect geometries
-  public reaperMistParticle: ObjectPool<THREE.SphereGeometry>;
+  public reaperMistParticle: ObjectPool<SphereGeometry>;
 
   // DeathKnight effect geometries (reuse skeleton patterns)
-  public deathKnightSlashTorus: ObjectPool<THREE.TorusGeometry>;
-  public deathKnightSlashParticle: ObjectPool<THREE.SphereGeometry>;
-  public deathKnightChargingArea: ObjectPool<THREE.BufferGeometry>;
-  public deathKnightChargingRing: ObjectPool<THREE.RingGeometry>;
-  public deathKnightChargingOrb: ObjectPool<THREE.SphereGeometry>;
-  public deathGraspTentacle: ObjectPool<THREE.CylinderGeometry>;
-  public frostStrikeShard: ObjectPool<THREE.ConeGeometry>;
-  public frostStrikeRing: ObjectPool<THREE.RingGeometry>;
+  public deathKnightSlashTorus: ObjectPool<TorusGeometry>;
+  public deathKnightSlashParticle: ObjectPool<SphereGeometry>;
+  public deathKnightChargingArea: ObjectPool<BufferGeometry>;
+  public deathKnightChargingRing: ObjectPool<RingGeometry>;
+  public deathKnightChargingOrb: ObjectPool<SphereGeometry>;
+  public deathGraspTentacle: ObjectPool<CylinderGeometry>;
+  public frostStrikeShard: ObjectPool<ConeGeometry>;
+  public frostStrikeRing: ObjectPool<RingGeometry>;
 
   // Ascendant effect geometries
-  public ascendantLightningBolt: ObjectPool<THREE.CylinderGeometry>;
-  public ascendantLightningRing: ObjectPool<THREE.RingGeometry>;
-  public ascendantChargingArea: ObjectPool<THREE.BufferGeometry>;
-  public ascendantChargingOrb: ObjectPool<THREE.SphereGeometry>;
-  public ascendantForcePulse: ObjectPool<THREE.SphereGeometry>;
+  public ascendantLightningBolt: ObjectPool<CylinderGeometry>;
+  public ascendantLightningRing: ObjectPool<RingGeometry>;
+  public ascendantChargingArea: ObjectPool<BufferGeometry>;
+  public ascendantChargingOrb: ObjectPool<SphereGeometry>;
+  public ascendantForcePulse: ObjectPool<SphereGeometry>;
 
   // Unit projectile geometries
-  public arrowCylinder: ObjectPool<THREE.CylinderGeometry>;
-  public arrowRing: ObjectPool<THREE.TorusGeometry>;
-  public spearCylinder: ObjectPool<THREE.CylinderGeometry>;
-  public projectileParticle: ObjectPool<THREE.SphereGeometry>;
-  public projectileTorus: ObjectPool<THREE.TorusGeometry>;
-  public projectileSphere: ObjectPool<THREE.SphereGeometry>;
-  public projectileCone: ObjectPool<THREE.ConeGeometry>;
-  public projectilePlane: ObjectPool<THREE.PlaneGeometry>;
+  public arrowCylinder: ObjectPool<CylinderGeometry>;
+  public arrowRing: ObjectPool<TorusGeometry>;
+  public spearCylinder: ObjectPool<CylinderGeometry>;
+  public projectileParticle: ObjectPool<SphereGeometry>;
+  public projectileTorus: ObjectPool<TorusGeometry>;
+  public projectileSphere: ObjectPool<SphereGeometry>;
+  public projectileCone: ObjectPool<ConeGeometry>;
+  public projectilePlane: ObjectPool<PlaneGeometry>;
 
   private constructor() {
     // Skeleton slash effect pools - reduced sizes for memory management
     this.slashMainTorus = new ObjectPool(
-      () => new THREE.TorusGeometry(1.2, 0.15, 8, 32, Math.PI * 0.8),
+      () => new TorusGeometry(1.2, 0.15, 8, 32, Math.PI * 0.8),
       3, 6 // Reduced from 5,10 to 3,6
     );
 
     this.slashInnerGlow = new ObjectPool(
-      () => new THREE.TorusGeometry(1.2, 0.08, 16, 32, Math.PI * 0.8),
+      () => new TorusGeometry(1.2, 0.08, 16, 32, Math.PI * 0.8),
       3, 6 // Reduced from 5,10 to 3,6
     );
 
     this.slashOuterGlow = new ObjectPool(
-      () => new THREE.TorusGeometry(1.4, 0.2, 16, 32, Math.PI * 0.8),
+      () => new TorusGeometry(1.4, 0.2, 16, 32, Math.PI * 0.8),
       3, 6 // Reduced from 5,10 to 3,6
     );
 
     this.slashParticle = new ObjectPool(
-      () => new THREE.SphereGeometry(0.06, 6, 6),
+      () => new SphereGeometry(0.06, 6, 6),
       12, 24 // Reduced from 20,40 to 12,24
     );
 
     this.slashTrailSegment = new ObjectPool(
-      () => new THREE.CylinderGeometry(0.08, 0.02, 0.4, 8),
+      () => new CylinderGeometry(0.08, 0.02, 0.4, 8),
       8, 16 // Reduced from 15,30 to 8,16
     );
 
@@ -194,55 +209,55 @@ class GeometryPools {
     );
     
     this.chargingRing = new ObjectPool(
-      () => new THREE.RingGeometry(0.6, 0.68, 16),
+      () => new RingGeometry(0.6, 0.68, 16),
       10, 20
     );
     
     this.chargingOrb = new ObjectPool(
-      () => new THREE.SphereGeometry(0.08, 8, 8),
+      () => new SphereGeometry(0.08, 8, 8),
       10, 20
     );
     
     this.chargingLine = new ObjectPool(
-      () => new THREE.CylinderGeometry(0.015, 0.015, 1, 6),
+      () => new CylinderGeometry(0.015, 0.015, 1, 6),
       20, 40
     );
 
     // Mage effect pools
     this.mageFireballSphere = new ObjectPool(
-      () => new THREE.SphereGeometry(0.3, 8, 8),
+      () => new SphereGeometry(0.3, 8, 8),
       10, 20
     );
     
     this.mageTrailSegment = new ObjectPool(
-      () => new THREE.SphereGeometry(0.15, 6, 6),
+      () => new SphereGeometry(0.15, 6, 6),
       30, 60
     );
     
     this.mageLightningCylinder = new ObjectPool(
-      () => new THREE.CylinderGeometry(0.1, 0.1, 1, 8),
+      () => new CylinderGeometry(0.1, 0.1, 1, 8),
       15, 30
     );
     
     this.mageLightningRing = new ObjectPool(
-      () => new THREE.RingGeometry(0.5, 0.7, 16),
+      () => new RingGeometry(0.5, 0.7, 16),
       10, 20
     );
 
     // Reaper effect pools
     this.reaperMistParticle = new ObjectPool(
-      () => new THREE.SphereGeometry(0.25, 8, 8),
+      () => new SphereGeometry(0.25, 8, 8),
       60, 120 // High count since mist creates many particles and is used twice per use
     );
 
     // DeathKnight effect pools (REDUCED for memory management)
     this.deathKnightSlashTorus = new ObjectPool(
-      () => new THREE.TorusGeometry(1.4, 0.18, 8, 32, Math.PI * 0.9),
+      () => new TorusGeometry(1.4, 0.18, 8, 32, Math.PI * 0.9),
       2, 4 // Reduced from 3,6 to 2,4 for stricter memory control
     );
 
     this.deathKnightSlashParticle = new ObjectPool(
-      () => new THREE.SphereGeometry(0.08, 6, 6),
+      () => new SphereGeometry(0.08, 6, 6),
       6, 12 // Reduced from 8,16 to 6,12 for stricter memory control
     );
 
@@ -252,38 +267,38 @@ class GeometryPools {
     );
 
     this.deathKnightChargingRing = new ObjectPool(
-      () => new THREE.RingGeometry(0.7, 0.78, 16),
+      () => new RingGeometry(0.7, 0.78, 16),
       3, 6 // Reduced from 4,8 to 3,6 for stricter memory control
     );
 
     this.deathKnightChargingOrb = new ObjectPool(
-      () => new THREE.SphereGeometry(0.1, 8, 8),
+      () => new SphereGeometry(0.1, 8, 8),
       3, 6 // Reduced from 4,8 to 3,6 for stricter memory control
     );
 
     this.deathGraspTentacle = new ObjectPool(
-      () => new THREE.CylinderGeometry(0.12, 0.08, 2, 8),
+      () => new CylinderGeometry(0.12, 0.08, 2, 8),
       4, 8 // Reduced from 6,12 to 4,8 for stricter memory control
     );
 
     this.frostStrikeShard = new ObjectPool(
-      () => new THREE.ConeGeometry(0.15, 0.8, 6),
+      () => new ConeGeometry(0.15, 0.8, 6),
       20, 40
     );
 
     this.frostStrikeRing = new ObjectPool(
-      () => new THREE.RingGeometry(1.0, 1.3, 16),
+      () => new RingGeometry(1.0, 1.3, 16),
       10, 20
     );
 
     // Ascendant effect pools
     this.ascendantLightningBolt = new ObjectPool(
-      () => new THREE.CylinderGeometry(0.08, 0.08, 1, 6),
+      () => new CylinderGeometry(0.08, 0.08, 1, 6),
       25, 50 // High count for frequent lightning effects
     );
 
     this.ascendantLightningRing = new ObjectPool(
-      () => new THREE.RingGeometry(0.8, 1.0, 16),
+      () => new RingGeometry(0.8, 1.0, 16),
       15, 30
     );
 
@@ -293,59 +308,59 @@ class GeometryPools {
     );
 
     this.ascendantChargingOrb = new ObjectPool(
-      () => new THREE.SphereGeometry(0.12, 10, 10),
+      () => new SphereGeometry(0.12, 10, 10),
       10, 20
     );
 
     this.ascendantForcePulse = new ObjectPool(
-      () => new THREE.SphereGeometry(1.0, 16, 16),
+      () => new SphereGeometry(1.0, 16, 16),
       8, 16
     );
 
     // Unit projectile geometry pools
     this.arrowCylinder = new ObjectPool(
-      () => new THREE.CylinderGeometry(0.02, 0.075, 1.75, 6),
+      () => new CylinderGeometry(0.02, 0.075, 1.75, 6),
       10, 20
     );
 
     this.arrowRing = new ObjectPool(
-      () => new THREE.TorusGeometry(0.125, 0.05, 6, 12),
+      () => new TorusGeometry(0.125, 0.05, 6, 12),
       15, 30
     );
 
     this.spearCylinder = new ObjectPool(
-      () => new THREE.CylinderGeometry(0.08, 0.18, 1.5, 4),
+      () => new CylinderGeometry(0.08, 0.18, 1.5, 4),
       8, 16
     );
 
     this.projectileParticle = new ObjectPool(
-      () => new THREE.SphereGeometry(0.08, 3, 3),
+      () => new SphereGeometry(0.08, 3, 3),
       20, 40
     );
 
     this.projectileTorus = new ObjectPool(
-      () => new THREE.TorusGeometry(0.25, 0.06, 3, 6),
+      () => new TorusGeometry(0.25, 0.06, 3, 6),
       10, 20
     );
 
     this.projectileSphere = new ObjectPool(
-      () => new THREE.SphereGeometry(0.05, 3, 3),
+      () => new SphereGeometry(0.05, 3, 3),
       25, 50
     );
 
     this.projectileCone = new ObjectPool(
-      () => new THREE.ConeGeometry(0.08, 0.4, 6),
+      () => new ConeGeometry(0.08, 0.4, 6),
       10, 20
     );
 
     this.projectilePlane = new ObjectPool(
-      () => new THREE.PlaneGeometry(1, 0.1),
+      () => new PlaneGeometry(1, 0.1),
       5, 10
     );
   }
 
-  private createAttackAreaGeometry(): THREE.BufferGeometry {
-    const geometry = new THREE.BufferGeometry();
+  private createAttackAreaGeometry(): BufferGeometry {
+    const geometry = new BufferGeometry();
     const vertices = [];
     const indices = [];
     
@@ -369,7 +384,7 @@ class GeometryPools {
     }
     
     geometry.setIndex(indices);
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
     geometry.computeVertexNormals();
     
     return geometry;
@@ -428,56 +443,56 @@ class MaterialPools {
   private static instance: MaterialPools;
   
   // Skeleton slash materials
-  public slashMain: ObjectPool<THREE.MeshStandardMaterial>;
-  public slashInnerGlow: ObjectPool<THREE.MeshStandardMaterial>;
-  public slashOuterGlow: ObjectPool<THREE.MeshStandardMaterial>;
-  public slashParticle: ObjectPool<THREE.MeshStandardMaterial>;
-  public slashTrail: ObjectPool<THREE.MeshStandardMaterial>;
+  public slashMain: ObjectPool<MeshStandardMaterial>;
+  public slashInnerGlow: ObjectPool<MeshStandardMaterial>;
+  public slashOuterGlow: ObjectPool<MeshStandardMaterial>;
+  public slashParticle: ObjectPool<MeshStandardMaterial>;
+  public slashTrail: ObjectPool<MeshStandardMaterial>;
   
   // Skeleton charging materials
-  public chargingArea: ObjectPool<THREE.MeshBasicMaterial>;
-  public chargingBorder: ObjectPool<THREE.MeshBasicMaterial>;
-  public chargingRing: ObjectPool<THREE.MeshBasicMaterial>;
-  public chargingOrb: ObjectPool<THREE.MeshStandardMaterial>;
-  public chargingLine: ObjectPool<THREE.MeshStandardMaterial>;
+  public chargingArea: ObjectPool<MeshBasicMaterial>;
+  public chargingBorder: ObjectPool<MeshBasicMaterial>;
+  public chargingRing: ObjectPool<MeshBasicMaterial>;
+  public chargingOrb: ObjectPool<MeshStandardMaterial>;
+  public chargingLine: ObjectPool<MeshStandardMaterial>;
   
   // Mage materials
-  public mageFireball: ObjectPool<THREE.MeshStandardMaterial>;
-  public mageTrail: ObjectPool<THREE.MeshStandardMaterial>;
-  public mageLightning: ObjectPool<THREE.MeshStandardMaterial>;
-  public mageLightningRing: ObjectPool<THREE.MeshBasicMaterial>;
+  public mageFireball: ObjectPool<MeshStandardMaterial>;
+  public mageTrail: ObjectPool<MeshStandardMaterial>;
+  public mageLightning: ObjectPool<MeshStandardMaterial>;
+  public mageLightningRing: ObjectPool<MeshBasicMaterial>;
 
   // Reaper materials
-  public reaperMist: ObjectPool<THREE.MeshStandardMaterial>;
+  public reaperMist: ObjectPool<MeshStandardMaterial>;
 
   // DeathKnight materials
-  public deathKnightSlash: ObjectPool<THREE.MeshStandardMaterial>;
-  public deathKnightSlashParticle: ObjectPool<THREE.MeshStandardMaterial>;
-  public deathKnightChargingArea: ObjectPool<THREE.MeshBasicMaterial>;
-  public deathKnightChargingRing: ObjectPool<THREE.MeshBasicMaterial>;
-  public deathKnightChargingOrb: ObjectPool<THREE.MeshStandardMaterial>;
-  public deathGrasp: ObjectPool<THREE.MeshStandardMaterial>;
-  public frostStrike: ObjectPool<THREE.MeshStandardMaterial>;
-  public frostStrikeRing: ObjectPool<THREE.MeshBasicMaterial>;
+  public deathKnightSlash: ObjectPool<MeshStandardMaterial>;
+  public deathKnightSlashParticle: ObjectPool<MeshStandardMaterial>;
+  public deathKnightChargingArea: ObjectPool<MeshBasicMaterial>;
+  public deathKnightChargingRing: ObjectPool<MeshBasicMaterial>;
+  public deathKnightChargingOrb: ObjectPool<MeshStandardMaterial>;
+  public deathGrasp: ObjectPool<MeshStandardMaterial>;
+  public frostStrike: ObjectPool<MeshStandardMaterial>;
+  public frostStrikeRing: ObjectPool<MeshBasicMaterial>;
 
   // Ascendant materials
-  public ascendantLightning: ObjectPool<THREE.MeshStandardMaterial>;
-  public ascendantLightningRing: ObjectPool<THREE.MeshBasicMaterial>;
-  public ascendantChargingArea: ObjectPool<THREE.MeshBasicMaterial>;
-  public ascendantChargingOrb: ObjectPool<THREE.MeshStandardMaterial>;
-  public ascendantForcePulse: ObjectPool<THREE.MeshStandardMaterial>;
+  public ascendantLightning: ObjectPool<MeshStandardMaterial>;
+  public ascendantLightningRing: ObjectPool<MeshBasicMaterial>;
+  public ascendantChargingArea: ObjectPool<MeshBasicMaterial>;
+  public ascendantChargingOrb: ObjectPool<MeshStandardMaterial>;
+  public ascendantForcePulse: ObjectPool<MeshStandardMaterial>;
 
   private constructor() {
     // Skeleton slash material pools
     this.slashMain = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#8B0000",
         emissive: "#8B0000",
         emissiveIntensity: 1.5,
         transparent: true,
         opacity: 0.9,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       5, 10,
       (material) => {
@@ -487,14 +502,14 @@ class MaterialPools {
     );
     
     this.slashInnerGlow = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#A00000",
         emissive: "#A00000",
         emissiveIntensity: 1.0,
         transparent: true,
         opacity: 0.8,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       5, 10,
       (material) => {
@@ -504,14 +519,14 @@ class MaterialPools {
     );
     
     this.slashOuterGlow = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#6B0000",
         emissive: "#6B0000",
         emissiveIntensity: 0.8,
         transparent: true,
         opacity: 0.6,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       5, 10,
       (material) => {
@@ -521,14 +536,14 @@ class MaterialPools {
     );
     
     this.slashParticle = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#B00000",
         emissive: "#B00000",
         emissiveIntensity: 1.2,
         transparent: true,
         opacity: 0.7,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       20, 40,
       (material) => {
@@ -538,14 +553,14 @@ class MaterialPools {
     );
     
     this.slashTrail = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#C00000",
         emissive: "#C00000",
         emissiveIntensity: 1.0,
         transparent: true,
         opacity: 0.6,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       15, 30,
       (material) => {
@@ -556,12 +571,12 @@ class MaterialPools {
 
     // Skeleton charging material pools
     this.chargingArea = new ObjectPool(
-      () => new THREE.MeshBasicMaterial({
+      () => new MeshBasicMaterial({
         color: "#FF4444",
         transparent: true,
         opacity: 0.4,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide
+        blending: AdditiveBlending,
+        side: DoubleSide
       }),
       5, 10,
       (material) => {
@@ -570,12 +585,12 @@ class MaterialPools {
     );
     
     this.chargingBorder = new ObjectPool(
-      () => new THREE.MeshBasicMaterial({
+      () => new MeshBasicMaterial({
         color: "#FF0000",
         transparent: true,
         opacity: 0.7,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide,
+        blending: AdditiveBlending,
+        side: DoubleSide,
         wireframe: true
       }),
       5, 10,
@@ -585,11 +600,11 @@ class MaterialPools {
     );
     
     this.chargingRing = new ObjectPool(
-      () => new THREE.MeshBasicMaterial({
+      () => new MeshBasicMaterial({
         color: "#FF4444",
         transparent: true,
         opacity: 0.5,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       10, 20,
       (material) => {
@@ -598,7 +613,7 @@ class MaterialPools {
     );
     
     this.chargingOrb = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#FF3333",
         emissive: "#FF0000",
         emissiveIntensity: 15,
@@ -613,7 +628,7 @@ class MaterialPools {
     );
     
     this.chargingLine = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#FF3333",
         emissive: "#FF0000",
         emissiveIntensity: 8,
@@ -629,7 +644,7 @@ class MaterialPools {
 
     // Mage material pools
     this.mageFireball = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#FF4500",
         emissive: "#FF4500",
         emissiveIntensity: 2.0,
@@ -644,13 +659,13 @@ class MaterialPools {
     );
     
     this.mageTrail = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#FF6600",
         emissive: "#FF4500",
         emissiveIntensity: 1.5,
         transparent: true,
         opacity: 0.7,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       30, 60,
       (material) => {
@@ -660,7 +675,7 @@ class MaterialPools {
     );
     
     this.mageLightning = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#4444FF",
         emissive: "#4444FF",
         emissiveIntensity: 3.0,
@@ -675,11 +690,11 @@ class MaterialPools {
     );
     
     this.mageLightningRing = new ObjectPool(
-      () => new THREE.MeshBasicMaterial({
+      () => new MeshBasicMaterial({
         color: "#6666FF",
         transparent: true,
         opacity: 0.6,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       10, 20,
       (material) => {
@@ -689,13 +704,13 @@ class MaterialPools {
 
     // Reaper material pools
     this.reaperMist = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#a8e6cf",
         emissive: "#a8e6cf",
         emissiveIntensity: 0.5,
         transparent: true,
         opacity: 0.6,
-        blending: THREE.AdditiveBlending,
+        blending: AdditiveBlending,
         depthWrite: false
       }),
       60, 120,
@@ -707,14 +722,14 @@ class MaterialPools {
 
     // DeathKnight material pools
     this.deathKnightSlash = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#4A90E2", // Frost blue
         emissive: "#4A90E2",
         emissiveIntensity: 2.0,
         transparent: true,
         opacity: 0.9,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       5, 10,
       (material) => {
@@ -724,14 +739,14 @@ class MaterialPools {
     );
 
     this.deathKnightSlashParticle = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#87CEEB", // Sky blue
         emissive: "#87CEEB",
         emissiveIntensity: 1.5,
         transparent: true,
         opacity: 0.8,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       20, 40,
       (material) => {
@@ -741,12 +756,12 @@ class MaterialPools {
     );
 
     this.deathKnightChargingArea = new ObjectPool(
-      () => new THREE.MeshBasicMaterial({
+      () => new MeshBasicMaterial({
         color: "#4A90E2",
         transparent: true,
         opacity: 0.4,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide
+        blending: AdditiveBlending,
+        side: DoubleSide
       }),
       5, 10,
       (material) => {
@@ -755,11 +770,11 @@ class MaterialPools {
     );
 
     this.deathKnightChargingRing = new ObjectPool(
-      () => new THREE.MeshBasicMaterial({
+      () => new MeshBasicMaterial({
         color: "#87CEEB",
         transparent: true,
         opacity: 0.6,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       10, 20,
       (material) => {
@@ -768,7 +783,7 @@ class MaterialPools {
     );
 
     this.deathKnightChargingOrb = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#4A90E2",
         emissive: "#4A90E2",
         emissiveIntensity: 12,
@@ -783,7 +798,7 @@ class MaterialPools {
     );
 
     this.deathGrasp = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#2E4057", // Dark blue-gray
         emissive: "#2E4057",
         emissiveIntensity: 1.0,
@@ -798,7 +813,7 @@ class MaterialPools {
     );
 
     this.frostStrike = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#B0E0E6", // Powder blue
         emissive: "#B0E0E6",
         emissiveIntensity: 2.5,
@@ -813,11 +828,11 @@ class MaterialPools {
     );
 
     this.frostStrikeRing = new ObjectPool(
-      () => new THREE.MeshBasicMaterial({
+      () => new MeshBasicMaterial({
         color: "#87CEEB",
         transparent: true,
         opacity: 0.7,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       10, 20,
       (material) => {
@@ -827,7 +842,7 @@ class MaterialPools {
 
     // Ascendant material pools
     this.ascendantLightning = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#FFD700", // Gold
         emissive: "#FFD700",
         emissiveIntensity: 3.5,
@@ -842,11 +857,11 @@ class MaterialPools {
     );
 
     this.ascendantLightningRing = new ObjectPool(
-      () => new THREE.MeshBasicMaterial({
+      () => new MeshBasicMaterial({
         color: "#FFA500", // Orange
         transparent: true,
         opacity: 0.8,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       15, 30,
       (material) => {
@@ -855,12 +870,12 @@ class MaterialPools {
     );
 
     this.ascendantChargingArea = new ObjectPool(
-      () => new THREE.MeshBasicMaterial({
+      () => new MeshBasicMaterial({
         color: "#FFD700",
         transparent: true,
         opacity: 0.5,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide
+        blending: AdditiveBlending,
+        side: DoubleSide
       }),
       5, 10,
       (material) => {
@@ -869,7 +884,7 @@ class MaterialPools {
     );
 
     this.ascendantChargingOrb = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#FFD700",
         emissive: "#FFD700",
         emissiveIntensity: 18,
@@ -884,13 +899,13 @@ class MaterialPools {
     );
 
     this.ascendantForcePulse = new ObjectPool(
-      () => new THREE.MeshStandardMaterial({
+      () => new MeshStandardMaterial({
         color: "#FFA500",
         emissive: "#FFA500",
         emissiveIntensity: 2.0,
         transparent: true,
         opacity: 0.6,
-        blending: THREE.AdditiveBlending
+        blending: AdditiveBlending
       }),
       8, 16,
       (material) => {

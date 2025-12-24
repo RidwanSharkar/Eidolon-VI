@@ -1,24 +1,39 @@
 import React, { useRef, useMemo } from 'react';
-import * as THREE from 'three';
+import {
+  TextureLoader,
+  LinearFilter,
+  Mesh,
+  Group,
+  SphereGeometry,
+  RingGeometry,
+  MeshStandardMaterial,
+  MeshBasicMaterial,
+  Frustum,
+  Matrix4,
+  Sphere,
+  Vector3,
+  DoubleSide,
+  BackSide
+} from 'three';
 import { useLoader, useFrame } from '@react-three/fiber';
 
 const Planet: React.FC = () => {
-  const texture = useLoader(THREE.TextureLoader, '/textures/ring-alpha.jpg');
+  const texture = useLoader(TextureLoader, '/textures/ring-alpha.jpg');
   const ringTexture = useMemo(() => {
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
+    texture.minFilter = LinearFilter;
+    texture.magFilter = LinearFilter;
     texture.generateMipmaps = false;
     return texture;
   }, [texture]);
-  const ringRef = useRef<THREE.Mesh>(null);
-  const groupRef = useRef<THREE.Group>(null);
+  const ringRef = useRef<Mesh>(null);
+  const groupRef = useRef<Group>(null);
 
   // Memoize geometries with reduced segments for better performance
-  const sphereGeometry = useMemo(() => new THREE.SphereGeometry(1, 24, 24), []);
-  const ringGeometry = useMemo(() => new THREE.RingGeometry(1.4, 2.1, 48), []);
+  const sphereGeometry = useMemo(() => new SphereGeometry(1, 24, 24), []);
+  const ringGeometry = useMemo(() => new RingGeometry(1.4, 2.1, 48), []);
   
   // Memoize materials
-  const planetMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+  const planetMaterial = useMemo(() => new MeshStandardMaterial({
     color: "#B8E0D2",
     roughness: 0.7,
     metalness: 0.2,
@@ -26,16 +41,16 @@ const Planet: React.FC = () => {
     emissiveIntensity: 0.675
   }), []);
 
-  const glowMaterial = useMemo(() => new THREE.MeshBasicMaterial({
+  const glowMaterial = useMemo(() => new MeshBasicMaterial({
     color: "#4dff90",
     transparent: true,
     opacity: 0.5
   }), []);
 
   // Cache frustum and matrices to reduce garbage collection
-  const frustum = useMemo(() => new THREE.Frustum(), []);
-  const matrix = useMemo(() => new THREE.Matrix4(), []);
-  const sphere = useMemo(() => new THREE.Sphere(new THREE.Vector3(), 24 * Math.sqrt(3)), []);
+  const frustum = useMemo(() => new Frustum(), []);
+  const matrix = useMemo(() => new Matrix4(), []);
+  const sphere = useMemo(() => new Sphere(new Vector3(), 24 * Math.sqrt(3)), []);
 
   // Cleanup geometries and materials on unmount
   React.useEffect(() => {
@@ -79,7 +94,7 @@ const Planet: React.FC = () => {
           color="#A8DBFF"
           transparent
           opacity={1}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
           alphaMap={ringTexture}
           roughness={0.7}
           metalness={0.2}
@@ -97,7 +112,7 @@ const Planet: React.FC = () => {
           color="#4dff90"
           transparent
           opacity={0.2}
-          side={THREE.BackSide}
+          side={BackSide}
         />
       </mesh>
 

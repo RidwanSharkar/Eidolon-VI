@@ -2,8 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Group, Vector3, Euler } from 'three';
-import * as THREE from 'three';
+import { Group, Vector3, Euler, AdditiveBlending } from 'three';
 
 interface WingJetProps {
   isActive: boolean;
@@ -172,7 +171,7 @@ const DraconicWingJets: React.FC<WingJetProps> = ({
               transparent
               opacity={0.5}
               depthWrite={false}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
 
@@ -203,7 +202,7 @@ const DraconicWingJets: React.FC<WingJetProps> = ({
               transparent
               opacity={particle.life / particle.maxLife * 0.8}
               depthWrite={false}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         ))}

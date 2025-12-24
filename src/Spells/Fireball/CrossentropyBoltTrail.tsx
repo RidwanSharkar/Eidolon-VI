@@ -1,12 +1,18 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  Color,
+  Mesh,
+  Points,
+  Vector3
+} from 'three';
 
 interface CrossentropyBoltTrailProps {
-  color: THREE.Color;
+  color: Color;
   size: number;
-  mesh1Ref: React.RefObject<THREE.Mesh>;
-  mesh2Ref: React.RefObject<THREE.Mesh>;
+  mesh1Ref: React.RefObject<Mesh>;
+  mesh2Ref: React.RefObject<Mesh>;
   opacity?: number;
 }
 
@@ -18,8 +24,8 @@ const CrossentropyBoltTrail: React.FC<CrossentropyBoltTrailProps> = ({
   opacity = 1
 }) => {
   const particlesCount = 30;
-  const particles1Ref = useRef<THREE.Points>(null);
-  const particles2Ref = useRef<THREE.Points>(null);
+  const particles1Ref = useRef<Points>(null);
+  const particles2Ref = useRef<Points>(null);
   const positions1Ref = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const positions2Ref = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacities1Ref = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -29,8 +35,8 @@ const CrossentropyBoltTrail: React.FC<CrossentropyBoltTrailProps> = ({
   const isInitialized = useRef(false);
   
   // ref to store the last known positions for smoother updates
-  const lastKnownPosition1 = useRef(new THREE.Vector3());
-  const lastKnownPosition2 = useRef(new THREE.Vector3());
+  const lastKnownPosition1 = useRef(new Vector3());
+  const lastKnownPosition2 = useRef(new Vector3());
 
   // Initialize positions only once when meshes are available
   useEffect(() => {
@@ -141,7 +147,7 @@ const CrossentropyBoltTrail: React.FC<CrossentropyBoltTrailProps> = ({
         <shaderMaterial
           transparent
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           vertexShader={`
             attribute float opacity;
             attribute float scale;
@@ -192,7 +198,7 @@ const CrossentropyBoltTrail: React.FC<CrossentropyBoltTrailProps> = ({
         <shaderMaterial
           transparent
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           vertexShader={`
             attribute float opacity;
             attribute float scale;

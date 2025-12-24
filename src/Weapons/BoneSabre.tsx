@@ -1,7 +1,6 @@
 // src/Weapons/BoneSabre.tsx
 import React from 'react';
-import { Shape, ExtrudeGeometry } from 'three';
-import * as THREE from 'three';
+import { Shape, ExtrudeGeometry, CylinderGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
 
 // MEMORY FIX: Create blade shapes at module level
 const createBladeShape = (): Shape => {
@@ -107,15 +106,15 @@ const CACHED_GEOMETRIES = {
   innerBlade2: new ExtrudeGeometry(INNER_BLADE_SHAPE, { ...innerBladeExtrudeSettings, depth: 0.04 }),
   innerBlade3: new ExtrudeGeometry(INNER_BLADE_SHAPE, { ...innerBladeExtrudeSettings, depth: 0.06 }),
   innerBlade4: new ExtrudeGeometry(INNER_BLADE_SHAPE, { ...innerBladeExtrudeSettings, depth: 0.08 }),
-  handleCylinder: new THREE.CylinderGeometry(0.015, 0.02, 0.45, 12),
-  handleWrapping: new THREE.TorusGeometry(0.0225, 0.004, 8, 16)
+  handleCylinder: new CylinderGeometry(0.015, 0.02, 0.45, 12),
+  handleWrapping: new TorusGeometry(0.0225, 0.004, 8, 16)
 };
 
 // MEMORY FIX: Cached materials - created once at module load
 const CACHED_MATERIALS = {
-  handle: new THREE.MeshStandardMaterial({ color: "#2a3b4c", roughness: 0.7 }),
-  handleWrapping: new THREE.MeshStandardMaterial({ color: "#1a2b3c", metalness: 0.6, roughness: 0.4 }),
-  blade0: new THREE.MeshStandardMaterial({
+  handle: new MeshStandardMaterial({ color: "#2a3b4c", roughness: 0.7 }),
+  handleWrapping: new MeshStandardMaterial({ color: "#1a2b3c", metalness: 0.6, roughness: 0.4 }),
+  blade0: new MeshStandardMaterial({
     color: "#8B0000",
     emissive: "#8B0000",
     emissiveIntensity: 1,
@@ -124,7 +123,7 @@ const CACHED_MATERIALS = {
     opacity: 0.9,
     transparent: true
   }),
-  blade1: new THREE.MeshStandardMaterial({
+  blade1: new MeshStandardMaterial({
     color: "#A00000",
     emissive: "#A00000",
     emissiveIntensity: 1,
@@ -133,7 +132,7 @@ const CACHED_MATERIALS = {
     opacity: 0.95,
     transparent: true
   }),
-  blade2: new THREE.MeshStandardMaterial({
+  blade2: new MeshStandardMaterial({
     color: "#B00000",
     emissive: "#B00000",
     emissiveIntensity: 1,
@@ -142,7 +141,7 @@ const CACHED_MATERIALS = {
     opacity: 0.7,
     transparent: true
   }),
-  blade3: new THREE.MeshStandardMaterial({
+  blade3: new MeshStandardMaterial({
     color: "#C00000",
     emissive: "#C00000",
     emissiveIntensity: 1,
@@ -151,7 +150,7 @@ const CACHED_MATERIALS = {
     opacity: 0.4,
     transparent: true
   }),
-  blade4: new THREE.MeshStandardMaterial({
+  blade4: new MeshStandardMaterial({
     color: "#D00000",
     emissive: "#D00000",
     emissiveIntensity: 1,

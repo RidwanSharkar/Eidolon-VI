@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Group, Mesh } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { Euler, Vector3 } from 'three';
 
 interface AscendantBoneAuraProps {
   parentRef: React.RefObject<Group>;
@@ -20,7 +20,7 @@ const createBonePiece = () => (
     </mesh>
     
     {/* Bone joints - more pronounced */}
-    <mesh position={new THREE.Vector3(0, 0.375, 0)} rotation={new THREE.Euler(0, 0, Math.PI / 3)}>
+    <mesh position={new Vector3(0, 0.375, 0)} rotation={new Euler(0, 0, Math.PI / 3)}>
       <sphereGeometry args={[0.075, 8, 8]} />
       <meshStandardMaterial 
         color="#ffffff"
@@ -29,7 +29,7 @@ const createBonePiece = () => (
       />
     </mesh>
 
-    <mesh position={new THREE.Vector3(0, -0.375, 0)} rotation={new THREE.Euler(0, 0, -Math.PI / 3)}>
+    <mesh position={new Vector3(0, -0.375, 0)} rotation={new Euler(0, 0, -Math.PI / 3)}>
       <sphereGeometry args={[0.075, 8, 8]} />
       <meshStandardMaterial 
         color="#ffffff"

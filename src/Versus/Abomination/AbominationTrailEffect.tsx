@@ -1,14 +1,14 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, Group, Points } from 'three';
 
 interface AbominationTrailEffectProps {
-  parentRef: React.RefObject<THREE.Group>;
+  parentRef: React.RefObject<Group>;
 }
 
 const AbominationTrailEffect: React.FC<AbominationTrailEffectProps> = ({ parentRef }) => {
   const particlesCount = 7;
-  const particlesRef = useRef<THREE.Points>(null);
+  const particlesRef = useRef<Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const scalesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -70,7 +70,7 @@ const AbominationTrailEffect: React.FC<AbominationTrailEffectProps> = ({ parentR
       <shaderMaterial
         transparent
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
+        blending={AdditiveBlending}
         vertexShader={`
           attribute float opacity;
           attribute float scale;

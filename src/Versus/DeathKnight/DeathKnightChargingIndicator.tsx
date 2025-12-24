@@ -2,7 +2,7 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Vector3, Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, DoubleSide } from 'three';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
 
 interface DeathKnightChargingIndicatorProps {
@@ -125,8 +125,8 @@ const DeathKnightChargingIndicator: React.FC<DeathKnightChargingIndicatorProps> 
             color="#8B44FF" // Purple
             transparent
             opacity={0.4 * currentIntensity}
-            blending={THREE.AdditiveBlending}
-            side={THREE.DoubleSide}
+            blending={AdditiveBlending}
+            side={DoubleSide}
           />
         </mesh>
         
@@ -136,8 +136,8 @@ const DeathKnightChargingIndicator: React.FC<DeathKnightChargingIndicatorProps> 
             color="#6A1B9A" // Dark purple
             transparent
             opacity={0.7 * currentIntensity}
-            blending={THREE.AdditiveBlending}
-            side={THREE.DoubleSide}
+            blending={AdditiveBlending}
+            side={DoubleSide}
             wireframe={true}
           />
         </mesh>

@@ -1,24 +1,24 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import FirestormShard from '@/Spells/Firestorm/FirestormShard';
 import { calculateFirestormDamage } from '@/Spells/Firestorm/FirestormDamage';
-import * as THREE from 'three';
+import { MeshStandardMaterial, TetrahedronGeometry, TorusGeometry } from 'three';
 
 export const sharedGeometries = {
-  torus: new THREE.TorusGeometry(0.8, 0.075, 8, 32),
-  tetrahedron: new THREE.TetrahedronGeometry(0.0725)
+  torus: new TorusGeometry(0.8, 0.075, 8, 32),
+  tetrahedron: new TetrahedronGeometry(0.0725)
 };
 
 export const sharedMaterials = {
-  firestorm: new THREE.MeshStandardMaterial({
+  firestorm: new MeshStandardMaterial({
     color: "#ff4400",
     emissive: "#ff2200",
     emissiveIntensity: 7.5,
     transparent: true,
     opacity: 0.6
   }),
-  shard: new THREE.MeshStandardMaterial({
+  shard: new MeshStandardMaterial({
     color: "#ff6600",
     emissive: "#ff3300",
     emissiveIntensity: 5,
@@ -43,9 +43,9 @@ interface FirestormProps {
   isActive?: boolean; // New prop to control if firestorm should remain active
 }
 
-export default function Firestorm({ 
-  onComplete, 
-  enemyData = [], 
+export default function Firestorm({
+  onComplete,
+  enemyData = [],
   onHitTarget,
   parentRef,
   isActive = true
@@ -55,8 +55,8 @@ export default function Firestorm({
   const lastDamageTime = useRef<number>(0);
   // Duration is now managed externally through isActive prop
   // const duration = 4; // 4 second duration as specified
-  const shardsRef = useRef<Array<{ id: number; position: Vector3; type: 'orbital' | 'falling' }>>([]);
-  const aurasRef = useRef<Array<{ id: number }>>([]);
+  const [shards, setShards] = useState<Array<{ id: string; position: Vector3; type: 'orbital' | 'falling' }>>([]);
+  const [auras, setAuras] = useState<Array<{ id: string }>>([]);
 
   const ORBITAL_RADIUS = 2;        // Smaller radius for more concentrated effect
   const FALLING_RADIUS = 0.75;        // Much smaller radius for intense concentration
@@ -92,41 +92,41 @@ export default function Firestorm({
     if (Math.random() < 0.8) { // Increased spawn rate for more particles
       const angle = Math.random() * Math.PI * 2;
       const spawnRadius = Math.random() * ORBITAL_RADIUS;
-      
+
       const orbitalPosition = new Vector3(
         Math.cos(angle) * spawnRadius +3,
         ORBITAL_HEIGHT + Math.random() * 0.8 + 3, // Reduced height variation for concentration
         Math.sin(angle) * spawnRadius +3
       );
 
-      shardsRef.current.push({
-        id: Date.now() + Math.random(),
+      setShards(prev => [...prev, {
+        id: `${Date.now()}-${Math.random()}`,
         position: orbitalPosition,
         type: 'orbital'
-      });
+      }]);
     }
 
     if (Math.random() < 0.6) { // Much higher spawn rate for falling particles
       const angle = Math.random() * Math.PI * 2;
       const spawnRadius = Math.random() * FALLING_RADIUS;
-      
+
       const fallingPosition = new Vector3(
         Math.cos(angle) * spawnRadius,
         FALLING_HEIGHT + Math.random() * 1.5, // Less height variation
         Math.sin(angle) * spawnRadius
       );
 
-      shardsRef.current.push({
-        id: Date.now() + Math.random(),
+      setShards(prev => [...prev, {
+        id: `${Date.now()}-${Math.random()}`,
         position: fallingPosition,
         type: 'falling'
-      });
+      }]);
     }
 
     if (Math.random() < 0.2) { // Increased aura spawn rate for more visual intensity
-      aurasRef.current.push({
-        id: Date.now() + Math.random(),
-      });
+      setAuras(prev => [...prev, {
+        id: `${Date.now()}-${Math.random()}`,
+      }]);
     }
 
     // Damage dealing logic
@@ -152,13 +152,13 @@ export default function Firestorm({
   return (
     <group ref={stormRef}>
 
-      {shardsRef.current.map(shard => (
+      {shards.map(shard => (
         <FirestormShard
           key={shard.id}
           initialPosition={shard.position}
           type={shard.type}
           onComplete={() => {
-            shardsRef.current = shardsRef.current.filter(s => s.id !== shard.id);
+            setShards(prev => prev.filter(s => s.id !== shard.id));
           }}
         />
       ))}

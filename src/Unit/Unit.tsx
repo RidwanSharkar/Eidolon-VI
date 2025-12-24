@@ -1,41 +1,64 @@
 // src/unit/Unit.tsx
 import { useRef, useState, useEffect, useCallback, useMemo, useImperativeHandle } from 'react';
-import { Vector3, Group } from 'three';
+import { Vector3 } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import Fireball from '../Spells/Fireball/Fireball';
 import CrossentropyBolt from '../Spells/Fireball/CrossentropyBolt';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  Color,
+  ConeGeometry,
+  CylinderGeometry,
+  Euler,
+  Group,
+  PlaneGeometry,
+  Quaternion,
+  SphereGeometry,
+  TorusGeometry
+} from 'three';
 import { WeaponType, WeaponSubclass, WEAPON_DAMAGES, WEAPON_ORB_COUNTS, getWeaponDamage } from '../Weapons/weapons';
 import { geometryPools as effectGeometryPools } from '../Scene/EffectPools';
 import { UNIT_GEOMETRIES } from './UnitGeometries';
+import {
+  SHARED_SPHERE_GEOMETRY_LOW,
+  SHARED_SPHERE_GEOMETRY_MEDIUM,
+  SHARED_SPHERE_GEOMETRY_HIGH,
+  SHARED_SPHERE_GEOMETRY_GLOW,
+  SHARED_PLANE_GEOMETRY_1x01,
+  SHARED_CYLINDER_GEOMETRY_ARROW,
+  SHARED_TORUS_GEOMETRY_RING_01,
+  SHARED_TORUS_GEOMETRY_RING_013,
+  SHARED_TORUS_GEOMETRY_RING_016,
+  SHARED_MESH_BASIC_MATERIAL_HEALTH_BAR_BG
+} from '../SharedGeometries';
 
-// Pre-allocated colors for performance - avoids new THREE.Color() on every render
-const ICICLE_TRAIL_COLOR = new THREE.Color("#CCFFFF");
+// Pre-allocated colors for performance - avoids new Color() on every render
+const ICICLE_TRAIL_COLOR = new Color("#CCFFFF");
 
 // Unique ID generator to prevent key collisions
 let uniqueIdCounter = 0;
 const generateUniqueId = (prefix: string = '') => `${prefix}${Date.now()}-${uniqueIdCounter++}`;
 
 // Pre-allocated fallback quaternion and zero position for bow direction calculation
-const DEFAULT_QUATERNION = new THREE.Quaternion();
+const DEFAULT_QUATERNION = new Quaternion();
 const ZERO_POSITION = new Vector3(0, 0, 0);
 
 // Pre-allocated vectors for stealth calculations (reused to avoid allocations)
 const STEALTH_ENEMY_FORWARD = new Vector3();
 const STEALTH_TO_PLAYER = new Vector3();
-const STEALTH_EULER = new THREE.Euler();
+const STEALTH_EULER = new Euler();
 
 // Shared geometries to prevent memory leaks - created once, reused everywhere
-const SHARED_ARROW_CYLINDER = new THREE.CylinderGeometry(0.02, 0.075, 1.75, 6);
-const SHARED_ARROW_RING_0 = new THREE.TorusGeometry(0.125, 0.05, 6, 12);
-const SHARED_ARROW_RING_1 = new THREE.TorusGeometry(0.165, 0.05, 6, 12);
-const SHARED_ARROW_RING_2 = new THREE.TorusGeometry(0.205, 0.05, 6, 12);
-const SHARED_SPEAR_CYLINDER = new THREE.CylinderGeometry(0.08, 0.18, 1.5, 4);
-const SHARED_PROJECTILE_SPHERE = new THREE.SphereGeometry(0.08, 3, 3);
-const SHARED_PROJECTILE_PARTICLE = new THREE.SphereGeometry(0.05, 3, 3);
-const SHARED_PROJECTILE_TORUS = new THREE.TorusGeometry(0.25, 0.06, 3, 6);
-const SHARED_PROJECTILE_CONE = new THREE.ConeGeometry(0.08, 0.4, 6);
-const SHARED_PROJECTILE_PLANE = new THREE.PlaneGeometry(1, 0.1);
+const SHARED_ARROW_CYLINDER = new CylinderGeometry(0.02, 0.075, 1.75, 6);
+const SHARED_ARROW_RING_0 = new TorusGeometry(0.125, 0.05, 6, 12);
+const SHARED_ARROW_RING_1 = new TorusGeometry(0.165, 0.05, 6, 12);
+const SHARED_ARROW_RING_2 = new TorusGeometry(0.205, 0.05, 6, 12);
+const SHARED_SPEAR_CYLINDER = new CylinderGeometry(0.08, 0.18, 1.5, 4);
+const SHARED_PROJECTILE_SPHERE = new SphereGeometry(0.08, 3, 3);
+const SHARED_PROJECTILE_PARTICLE = new SphereGeometry(0.05, 3, 3);
+const SHARED_PROJECTILE_TORUS = new TorusGeometry(0.25, 0.06, 3, 6);
+const SHARED_PROJECTILE_CONE = new ConeGeometry(0.08, 0.4, 6);
+const SHARED_PROJECTILE_PLANE = new PlaneGeometry(1, 0.1);
 
 import Scythe from '@/Weapons/Scythe';
 import Sword from '@/Weapons/Sword';
@@ -197,7 +220,7 @@ interface IcicleProjectileWithTrailProps {
 }
 
 function IcicleProjectileWithTrail({ projectile }: IcicleProjectileWithTrailProps) {
-  const projectileRef = useRef<THREE.Group>(null);
+  const projectileRef = useRef<Group>(null);
 
   // Update position when projectile position changes
   useEffect(() => {
@@ -2170,8 +2193,7 @@ export default function Unit({
             isColossusStrike: false,
             isColossusLightning: false,
             isFirestorm: false,
-            isElementalBowPowershot: false,
-            isPoisonDoT: true
+            isElementalBowPowershot: false
           }]);
           
           // Update last tick time
@@ -2252,22 +2274,28 @@ export default function Unit({
       }
     });
 
-    // Update projectiles with optimized frame-by-frame movement
+    // Update projectiles with optimized frame-by-frame movement and AGGRESSIVE cleanup
     const now = Date.now();
     activeProjectilesRef.current = activeProjectilesRef.current.filter(projectile => {
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
-      
+      const timeAlive = now - projectile.startTime;
+
+      // ULTRA AGGRESSIVE: Force removal after 3 seconds regardless of state
+      if (timeAlive > 3000) {
+        return false;
+      }
+
       // Handle fading when projectile reaches max distance
       if (distanceTraveled >= projectile.maxDistance && !projectile.fadeStartTime) {
         projectile.fadeStartTime = now;
       }
-      
-      // Handle fade effect
+
+      // Handle fade effect with SHORTER duration
       if (projectile.fadeStartTime) {
         const fadeElapsed = now - projectile.fadeStartTime;
-        const fadeProgress = fadeElapsed / 1000; // 1 second fade duration
+        const fadeProgress = fadeElapsed / 500; // Reduced from 1 second to 0.5 seconds
         projectile.opacity = Math.max(0, 1 - fadeProgress);
-        
+
         if (fadeProgress >= 1) {
           return false; // Remove projectile after fade completes
         }
@@ -3849,58 +3877,58 @@ export default function Unit({
     };
   }, [setActiveEffects]);
 
-  // cleanup for damage numbers and effects - run every 500ms
+  // ULTRA-AGGRESSIVE cleanup for damage numbers and effects - run every 200ms
   useEffect(() => {
-    const ultraAggressiveCleanup = setInterval(() => {
-      // MEMORY FIX: More aggressive limits for damage numbers (reduced from 20/15 to 15/10)
-      if (damageNumbers.length > 15) {
-        setDamageNumbers(prev => prev.slice(-10)); // Keep only the last 10
+    const extremeCleanup = setInterval(() => {
+      // ULTRA AGGRESSIVE: Damage numbers limit reduced from 15/10 to 8/5
+      if (damageNumbers.length > 8) {
+        setDamageNumbers(prev => prev.slice(-5)); // Keep only the last 5
       }
 
-      // MEMORY FIX: More aggressive limits for active effects (reduced from 20/15 to 12/8)
-      if (activeEffects.length > 12) {
-        setActiveEffects(prev => prev.slice(-8)); // Keep only the last 8
+      // ULTRA AGGRESSIVE: Active effects limit reduced from 12/8 to 6/4
+      if (activeEffects.length > 6) {
+        setActiveEffects(prev => prev.slice(-4)); // Keep only the last 4
       }
 
-      // Check if we have too many fireballs - much more aggressive limits (reduced from 10/5 to 6/3)
-      if (fireballs.length > 6) {
-        setFireballs(prev => prev.slice(-3)); // Keep only the last 3
+      // ULTRA AGGRESSIVE: Fireballs limit reduced from 6/3 to 3/2
+      if (fireballs.length > 3) {
+        setFireballs(prev => prev.slice(-2)); // Keep only the last 2
       }
 
-      // Check if we have too many active projectiles (reduced from 30/15 to 20/10)
-      if (activeProjectiles.length > 20) {
-        setActiveProjectiles(prev => prev.slice(-10)); // Keep only the last 10
+      // ULTRA AGGRESSIVE: Projectiles limit reduced from 20/10 to 10/5
+      if (activeProjectiles.length > 10) {
+        setActiveProjectiles(prev => prev.slice(-5)); // Keep only the last 5
       }
 
-      // MEMORY FIX: Limit colossus strike lightning effects (reduced from 8/5 to 4/2)
-      if (colossusStrikeLightning.length > 4) {
-        setColossusStrikeLightning(prev => prev.slice(-2));
+      // ULTRA AGGRESSIVE: Colossus lightning limit reduced from 4/2 to 2/1
+      if (colossusStrikeLightning.length > 2) {
+        setColossusStrikeLightning(prev => prev.slice(-1));
       }
 
-      // MEMORY FIX: Limit player stun effects (reduced from 5/3 to 3/2)
-      if (playerStunEffects.length > 3) {
-        setPlayerStunEffects(prev => prev.slice(-2));
+      // ULTRA AGGRESSIVE: Player stun effects limit reduced from 3/2 to 2/1
+      if (playerStunEffects.length > 2) {
+        setPlayerStunEffects(prev => prev.slice(-1));
       }
 
-      // MEMORY FIX: Limit abyssal slash effects (reduced from 8/5 to 4/2)
-      if (abyssalSlashEffects.length > 4) {
-        setAbyssalSlashEffects(prev => prev.slice(-2));
+      // ULTRA AGGRESSIVE: Abyssal slash effects limit reduced from 4/2 to 2/1
+      if (abyssalSlashEffects.length > 2) {
+        setAbyssalSlashEffects(prev => prev.slice(-1));
       }
 
-      // MEMORY FIX: Cleanup stale soul steal effects (effects older than 2 seconds)
+      // ULTRA AGGRESSIVE: Soul steal effects cleanup (reduced from 2s to 1s lifetime)
       const now = Date.now();
       if (viperStingSoulStealEffects.current.length > 0) {
         viperStingSoulStealEffects.current = viperStingSoulStealEffects.current.filter(
-          effect => now - effect.startTime < 2000 // Remove effects older than 2 seconds
+          effect => now - effect.startTime < 1000 // Remove effects older than 1 second (was 2s)
         );
-        // Hard limit: never allow more than 10 soul steal effects
-        if (viperStingSoulStealEffects.current.length > 10) {
-          viperStingSoulStealEffects.current = viperStingSoulStealEffects.current.slice(-10);
+        // ULTRA AGGRESSIVE: Hard limit reduced from 10 to 5
+        if (viperStingSoulStealEffects.current.length > 5) {
+          viperStingSoulStealEffects.current = viperStingSoulStealEffects.current.slice(-5);
         }
       }
-    }, 500); // Check every 500ms - much more aggressive cleanup
+    }, 200); // Increased frequency from 500ms to 200ms
 
-    return () => clearInterval(ultraAggressiveCleanup);
+    return () => clearInterval(extremeCleanup);
   }, [damageNumbers.length, activeEffects.length, fireballs.length, activeProjectiles.length, colossusStrikeLightning.length, playerStunEffects.length, abyssalSlashEffects.length]);
 
   // Add additional cleanup for unmounting
@@ -4084,26 +4112,26 @@ export default function Unit({
 
         {/* Outer glow SPhere layer */}
         <mesh scale={1.085}>
-          <sphereGeometry args={[0.415, 8, 8]} />
+          <primitive object={SHARED_SPHERE_GEOMETRY_GLOW} />
           <meshBasicMaterial
             color="#a8e6cf"
             transparent
             opacity={isStealthed ? 0.15 : 0.125}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
 
         {/* Stealth fade effect */}
         {isStealthed && (
           <mesh scale={1.1}>
-            <sphereGeometry args={[0.42, 32, 32]} />
+            <primitive object={SHARED_SPHERE_GEOMETRY_HIGH} />
             <meshBasicMaterial
               color="#a8e6cf"
               transparent
               opacity={0.08}
               depthWrite={false}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         )}
@@ -4292,8 +4320,8 @@ export default function Unit({
             lockZ={false}
           >
             <mesh>
-              <planeGeometry args={[1, 0.1]} />
-              <meshBasicMaterial color="#333333" />
+              <primitive object={SHARED_PLANE_GEOMETRY_1x01} />
+              <primitive object={SHARED_MESH_BASIC_MATERIAL_HEALTH_BAR_BG} />
             </mesh>
             <mesh position={[0.5 + (health / maxHealth) * 0.5, 0, 0.001]}>
               <planeGeometry args={[(health / maxHealth), 0.08]} />
@@ -4419,7 +4447,7 @@ export default function Unit({
                   emissiveIntensity={currentSubclass === WeaponSubclass.VENOM ? 3.5 : 3}
                   transparent
                   opacity={(0.9 - i * 0.125) * (projectile.opacity !== undefined ? projectile.opacity : 1)}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             ))}
@@ -4501,7 +4529,7 @@ export default function Unit({
                         }
                         transparent
                         opacity={0.5 * (projectile.opacity !== undefined ? projectile.opacity : 1)}
-                        blending={THREE.AdditiveBlending}
+                        blending={AdditiveBlending}
                       />
                     </mesh>
                   </group>
@@ -4531,7 +4559,7 @@ export default function Unit({
                           emissiveIntensity={2}
                           transparent
                           opacity={0.7 * (projectile.opacity !== undefined ? projectile.opacity : 1)}
-                          blending={THREE.AdditiveBlending}
+                          blending={AdditiveBlending}
                         />
                       </mesh>
                     </group>
@@ -4562,7 +4590,7 @@ export default function Unit({
                           emissiveIntensity={2}
                           transparent
                           opacity={0.7 * (projectile.opacity !== undefined ? projectile.opacity : 1)}
-                          blending={THREE.AdditiveBlending}
+                          blending={AdditiveBlending}
                         />
                       </mesh>
                     </group>
@@ -4597,7 +4625,7 @@ export default function Unit({
                         }
                         transparent
                         opacity={0.3 * (projectile.opacity !== undefined ? projectile.opacity : 1)}
-                        blending={THREE.AdditiveBlending}
+                        blending={AdditiveBlending}
                       />
                     </mesh>
                   </group>
@@ -4638,7 +4666,7 @@ export default function Unit({
           >
             {/* Base arrow - slightly smaller than regular bow arrows */}
             <mesh rotation={[Math.PI/2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.1, 1.8, 6]} />
+              <primitive object={SHARED_CYLINDER_GEOMETRY_ARROW} />
               <meshStandardMaterial
                 color="#ff8800"
                 emissive="#ff8800"
@@ -4649,20 +4677,20 @@ export default function Unit({
             </mesh>
 
             {/* Arrow Rings - fewer rings for barrage arrows */}
-            {[...Array(2)].map((_, i) => ( 
+            {[...Array(2)].map((_, i) => (
               <mesh
                 key={`barrage-ring-${i}`}
                 position={[0, 0, -i * 0.4 + 0.4]}
                 rotation={[Math.PI, 0, Date.now() * 0.004 + i * Math.PI / 2]}
               >
-                <torusGeometry args={[0.1 + i * 0.03, 0.04, 6, 10]} />
+                <primitive object={i === 0 ? SHARED_TORUS_GEOMETRY_RING_01 : SHARED_TORUS_GEOMETRY_RING_013} />
                 <meshStandardMaterial
                   color="#ff8800"
                   emissive="#ff8800"
                   emissiveIntensity={2.5}
                   transparent
                   opacity={(0.8 - i * 0.1) * (projectile.opacity !== undefined ? projectile.opacity : 1)}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             ))}
@@ -5327,7 +5355,7 @@ export default function Unit({
                   transparent
                   opacity={0.8 * fade}
                   depthWrite={false}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
               
@@ -5341,7 +5369,7 @@ export default function Unit({
                   transparent
                   opacity={0.9 * fade}
                   depthWrite={false}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
 
@@ -5356,7 +5384,7 @@ export default function Unit({
                     transparent
                     opacity={0.5 * fade * (1 - i * 0.2)}
                     depthWrite={false}
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                   />
                 </mesh>
               ))}
@@ -5374,7 +5402,7 @@ export default function Unit({
                       0
                     ]}
                   >
-                    <sphereGeometry args={[0.05, 8, 8]} />
+                    <primitive object={SHARED_SPHERE_GEOMETRY_LOW} />
                     <meshStandardMaterial
                       color="#66ff88"
                       emissive="#ffffff"
@@ -5382,7 +5410,7 @@ export default function Unit({
                       transparent
                       opacity={0.85 * fade}
                       depthWrite={false}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 );
@@ -5448,7 +5476,7 @@ export default function Unit({
               }
               transparent
               opacity={0.3 + (0.4 * bowGroundEffectProgress)}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
               depthWrite={false}
             />
           </mesh>
@@ -5473,7 +5501,7 @@ export default function Unit({
                 }
                 transparent
                 opacity={0.6 * bowGroundEffectProgress}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
                 depthWrite={false}
               />
             </mesh>
@@ -5486,14 +5514,14 @@ export default function Unit({
               position={[0, 0.1, (i * 2.5 * bowGroundEffectProgress) + (bowGroundEffectProgress * 3 -2)]}
               rotation={[-Math.PI / 2, 0, 0]}
             >
-              <planeGeometry args={[1, 0.1]} />
+              <primitive object={SHARED_PLANE_GEOMETRY_1x01} />
               <meshStandardMaterial
                 color="#C18C4B"
                 emissive="#C18C4B"
                 emissiveIntensity={1.5}
                 transparent
                 opacity={0.4 * bowGroundEffectProgress * (1 - i * 0.07)}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
                 depthWrite={false}
               />
             </mesh>

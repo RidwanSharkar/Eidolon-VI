@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3 } from 'three';
-import * as THREE from 'three';
+import { AdditiveBlending, Material, Object3D } from 'three';
 
 interface SoulStealEffectProps {
   id: number;
@@ -72,9 +72,9 @@ export default function SoulStealEffect({
         trail.scale.setScalar(scale);
         
         // Update material opacity
-        trail.children.forEach((child: THREE.Object3D) => {
+        trail.children.forEach((child: Object3D) => {
           if ('material' in child && child.material) {
-            (child.material as THREE.Material).opacity = Math.max(0, trailOpacity);
+            (child.material as Material).opacity = Math.max(0, trailOpacity);
           }
         });
       }
@@ -98,7 +98,7 @@ export default function SoulStealEffect({
           emissiveIntensity={2.5}
           transparent
           opacity={fadeOpacity * 0.9}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -110,7 +110,7 @@ export default function SoulStealEffect({
           color="#8B3F9B"
           transparent
           opacity={fadeOpacity * 0.3}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -130,7 +130,7 @@ export default function SoulStealEffect({
             color="#C084FC"
             transparent
             opacity={fadeOpacity * (0.6 - i * 0.2)}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
             depthWrite={false}
           />
         </mesh>
@@ -153,7 +153,7 @@ export default function SoulStealEffect({
               color="#C084FC"
               transparent
               opacity={fadeOpacity * 0.5}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
               depthWrite={false}
             />
           </mesh>

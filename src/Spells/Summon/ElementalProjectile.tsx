@@ -1,11 +1,11 @@
 import { useRef, useEffect, useState } from 'react';
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, Color, Group, Mesh } from 'three';
 import ElementalTrail from './ElementalTrail';
 
-// Pre-allocated color for performance - avoids new THREE.Color() on every render
-const ELEMENTAL_TRAIL_COLOR = new THREE.Color("#4FC3F7");
+// Pre-allocated color for performance - avoids new Color() on every render
+const ELEMENTAL_TRAIL_COLOR = new Color("#4FC3F7");
 
 interface ElementalProjectileProps {
   id: number;
@@ -26,8 +26,8 @@ export default function ElementalProjectile({
   onImpact,
   checkCollisions
 }: ElementalProjectileProps) {
-  const projectileRef = useRef<THREE.Group>(null);
-  const projectileMeshRef = useRef<THREE.Mesh>(null);
+  const projectileRef = useRef<Group>(null);
+  const projectileMeshRef = useRef<Mesh>(null);
   const startPosition = useRef(position.clone());
   const hasCollided = useRef(false);
   const [showImpact, setShowImpact] = useState(false);
@@ -197,7 +197,7 @@ function ElementalImpact({ position, onComplete }: ElementalImpactProps) {
           transparent
           opacity={0.6 * fade}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
 

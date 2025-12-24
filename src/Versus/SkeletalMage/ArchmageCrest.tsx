@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber';
 import { useRef, useMemo } from 'react';
-import * as THREE from 'three';
+import { DoubleSide, Group, MeshStandardMaterial, SphereGeometry } from 'three';
 import { Shape, ExtrudeGeometry } from 'three';
 
 interface ArchmageCrestProps {
@@ -9,13 +9,13 @@ interface ArchmageCrestProps {
 }
 
 export default function ArchmageCrest({ position = [0, 0, 0], scale = 1 }: ArchmageCrestProps) {
-  const groupRef = useRef<THREE.Group>(null);
-  const leftWingRef = useRef<THREE.Group>(null);
-  const rightWingRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<Group>(null);
+  const leftWingRef = useRef<Group>(null);
+  const rightWingRef = useRef<Group>(null);
 
   // Cached materials for performance - purple theme
   const materials = useMemo(() => ({
-    blade: new THREE.MeshStandardMaterial({
+    blade: new MeshStandardMaterial({
       color: "#8A2BE2",
       emissive: "#8A2BE2",
       emissiveIntensity: 1.3,
@@ -23,16 +23,16 @@ export default function ArchmageCrest({ position = [0, 0, 0], scale = 1 }: Archm
       roughness: 0.1,
       opacity: 1,
       transparent: true,
-      side: THREE.DoubleSide
+      side: DoubleSide
     }),
-    bladeCore: new THREE.MeshStandardMaterial({
+    bladeCore: new MeshStandardMaterial({
       color: "#9370DB",
       emissive: "#9370DB",
       emissiveIntensity: 2.0,
       transparent: true,
       opacity: 0.9
     }),
-    bladeGlow: new THREE.MeshStandardMaterial({
+    bladeGlow: new MeshStandardMaterial({
       color: "#DA70D6",
       emissive: "#DA70D6",
       emissiveIntensity: 1.5,
@@ -74,8 +74,8 @@ export default function ArchmageCrest({ position = [0, 0, 0], scale = 1 }: Archm
   // Cached geometries
   const geometries = useMemo(() => ({
     blade: new ExtrudeGeometry(bladeShape, bladeExtrudeSettings),
-    centerCore: new THREE.SphereGeometry(0.12, 12, 12),
-    energyWisp: new THREE.SphereGeometry(0.04, 6, 6)
+    centerCore: new SphereGeometry(0.12, 12, 12),
+    energyWisp: new SphereGeometry(0.04, 6, 6)
   }), [bladeShape, bladeExtrudeSettings]);
 
   // Animation

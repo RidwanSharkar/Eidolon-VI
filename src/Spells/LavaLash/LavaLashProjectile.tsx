@@ -1,11 +1,11 @@
 import { useRef, useEffect, useState } from 'react';
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, Color, Group, Mesh } from 'three';
 import LavaLashTrail from './LavaLashTrail';
 
-// Pre-allocated color for performance - avoids new THREE.Color() on every render
-const LAVA_TRAIL_COLOR = new THREE.Color("#FF4500");
+// Pre-allocated color for performance - avoids new Color() on every render
+const LAVA_TRAIL_COLOR = new Color("#FF4500");
 
 interface LavaLashProjectileProps {
   id: number;
@@ -32,8 +32,8 @@ export default function LavaLashProjectile({
   onImpact,
   checkCollisions // eslint-disable-line @typescript-eslint/no-unused-vars
 }: LavaLashProjectileProps) {
-  const projectileRef = useRef<THREE.Group>(null);
-  const projectileMeshRef = useRef<THREE.Mesh>(null);
+  const projectileRef = useRef<Group>(null);
+  const projectileMeshRef = useRef<Mesh>(null);
   const hasCollided = useRef(propHasCollided);
   const [showImpact, ] = useState(false);
   const [impactPosition, ] = useState<Vector3 | null>(null);
@@ -108,7 +108,7 @@ export default function LavaLashProjectile({
                 emissiveIntensity={4.0 * opacity}
                 transparent
                 opacity={0.8 * opacity}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
                 depthWrite={false}
               />
             </mesh>
@@ -122,7 +122,7 @@ export default function LavaLashProjectile({
                 emissiveIntensity={2.0 * opacity}
                 transparent
                 opacity={0.4 * opacity}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
                 depthWrite={false}
               />
             </mesh>
@@ -140,7 +140,7 @@ export default function LavaLashProjectile({
                   emissiveIntensity={2.5 * opacity}
                   transparent
                   opacity={(0.7 - i * 0.2) * opacity}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             ))}
@@ -217,7 +217,7 @@ function LavaLashImpact({ position, onComplete }: LavaLashImpactProps) {
           emissiveIntensity={3.0 * fade}
           transparent
           opacity={0.8 * fade}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -231,7 +231,7 @@ function LavaLashImpact({ position, onComplete }: LavaLashImpactProps) {
           emissiveIntensity={4.0 * fade}
           transparent
           opacity={0.9 * fade}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -276,7 +276,7 @@ function LavaLashImpact({ position, onComplete }: LavaLashImpactProps) {
             emissiveIntensity={2.5 * fade}
             transparent
             opacity={0.7 * fade * (1 - i * 0.2)}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       ))}

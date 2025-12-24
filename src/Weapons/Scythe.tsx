@@ -1,9 +1,8 @@
 // src/weapons/Scythe.tsx
 
 import React, { useRef, useEffect } from 'react';
-import { Group, Shape } from 'three';
+import { Group, Shape, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 import { WeaponSubclass } from './weapons';
 
 interface ScytheProps {
@@ -210,7 +209,7 @@ function ScytheModel({
             roughness={0.1}
             opacity={1}
             transparent
-            side={THREE.DoubleSide}
+            side={DoubleSide}
           />
         </mesh>
 

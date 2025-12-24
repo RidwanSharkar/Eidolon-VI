@@ -1,6 +1,6 @@
 // src/versus/Reaper/ReaperModel.tsx
 import React, { useRef } from 'react';
-import { Group } from 'three';
+import { Group, Vector3 } from 'three';
 import BonePlate from '../../gear/BonePlate';  
 import ReaperBoneWings from './ReaperBoneWings';  
 import ReaperBoneVortex from './ReaperBoneVortex';  
@@ -8,13 +8,12 @@ import DragonSkull from '../../gear/DragonSkull';
 import ReaperTrailEffect from './ReaperTrailEffect';
 import ReaperDexScythe from './ReaperDexScythe';
 import ReaperLysScythe from './ReaperLysScythe';
-import * as THREE from 'three';
 import ReaperBoneAura from './ReaperBoneAura';
 
 interface ReaperModelProps {
   isAttacking: boolean;
   onHit?: (damage: number) => void;
-  playerPosition: THREE.Vector3;
+  playerPosition: Vector3;
   isWalking: boolean;
 }
 

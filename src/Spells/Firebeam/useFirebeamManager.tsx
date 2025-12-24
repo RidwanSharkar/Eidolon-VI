@@ -1,17 +1,16 @@
 import { useRef, useCallback, useEffect, useMemo } from 'react';
-import { Vector3 } from 'three';
+import { Vector3, Group } from 'three';
 import { useFirebeam } from '@/Spells/Firebeam/useFirebeam';
 import { useFirebeamPersistentManager } from '@/Spells/Firebeam/useFirebeamPersistentManager';
 import { useDeepFreeze } from '@/Spells/Firebeam/useDeepFreeze';
 import { Enemy } from '@/Versus/enemy';
 import { WeaponSubclass } from '@/Weapons/weapons';
-import * as THREE from 'three';
 import { DamageNumber } from '../../Unit/useDamageNumbers';
 import { SynchronizedEffect } from '@/Multiplayer/MultiplayerContext';
 import { calculateDamage } from '@/Weapons/damage';
 
 interface FirebeamManagerProps {
-  parentRef: React.RefObject<THREE.Group>;
+  parentRef: React.RefObject<Group>;
   onHit: (targetId: string, damage: number) => void;
   enemyData: Enemy[];
   setActiveEffects: React.Dispatch<React.SetStateAction<Array<{
@@ -21,7 +20,7 @@ interface FirebeamManagerProps {
     direction: Vector3;
     duration?: number;
     startTime?: number;
-    parentRef?: React.RefObject<THREE.Group>;
+    parentRef?: React.RefObject<Group>;
     enemyId?: string;
   }>>>;
   charges: Array<{

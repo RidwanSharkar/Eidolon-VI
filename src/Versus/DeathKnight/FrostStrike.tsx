@@ -2,7 +2,12 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
-import * as THREE from 'three';
+import {
+  Material,
+  Mesh,
+  Object3D,
+  Quaternion
+} from 'three';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
 
 interface FrostStrikeProps {
@@ -67,7 +72,7 @@ export default function FrostStrike({ position, direction, onComplete, parentRef
   // Simplified particle and ice shard positions for performance
   const particlePositions = useMemo(() =>
     Array(8).fill(0).map((_, i) => ({
-      position: new THREE.Vector3(
+      position: new Vector3(
         Math.cos((i * Math.PI * 2) / 8) * 1.2, // Reduced count and radius
         Math.sin((i * Math.PI * 2) / 8) * 1.2,
         0
@@ -78,7 +83,7 @@ export default function FrostStrike({ position, direction, onComplete, parentRef
 
   const iceShardPositions = useMemo(() =>
     Array(4).fill(0).map((_, i) => ({
-      position: new THREE.Vector3(
+      position: new Vector3(
         Math.cos((i * Math.PI * 2) / 4) * 1.8, // Reduced count and radius
         Math.sin((i * Math.PI * 2) / 4) * 1.8,
         0
@@ -107,7 +112,7 @@ export default function FrostStrike({ position, direction, onComplete, parentRef
     if (progress <= 1) {
       // Position the effect in front of the Death Knight
       const parentQuaternion = parentRef.current.quaternion;
-      const forward = new THREE.Vector3(0, 0, 2);
+      const forward = new Vector3(0, 0, 2);
       forward.applyQuaternion(parentQuaternion);
       
       effectRef.current.position.copy(parentRef.current.position)
@@ -115,8 +120,8 @@ export default function FrostStrike({ position, direction, onComplete, parentRef
         .setY(0.1);
       
       // Apply rotation
-      const flatRotation = new THREE.Quaternion().setFromAxisAngle(
-        new THREE.Vector3(-1, 0, 0),
+      const flatRotation = new Quaternion().setFromAxisAngle(
+        new Vector3(-1, 0, 0),
         -Math.PI/2
       );
       
@@ -131,8 +136,8 @@ export default function FrostStrike({ position, direction, onComplete, parentRef
       const baseOpacity = Math.sin(progress * Math.PI);
       const flicker = Math.sin(Date.now() * 0.01) * 0.1 + 0.9;
       
-      effectRef.current.traverse((child: THREE.Object3D) => {
-        const material = (child as THREE.Mesh).material as THREE.Material & { opacity?: number };
+      effectRef.current.traverse((child: Object3D) => {
+        const material = (child as Mesh).material as Material & { opacity?: number };
         if (material?.opacity !== undefined) {
           material.opacity = baseOpacity * flicker;
         }

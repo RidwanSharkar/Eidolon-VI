@@ -1,7 +1,7 @@
 import React, { useRef, useMemo } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, DoubleSide } from 'three';
 
 // MEMORY FIX: Import shared geometries to avoid creating new geometry objects on every render
 import { 
@@ -246,7 +246,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     transparent
                     opacity={0.8 * fade}
                     depthWrite={false}
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                   />
                 </mesh>
                 
@@ -259,7 +259,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     transparent
                     opacity={0.9 * fade}
                     depthWrite={false}
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                   />
                 </mesh>
 
@@ -273,7 +273,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       transparent
                       opacity={0.5 * fade * (1 - i * 0.2)}
                       depthWrite={false}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 ))}
@@ -300,7 +300,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                         transparent
                         opacity={0.85 * fade}
                         depthWrite={false}
-                        blending={THREE.AdditiveBlending}
+                        blending={AdditiveBlending}
                       />
                     </mesh>
                   );
@@ -366,7 +366,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                         emissiveIntensity={1.5 * opacity}
                         transparent
                         opacity={opacity}
-                        blending={THREE.AdditiveBlending}
+                        blending={AdditiveBlending}
                         depthWrite={false}
                       />
                     </mesh>
@@ -397,7 +397,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   transparent
                   opacity={0.8 * fade}
                   depthWrite={false}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
               
@@ -410,7 +410,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   transparent
                   opacity={0.9 * fade}
                   depthWrite={false}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
 
@@ -424,7 +424,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     transparent
                     opacity={0.5 * fade * (1 - i * 0.2)}
                     depthWrite={false}
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                   />
                 </mesh>
               ))}
@@ -451,7 +451,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       transparent
                       opacity={0.85 * fade}
                       depthWrite={false}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 );
@@ -527,7 +527,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       emissiveIntensity={3}
                       transparent
                       opacity={0.9 - i * 0.125}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 ))}
@@ -575,7 +575,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   emissiveIntensity={1}
                   transparent
                   opacity={0.3 + (0.4 * chargeProgress)}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                   depthWrite={false}
                 />
               </mesh>
@@ -603,7 +603,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   emissiveIntensity={2}
                   transparent
                   opacity={0.6}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
               <pointLight
@@ -752,7 +752,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       emissiveIntensity={6}
                       transparent
                       opacity={0.8}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 </group>
@@ -766,7 +766,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   emissiveIntensity={8}
                   transparent
                   opacity={0.9}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
               
@@ -861,7 +861,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   emissiveIntensity={2}
                   transparent
                   opacity={0.8}
-                  side={THREE.DoubleSide}
+                  side={DoubleSide}
                 />
               </mesh>
             </group>
@@ -938,7 +938,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   emissiveIntensity={3}
                   transparent
                   opacity={0.6}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                   depthWrite={false}
                 />
               </mesh>
@@ -1064,7 +1064,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   emissiveIntensity={3}
                   transparent
                   opacity={0.6}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                   depthWrite={false}
                 />
               </mesh>
@@ -1078,7 +1078,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     emissiveIntensity={2}
                     transparent
                     opacity={0.4 * (1 - swordProgress)}
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                     depthWrite={false}
                   />
                 </mesh>
@@ -1395,7 +1395,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       emissiveIntensity={0.4}
                       transparent
                       opacity={0.6 * (1 - i * 0.2)}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                       depthWrite={false}
                     />
                   </mesh>
@@ -1553,7 +1553,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     emissiveIntensity={4.0}
                     transparent
                     opacity={0.8}
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                     depthWrite={false}
                   />
                 </mesh>
@@ -1566,7 +1566,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     emissiveIntensity={2.0}
                     transparent
                     opacity={0.4}
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                     depthWrite={false}
                   />
                 </mesh>
@@ -1585,7 +1585,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       emissiveIntensity={2.5}
                       transparent
                       opacity={0.7 - i * 0.2}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 ))}
@@ -1612,7 +1612,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   emissiveIntensity={2}
                   transparent
                   opacity={0.6}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                   depthWrite={false}
                 />
               </mesh>
@@ -1728,7 +1728,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                               emissiveIntensity={8}
                               transparent
                               opacity={0.8}
-                              blending={THREE.AdditiveBlending}
+                              blending={AdditiveBlending}
                             />
                           </mesh>
                         </group>
@@ -1812,7 +1812,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       emissiveIntensity={3}
                       transparent
                       opacity={0.9 - i * 0.125}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 ))}
@@ -1871,7 +1871,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                       emissiveIntensity={4}
                       transparent
                       opacity={1 - i * 0.15}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 ))}
@@ -1902,7 +1902,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   transparent
                   opacity={0.9 * eagleEyeFade}
                   depthWrite={false}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
               
@@ -1915,7 +1915,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   transparent
                   opacity={0.9 * eagleEyeFade}
                   depthWrite={false}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
               
@@ -1941,7 +1941,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                     transparent
                     opacity={0.8 * eagleEyeFade}
                     depthWrite={false}
-                    blending={THREE.AdditiveBlending}
+                    blending={AdditiveBlending}
                   />
                 </mesh>
               ))}
@@ -1962,7 +1962,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
                   emissiveIntensity={2 * venomFade}
                   transparent
                   opacity={0.6 * venomFade}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                   depthWrite={false}
                 />
               </mesh>
@@ -2029,7 +2029,7 @@ export default function MultiplayerPlayer({ player, isLocalPlayer = false }: Mul
           transparent
           opacity={0.125}
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
         />
       </mesh>
 

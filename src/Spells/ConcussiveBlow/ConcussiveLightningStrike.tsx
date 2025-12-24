@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, MeshStandardMaterial, SphereGeometry } from 'three';
 
 interface ConcussiveLightningStrikeProps {
   position: Vector3;
@@ -108,24 +108,24 @@ const ConcussiveLightningStrike: React.FC<ConcussiveLightningStrikeProps> = ({
   
   // Create geometries and materials
   const geometries = useMemo(() => ({
-    bolt: new THREE.SphereGeometry(1, 8, 8),
-    impact: new THREE.SphereGeometry(0.8, 16, 16)
+    bolt: new SphereGeometry(1, 8, 8),
+    impact: new SphereGeometry(0.8, 16, 16)
   }), []);
   
   const materials = useMemo(() => ({
-    coreBolt: new THREE.MeshStandardMaterial({
+    coreBolt: new MeshStandardMaterial({
       color: new Color('#FFFFFF'),
       emissive: new Color('#BB0000'), // Deep red emission
       emissiveIntensity: 8,
       transparent: true
     }),
-    secondaryBolt: new THREE.MeshStandardMaterial({
+    secondaryBolt: new MeshStandardMaterial({
       color: new Color('#DD4444'), // Red secondary
       emissive: new Color('#990000'), // Darker red emission
       emissiveIntensity: 6,
       transparent: true
     }),
-    impact: new THREE.MeshStandardMaterial({
+    impact: new MeshStandardMaterial({
       color: new Color('#FFFFFF'),
       emissive: new Color('#DD0000'), // Red impact
       emissiveIntensity: 4,
@@ -193,7 +193,7 @@ const ConcussiveLightningStrike: React.FC<ConcussiveLightningStrikeProps> = ({
               color="#CC0000" // Deep red rings
               transparent
               opacity={(0.9 - (i * 0.2)) * (1 - (Date.now() - startTimeRef.current) / (duration * 1000))}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         ))}

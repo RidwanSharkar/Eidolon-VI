@@ -1,17 +1,24 @@
 // src/versus/Boss/MeteorTrail.tsx
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  BufferAttribute,
+  Color,
+  Group,
+  Mesh,
+  Points
+} from 'three';
 
 interface MeteorTrailProps {
-  color: THREE.Color;
+  color: Color;
   size: number;
-  meshRef: React.RefObject<THREE.Mesh | THREE.Group>;
+  meshRef: React.RefObject<Mesh | Group>;
 }
 
 export default function MeteorTrail({ color, size, meshRef }: MeteorTrailProps) {
   const particlesCount = 8;
-  const particlesRef = useRef<THREE.Points>(null);
+  const particlesRef = useRef<Points>(null);
   const positionsRef = useRef<Float32Array>(new Float32Array(particlesCount * 3));
   const opacitiesRef = useRef<Float32Array>(new Float32Array(particlesCount));
   const scalesRef = useRef<Float32Array>(new Float32Array(particlesCount));
@@ -59,16 +66,16 @@ export default function MeteorTrail({ color, size, meshRef }: MeteorTrailProps) 
     // Update geometry
     if (particlesRef.current) {
       const geometry = particlesRef.current.geometry;
-      (geometry.attributes.position as THREE.BufferAttribute).array = positionsRef.current;
+      (geometry.attributes.position as BufferAttribute).array = positionsRef.current;
       geometry.attributes.position.needsUpdate = true;
 
       if (geometry.attributes.opacity) {
-        (geometry.attributes.opacity as THREE.BufferAttribute).array = opacitiesRef.current;
+        (geometry.attributes.opacity as BufferAttribute).array = opacitiesRef.current;
         geometry.attributes.opacity.needsUpdate = true;
       }
 
       if (geometry.attributes.scale) {
-        (geometry.attributes.scale as THREE.BufferAttribute).array = scalesRef.current;
+        (geometry.attributes.scale as BufferAttribute).array = scalesRef.current;
         geometry.attributes.scale.needsUpdate = true;
       }
     }
@@ -99,7 +106,7 @@ export default function MeteorTrail({ color, size, meshRef }: MeteorTrailProps) 
       <shaderMaterial
         transparent
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
+        blending={AdditiveBlending}
         vertexShader={`
           attribute float opacity;
           attribute float scale;

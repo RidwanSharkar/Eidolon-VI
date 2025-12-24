@@ -1,7 +1,12 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  MeshStandardMaterial,
+  PlaneGeometry,
+  SphereGeometry
+} from 'three';
 
 interface EviscerateSlashEffectProps {
   parentRef: React.RefObject<Group>;
@@ -23,59 +28,59 @@ export default function EviscerateSlashEffect({
 
   // Cache geometries for performance - Create diagonal slash shapes
   const geometries = useMemo(() => ({
-    mainSlash: new THREE.PlaneGeometry(4, 0.4), // Wide diagonal slash plane
-    innerGlow: new THREE.PlaneGeometry(4.2, 0.25), // Inner glow
-    outerGlow: new THREE.PlaneGeometry(4.5, 0.5), // Outer glow
-    particle: new THREE.SphereGeometry(0.08, 6, 6),
-    trailSegment: new THREE.PlaneGeometry(1.0, 0.2) // Trail segments
+    mainSlash: new PlaneGeometry(4, 0.4), // Wide diagonal slash plane
+    innerGlow: new PlaneGeometry(4.2, 0.25), // Inner glow
+    outerGlow: new PlaneGeometry(4.5, 0.5), // Outer glow
+    particle: new SphereGeometry(0.08, 6, 6),
+    trailSegment: new PlaneGeometry(1.0, 0.2) // Trail segments
   }), []);
 
   // Blue assassin slash materials
   const materials = useMemo(() => ({
-    mainSlash: new THREE.MeshStandardMaterial({
+    mainSlash: new MeshStandardMaterial({
       color: "#1f7fff", // Bright blue
       emissive: "#003d8b", // Dark blue
       emissiveIntensity: 2.5,
       transparent: true,
       opacity: 0.9,
       depthWrite: false,
-      blending: THREE.AdditiveBlending
+      blending: AdditiveBlending
     }),
-    innerGlow: new THREE.MeshStandardMaterial({
+    innerGlow: new MeshStandardMaterial({
       color: "#87ceeb", // Light blue core
       emissive: "#4a90e2", // Medium blue
       emissiveIntensity: 1.8,
       transparent: true,
       opacity: 0.8,
       depthWrite: false,
-      blending: THREE.AdditiveBlending
+      blending: AdditiveBlending
     }),
-    outerGlow: new THREE.MeshStandardMaterial({
+    outerGlow: new MeshStandardMaterial({
       color: "#1e3a8a", // Dark blue
       emissive: "#1e40af", // Navy blue
       emissiveIntensity: 1.2,
       transparent: true,
       opacity: 0.6,
       depthWrite: false,
-      blending: THREE.AdditiveBlending
+      blending: AdditiveBlending
     }),
-    particle: new THREE.MeshStandardMaterial({
+    particle: new MeshStandardMaterial({
       color: "#60a5fa", // Light blue
       emissive: "#3b82f6", // Blue
       emissiveIntensity: 2,
       transparent: true,
       opacity: 0.7,
       depthWrite: false,
-      blending: THREE.AdditiveBlending
+      blending: AdditiveBlending
     }),
-    trail: new THREE.MeshStandardMaterial({
+    trail: new MeshStandardMaterial({
       color: "#7dd3fc", // Sky blue
       emissive: "#0ea5e9", // Bright blue
       emissiveIntensity: 1.5,
       transparent: true,
       opacity: 0.6,
       depthWrite: false,
-      blending: THREE.AdditiveBlending
+      blending: AdditiveBlending
     })
   }), []);
 
@@ -84,7 +89,7 @@ export default function EviscerateSlashEffect({
     Array(10).fill(0).map((_, i) => {
       const t = (i / 9) - 0.5; // From -0.5 to 0.5 along the slash
       return {
-        position: new THREE.Vector3(
+        position: new Vector3(
           t * 3, // X position along slash
           Math.random() * 0.3 - 0.15, // Slight Y variation
           0.1 + Math.random() * 0.1 // Slightly forward with variation
@@ -99,7 +104,7 @@ export default function EviscerateSlashEffect({
     Array(8).fill(0).map((_, i) => {
       const t = (i / 7) - 0.5; // From -0.5 to 0.5
       return {
-        position: new THREE.Vector3(
+        position: new Vector3(
           t * 2.5, // X position along slash
           Math.random() * 0.2 - 0.1, // Slight Y variation
           -0.05 // Slightly behind main slash

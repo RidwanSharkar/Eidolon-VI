@@ -1,11 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Group } from 'three';
-import * as THREE from 'three';
+import { AdditiveBlending, Color, Group, Mesh } from 'three';
 
-// Pre-allocated colors for performance - avoids new THREE.Color() on every render
-const LIGHTNING_COLOR = new THREE.Color(0xFF0000); // Red lightning
-const CORE_COLOR = new THREE.Color(0xFFFF00); // Yellow core
+// Pre-allocated colors for performance - avoids new Color() on every render
+const LIGHTNING_COLOR = new Color(0xFF0000); // Red lightning
+const CORE_COLOR = new Color(0xFFFF00); // Yellow core
 
 interface ThrowSpearChargeEffectProps {
   parentRef: React.RefObject<Group>;
@@ -18,9 +17,9 @@ export default function ThrowSpearChargeEffect({
   isActive, 
   chargeProgress 
 }: ThrowSpearChargeEffectProps) {
-  const effectGroupRef = useRef<THREE.Group>(null);
+  const effectGroupRef = useRef<Group>(null);
   const [shouldShowEffect, setShouldShowEffect] = useState(false);
-  const particleRefs = useRef<THREE.Mesh[]>([]);
+  const particleRefs = useRef<Mesh[]>([]);
   
   // Add effect to handle the activation delay
   useEffect(() => {
@@ -89,7 +88,7 @@ export default function ThrowSpearChargeEffect({
           emissiveIntensity={baseIntensity * 2}
           transparent
           opacity={0.8}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -103,7 +102,7 @@ export default function ThrowSpearChargeEffect({
           emissiveIntensity={baseIntensity}
           transparent
           opacity={0.4 + chargeProgress * 0.3}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -123,7 +122,7 @@ export default function ThrowSpearChargeEffect({
             emissiveIntensity={baseIntensity * 1.5}
             transparent
             opacity={0.7}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
             depthWrite={false}
           />
         </mesh>
@@ -151,7 +150,7 @@ export default function ThrowSpearChargeEffect({
             emissiveIntensity={baseIntensity * 2}
             transparent
             opacity={0.6}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
             depthWrite={false}
           />
         </mesh>
@@ -171,7 +170,7 @@ export default function ThrowSpearChargeEffect({
             emissiveIntensity={baseIntensity}
             transparent
             opacity={0.5 - i * 0.1}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
             depthWrite={false}
           />
         </mesh>

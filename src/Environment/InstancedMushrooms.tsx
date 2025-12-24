@@ -1,8 +1,14 @@
 import React, { useRef, useEffect, useMemo } from 'react';
-import * as THREE from 'three';
+import {
+  Color,
+  Euler,
+  InstancedMesh,
+  Matrix4,
+  Vector3
+} from 'three';
 
 interface MushroomData {
-  position: THREE.Vector3;
+  position: Vector3;
   scale: number;
   variant: 'pink' | 'green' | 'blue' | 'orange';
 }
@@ -12,33 +18,33 @@ interface InstancedMushroomsProps {
 }
 
 const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) => {
-  const stemRef = useRef<THREE.InstancedMesh>(null);
-  const capRef = useRef<THREE.InstancedMesh>(null);
-  const spotsRef = useRef<THREE.InstancedMesh>(null);
+  const stemRef = useRef<InstancedMesh>(null);
+  const capRef = useRef<InstancedMesh>(null);
+  const spotsRef = useRef<InstancedMesh>(null);
 
   const variantColors = useMemo(() => ({
     pink: {
-      main: new THREE.Color("#FAA9C5").multiplyScalar(5.5),
-      spots: new THREE.Color("#FAA9C5").multiplyScalar(3.5)
+      main: new Color("#FAA9C5").multiplyScalar(5.5),
+      spots: new Color("#FAA9C5").multiplyScalar(3.5)
     },
     green: {
-      main: new THREE.Color("#FF8DC6").multiplyScalar(5.5),
-      spots: new THREE.Color("#92E2FF").multiplyScalar(3.5)
+      main: new Color("#FF8DC6").multiplyScalar(5.5),
+      spots: new Color("#92E2FF").multiplyScalar(3.5)
     },
     blue: {
-      main: new THREE.Color("#92E2FF").multiplyScalar(5.5),
-      spots: new THREE.Color("#92E2FF").multiplyScalar(3.5)
+      main: new Color("#92E2FF").multiplyScalar(5.5),
+      spots: new Color("#92E2FF").multiplyScalar(3.5)
     },
     orange: {
-      main: new THREE.Color("#5BDF64").multiplyScalar(5.5),
-      spots: new THREE.Color("#5ABD61").multiplyScalar(3)
+      main: new Color("#5BDF64").multiplyScalar(5.5),
+      spots: new Color("#5ABD61").multiplyScalar(3)
     }
   }), []);
 
   useEffect(() => {
     if (!stemRef.current || !capRef.current || !spotsRef.current) return;
 
-    const matrix = new THREE.Matrix4();
+    const matrix = new Matrix4();
 
     // Handle stems with brighter colors
     mushrooms.forEach((mushroom, i) => {
@@ -47,7 +53,7 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
         mushroom.position.y,
         mushroom.position.z
       );
-      matrix.scale(new THREE.Vector3(
+      matrix.scale(new Vector3(
         mushroom.scale * 0.825,
         mushroom.scale * 0.825,
         mushroom.scale * 0.825
@@ -63,7 +69,7 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
         mushroom.position.y + (0.35 * mushroom.scale * 0.8),
         mushroom.position.z
       );
-      matrix.scale(new THREE.Vector3(
+      matrix.scale(new Vector3(
         mushroom.scale * 0.8,
         mushroom.scale * 0.8,
         mushroom.scale * 0.8
@@ -84,12 +90,12 @@ const InstancedMushrooms: React.FC<InstancedMushroomsProps> = ({ mushrooms }) =>
           mushroom.position.z + Math.cos(angle) * 0.15 * mushroom.scale * 0.8
         );
         
-        const rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(
-          new THREE.Euler(-Math.PI / 3, 0, -angle)
+        const rotationMatrix = new Matrix4().makeRotationFromEuler(
+          new Euler(-Math.PI / 3, 0, -angle)
         );
         
         matrix.multiply(rotationMatrix);
-        matrix.scale(new THREE.Vector3(
+        matrix.scale(new Vector3(
           mushroom.scale * 0.8,
           mushroom.scale * 0.8,
           mushroom.scale * 0.8

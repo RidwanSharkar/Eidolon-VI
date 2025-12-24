@@ -1,13 +1,12 @@
-import { Vector3 } from 'three';
+import { Vector3, Group } from 'three';
 import { useRef, useCallback, useEffect } from 'react';
-import * as THREE from 'three';
 import { useQuickShotManager } from '../QuickShot/useQuickShotManager';
 import { WeaponType, WeaponSubclass, WEAPON_DAMAGES } from '../../Weapons/weapons';
 import { useEagleEye } from '../EagleEye/useEagleEye';
 import EagleEyeManager from '../EagleEye/EagleEyeManager';
 
 interface QuickShotProps {
-  parentRef: React.RefObject<THREE.Group>;
+  parentRef: React.RefObject<Group>;
   onHit: (targetId: string, damage: number) => void;
   enemyData: Array<{
     id: string;

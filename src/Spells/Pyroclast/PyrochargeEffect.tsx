@@ -1,8 +1,14 @@
 // src/Spells/Pyroclast/PyrochargeEffect.tsx
 import { useRef, useState, useEffect } from 'react';
-import { Group } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  DoubleSide,
+  Group,
+  Material,
+  Mesh,
+  MeshStandardMaterial
+} from 'three';
 
 interface PyrochargeEffectProps {
   parentRef: React.RefObject<Group>;
@@ -15,7 +21,7 @@ export default function PyrochargeEffect({
   isActive, 
   chargeProgress 
 }: PyrochargeEffectProps) {
-  const flameParticlesRef = useRef<THREE.Group>(null);
+  const flameParticlesRef = useRef<Group>(null);
   const lastUpdateTime = useRef(0);
   // Add state to track if we should show the effect (with a short delay)
   const [shouldShowEffect, setShouldShowEffect] = useState(false);
@@ -48,7 +54,7 @@ export default function PyrochargeEffect({
     if (now - lastUpdateTime.current > 50) { // Update rotation every 50ms
       // Rotate the flame particles for effect
       Array.from(flameParticlesRef.current.children).forEach((child) => {
-        const mesh = child as THREE.Mesh;
+        const mesh = child as Mesh;
         mesh.rotation.y += (Math.random() * 0.2 - 0.1);
         mesh.rotation.x += (Math.random() * 0.1 - 0.05);
         
@@ -58,8 +64,8 @@ export default function PyrochargeEffect({
         mesh.scale.set(randomScale, randomScale, randomScale);
 
         // Adjust opacity based on charge progress
-        if (mesh.material instanceof THREE.Material) {
-          const material = mesh.material as THREE.MeshStandardMaterial;
+        if (mesh.material instanceof Material) {
+          const material = mesh.material as MeshStandardMaterial;
           material.opacity = 0.6 + (chargeProgress * 0.4);
           material.emissiveIntensity = 1 + (chargeProgress * 4);
         }
@@ -95,7 +101,7 @@ export default function PyrochargeEffect({
           emissiveIntensity={1 + (chargeProgress * 4)}
           transparent
           opacity={0.6 + (chargeProgress * 0.4)}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
@@ -119,9 +125,9 @@ export default function PyrochargeEffect({
           emissiveIntensity={2 + (chargeProgress * 4)}
           transparent
           opacity={0.3 + (chargeProgress * 0.6)}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
-          side={THREE.DoubleSide}
+          side={DoubleSide}
         />
       </mesh>
       
@@ -134,7 +140,7 @@ export default function PyrochargeEffect({
           emissiveIntensity={3 + (chargeProgress * 3)}
           transparent
           opacity={0.5 + (chargeProgress * 0.4)}
-          blending={THREE.AdditiveBlending}
+          blending={AdditiveBlending}
           depthWrite={false}
         />
       </mesh>

@@ -1,9 +1,8 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, AdditiveBlending } from 'three';
 import { useOrbShieldManager } from '@/Spells/Avalanche/useOrbShieldManager';
 import { ChargeStatus } from '@/color/ChargedOrbitals';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 
 interface OrbShieldProps {
   parentRef: React.RefObject<Group>;
@@ -92,7 +91,7 @@ const OrbShieldSparkEffect: React.FC<{ position: Vector3 }> = ({ position }) => 
             transparent
             opacity={spark.life * 0.8}
             depthWrite={false}
-            blending={THREE.AdditiveBlending}
+            blending={AdditiveBlending}
           />
         </mesh>
       ))}

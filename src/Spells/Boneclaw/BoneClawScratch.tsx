@@ -1,24 +1,33 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Group, MeshBasicMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import {
+  AdditiveBlending,
+  Color,
+  CylinderGeometry,
+  Mesh,
+  MeshStandardMaterial,
+  ShaderMaterial,
+  SphereGeometry,
+  TorusGeometry
+} from 'three';
 import { registerGlobalSharedResource } from '../../Scene/EffectPools';
 
 // Pre-allocated color for performance
-const BONECLAW_COLOR = new THREE.Color('#39ff14');
+const BONECLAW_COLOR = new Color('#39ff14');
 
 // Module-level shared geometries (singleton pattern for maximum reuse)
 const SHARED_GEOMETRIES = {
-  beam: new THREE.CylinderGeometry(0.1, 0.1, 15, 16),
-  innerBeam: new THREE.CylinderGeometry(0.175, 0.175, 15, 16),
-  middleBeam: new THREE.CylinderGeometry(0.25, 0.25, 15, 16),
-  outerBeam: new THREE.CylinderGeometry(0.375, 0.375, 15, 16),
-  torus: new THREE.TorusGeometry(0.5, 0.08, 32, 32),
-  particle: new THREE.SphereGeometry(0.04, 8, 8)
+  beam: new CylinderGeometry(0.1, 0.1, 15, 16),
+  innerBeam: new CylinderGeometry(0.175, 0.175, 15, 16),
+  middleBeam: new CylinderGeometry(0.25, 0.25, 15, 16),
+  outerBeam: new CylinderGeometry(0.375, 0.375, 15, 16),
+  torus: new TorusGeometry(0.5, 0.08, 32, 32),
+  particle: new SphereGeometry(0.04, 8, 8)
 };
 
 // Module-level shared materials for torusSpiral and particle meshes (avoids per-render allocations)
-const SHARED_TORUS_MATERIAL = new THREE.MeshStandardMaterial({
+const SHARED_TORUS_MATERIAL = new MeshStandardMaterial({
   color: BONECLAW_COLOR,
   emissive: BONECLAW_COLOR,
   emissiveIntensity: 3,
@@ -26,7 +35,7 @@ const SHARED_TORUS_MATERIAL = new THREE.MeshStandardMaterial({
   opacity: 0.4
 });
 
-const SHARED_PARTICLE_MATERIAL = new THREE.MeshStandardMaterial({
+const SHARED_PARTICLE_MATERIAL = new MeshStandardMaterial({
   color: BONECLAW_COLOR,
   emissive: BONECLAW_COLOR,
   emissiveIntensity: 12,
@@ -52,10 +61,10 @@ const registerBoneClawResources = () => {
 };
 
 // Helper to create shader material with specific opacity
-const createShaderMaterial = (opacity: number, color: THREE.Color) => new THREE.ShaderMaterial({
+const createShaderMaterial = (opacity: number, color: Color) => new ShaderMaterial({
   transparent: true,
   depthWrite: false,
-  blending: THREE.AdditiveBlending,
+  blending: AdditiveBlending,
   vertexShader: `
     varying vec2 vUv;
     void main() {
@@ -167,7 +176,7 @@ export default function BoneClawScratch({ position, direction, onComplete }: Bon
         Math.min(scorchedProgress * 1.2, 1)
       );
       
-      const materials = (scorchedRef.current.children[0] as THREE.Mesh).material as MeshBasicMaterial;
+      const materials = (scorchedRef.current.children[0] as Mesh).material as MeshBasicMaterial;
       materials.opacity = fadeOut * 0.6;
     }
   });

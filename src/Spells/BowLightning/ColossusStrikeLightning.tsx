@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { AdditiveBlending, MeshStandardMaterial, SphereGeometry } from 'three';
 
 interface ColossusStrikeLightningProps {
   position: Vector3;
@@ -99,25 +99,25 @@ const ColossusStrikeLightning: React.FC<ColossusStrikeLightningProps> = ({
   
   // Create geometries and materials
   const geometries = useMemo(() => ({
-    bolt: new THREE.SphereGeometry(1, 8, 8),
-    impact: new THREE.SphereGeometry(0.8, 16, 16)
+    bolt: new SphereGeometry(1, 8, 8),
+    impact: new SphereGeometry(0.8, 16, 16)
   }), []);
   
   // Updated materials for yellow lightning
   const materials = useMemo(() => ({
-    coreBolt: new THREE.MeshStandardMaterial({
+    coreBolt: new MeshStandardMaterial({
       color: new Color('#FFFF00'), // Pure yellow instead of white
       emissive: new Color('#FFD700'), // Golden yellow
       emissiveIntensity: 4, // Increased intensity
       transparent: true
     }),
-    secondaryBolt: new THREE.MeshStandardMaterial({
+    secondaryBolt: new MeshStandardMaterial({
       color: new Color('#FFDD00'), // Bright yellow
       emissive: new Color('#FFD700'), // Golden yellow
       emissiveIntensity: 2, // Increased intensity
       transparent: true
     }),
-    impact: new THREE.MeshStandardMaterial({
+    impact: new MeshStandardMaterial({
       color: new Color('#FFFF00'), // Pure yellow instead of white
       emissive: new Color('#FFD700'), // Golden yellow instead of light yellow
       emissiveIntensity: 1, // Increased intensity
@@ -185,7 +185,7 @@ const ColossusStrikeLightning: React.FC<ColossusStrikeLightningProps> = ({
               color="#FFD700" // Golden yellow
               transparent
               opacity={(0.8 - (i * 0.15)) * (1 - (Date.now() - startTimeRef.current) / (duration * 1000))}
-              blending={THREE.AdditiveBlending}
+              blending={AdditiveBlending}
             />
           </mesh>
         ))}

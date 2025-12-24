@@ -1,8 +1,7 @@
 // src/Spells/BowPowershot/BowPowershot.tsx
 import React, { useRef } from 'react';
-import { Vector3, Group } from 'three';
+import { Vector3, Group, AdditiveBlending } from 'three';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 import { WeaponSubclass } from '@/Weapons/weapons';
 
 interface BowPowershotProps {
@@ -156,7 +155,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
                   emissiveIntensity={2 * ringFade}
                   transparent
                   opacity={0.4 * ringFade * (1 - ringProgress * 0.5)}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
               
@@ -172,7 +171,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
                   emissiveIntensity={1.5 * ringFade}
                   transparent
                   opacity={0.3 * ringFade * (1 - ringProgress * 0.3)}
-                  blending={THREE.AdditiveBlending}
+                  blending={AdditiveBlending}
                 />
               </mesh>
             </group>
@@ -209,7 +208,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
                       emissiveIntensity={8 * fadeProgress}
                       transparent
                       opacity={0.8 * fadeProgress}
-                      blending={THREE.AdditiveBlending}
+                      blending={AdditiveBlending}
                     />
                   </mesh>
                 </group>
@@ -225,7 +224,7 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
                 emissiveIntensity={2 * fadeProgress}
                 transparent
                 opacity={0.3 * fadeProgress}
-                blending={THREE.AdditiveBlending}
+                blending={AdditiveBlending}
               />
             </mesh>
           </>
