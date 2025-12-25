@@ -13,15 +13,24 @@ interface FirebeamProps {
 export default function Firebeam({ parentRef, onComplete, isActive, startTime }: FirebeamProps) {
   const beamRef = useRef<Group>(null);
   const [intensity, setIntensity] = useState(1);
-  const [fadeProgress, setFadeProgress] = useState(0);
+  const [fadeProgress, setFadeProgress] = useState(isActive ? 1 : 0);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const fadeStartTime = useRef<number | null>(null);
   const currentPosition = useRef(new Vector3());
   const currentDirection = useRef(new Vector3());
+  // Track if we've ever been active to prevent immediate fade on mount
+  const hasBeenActive = useRef(isActive);
 
-  // Handle fade out when beam becomes inactive
+  // Handle fade out when beam becomes inactive, and reset when it becomes active
   useEffect(() => {
-    if (!isActive && !isFadingOut) {
+    if (isActive) {
+      // Reset fading state when beam becomes active
+      hasBeenActive.current = true;
+      setIsFadingOut(false);
+      fadeStartTime.current = null;
+      setFadeProgress(1);
+    } else if (!isActive && !isFadingOut && hasBeenActive.current) {
+      // Only start fading if we were previously active
       setIsFadingOut(true);
       fadeStartTime.current = Date.now();
     }

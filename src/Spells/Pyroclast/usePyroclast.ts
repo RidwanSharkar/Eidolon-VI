@@ -5,6 +5,60 @@ import { ORBITAL_COOLDOWN } from '@/color/ChargedOrbitals';
 import { ReigniteRef } from '../Reignite/Reignite';
 import { calculateDamage } from '@/Weapons/damage';
 
+// BOUNDED CACHE for missile hit tracking - prevents memory leaks from accumulating hit data
+class MissileHitCache {
+  private cache = new Map<string, number>(); // missileId_enemyId -> timestamp
+  private maxSize = 2000; // Maximum entries before cleanup
+  private cleanupThreshold = 500; // Cleanup when we hit this many entries
+
+  add(missileId: number, enemyId: string): void {
+    const key = `${missileId}_${enemyId}`;
+    const now = Date.now();
+    this.cache.set(key, now);
+
+    // Trigger cleanup if we exceed threshold
+    if (this.cache.size > this.cleanupThreshold) {
+      this.cleanup();
+    }
+  }
+
+  has(missileId: number, enemyId: string): boolean {
+    const key = `${missileId}_${enemyId}`;
+    return this.cache.has(key);
+  }
+
+  // Remove entries older than 10 seconds to prevent indefinite accumulation
+  cleanup(): void {
+    const cutoff = Date.now() - 10000; // 10 seconds ago
+    for (const [key, timestamp] of this.cache) {
+      if (timestamp < cutoff) {
+        this.cache.delete(key);
+      }
+    }
+
+    // If still too large, remove oldest entries
+    if (this.cache.size > this.maxSize) {
+      const sorted = Array.from(this.cache.entries()).sort((a, b) => a[1] - b[1]);
+      const toRemove = sorted.slice(0, this.cache.size - this.maxSize);
+      toRemove.forEach(([key]) => this.cache.delete(key));
+    }
+  }
+
+  // Clean up all entries for a specific missile
+  cleanupMissile(missileId: number): void {
+    const prefix = `${missileId}_`;
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
 interface UsePyroclastProps {
   parentRef: React.RefObject<Group>;
   onHit: (targetId: string, damage: number) => void;
@@ -105,13 +159,14 @@ export function usePyroclast({
     position: Vector3;
     direction: Vector3;
     chargeTime: number; // Changed from power to chargeTime
-    hitEnemies?: Set<string>; // Track enemies that have been hit
   }>>([]);
   const nextMissileId = useRef(0);
   const lastChargeConsumeTime = useRef<number>(0);
   // Add a lastToggleTime to prevent rapid toggling
   const lastToggleTime = useRef<number>(0);
   const TOGGLE_DEBOUNCE_TIME = 150; // 150ms debounce for toggling charge state
+  const pendingTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
+  const missileHitCache = useRef(new MissileHitCache());
 
   // Add health tracker for kill detection
   const enemyHealthTracker = useRef<Record<string, number>>({});
@@ -125,6 +180,41 @@ export function usePyroclast({
       });
     }
   }, [enemyData]);
+
+  // Cleanup pending timeouts on unmount with failsafe
+  useEffect(() => {
+    return () => {
+      pendingTimeouts.current.forEach(timeoutId => {
+        try {
+          clearTimeout(timeoutId);
+        } catch (error) {
+          // Ignore errors from already cleared timeouts
+        }
+      });
+      pendingTimeouts.current.clear();
+    };
+  }, []);
+
+  // Periodic cleanup of old/stale timeouts to prevent memory leaks
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      // This is a safety net - normally timeouts should be cleaned up when they execute
+      // But if somehow they don't get cleaned up, this will prevent indefinite accumulation
+      if (pendingTimeouts.current.size > 50) { // If we have too many pending timeouts
+        console.warn('Pyroclast: High number of pending timeouts detected, clearing all');
+        pendingTimeouts.current.forEach(timeoutId => {
+          try {
+            clearTimeout(timeoutId);
+          } catch (error) {
+            // Ignore errors
+          }
+        });
+        pendingTimeouts.current.clear();
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(cleanupInterval);
+  }, []);
 
   // Function to fire an empowered Pyroclast instantly at max damage
   const fireEmpoweredPyroclast = useCallback(() => {
@@ -142,8 +232,7 @@ export function usePyroclast({
       id: nextMissileId.current++,
       position,
       direction,
-      chargeTime: PYROCLAST_MAX_CHARGE_TIME, // Max damage
-      hitEnemies: new Set<string>()
+      chargeTime: PYROCLAST_MAX_CHARGE_TIME // Max damage
     }]);
 
     // Consume the empowerment
@@ -201,8 +290,7 @@ export function usePyroclast({
       id: nextMissileId.current++,
       position,
       direction,
-      chargeTime, // Store the actual charge time in seconds
-      hitEnemies: new Set<string>() // Initialize empty set to track hit enemies
+      chargeTime // Store the actual charge time in seconds
     }]);
 
     setIsCharging(false);
@@ -215,6 +303,8 @@ export function usePyroclast({
       onImpact(missileId, impactPosition);
     }
     setActiveMissiles(prev => prev.filter(missile => missile.id !== missileId));
+    // Clean up hit tracking for this missile
+    missileHitCache.current.cleanupMissile(missileId);
   }, [onImpact]);
 
   // Optimize the checkMissileCollisions callback to handle multiple hits better
@@ -226,24 +316,13 @@ export function usePyroclast({
       return false;
     }
 
-
-    // Initialize hitEnemies if it doesn't exist
-    if (!missile.hitEnemies) {
-      missile.hitEnemies = new Set<string>();
-    }
-
     // Track if we hit any enemies with this collision check
     let anyHits = false;
 
     // Check all enemies for collisions
     for (const enemy of enemyData) {
       // Skip dead enemies or enemies we've already hit with this missile
-      if (enemy.health <= 0 || missile.hitEnemies.has(enemy.id)) {
-        // Debug log for skipped enemies (reduce noise by only logging once per enemy)
-        if (enemy.health <= 0 && !missile.hitEnemies.has(enemy.id)) {
-          // Add to hitEnemies to avoid logging again
-          missile.hitEnemies.add(enemy.id);
-        }
+      if (enemy.health <= 0 || missileHitCache.current.has(missileId, enemy.id)) {
         continue;
       }
 
@@ -253,9 +332,12 @@ export function usePyroclast({
       // If within hit radius, process the hit
       if (distance < PYROCLAST_HIT_RADIUS) {
         
+        // Add to hit tracking using shared cache
+        missileHitCache.current.add(missileId, enemy.id);
+
         // Calculate damage based on charge time and level
         const { damage, isCritical } = calculatePyroclastDamage(missile.chargeTime, level);
-        
+
         // Store enemy position and health before damage
         const enemyPosition = enemy.position.clone();
         const previousHealth = enemy.health;
@@ -388,7 +470,7 @@ export function usePyroclast({
       return newCharges;
     });
 
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setCharges(prev => {
         const newCharges = [...prev];
         newCharges[availableChargeIndex] = {
@@ -398,7 +480,12 @@ export function usePyroclast({
         };
         return newCharges;
       });
+      // Remove from pending timeouts when it executes
+      pendingTimeouts.current.delete(timeoutId);
     }, ORBITAL_COOLDOWN);
+
+    // Track the timeout for cleanup
+    pendingTimeouts.current.add(timeoutId);
 
     return true;
   }, [charges, setCharges, releaseCharge]);
@@ -434,6 +521,14 @@ export function usePyroclast({
     }
   }, [isCharging, consumeCharge, charges, releaseCharge]);
 
+  const clearAllMissiles = useCallback(() => {
+    setActiveMissiles([]);
+    // Clear enemy health tracker
+    enemyHealthTracker.current = {};
+    // Clear missile hit cache
+    missileHitCache.current.clear();
+  }, []);
+
   return {
     isCharging,
     chargeProgress,
@@ -442,6 +537,7 @@ export function usePyroclast({
     releaseCharge,
     handleMissileImpact,
     checkMissileCollisions,
+    clearAllMissiles,
     setChargeProgress,
     chargeStartTime,
     charges,

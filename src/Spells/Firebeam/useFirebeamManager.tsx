@@ -235,7 +235,9 @@ export const useFirebeamManager = ({
       type: 'firebeam',
       position: new Vector3(), // Dummy values - will be overridden by parentRef
       direction: new Vector3(0, 0, 1), // Dummy values - will be overridden by parentRef
-      parentRef: parentRef
+      parentRef: parentRef,
+      startTime: Date.now(), // Required for cleanup logic - prevents immediate removal
+      duration: 60 // Long duration - firebeam manages its own lifecycle via isFirebeaming state
     }]);
 
     // Clear any existing interval

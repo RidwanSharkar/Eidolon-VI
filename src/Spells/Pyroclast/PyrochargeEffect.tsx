@@ -13,18 +13,20 @@ import {
   CylinderGeometry
 } from 'three';
 
-// Shared geometries for pyrocharge effect - avoid per-render allocations
+// Import shared geometries for pyrocharge effect - prevents memory leaks
+import {
+  MULTIPLAYER_EFFECT_GEOMETRIES
+} from '@/Scene/SharedGeometries';
+
+// Use shared geometries for pyrocharge effect - prevents memory leaks
 const pyrochargeGeometries = {
-  particle: new DodecahedronGeometry(0.2, 0),
-  groundRing: new RingGeometry(0, 0, 32), // Will be scaled dynamically
-  centerPillar: new CylinderGeometry(0.2, 0.5, 0, 8) // Will be scaled dynamically
+  particle: MULTIPLAYER_EFFECT_GEOMETRIES.pyrochargeParticle,
+  groundRing: MULTIPLAYER_EFFECT_GEOMETRIES.pyrochargeRing, // Will be scaled dynamically
+  centerPillar: MULTIPLAYER_EFFECT_GEOMETRIES.pyrochargePillar // Will be scaled dynamically
 };
 
-let pyrochargeResourceUsers = 0;
-
-const disposePyrochargeResources = () => {
-  Object.values(pyrochargeGeometries).forEach(geo => geo.dispose());
-};
+// Note: Using SHARED geometries from SharedGeometries.ts
+// These should NOT be disposed as they are shared across the entire application
 
 interface PyrochargeEffectProps {
   parentRef: React.RefObject<Group>;
@@ -42,22 +44,31 @@ export default function PyrochargeEffect({
   // Add state to track if we should show the effect (with a short delay)
   const [shouldShowEffect, setShouldShowEffect] = useState(false);
 
-  // Resource management
-  useEffect(() => {
-    pyrochargeResourceUsers += 1;
-    return () => {
-      pyrochargeResourceUsers = Math.max(0, pyrochargeResourceUsers - 1);
-      if (pyrochargeResourceUsers === 0) {
-        disposePyrochargeResources();
-      }
-    };
-  }, []);
+  // Note: Using shared geometries - no resource management needed
 
   // Shared materials - memoized to avoid recreation
   const materials = useMemo(() => ({
     particle: new MeshStandardMaterial({
       color: "#FF8800",
       emissive: "#FF8800",
+      emissiveIntensity: 1,
+      transparent: true,
+      opacity: 0.6,
+      blending: AdditiveBlending,
+      depthWrite: false
+    }),
+    particleAlt1: new MeshStandardMaterial({
+      color: "#FF4400",
+      emissive: "#FF4400",
+      emissiveIntensity: 1,
+      transparent: true,
+      opacity: 0.6,
+      blending: AdditiveBlending,
+      depthWrite: false
+    }),
+    particleAlt2: new MeshStandardMaterial({
+      color: "#FF2200",
+      emissive: "#FF2200",
       emissiveIntensity: 1,
       transparent: true,
       opacity: 0.6,
@@ -103,7 +114,7 @@ export default function PyrochargeEffect({
   // Cleanup materials on unmount
   useEffect(() => {
     return () => {
-      Object.values(materials).forEach((mat: MeshStandardMaterial) => mat.dispose());
+      Object.values(materials).forEach((mat) => mat.dispose());
     };
   }, [materials]);
 
@@ -162,23 +173,18 @@ export default function PyrochargeEffect({
   const particleCount = 12;
   const particles = [];
 
-  // Get particle material with different colors
+  // Get particle material with different colors (using shared materials)
   const getParticleMaterial = (i: number) => {
-    const color = i % 3 === 0 ? "#FF8800" : (i % 3 === 1 ? "#FF4400" : "#FF2200");
-    const emissive = i % 3 === 0 ? "#FF8800" : (i % 3 === 1 ? "#FF4400" : "#FF2200");
-    const emissiveIntensity = 1 + (chargeProgress * 4);
-    const opacity = 0.6 + (chargeProgress * 0.4);
+    const materialIndex = i % 3;
+    const material = materialIndex === 0 ? materials.particle :
+                     materialIndex === 1 ? materials.particleAlt1 :
+                     materials.particleAlt2;
 
-    // Clone material to allow different properties
-    return new MeshStandardMaterial({
-      color,
-      emissive,
-      emissiveIntensity,
-      transparent: true,
-      opacity,
-      blending: AdditiveBlending,
-      depthWrite: false
-    });
+    // Update material properties based on charge progress
+    material.emissiveIntensity = 1 + (chargeProgress * 4);
+    material.opacity = 0.6 + (chargeProgress * 0.4);
+
+    return material;
   };
 
   for (let i = 0; i < particleCount; i++) {

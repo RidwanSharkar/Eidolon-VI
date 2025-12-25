@@ -137,12 +137,12 @@ export const WEAPON_DAMAGES: Record<WeaponType, WeaponDamage> = {
   },
   [WeaponType.SCYTHE]: {
     normal: 29,
-    range: 4.3,
+    range: 4.35,
     maxHitsPerSwing: 1
   },
   [WeaponType.SABRES]: {
     normal: 17, // Base damage - actual damage varies by subclass
-    range: 4.0,
+    range: 4.1,
     maxHitsPerSwing: 2
   },
   [WeaponType.SPEAR]: {
@@ -189,7 +189,7 @@ export const getWeaponDamage = (weapon: WeaponType, subclass?: WeaponSubclass, s
       case WeaponSubclass.STORM:
         return 31; //  damage per hit since it hits twice per attack (burst)
       case WeaponSubclass.PYRO:
-        return 37; //  damage for single attack
+        return 31; //  damage for single attack
       default:
         return baseDamage;
     }
@@ -374,9 +374,9 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
   if (weapon === WeaponType.SPEAR && ability === 'q' && currentSubclass) {
     switch (currentSubclass) {
       case WeaponSubclass.STORM:
-        return 0.675; // Storm subclass cooldown
+        return 0.6; // Storm subclass cooldown
       case WeaponSubclass.PYRO:
-        return 0.675; // Pyro subclass cooldown
+        return 0.6; // Pyro subclass cooldown
       default:
         return currentAbility.cooldown;
     }

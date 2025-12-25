@@ -28,6 +28,58 @@ export interface UseLavaLashProps {
   onIncinerateStackChange?: (stacks: number) => void; // Callback for stack changes
 }
 
+// BOUNDED CACHE for hit tracking - prevents memory leaks from accumulating hit data
+class BoundedHitCache {
+  private cache = new Map<string, number>(); // key -> timestamp
+  private maxSize = 1000; // Maximum entries before cleanup
+  private cleanupThreshold = 200; // Cleanup when we hit this many entries
+
+  add(key: string): void {
+    const now = Date.now();
+    this.cache.set(key, now);
+
+    // Trigger cleanup if we exceed threshold
+    if (this.cache.size > this.cleanupThreshold) {
+      this.cleanup();
+    }
+  }
+
+  has(key: string): boolean {
+    return this.cache.has(key);
+  }
+
+  // Remove entries older than 5 seconds to prevent indefinite accumulation
+  cleanup(): void {
+    const cutoff = Date.now() - 5000; // 5 seconds ago
+    for (const [key, timestamp] of this.cache) {
+      if (timestamp < cutoff) {
+        this.cache.delete(key);
+      }
+    }
+
+    // If still too large, remove oldest entries
+    if (this.cache.size > this.maxSize) {
+      const sorted = Array.from(this.cache.entries()).sort((a, b) => a[1] - b[1]);
+      const toRemove = sorted.slice(0, this.cache.size - this.maxSize);
+      toRemove.forEach(([key]) => this.cache.delete(key));
+    }
+  }
+
+  // Clean up all entries for a specific projectile
+  cleanupProjectile(projectileId: number): void {
+    const prefix = `${projectileId}_`;
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
 export function useLavaLash({
   onHit,
   setDamageNumbers,
@@ -39,7 +91,7 @@ export function useLavaLash({
   const [projectiles, setProjectiles] = useState<LavaLashProjectile[]>([]);
   const [incinerateStacks, setIncinerateStacks] = useState(0);
   const nextProjectileId = useRef(0);
-  const hitEnemies = useRef<Set<string>>(new Set());
+  const hitEnemies = useRef(new BoundedHitCache());
 
   // Calculate level-based damage
   const getLavaLashDamage = useCallback((currentLevel: number): number => {
@@ -102,7 +154,7 @@ export function useLavaLash({
         if (hitEnemies.current.has(hitKey)) {
           continue;
         }
-        
+
         hitEnemies.current.add(hitKey);
         
         // Calculate damage with rune system
@@ -136,12 +188,9 @@ export function useLavaLash({
   const handleProjectileImpact = useCallback((projectileId: number) => {
     // Remove the projectile
     setProjectiles(prev => prev.filter(p => p.id !== projectileId));
-    
-    // Clean up hit tracking for this projectile
-    const keysToRemove = Array.from(hitEnemies.current).filter(key => 
-      key.startsWith(`${projectileId}_`)
-    );
-    keysToRemove.forEach(key => hitEnemies.current.delete(key));
+
+    // Clean up hit tracking for this projectile using bounded cache
+    hitEnemies.current.cleanupProjectile(projectileId);
   }, []);
 
   const updateProjectiles = useCallback(() => {
@@ -173,10 +222,7 @@ export function useLavaLash({
         
         if (fadeProgress >= 1) {
           // Clean up hit tracking for this projectile when it's removed
-          const keysToRemove = Array.from(hitEnemies.current).filter(key => 
-            key.startsWith(`${projectile.id}_`)
-          );
-          keysToRemove.forEach(key => hitEnemies.current.delete(key));
+          hitEnemies.current.cleanupProjectile(projectile.id);
           return false; // Remove projectile after fade completes
         }
       }

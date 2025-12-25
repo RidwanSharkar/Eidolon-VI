@@ -4,6 +4,7 @@ import {
   AdditiveBlending,
   Color,
   Group,
+  Material,
   Mesh,
   Points,
   Vector3
@@ -52,6 +53,24 @@ const PyroclastTrail: React.FC<PyroclastTrailProps> = ({
       isInitialized.current = true;
     }
   }, [meshRef]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (particlesRef.current) {
+        // Dispose of geometry and materials
+        particlesRef.current.geometry.dispose();
+        if (particlesRef.current.material instanceof Material) {
+          particlesRef.current.material.dispose();
+        }
+      }
+
+      // Clear the Float32Arrays to free memory
+      positionsRef.current = new Float32Array(0);
+      opacitiesRef.current = new Float32Array(0);
+      scalesRef.current = new Float32Array(0);
+    };
+  }, []);
 
   useFrame(() => {
     if (!particlesRef.current?.parent || !meshRef.current || !isInitialized.current) return;

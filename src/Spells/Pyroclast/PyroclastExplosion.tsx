@@ -1,6 +1,46 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Vector3, AdditiveBlending, SphereGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
 
+// SHARED MATERIAL POOLS - prevents memory leaks from per-instance material creation
+const PYROCLAST_EXPLOSION_SHARED_MATERIALS = {
+  coreExplosion: new MeshStandardMaterial({
+    color: "#FF2200",
+    emissive: "#FF3300",
+    emissiveIntensity: 0.5,
+    transparent: true,
+    opacity: 0.9,
+    depthWrite: false,
+    blending: AdditiveBlending
+  }),
+  innerEnergy: new MeshStandardMaterial({
+    color: "#FF4400",
+    emissive: "#FF6600",
+    emissiveIntensity: 0.5,
+    transparent: true,
+    opacity: 0.95,
+    depthWrite: false,
+    blending: AdditiveBlending
+  }),
+  torus: new MeshStandardMaterial({
+    color: "#FF2200",
+    emissive: "#FF4400",
+    emissiveIntensity: 0.3,
+    transparent: true,
+    opacity: 0.7,
+    depthWrite: false,
+    blending: AdditiveBlending
+  }),
+  spark: new MeshStandardMaterial({
+    color: "#FF5500",
+    emissive: "#FF7700",
+    emissiveIntensity: 1.2,
+    transparent: true,
+    opacity: 0.9,
+    depthWrite: false,
+    blending: AdditiveBlending
+  })
+};
+
 // Import shared geometries to prevent memory leaks
 import {
   SHARED_SPHERE_GEOMETRY_SPELL_LARGE,
@@ -21,11 +61,8 @@ const pyroclastGeometries = {
   spark: SHARED_SPHERE_GEOMETRY_LOW // Approximation of (0.08, 8, 8)
 };
 
-let pyroclastExplosionResourceUsers = 0;
-
-const disposePyroclastExplosionResources = () => {
-  Object.values(pyroclastGeometries).forEach(geo => geo.dispose());
-};
+// Note: pyroclastGeometries uses SHARED geometries from SharedGeometries.ts
+// These should NOT be disposed as they are shared across the entire application
 
 interface PyroclastExplosionProps {
   position: Vector3;
@@ -49,63 +86,7 @@ export default function PyroclastExplosion({
   const intensity = 2 + (normalizedCharge * 3); // Increased intensity
   const sparkCount = 12; // More sparks
 
-  // Resource management
-  useEffect(() => {
-    pyroclastExplosionResourceUsers += 1;
-    return () => {
-      pyroclastExplosionResourceUsers = Math.max(0, pyroclastExplosionResourceUsers - 1);
-      if (pyroclastExplosionResourceUsers === 0) {
-        disposePyroclastExplosionResources();
-      }
-    };
-  }, []);
-
-  // Shared materials - memoized to avoid recreation
-  const materials = useMemo(() => ({
-    coreExplosion: new MeshStandardMaterial({
-      color: "#FF2200",
-      emissive: "#FF3300",
-      emissiveIntensity: intensity * 0.5,
-      transparent: true,
-      opacity: 0.9,
-      depthWrite: false,
-      blending: AdditiveBlending
-    }),
-    innerEnergy: new MeshStandardMaterial({
-      color: "#FF4400",
-      emissive: "#FF6600",
-      emissiveIntensity: intensity * 0.5,
-      transparent: true,
-      opacity: 0.95,
-      depthWrite: false,
-      blending: AdditiveBlending
-    }),
-    torus: new MeshStandardMaterial({
-      color: "#FF2200",
-      emissive: "#FF4400",
-      emissiveIntensity: intensity * 0.3,
-      transparent: true,
-      opacity: 0.7,
-      depthWrite: false,
-      blending: AdditiveBlending
-    }),
-    spark: new MeshStandardMaterial({
-      color: "#FF5500",
-      emissive: "#FF7700",
-      emissiveIntensity: intensity * 1.2,
-      transparent: true,
-      opacity: 0.9,
-      depthWrite: false,
-      blending: AdditiveBlending
-    })
-  }), [intensity]);
-
-  // Cleanup materials on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(materials).forEach(mat => mat.dispose());
-    };
-  }, [materials]);
+  // Note: Using shared geometries and materials - no resource management needed
 
   // Pre-generate spark positions
   const sparkPositions = useMemo(() => {
@@ -164,33 +145,33 @@ export default function PyroclastExplosion({
   // More dynamic effect - faster expansion for initial impact
   const expansionRate = 3 + (elapsed < 0.1 ? 8 : 0);
 
-  // Update material opacities based on fade
+  // Update material opacities based on fade using shared materials
   const coreScale = scale * (1 + elapsed * expansionRate);
   const innerScale = scale * (1 + elapsed * (expansionRate + 1));
   const ringScale = scale * (1 + elapsed * (expansionRate + 2));
 
-  materials.coreExplosion.opacity = 0.9 * fade;
-  materials.coreExplosion.emissiveIntensity = intensity * fade * 0.5;
-  materials.innerEnergy.opacity = 0.95 * fade;
-  materials.innerEnergy.emissiveIntensity = intensity * 0.5 * fade;
-  materials.torus.opacity = 0.7 * fade;
-  materials.torus.emissiveIntensity = intensity * fade * 0.3;
-  materials.spark.opacity = 0.9 * fade;
-  materials.spark.emissiveIntensity = intensity * 1.2 * fade;
+  PYROCLAST_EXPLOSION_SHARED_MATERIALS.coreExplosion.opacity = 0.9 * fade;
+  PYROCLAST_EXPLOSION_SHARED_MATERIALS.coreExplosion.emissiveIntensity = intensity * fade * 0.5;
+  PYROCLAST_EXPLOSION_SHARED_MATERIALS.innerEnergy.opacity = 0.95 * fade;
+  PYROCLAST_EXPLOSION_SHARED_MATERIALS.innerEnergy.emissiveIntensity = intensity * 0.5 * fade;
+  PYROCLAST_EXPLOSION_SHARED_MATERIALS.torus.opacity = 0.7 * fade;
+  PYROCLAST_EXPLOSION_SHARED_MATERIALS.torus.emissiveIntensity = intensity * fade * 0.3;
+  PYROCLAST_EXPLOSION_SHARED_MATERIALS.spark.opacity = 0.9 * fade;
+  PYROCLAST_EXPLOSION_SHARED_MATERIALS.spark.emissiveIntensity = intensity * 1.2 * fade;
 
   return (
     <group position={position}>
       {/* Core explosion sphere */}
       <mesh
         geometry={pyroclastGeometries.coreExplosion}
-        material={materials.coreExplosion}
+        material={PYROCLAST_EXPLOSION_SHARED_MATERIALS.coreExplosion}
         scale={[coreScale, coreScale, coreScale]}
       />
-      
+
       {/* Inner energy sphere */}
       <mesh
         geometry={pyroclastGeometries.innerEnergy}
-        material={materials.innerEnergy}
+        material={PYROCLAST_EXPLOSION_SHARED_MATERIALS.innerEnergy}
         scale={[innerScale, innerScale, innerScale]}
       />
 
@@ -200,7 +181,7 @@ export default function PyroclastExplosion({
           key={i} 
           rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
           geometry={getTorusGeometry(i)}
-          material={materials.torus}
+          material={PYROCLAST_EXPLOSION_SHARED_MATERIALS.torus}
           scale={[ringScale, ringScale, ringScale]}
         />
       ))}
@@ -218,7 +199,7 @@ export default function PyroclastExplosion({
               spark.depthOffset
             ]}
             geometry={pyroclastGeometries.spark}
-            material={materials.spark}
+            material={PYROCLAST_EXPLOSION_SHARED_MATERIALS.spark}
             scale={[scale, scale, scale]}
           />
         );

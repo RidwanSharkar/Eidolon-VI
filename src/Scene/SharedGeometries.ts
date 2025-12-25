@@ -7,6 +7,7 @@ import {
   BufferGeometry,
   ConeGeometry,
   CylinderGeometry,
+  DodecahedronGeometry,
   IcosahedronGeometry,
   MeshStandardMaterial,
   PlaneGeometry,
@@ -439,12 +440,7 @@ export const MULTIPLAYER_EFFECT_GEOMETRIES = {
   lavaOuter: new SphereGeometry(0.35, 12, 12),
   lavaRing: new TorusGeometry(0.375, 0.04, 6, 12),
   lavaTrail: new SphereGeometry(0.205, 12, 12),
-  
-  // Pyroclast
-  pyroclastCore: new SphereGeometry(0.5, 8, 8),
-  pyroclastTrail: new SphereGeometry(0.3, 6, 6),
-  pyroclastExplosion: new SphereGeometry(3, 12, 12),
-  
+
   // Reignite
   reigniteColumn: new CylinderGeometry(0.5, 1, 2, 8),
   
@@ -495,6 +491,21 @@ export const MULTIPLAYER_EFFECT_GEOMETRIES = {
   // Frenzy aura
   frenzyRing: new RingGeometry(0.85, 1.0, 3),
   frenzyGlow: new CylinderGeometry(0.5, 0.8, 0.1, 32),
+
+  // Pyroclast
+  pyroclastCore: new CylinderGeometry(0.3, 0.4, 2, 6),
+  pyroclastRing0: new TorusGeometry(0.4, 0.1, 6, 12),
+  pyroclastRing1: new TorusGeometry(0.5, 0.1, 6, 12),
+  pyroclastRing2: new TorusGeometry(0.6, 0.1, 6, 12),
+  pyroclastRing3: new TorusGeometry(0.7, 0.1, 6, 12),
+  pyroclastRing4: new TorusGeometry(0.8, 0.1, 6, 12),
+  pyroclastTrail: new SphereGeometry(0.3, 6, 6),
+  pyroclastExplosion: new SphereGeometry(3, 12, 12),
+
+  // Pyrocharge effect
+  pyrochargeParticle: new DodecahedronGeometry(0.2, 0),
+  pyrochargeRing: new RingGeometry(0, 0, 32),
+  pyrochargePillar: new CylinderGeometry(0.2, 0.5, 0, 8),
 };
 
 // ============================================================================

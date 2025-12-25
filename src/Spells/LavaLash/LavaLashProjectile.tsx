@@ -15,6 +15,80 @@ import {
 // Pre-allocated color for performance - avoids new Color() on every render
 const LAVA_TRAIL_COLOR = new Color("#FF4500");
 
+// SHARED MATERIAL POOLS - prevents memory leaks from per-instance material creation
+const LAVA_LASH_SHARED_MATERIALS = {
+  core: new MeshStandardMaterial({
+    color: "#FF6600",
+    emissive: "#FF6600",
+    emissiveIntensity: 3.0,
+    transparent: true,
+    opacity: 0.9
+  }),
+  innerCore: new MeshStandardMaterial({
+    color: "#FFAA00",
+    emissive: "#FFAA00",
+    emissiveIntensity: 4.0,
+    transparent: true,
+    opacity: 0.8,
+    blending: AdditiveBlending,
+    depthWrite: false
+  }),
+  outerAura: new MeshStandardMaterial({
+    color: "#FF4500",
+    emissive: "#FF4500",
+    emissiveIntensity: 2.0,
+    transparent: true,
+    opacity: 0.4,
+    blending: AdditiveBlending,
+    depthWrite: false
+  }),
+  ring: new MeshStandardMaterial({
+    color: "#FF6600",
+    emissive: "#FF6600",
+    emissiveIntensity: 2.5,
+    transparent: true,
+    opacity: 0.7,
+    blending: AdditiveBlending
+  })
+};
+
+// Shared materials for impact effect
+const LAVA_LASH_IMPACT_SHARED_MATERIALS = {
+  mainExplosion: new MeshStandardMaterial({
+    color: "#FF4500",
+    emissive: "#FF4500",
+    emissiveIntensity: 3.0,
+    transparent: true,
+    opacity: 0.8,
+    blending: AdditiveBlending,
+    depthWrite: false
+  }),
+  secondaryExplosion: new MeshStandardMaterial({
+    color: "#FFAA00",
+    emissive: "#FFAA00",
+    emissiveIntensity: 4.0,
+    transparent: true,
+    opacity: 0.9,
+    blending: AdditiveBlending,
+    depthWrite: false
+  }),
+  spark: new MeshStandardMaterial({
+    color: "#FF6600",
+    emissive: "#FF6600",
+    emissiveIntensity: 3,
+    transparent: true,
+    opacity: 0.9
+  }),
+  ring: new MeshStandardMaterial({
+    color: "#FF4500",
+    emissive: "#FF4500",
+    emissiveIntensity: 2.5,
+    transparent: true,
+    opacity: 0.7,
+    blending: AdditiveBlending
+  })
+};
+
 // Use shared geometries for lava lash projectile - prevents memory leaks
 const lavaLashGeometries = {
   core: SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.25, 16, 16)
@@ -31,11 +105,8 @@ const lavaLashGeometries = {
   impactRing2: SHARED_TORUS_GEOMETRY_SPELL_LARGE // Approximation of (1.8, 0.08, 6, 16)
 };
 
-let lavaLashResourceUsers = 0;
-
-const disposeLavaLashResources = () => {
-  Object.values(lavaLashGeometries).forEach(geo => geo.dispose());
-};
+// Note: lavaLashGeometries uses SHARED geometries from SharedGeometries.ts
+// These should NOT be disposed as they are shared across the entire application
 
 interface LavaLashProjectileProps {
   id: number;
@@ -69,60 +140,8 @@ export default function LavaLashProjectile({
   const [impactPosition, ] = useState<Vector3 | null>(null);
   const [opacity, setOpacity] = useState(propOpacity); // Use prop opacity or default to 1.0
 
-  // Resource management
-  useEffect(() => {
-    lavaLashResourceUsers += 1;
-    return () => {
-      lavaLashResourceUsers = Math.max(0, lavaLashResourceUsers - 1);
-      if (lavaLashResourceUsers === 0) {
-        disposeLavaLashResources();
-      }
-    };
-  }, []);
-
-  // Shared materials - memoized to avoid recreation
-  const materials = useMemo(() => ({
-    core: new MeshStandardMaterial({
-      color: "#FF6600",
-      emissive: "#FF6600",
-      emissiveIntensity: 3.0,
-      transparent: true,
-      opacity: 0.9
-    }),
-    innerCore: new MeshStandardMaterial({
-      color: "#FFAA00",
-      emissive: "#FFAA00",
-      emissiveIntensity: 4.0,
-      transparent: true,
-      opacity: 0.8,
-      blending: AdditiveBlending,
-      depthWrite: false
-    }),
-    outerAura: new MeshStandardMaterial({
-      color: "#FF4500",
-      emissive: "#FF4500",
-      emissiveIntensity: 2.0,
-      transparent: true,
-      opacity: 0.4,
-      blending: AdditiveBlending,
-      depthWrite: false
-    }),
-    ring: new MeshStandardMaterial({
-      color: "#FF6600",
-      emissive: "#FF6600",
-      emissiveIntensity: 2.5,
-      transparent: true,
-      opacity: 0.7,
-      blending: AdditiveBlending
-    })
-  }), []);
-
-  // Cleanup materials on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(materials).forEach(mat => mat.dispose());
-    };
-  }, [materials]);
+  // Note: Using shared geometries and materials - no resource management needed
+  // Materials are now shared across all Lava Lash projectiles to prevent memory leaks
 
   // Initialize position on mount
   useEffect(() => {
@@ -176,19 +195,19 @@ export default function LavaLashProjectile({
             <mesh
               ref={projectileMeshRef}
               geometry={lavaLashGeometries.core}
-              material={materials.core}
+              material={LAVA_LASH_SHARED_MATERIALS.core}
             />
 
             {/* Inner fire core */}
             <mesh
               geometry={lavaLashGeometries.innerCore}
-              material={materials.innerCore}
+              material={LAVA_LASH_SHARED_MATERIALS.innerCore}
             />
 
             {/* Outer fire aura */}
             <mesh
               geometry={lavaLashGeometries.outerAura}
-              material={materials.outerAura}
+              material={LAVA_LASH_SHARED_MATERIALS.outerAura}
             />
 
             {/* Rotating fire rings for dynamic effect */}
@@ -197,16 +216,8 @@ export default function LavaLashProjectile({
                 key={`fire-ring-${i}`}
                 rotation={[Math.PI/2, 0, Date.now() * 0.003 + i * Math.PI]}
                 geometry={i === 0 ? lavaLashGeometries.ring0 : lavaLashGeometries.ring1}
-              >
-                <meshStandardMaterial
-                  color="#FF6600"
-                  emissive="#FF6600"
-                  emissiveIntensity={2.5 * opacity}
-                  transparent
-                  opacity={(0.7 - i * 0.2) * opacity}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
+                material={LAVA_LASH_SHARED_MATERIALS.ring}
+              />
             ))}
 
             {/* Enhanced light source */}
@@ -243,49 +254,7 @@ function LavaLashImpact({ position, onComplete }: LavaLashImpactProps) {
   const [, forceUpdate] = useState({});
   const IMPACT_DURATION = 0.3; // Shorter duration for fire explosion
 
-  // Shared materials for impact - memoized
-  const impactMaterials = useMemo(() => ({
-    mainExplosion: new MeshStandardMaterial({
-      color: "#FF4500",
-      emissive: "#FF4500",
-      emissiveIntensity: 3.0,
-      transparent: true,
-      opacity: 0.8,
-      blending: AdditiveBlending,
-      depthWrite: false
-    }),
-    secondaryExplosion: new MeshStandardMaterial({
-      color: "#FFAA00",
-      emissive: "#FFAA00",
-      emissiveIntensity: 4.0,
-      transparent: true,
-      opacity: 0.9,
-      blending: AdditiveBlending,
-      depthWrite: false
-    }),
-    spark: new MeshStandardMaterial({
-      color: "#FF6600",
-      emissive: "#FF6600",
-      emissiveIntensity: 3,
-      transparent: true,
-      opacity: 0.9
-    }),
-    ring: new MeshStandardMaterial({
-      color: "#FF4500",
-      emissive: "#FF4500",
-      emissiveIntensity: 2.5,
-      transparent: true,
-      opacity: 0.7,
-      blending: AdditiveBlending
-    })
-  }), []);
-
-  // Cleanup materials on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(impactMaterials).forEach(mat => mat.dispose());
-    };
-  }, [impactMaterials]);
+  // Note: Using shared materials for impact effects - no resource management needed
 
   // Pre-generate spark positions
   const sparkPositions = useMemo(() => {
@@ -333,14 +302,14 @@ function LavaLashImpact({ position, onComplete }: LavaLashImpactProps) {
 
   if (fade <= 0) return null;
 
-  // Update material opacities
-  impactMaterials.mainExplosion.opacity = 0.8 * fade;
-  impactMaterials.mainExplosion.emissiveIntensity = 3.0 * fade;
-  impactMaterials.secondaryExplosion.opacity = 0.9 * fade;
-  impactMaterials.secondaryExplosion.emissiveIntensity = 4.0 * fade;
-  impactMaterials.spark.opacity = 0.9 * fade;
-  impactMaterials.spark.emissiveIntensity = 3 * fade;
-  impactMaterials.ring.emissiveIntensity = 2.5 * fade;
+  // Update material opacities using shared materials
+  LAVA_LASH_IMPACT_SHARED_MATERIALS.mainExplosion.opacity = 0.8 * fade;
+  LAVA_LASH_IMPACT_SHARED_MATERIALS.mainExplosion.emissiveIntensity = 3.0 * fade;
+  LAVA_LASH_IMPACT_SHARED_MATERIALS.secondaryExplosion.opacity = 0.9 * fade;
+  LAVA_LASH_IMPACT_SHARED_MATERIALS.secondaryExplosion.emissiveIntensity = 4.0 * fade;
+  LAVA_LASH_IMPACT_SHARED_MATERIALS.spark.opacity = 0.9 * fade;
+  LAVA_LASH_IMPACT_SHARED_MATERIALS.spark.emissiveIntensity = 3 * fade;
+  LAVA_LASH_IMPACT_SHARED_MATERIALS.ring.emissiveIntensity = 2.5 * fade;
 
   const mainScale = 1 + elapsed * 2.5;
   const innerScale = 1 + elapsed * 3.5;
@@ -351,14 +320,14 @@ function LavaLashImpact({ position, onComplete }: LavaLashImpactProps) {
       {/* Main fire explosion effect */}
       <mesh
         geometry={lavaLashGeometries.impactCore}
-        material={impactMaterials.mainExplosion}
+        material={LAVA_LASH_IMPACT_SHARED_MATERIALS.mainExplosion}
         scale={[mainScale, mainScale, mainScale]}
       />
 
       {/* Secondary explosion ring */}
       <mesh
         geometry={lavaLashGeometries.impactInner}
-        material={impactMaterials.secondaryExplosion}
+        material={LAVA_LASH_IMPACT_SHARED_MATERIALS.secondaryExplosion}
         scale={[innerScale, innerScale, innerScale]}
       />
 
@@ -376,7 +345,7 @@ function LavaLashImpact({ position, onComplete }: LavaLashImpactProps) {
             ]}
             rotation={spark.rotation}
             geometry={lavaLashGeometries.impactSpark}
-            material={impactMaterials.spark}
+            material={LAVA_LASH_IMPACT_SHARED_MATERIALS.spark}
           />
         );
       })}
@@ -390,16 +359,8 @@ function LavaLashImpact({ position, onComplete }: LavaLashImpactProps) {
             rotation={[-Math.PI/2, 0, i * Math.PI/3]}
             geometry={getImpactRingGeometry(i)}
             scale={[ringScale, ringScale, ringScale]}
-          >
-            <meshStandardMaterial
-              color="#FF4500"
-              emissive="#FF4500"
-              emissiveIntensity={2.5 * fade}
-              transparent
-              opacity={opacity}
-              blending={AdditiveBlending}
-            />
-          </mesh>
+          material={LAVA_LASH_IMPACT_SHARED_MATERIALS.ring}
+          />
         );
       })}
 

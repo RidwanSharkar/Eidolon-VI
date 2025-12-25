@@ -610,7 +610,8 @@ export default function Unit({
     startCharging: startPyroclastCharge,
     releaseCharge: releasePyroclastCharge,
     handleMissileImpact: handlePyroclastImpact,
-    checkMissileCollisions: checkPyroclastCollisions
+    checkMissileCollisions: checkPyroclastCollisions,
+    clearAllMissiles: clearAllPyroclastMissiles
   } = usePyroclast({
     parentRef: groupRef,
     onHit,
@@ -2452,9 +2453,10 @@ export default function Unit({
 
     // Fireball Cleanup
     setActiveEffects(prev => prev.filter(effect => {
-      // Special handling for boneclaw and blizzard
-      if (effect.type === 'boneclaw' || effect.type === 'blizzard') {
-        return true; // Let these effects manage their own cleanup via onComplete
+      // Special handling for boneclaw, blizzard, and firebeam (Icebeam)
+      // These effects manage their own lifecycle and should not be auto-cleaned
+      if (effect.type === 'boneclaw' || effect.type === 'blizzard' || effect.type === 'firebeam') {
+        return true; // Let these effects manage their own cleanup via onComplete or state
       }
 
       // Handle timed effects
@@ -3048,6 +3050,7 @@ export default function Unit({
     checkCollisions: checkLavaLashCollisions,
     handleProjectileImpact: handleLavaLashImpact,
     updateProjectiles: updateLavaLashProjectiles,
+    clearAllProjectiles: clearAllLavaLashProjectiles,
     resetIncinerateStacks
   } = useLavaLash({
     onHit,
@@ -3923,8 +3926,15 @@ export default function Unit({
       }
 
       // ULTRA AGGRESSIVE: Active effects limit reduced from 12/8 to 6/4
+      // But preserve critical effects like firebeam (Icebeam) that manage their own lifecycle
       if (activeEffects.length > 6) {
-        setActiveEffects(prev => prev.slice(-4)); // Keep only the last 4
+        setActiveEffects(prev => {
+          // Separate protected effects from others
+          const protectedEffects = prev.filter(e => e.type === 'firebeam' || e.type === 'blizzard' || e.type === 'boneclaw');
+          const otherEffects = prev.filter(e => e.type !== 'firebeam' && e.type !== 'blizzard' && e.type !== 'boneclaw');
+          // Only slice the non-protected effects
+          return [...protectedEffects, ...otherEffects.slice(-4)];
+        });
       }
 
       // ULTRA AGGRESSIVE: Fireballs limit reduced from 6/3 to 3/2
@@ -4056,9 +4066,15 @@ export default function Unit({
       
       // Clean up barrage projectiles
       cleanupBarrage();
-      
+
       // Clean up guided bolt missiles
       cleanupGuidedBolts();
+
+      // Clean up LavaLash projectiles
+      clearAllLavaLashProjectiles();
+
+      // Clean up Pyroclast missiles
+      clearAllPyroclastMissiles();
     };
   }, [projectilePool, fireballPool, cleanupBarrage, cleanupGuidedBolts]);
 
