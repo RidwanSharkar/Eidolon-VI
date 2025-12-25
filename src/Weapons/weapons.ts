@@ -552,11 +552,20 @@ export const WEAPON_ORB_COUNTS: Record<WeaponType, number> = {
 
 // Dash charges system - number of dash charges per weapon type
 export const WEAPON_DASH_CHARGES: Record<WeaponType, number> = {
-  [WeaponType.SWORD]: 1,
-  [WeaponType.SCYTHE]: 1,
-  [WeaponType.SPEAR]: 1,
+  [WeaponType.SWORD]: 2,
+  [WeaponType.SCYTHE]: 2,
+  [WeaponType.SPEAR]: 2,
   [WeaponType.SABRES]: 3,
   [WeaponType.BOW]: 2,
+};
+
+// Dash charge cooldowns per weapon type (in seconds)
+export const WEAPON_DASH_COOLDOWNS: Record<WeaponType, number> = {
+  [WeaponType.SCYTHE]: 10.0,
+  [WeaponType.SWORD]: 9.0,
+  [WeaponType.SABRES]: 6.0,
+  [WeaponType.BOW]: 7.0,
+  [WeaponType.SPEAR]: 10.0,
 };
 
 // Dash charge interface for tracking individual charges
@@ -572,5 +581,4 @@ export interface DashChargesState {
 }
 
 // Constants for dash system
-export const DASH_CHARGE_COOLDOWN = 6.0; // 6 seconds per charge
-export const DASH_GLOBAL_COOLDOWN = 0.75; // 0.75 seconds between rapid dashes 
+export const DASH_GLOBAL_COOLDOWN = 0.325; // 0.325 seconds between rapid dashes 

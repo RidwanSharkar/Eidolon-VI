@@ -1,4 +1,4 @@
-import { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { Group, Vector3, Shape, DoubleSide } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { calculateBoneclawHits } from '@/Spells/Boneclaw/BoneclawDamage';
@@ -365,7 +365,7 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
                         metalness={0.1}
                       />
                     </mesh>
-                    {[0, 1, 2, 3, 4].map(i => createSpectralClaw(i))}
+                    {[0, 1, 2, 3, 4].map(i => <React.Fragment key={i}>{createSpectralClaw(i)}</React.Fragment>)}
                   </group>
                 </group>
               </group>

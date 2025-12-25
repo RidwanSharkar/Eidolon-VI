@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { WeaponType, WEAPON_DASH_CHARGES, DASH_CHARGE_COOLDOWN, DASH_GLOBAL_COOLDOWN, DashChargesState, DashCharge } from '@/Weapons/weapons';
+import { WeaponType, WEAPON_DASH_CHARGES, WEAPON_DASH_COOLDOWNS, DASH_GLOBAL_COOLDOWN, DashChargesState, DashCharge } from '@/Weapons/weapons';
 
 interface UseDashChargesProps {
   currentWeapon: WeaponType;
@@ -95,7 +95,7 @@ export function useDashCharges({ currentWeapon }: UseDashChargesProps): UseDashC
       // Use the charge
       newState.charges[availableChargeIndex] = {
         isAvailable: false,
-        cooldownRemaining: DASH_CHARGE_COOLDOWN,
+        cooldownRemaining: WEAPON_DASH_COOLDOWNS[currentWeapon],
       };
 
       // Set global cooldown

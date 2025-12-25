@@ -56,7 +56,7 @@ export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentPro
 
   // Create particle system for fiery effect
   const particleSystem = useMemo(() => {
-    const particleCount = 50;
+    const particleCount = 40;
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
     const sizes = new Float32Array(particleCount);
@@ -169,7 +169,7 @@ export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentPro
   if (!isEmpowered) return null;
 
   return (
-    <group ref={groupRef} scale={[0.6, 0.6, 0.6]}>
+    <group ref={groupRef} scale={[0.5, 0.5, 0.5]}>
       {/* Particle system */}
       <points ref={particlesRef} geometry={particleSystem.geometry} material={particleSystem.material} />
       

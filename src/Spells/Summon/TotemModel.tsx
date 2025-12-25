@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Group, MeshStandardMaterial, CylinderGeometry, ConeGeometry, PlaneGeometry, SphereGeometry } from 'three';
+import { Group, MeshStandardMaterial, CylinderGeometry, ConeGeometry, PlaneGeometry, SphereGeometry, DoubleSide } from 'three';
 import BoneAuraTotem from './BoneAuraTotem';
 import UnholyAura from './UnholyAura';
 import { registerGlobalSharedResource } from '../../Scene/EffectPools';
@@ -18,6 +18,14 @@ const SHARED_MATERIALS = {
   runes: new MeshStandardMaterial({
     color: "#00ff88",
     emissive: "#00ff88",
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 0.9
+  }),
+  runesAttacking: new MeshStandardMaterial({
+    color: "#00ff88",
+    emissive: "#00ff88",
+    emissiveIntensity: 4,
     transparent: true,
     opacity: 0.9
   }),
@@ -25,6 +33,14 @@ const SHARED_MATERIALS = {
     color: "#DEB887",
     roughness: 1,
     metalness: 0
+  }),
+  runePlane: new MeshStandardMaterial({
+    color: "#00ff88",
+    emissive: "#00ff88",
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 0.8,
+    side: DoubleSide
   })
 };
 
@@ -70,27 +86,29 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
   return (
     <group ref={totemRef} scale={0.40} position={[0, -0.80, 0]}>
       {/* Main tower structure */}
-      <mesh position={[0, 2, 0]}>
-        <primitive object={SHARED_GEOMETRIES.tower} />
-        <primitive object={SHARED_MATERIALS.bone} />
-      </mesh> 
+      <mesh 
+        position={[0, 2, 0]} 
+        geometry={SHARED_GEOMETRIES.tower} 
+        material={SHARED_MATERIALS.bone} 
+      />
 
       {/* Jagged spikes around the structure */}
       {[...Array(12)].map((_, i) => (
-        <group key={i} rotation={[0, (-Math.PI  * i) / 12, Math.PI * 0.25]} position={[0, 2.5, 0]}>
-          <mesh position={[0.7, Math.sin(i * 3) * 0.5, 0]} rotation={[Math.PI/3, 0, -Math.PI * 0.25]}>
-            <primitive object={SHARED_GEOMETRIES.spike} />
-            <primitive object={SHARED_MATERIALS.spikes} />
-          </mesh>
+        <group key={i} rotation={[0, (-Math.PI * i) / 12, Math.PI * 0.25]} position={[0, 2.5, 0]}>
+          <mesh 
+            position={[0.7, Math.sin(i * 3) * 0.5, 0]} 
+            rotation={[Math.PI/3, 0, -Math.PI * 0.25]}
+            geometry={SHARED_GEOMETRIES.spike}
+            material={SHARED_MATERIALS.spikes}
+          />
         </group>
       ))}
 
       {/* Glowing rune circles */}
       {[0.5, 1.5, 2.5, 3.5].map((height, i) => (
         <group key={i} position={[0, height, 0]}>
-          <mesh>
+          <mesh material={isAttacking ? SHARED_MATERIALS.runesAttacking : SHARED_MATERIALS.runes}>
             <torusGeometry args={[0.7, 0.05, 16, 32]} />
-            <primitive object={SHARED_MATERIALS.runes} emissiveIntensity={isAttacking ? 3 : 1} />
           </mesh>
           {/* Floating rune symbols */}
           {[...Array(4)].map((_, j) => (
@@ -98,13 +116,12 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
               key={j} 
               position={[
                 Math.cos((Math.PI * 2 * j) / 4) * 0.7,
-                Math.sin(Date.now() * 0.001 + j) * 0.1,
+                0,
                 Math.sin((Math.PI * 2 * j) / 4) * 0.7
               ]}
-            >
-              <primitive object={SHARED_GEOMETRIES.rune} />
-              <primitive object={SHARED_MATERIALS.runes} emissiveIntensity={isAttacking ? 4 : 2} opacity={0.8} side={2} />
-            </mesh>
+              geometry={SHARED_GEOMETRIES.rune}
+              material={SHARED_MATERIALS.runePlane}
+            />
           ))}
         </group>
       ))}
@@ -120,28 +137,29 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
               Math.sin((Math.PI * 2 * i) / 8) * 0.5
             ]}
             rotation={[
-              Math.random() * 0.2,
+              0.1,
               (Math.PI * 2 * i) / 8,
               Math.PI * 0.15
             ]}
-          >
-            <primitive object={SHARED_GEOMETRIES.crown} />
-            <primitive object={SHARED_MATERIALS.crown} />
-          </mesh>
+            geometry={SHARED_GEOMETRIES.crown}
+            material={SHARED_MATERIALS.crown}
+          />
         ))}
         
         {/* Central eye */}
-        <mesh position={[0, 0.5, 0]}>
-          <primitive object={SHARED_GEOMETRIES.eye} />
-          <primitive object={SHARED_MATERIALS.runes} emissiveIntensity={isAttacking ? 5 : 3} />
-        </mesh>
+        <mesh 
+          position={[0, 0.5, 0]}
+          geometry={SHARED_GEOMETRIES.eye}
+          material={isAttacking ? SHARED_MATERIALS.runesAttacking : SHARED_MATERIALS.runes}
+        />
       </group>
 
       {/* Base structure */}
-      <mesh position={[0, 0.3, 0]}>
-        <primitive object={SHARED_GEOMETRIES.base} />
-        <primitive object={SHARED_MATERIALS.bone} />
-      </mesh>
+      <mesh 
+        position={[0, 0.3, 0]}
+        geometry={SHARED_GEOMETRIES.base}
+        material={SHARED_MATERIALS.bone}
+      />
 
       {/* Lightning effects when attacking */}
       {isAttacking && [...Array(4)].map((_, i) => (
@@ -152,10 +170,9 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
             2,
             Math.sin((Math.PI * 2 * i) / 4) * 1
           ]}
-        >
-          <primitive object={SHARED_GEOMETRIES.lightning} />
-          <primitive object={SHARED_MATERIALS.runes} emissiveIntensity={5} opacity={0.8} />
-        </mesh>
+          geometry={SHARED_GEOMETRIES.lightning}
+          material={SHARED_MATERIALS.runesAttacking}
+        />
       ))}
 
       <BoneAuraTotem parentRef={totemRef} />
@@ -163,4 +180,4 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
 
     </group>
   );
-} 
+}

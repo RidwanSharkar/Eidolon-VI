@@ -383,6 +383,7 @@ export default function Unit({
   const [damageNumbers, setDamageNumbers] = useState<DamageNumberType[]>([]);
   
   const nextDamageNumberId = useRef(0);
+  const nextEffectId = useRef(0);
   
   // ORBITAL CHARGES
   const [fireballCharges, setFireballCharges] = useState<Array<{
@@ -673,13 +674,16 @@ export default function Unit({
     enemyData,
     onKillingBlow: (position: Vector3) => {
       // Trigger totem summoning when BoneClaw gets a killing blow
-      if (currentWeapon === WeaponType.SCYTHE && currentSubclass === WeaponSubclass.CHAOS) {
+      if (currentWeapon === WeaponType.SCYTHE && currentSubclass === WeaponSubclass.CHAOS && groupRef.current) {
         
-        const summonId = Date.now();
+        const summonId = nextEffectId.current++;
+        // Capture position and direction BEFORE the state update callback
+        const totemPosition = position.clone().setY(0.0);
+        const totemDirection = new Vector3(0, 0, 1).applyQuaternion(groupRef.current.quaternion);
         
         setActiveEffects(prev => {
           // Get max totems based on level (1 at levels 1-2, 2 at level 3+)
-          const maxTotems = level >= 3 ? 2 : 1;
+          const maxTotems = level >= 4 ? 2 : 1;
           const currentTotems = prev.filter(effect => effect.type === 'summon').length;
           
           if (currentTotems >= maxTotems) {
@@ -690,11 +694,11 @@ export default function Unit({
           startTotemHealing();
 
           // Send totem effect to other players in multiplayer
-          if (isInRoom && isPlayer && sendEffect && groupRef.current) {
+          if (isInRoom && isPlayer && sendEffect) {
             sendEffect({
               type: 'totem',
-              position: position.clone(),
-              direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current.quaternion),
+              position: totemPosition.clone(),
+              direction: totemDirection.clone(),
               duration: 8000, // 8 second duration
               weaponType: currentWeapon,
               subclass: currentSubclass,
@@ -707,8 +711,8 @@ export default function Unit({
             {
               id: summonId,
               type: 'summon',
-              position: position.clone().setY(0.8),
-              direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
+              position: totemPosition,
+              direction: totemDirection,
               onComplete: () => {
                 // Stop healing when totem expires
                 stopTotemHealing();
@@ -1001,6 +1005,7 @@ export default function Unit({
       nextDamageNumberId.current = 0;
       nextFireballId.current = 0;
       nextSmiteId.current = 0;
+      nextEffectId.current = 0;
       
     };
 
@@ -2453,9 +2458,9 @@ export default function Unit({
 
     // Fireball Cleanup
     setActiveEffects(prev => prev.filter(effect => {
-      // Special handling for boneclaw, blizzard, and firebeam (Icebeam)
+      // Special handling for boneclaw, blizzard, firebeam (Icebeam), summon, and elemental
       // These effects manage their own lifecycle and should not be auto-cleaned
-      if (effect.type === 'boneclaw' || effect.type === 'blizzard' || effect.type === 'firebeam') {
+      if (effect.type === 'boneclaw' || effect.type === 'blizzard' || effect.type === 'firebeam' || effect.type === 'summon' || effect.type === 'elemental') {
         return true; // Let these effects manage their own cleanup via onComplete or state
       }
 
@@ -3754,9 +3759,12 @@ export default function Unit({
     
     
     // Passive Chaos Totem summoning on critical Fireball/Entropic Bolt hits
-    if (isCritical && currentWeapon === WeaponType.SCYTHE && currentSubclass === WeaponSubclass.CHAOS) {
+    if (isCritical && currentWeapon === WeaponType.SCYTHE && currentSubclass === WeaponSubclass.CHAOS && groupRef.current) {
       
-      const summonId = Date.now();
+      const summonId = nextEffectId.current++;
+      // Capture position and direction BEFORE the state update callback
+      const totemPosition = groupRef.current.position.clone().setY(0.8);
+      const totemDirection = new Vector3(0, 0, 1).applyQuaternion(groupRef.current.quaternion);
       
       setActiveEffects(prev => {
         // Get max totems based on level (1 at levels 1-2, 2 at level 3+)
@@ -3771,11 +3779,11 @@ export default function Unit({
         startTotemHealing();
 
         // Send totem effect to other players in multiplayer
-        if (isInRoom && isPlayer && groupRef.current) {
+        if (isInRoom && isPlayer) {
           sendEffect({
             type: 'totem',
-            position: groupRef.current.position.clone(),
-            direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current.quaternion),
+            position: totemPosition.clone(),
+            direction: totemDirection.clone(),
             duration: 8000, // 8 second duration
             weaponType: currentWeapon,
             subclass: currentSubclass,
@@ -3788,8 +3796,8 @@ export default function Unit({
           {
             id: summonId,
             type: 'summon',
-            position: groupRef.current!.position.clone(),
-            direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
+            position: totemPosition,
+            direction: totemDirection,
             onComplete: () => {
               // Stop healing when totem expires
               stopTotemHealing();
@@ -3929,9 +3937,10 @@ export default function Unit({
       // But preserve critical effects like firebeam (Icebeam) that manage their own lifecycle
       if (activeEffects.length > 6) {
         setActiveEffects(prev => {
-          // Separate protected effects from others
-          const protectedEffects = prev.filter(e => e.type === 'firebeam' || e.type === 'blizzard' || e.type === 'boneclaw');
-          const otherEffects = prev.filter(e => e.type !== 'firebeam' && e.type !== 'blizzard' && e.type !== 'boneclaw');
+          // Separate protected effects from others - include 'summon' for Chaos Totem
+          const protectedTypes = ['firebeam', 'blizzard', 'boneclaw', 'summon', 'elemental'];
+          const protectedEffects = prev.filter(e => protectedTypes.includes(e.type));
+          const otherEffects = prev.filter(e => !protectedTypes.includes(e.type));
           // Only slice the non-protected effects
           return [...protectedEffects, ...otherEffects.slice(-4)];
         });
@@ -4804,50 +4813,52 @@ export default function Unit({
           }}
           onKillingBlow={(position) => {
             // Trigger totem summoning when BoneClaw gets a killing blow
-                if (currentWeapon === WeaponType.SCYTHE && currentSubclass === WeaponSubclass.CHAOS) {
-                  
-                  const summonId = Date.now();
-                  
-                  setActiveEffects(prev => {
-                    // Get max totems based on level (1 at levels 1-2, 2 at level 3+)
-                    const maxTotems = level >= 3 ? 2 : 1;
-                    const currentTotems = prev.filter(effect => effect.type === 'summon').length;
-                    
-                    if (currentTotems >= maxTotems) {
-                      return prev;
-                    }
+            if (currentWeapon === WeaponType.SCYTHE && currentSubclass === WeaponSubclass.CHAOS && groupRef.current) {
+              
+              const summonId = nextEffectId.current++;
+              // Capture position and direction BEFORE the state update callback
+              const totemPosition = position.clone().setY(0.8);
+              const totemDirection = new Vector3(0, 0, 1).applyQuaternion(groupRef.current.quaternion);
+              
+              setActiveEffects(prev => {
+                // Get max totems based on level (1 at levels 1-2, 2 at level 3+)
+                const maxTotems = level >= 3 ? 2 : 1;
+                const currentTotems = prev.filter(effect => effect.type === 'summon').length;
+                
+                if (currentTotems >= maxTotems) {
+                  return prev;
+                }
 
-                    // Start the healing effect when totem is summoned
-                    startTotemHealing();
+                // Start the healing effect when totem is summoned
+                startTotemHealing();
 
-                    // Send totem effect to other players in multiplayer
-                    if (isInRoom && isPlayer && groupRef.current) {
-                      sendEffect({
-                        type: 'totem',
-                        position: position.clone(),
-                        direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current.quaternion),
-                        duration: 8000, // 8 second duration
-                        weaponType: currentWeapon,
-                        subclass: currentSubclass,
-                        totemId: summonId.toString()
-                      });
-                    }
+                // Send totem effect to other players in multiplayer
+                if (isInRoom && isPlayer) {
+                  sendEffect({
+                    type: 'totem',
+                    position: totemPosition.clone(),
+                    direction: totemDirection.clone(),
+                    duration: 8000, // 8 second duration
+                    weaponType: currentWeapon,
+                    subclass: currentSubclass,
+                    totemId: summonId.toString()
+                  });
+                }
 
-                    return [
-                      ...prev,
-                      {
-                        id: summonId,
-                        type: 'summon',
-                        position: position.clone().setY(0.8),
-                        direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion),
-                        onComplete: () => {
-                          // Stop healing when totem expires
-
-                          stopTotemHealing();
-                        },
-                        onStartCooldown: () => {}
-                      }
-                    ];
+                return [
+                  ...prev,
+                  {
+                    id: summonId,
+                    type: 'summon',
+                    position: totemPosition,
+                    direction: totemDirection,
+                    onComplete: () => {
+                      // Stop healing when totem expires
+                      stopTotemHealing();
+                    },
+                    onStartCooldown: () => {}
+                  }
+                ];
                   });
                 }
               }}

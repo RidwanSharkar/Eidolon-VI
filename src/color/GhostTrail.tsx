@@ -17,7 +17,7 @@ export default function GhostTrail({ parentRef, weaponType, weaponSubclass, targ
   const trailsRef = useRef<Mesh[]>([]);
   const positions = useRef<Vector3[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const trailCount = 30;
+  const trailCount = 40;
   
   useEffect(() => {
     // Initialize with target position if provided, otherwise use parent's position
