@@ -1,11 +1,20 @@
 import React, { useRef, useMemo, useEffect } from 'react';
-import { Vector3, Group } from 'three';
+import { Vector3, Group, CylinderGeometry, SphereGeometry, ConeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { AdditiveBlending, Color, MeshStandardMaterial, PointLight } from 'three';
 import GuidedBoltTrail from './GuidedBoltTrail';
 
 // Pre-allocated color for trail - module level constant
 const TRAIL_COLOR = new Color("#4DC7FF");
+
+// Shared geometries - created once at module level for all instances
+const GUIDED_BOLT_GEOMETRIES = {
+  shaft: new CylinderGeometry(0.03, 0.045, 0.9, 6),
+  joint: new SphereGeometry(0.06, 8, 8),
+  arrowHead: new ConeGeometry(0.08, 0.25, 6),
+  spike: new ConeGeometry(0.015, 0.08, 4),
+  aura: new SphereGeometry(0.15, 12, 12),
+};
 
 interface GuidedBoltMissileProps {
   position: Vector3;
@@ -19,9 +28,9 @@ export default function GuidedBoltMissile({ position, targetPosition, direction 
   // Light teal color for guided bolt arrows
   const arrowColor = "#80d9ff";
   
-  // Shared material for the bone arrow with teal coloring - properly memoized
-  const boneMaterial = useMemo(() => {
-    return new MeshStandardMaterial({
+  // Shared materials for the bone arrow with teal coloring - properly memoized
+  const materials = useMemo(() => {
+    const boneMaterial = new MeshStandardMaterial({
       color: arrowColor,
       roughness: 0.8,
       metalness: 0.2,
@@ -30,14 +39,27 @@ export default function GuidedBoltMissile({ position, targetPosition, direction 
       emissive: arrowColor,
       emissiveIntensity: 0.3
     });
+    
+    const auraMaterial = new MeshStandardMaterial({
+      color: "#80d9ff",
+      emissive: "#80d9ff",
+      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.3,
+      blending: AdditiveBlending,
+      depthWrite: false,
+    });
+    
+    return { bone: boneMaterial, aura: auraMaterial };
   }, [arrowColor]);
 
-  // Cleanup material on unmount
+  // Cleanup materials on unmount
   useEffect(() => {
     return () => {
-      boneMaterial.dispose();
+      materials.bone.dispose();
+      materials.aura.dispose();
     };
-  }, [boneMaterial]);
+  }, [materials]);
 
   useFrame(() => {
     if (!missileRef.current) return;
@@ -80,27 +102,29 @@ export default function GuidedBoltMissile({ position, targetPosition, direction 
       
       <group ref={missileRef} position={position.toArray()}>
         {/* Main bone shaft */}
-        <mesh rotation={[Math.PI/2, 0, 0]}>
-          <cylinderGeometry args={[0.03, 0.045, 0.9, 6]} />
-          <meshStandardMaterial {...boneMaterial} />
-        </mesh>
+        <mesh 
+          rotation={[Math.PI/2, 0, 0]}
+          geometry={GUIDED_BOLT_GEOMETRIES.shaft}
+          material={materials.bone}
+        />
 
         {/* Bone joints/decorations */}
         {[-0.2, 0, 0.2].map((offset, i) => (
           <group key={i} position={[0, 0, offset]}>
-            <mesh>
-              <sphereGeometry args={[0.06, 8, 8]} />
-              <meshStandardMaterial {...boneMaterial} />
-            </mesh>
+            <mesh
+              geometry={GUIDED_BOLT_GEOMETRIES.joint}
+              material={materials.bone}
+            />
           </group>
         ))}
 
         {/* Arrow head (bone spike) */}
         <group position={[0, 0, -0.5]}>
-          <mesh rotation={[Math.PI/2, 0, 0]}>
-            <coneGeometry args={[0.08, 0.25, 6]} />
-            <meshStandardMaterial {...boneMaterial} />
-          </mesh>
+          <mesh 
+            rotation={[Math.PI/2, 0, 0]}
+            geometry={GUIDED_BOLT_GEOMETRIES.arrowHead}
+            material={materials.bone}
+          />
         </group>
 
         {/* Small decorative spikes */}
@@ -114,26 +138,19 @@ export default function GuidedBoltMissile({ position, targetPosition, direction 
             ]}
             rotation={[0, 0, angle]}
           >
-            <mesh rotation={[Math.PI/2, 0, 0]}>
-              <coneGeometry args={[0.015, 0.08, 4]} />
-              <meshStandardMaterial {...boneMaterial} />
-            </mesh>
+            <mesh 
+              rotation={[Math.PI/2, 0, 0]}
+              geometry={GUIDED_BOLT_GEOMETRIES.spike}
+              material={materials.bone}
+            />
           </group>
         ))}
 
         {/* Magical aura around the arrow */}
-        <mesh>
-          <sphereGeometry args={[0.15, 12, 12]} />
-          <meshStandardMaterial
-            color="#80d9ff"
-            emissive="#80d9ff"
-            emissiveIntensity={0.5}
-            transparent
-            opacity={0.3}
-            blending={AdditiveBlending}
-            depthWrite={false}
-          />
-        </mesh>
+        <mesh
+          geometry={GUIDED_BOLT_GEOMETRIES.aura}
+          material={materials.aura}
+        />
 
         {/* Subtle glow light */}
         <pointLight 

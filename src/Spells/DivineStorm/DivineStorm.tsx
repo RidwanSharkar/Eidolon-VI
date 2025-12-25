@@ -26,6 +26,7 @@ export default function DivineStorm({
   const FALLING_RADIUS = 1.0;        // Smaller radius for concentration
   const ORBITAL_HEIGHT = -2.0;       // Height for orbital shards
   const FALLING_HEIGHT = 1.0;        // Starting height for falling shards
+  const MAX_SHARDS = 40;             // Maximum shards to prevent unbounded growth
 
   // Cleanup on unmount
   useEffect(() => {
@@ -52,39 +53,51 @@ export default function DivineStorm({
     stormRef.current.rotation.y += delta * 4;
 
     // Spawn orbital shards - less frequent than firestorm for cleaner look
+    // Only spawn if under the maximum shard limit
     if (Math.random() < 0.6) {
-      const angle = Math.random() * Math.PI * 2;
-      const spawnRadius = Math.random() * ORBITAL_RADIUS;
+      setShards(prev => {
+        // Check limit before adding
+        if (prev.length >= MAX_SHARDS) return prev;
+        
+        const angle = Math.random() * Math.PI * 2;
+        const spawnRadius = Math.random() * ORBITAL_RADIUS;
 
-      const orbitalPosition = new Vector3(
-        Math.cos(angle) * spawnRadius,
-        ORBITAL_HEIGHT + Math.random() * 0.6,
-        Math.sin(angle) * spawnRadius
-      );
+        const orbitalPosition = new Vector3(
+          Math.cos(angle) * spawnRadius,
+          ORBITAL_HEIGHT + Math.random() * 0.6,
+          Math.sin(angle) * spawnRadius
+        );
 
-      setShards(prev => [...prev, {
-        id: Date.now() + Math.random(),
-        position: orbitalPosition,
-        type: 'orbital'
-      }]);
+        return [...prev, {
+          id: Date.now() + Math.random(),
+          position: orbitalPosition,
+          type: 'orbital'
+        }];
+      });
     }
 
     // Spawn falling shards
+    // Only spawn if under the maximum shard limit
     if (Math.random() < 0.4) {
-      const angle = Math.random() * Math.PI * 2;
-      const spawnRadius = Math.random() * FALLING_RADIUS;
+      setShards(prev => {
+        // Check limit before adding
+        if (prev.length >= MAX_SHARDS) return prev;
+        
+        const angle = Math.random() * Math.PI * 2;
+        const spawnRadius = Math.random() * FALLING_RADIUS;
 
-      const fallingPosition = new Vector3(
-        Math.cos(angle) * spawnRadius,
-        FALLING_HEIGHT + Math.random() * 1.2,
-        Math.sin(angle) * spawnRadius
-      );
+        const fallingPosition = new Vector3(
+          Math.cos(angle) * spawnRadius,
+          FALLING_HEIGHT + Math.random() * 1.2,
+          Math.sin(angle) * spawnRadius
+        );
 
-      setShards(prev => [...prev, {
-        id: Date.now() + Math.random(),
-        position: fallingPosition,
-        type: 'falling'
-      }]);
+        return [...prev, {
+          id: Date.now() + Math.random(),
+          position: fallingPosition,
+          type: 'falling'
+        }];
+      });
     }
 
   });

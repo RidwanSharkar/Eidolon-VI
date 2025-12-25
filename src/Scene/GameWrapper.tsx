@@ -465,12 +465,14 @@ function GameContent({
               boneclawCharges={boneclawCharges}
               incinerateStacks={incinerateStacks}
             />
-            <HealthOrb 
+            <HealthOrb
               currentHealth={isInRoom ? currentPlayerHealth : playerHealth}
               maxHealth={isInRoom ? currentPlayerMaxHealth : maxHealth}
               killCount={isInRoom ? multiplayerKillCount : killCount}
               hasShield={shieldState.hasShield}
               shieldAbsorption={shieldState.shieldAbsorption}
+              weaponType={currentWeapon}
+              weaponSubclass={currentSubclass}
             />
             <RuneCounter 
               criticalRuneCount={criticalRuneCount}

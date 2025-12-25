@@ -34,10 +34,10 @@ interface PanelProps {
 
 
 /**
- * RoundedSquareProgress Component
- * Renders a sweeping cooldown animation around a rounded square.
+ * TechCooldownProgress Component
+ * Renders a modern techno/cyberpunk cooldown animation with hexagonal segments.
  */
-const RoundedSquareProgress: React.FC<{
+const TechCooldownProgress: React.FC<{
   size: number;
   strokeWidth: number;
   percentage: number;
@@ -49,25 +49,104 @@ const RoundedSquareProgress: React.FC<{
   const perimeter = 4 * adjustedSize;
   const dashOffset = perimeter - (perimeter * percentage) / 100;
 
+  // Create hexagonal corner cuts for techno look
+  const cornerSize = 6;
+  const hexPath = `
+    M ${halfStroke + cornerSize} ${halfStroke}
+    L ${halfStroke + adjustedSize - cornerSize} ${halfStroke}
+    L ${halfStroke + adjustedSize} ${halfStroke + cornerSize}
+    L ${halfStroke + adjustedSize} ${halfStroke + adjustedSize - cornerSize}
+    L ${halfStroke + adjustedSize - cornerSize} ${halfStroke + adjustedSize}
+    L ${halfStroke + cornerSize} ${halfStroke + adjustedSize}
+    L ${halfStroke} ${halfStroke + adjustedSize - cornerSize}
+    L ${halfStroke} ${halfStroke + cornerSize}
+    Z
+  `;
+  
+  const hexPathLength = 4 * adjustedSize - 8 * cornerSize + 8 * cornerSize * Math.SQRT2;
+  const hexDashOffset = hexPathLength - (hexPathLength * percentage) / 100;
+
+  const color = isActive ? "#ff3333" : "#39ff14";
+  const glowColor = isActive ? "rgba(255, 51, 51, 0.6)" : "rgba(57, 255, 20, 0.6)";
+
   return (
     <svg
       width={size}
       height={size}
-      className={styles.roundedSquareProgress}
+      className={styles.techCooldownProgress}
     >
-      <rect
-        x={halfStroke}
-        y={halfStroke}
-        width={adjustedSize}
-        height={adjustedSize}
-        rx={borderRadius}
-        ry={borderRadius}
-        stroke={isActive ? "#ff3333" : "#39ff14"}
+      {/* Background glow layer */}
+      <defs>
+        <filter id={`glow-${isActive ? 'active' : 'normal'}`}>
+          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <linearGradient id={`gradient-${isActive ? 'active' : 'normal'}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{ stopColor: color, stopOpacity: 1 }} />
+          <stop offset="50%" style={{ stopColor: color, stopOpacity: 0.8 }} />
+          <stop offset="100%" style={{ stopColor: color, stopOpacity: 1 }} />
+        </linearGradient>
+      </defs>
+
+      {/* Outer dim border */}
+      <path
+        d={hexPath}
+        stroke={`${color}40`}
+        strokeWidth={strokeWidth * 0.8}
+        fill="none"
+        className={styles.techProgressBackground}
+      />
+
+      {/* Main progress indicator with gradient */}
+      <path
+        d={hexPath}
+        stroke={`url(#gradient-${isActive ? 'active' : 'normal'})`}
         strokeWidth={strokeWidth}
         fill="none"
-        strokeDasharray={perimeter}
-        strokeDashoffset={dashOffset}
-        className={styles.progressForeground}
+        strokeDasharray={hexPathLength}
+        strokeDashoffset={hexDashOffset}
+        strokeLinecap="round"
+        className={styles.techProgressForeground}
+        filter={`url(#glow-${isActive ? 'active' : 'normal'})`}
+      />
+
+      {/* Corner accent dots */}
+      {[0, 25, 50, 75].map((pos, i) => {
+        const opacity = (percentage >= pos) ? 1 : 0.2;
+        const points = [
+          { x: halfStroke + cornerSize, y: halfStroke },
+          { x: halfStroke + adjustedSize, y: halfStroke + cornerSize },
+          { x: halfStroke + adjustedSize - cornerSize, y: halfStroke + adjustedSize },
+          { x: halfStroke, y: halfStroke + adjustedSize - cornerSize },
+        ];
+        return (
+          <circle
+            key={i}
+            cx={points[i].x}
+            cy={points[i].y}
+            r={1.5}
+            fill={color}
+            opacity={opacity}
+            className={styles.techCornerDot}
+          />
+        );
+      })}
+
+      {/* Inner scanline effect */}
+      <rect
+        x={halfStroke + strokeWidth}
+        y={halfStroke + strokeWidth}
+        width={adjustedSize - strokeWidth * 2}
+        height={adjustedSize - strokeWidth * 2}
+        rx={borderRadius - strokeWidth}
+        fill="none"
+        stroke={glowColor}
+        strokeWidth={0.5}
+        opacity={0.3}
+        className={styles.techScanline}
       />
     </svg>
   );
@@ -228,7 +307,7 @@ export default function Panel({
                    abilities[WeaponType.SCYTHE].active.isUnlocked &&
                    activeEffects?.some(effect => effect.type === 'summon') ? (
                     <div className={styles.activeOverlay}>
-                      <RoundedSquareProgress
+                      <TechCooldownProgress
                         size={50}
                         strokeWidth={4}
                         percentage={100}
@@ -238,7 +317,7 @@ export default function Panel({
                     </div>
                   ) : ability.currentCooldown > 0 && (
                     <div className={styles.cooldownOverlay}>
-                      <RoundedSquareProgress
+                      <TechCooldownProgress
                         size={50}
                         strokeWidth={4}
                         percentage={(ability.currentCooldown / ability.cooldown) * 100}
@@ -269,7 +348,7 @@ export default function Panel({
                           if (timeRemaining > 0) {
                             return (
                               <div className={styles.cooldownOverlay}>
-                                <RoundedSquareProgress
+                                <TechCooldownProgress
                                   size={50}
                                   strokeWidth={4}
                                   percentage={(timeRemaining / 10) * 100}
@@ -302,7 +381,7 @@ export default function Panel({
                           if (timeRemaining > 0) {
                             return (
                               <div className={styles.cooldownOverlay}>
-                                <RoundedSquareProgress
+                                <TechCooldownProgress
                                   size={50}
                                   strokeWidth={4}
                                   percentage={(timeRemaining / 8) * 100}

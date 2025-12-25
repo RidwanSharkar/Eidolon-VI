@@ -1,6 +1,58 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styles from './HealthOrb.module.css';
 import DamageNotification from './DamageNotification';
+import { WeaponType, WeaponSubclass } from '@/Weapons/weapons';
+
+// Import color function from BoneVortex
+const getVortexColor = (weaponType: WeaponType, weaponSubclass?: WeaponSubclass) => {
+  if (weaponSubclass) {
+    switch (weaponSubclass) {
+      // Scythe subclasses
+      case WeaponSubclass.CHAOS:
+        return '#00FF37'; // Keep original chaos color
+      case WeaponSubclass.ABYSSAL:
+        return '#17CE54'; // lifegreen malachite
+
+      // Sword subclasses
+      case WeaponSubclass.DIVINITY:
+        return '#FF9748'; // Keep original divinity color
+      case WeaponSubclass.VENGEANCE:
+        return '#FF9748'; // More orange for vengeance
+
+      // Sabres subclasses
+      case WeaponSubclass.FROST:
+        return '#00AAFF'; // Keep original frost color
+      case WeaponSubclass.ASSASSIN:
+        return '#3A98F7'; // Dark purple for assassin
+
+      // Spear subclasses
+      case WeaponSubclass.PYRO:
+        return '#FF544E'; // Keep original pyro color
+      case WeaponSubclass.STORM:
+        return '#FF544E'; // Grey for storm
+
+      // Bow subclasses
+      case WeaponSubclass.ELEMENTAL:
+        return '#FF6F16'; // Keep original elemental color
+      case WeaponSubclass.VENOM:
+        return '#17CC93'; // Green/purple for venom
+    }
+  }
+
+  // Fallback to weapon type colors
+  switch (weaponType) {
+    case WeaponType.SCYTHE:
+      return '#5EFF00';
+    case WeaponType.SWORD:
+      return '#FF9748';
+    case WeaponType.SABRES:
+      return '#00AAFF';
+    case WeaponType.SPEAR:
+      return '#FF544E';
+    case WeaponType.BOW:
+      return '#17CC93';
+  }
+};
 
 interface HealthOrbProps {
   currentHealth: number;
@@ -8,6 +60,8 @@ interface HealthOrbProps {
   killCount: number;
   hasShield?: boolean;
   shieldAbsorption?: number;
+  weaponType?: WeaponType;
+  weaponSubclass?: WeaponSubclass;
 }
 
 interface DamageNotificationData {
@@ -21,7 +75,9 @@ const HealthOrb: React.FC<HealthOrbProps> = ({
   maxHealth,
   killCount,
   hasShield = false,
-  shieldAbsorption = 0
+  shieldAbsorption = 0,
+  weaponType,
+  weaponSubclass
 }) => {
   // Damage notification state - simplified to match original Panel implementation
   const [damageNotifications, setDamageNotifications] = useState<DamageNotificationData[]>([]);
@@ -85,7 +141,19 @@ const HealthOrb: React.FC<HealthOrbProps> = ({
 
   const currentLevel = getLevel(killCount);
   const expProgress = getExpProgress(killCount);
-  
+
+  // Determine class color for the orb glow
+  const hexToRgba = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  const classColor = weaponType ? getVortexColor(weaponType, weaponSubclass) : '#ff3333';
+  const classColorRgba30 = hexToRgba(classColor, 0.3);
+  const classColorRgba15 = hexToRgba(classColor, 0.15);
+
   // Responsive radius calculation
   useEffect(() => {
     const updateRadius = () => {
@@ -201,7 +269,13 @@ const HealthOrb: React.FC<HealthOrbProps> = ({
         </div>
         
         {/* Orb glow effect */}
-        <div className={styles.orbGlow} />
+        <div
+          className={styles.orbGlow}
+          style={{
+            '--class-color-30': classColorRgba30,
+            '--class-color-15': classColorRgba15
+          } as React.CSSProperties}
+        />
       </div>
 
       {/* Level Badge */}

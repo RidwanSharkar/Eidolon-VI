@@ -1,7 +1,16 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, SphereGeometry, TorusGeometry, MeshStandardMaterial, MeshBasicMaterial } from 'three';
 import { AdditiveBlending, Material, Object3D } from 'three';
+
+// Shared geometries - created once at module level for all instances
+const SOUL_STEAL_GEOMETRIES = {
+  core: new SphereGeometry(0.15, 8, 8),
+  outerShell: new SphereGeometry(0.25, 6, 6),
+  ringSmall: new TorusGeometry(0.18, 0.02, 4, 8),
+  ringLarge: new TorusGeometry(0.23, 0.02, 4, 8),
+  particle: new SphereGeometry(0.02, 4, 4),
+};
 
 interface SoulStealEffectProps {
   id: number;
@@ -26,6 +35,54 @@ export default function SoulStealEffect({
   const trailsRef = useRef<Group[]>([]);
   const TRAIL_COUNT = 6;
   const trailPositions = useRef<Vector3[]>([]);
+
+  // Memoized materials - created once per component instance
+  const materials = useMemo(() => ({
+    core: new MeshStandardMaterial({
+      color: "#C084FC",
+      emissive: "#A855C7",
+      emissiveIntensity: 2.5,
+      transparent: true,
+      opacity: 0.9,
+      blending: AdditiveBlending,
+      depthWrite: false,
+    }),
+    outerShell: new MeshBasicMaterial({
+      color: "#8B3F9B",
+      transparent: true,
+      opacity: 0.3,
+      blending: AdditiveBlending,
+      depthWrite: false,
+    }),
+    ring: new MeshBasicMaterial({
+      color: "#C084FC",
+      transparent: true,
+      opacity: 0.6,
+      blending: AdditiveBlending,
+      depthWrite: false,
+    }),
+    ringSecond: new MeshBasicMaterial({
+      color: "#C084FC",
+      transparent: true,
+      opacity: 0.4,
+      blending: AdditiveBlending,
+      depthWrite: false,
+    }),
+    particle: new MeshBasicMaterial({
+      color: "#C084FC",
+      transparent: true,
+      opacity: 0.5,
+      blending: AdditiveBlending,
+      depthWrite: false,
+    }),
+  }), []);
+
+  // Cleanup materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(materials).forEach(mat => mat.dispose());
+    };
+  }, [materials]);
 
   useFrame(() => {
     if (!groupRef.current) return;
@@ -90,30 +147,16 @@ export default function SoulStealEffect({
   return (
     <group ref={groupRef}>
       {/* Main soul wisp core */}
-      <mesh>
-        <sphereGeometry args={[0.15, 8, 8]} />
-        <meshStandardMaterial
-          color="#C084FC"
-          emissive="#A855C7"
-          emissiveIntensity={2.5}
-          transparent
-          opacity={fadeOpacity * 0.9}
-          blending={AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
+      <mesh
+        geometry={SOUL_STEAL_GEOMETRIES.core}
+        material={materials.core}
+      />
 
       {/* Outer glow shell */}
-      <mesh>
-        <sphereGeometry args={[0.25, 6, 6]} />
-        <meshBasicMaterial
-          color="#8B3F9B"
-          transparent
-          opacity={fadeOpacity * 0.3}
-          blending={AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
+      <mesh
+        geometry={SOUL_STEAL_GEOMETRIES.outerShell}
+        material={materials.outerShell}
+      />
 
       {/* Pulsing energy rings */}
       {[...Array(2)].map((_, i) => (
@@ -124,16 +167,9 @@ export default function SoulStealEffect({
             Date.now() * 0.004 + i * Math.PI / 2,
             0
           ]}
-        >
-          <torusGeometry args={[0.18 + i * 0.05, 0.02, 4, 8]} />
-          <meshBasicMaterial
-            color="#C084FC"
-            transparent
-            opacity={fadeOpacity * (0.6 - i * 0.2)}
-            blending={AdditiveBlending}
-            depthWrite={false}
-          />
-        </mesh>
+          geometry={i === 0 ? SOUL_STEAL_GEOMETRIES.ringSmall : SOUL_STEAL_GEOMETRIES.ringLarge}
+          material={i === 0 ? materials.ring : materials.ringSecond}
+        />
       ))}
 
       {/* Subtle floating particle effects around the wisp */}
@@ -147,16 +183,12 @@ export default function SoulStealEffect({
         const y = Math.sin(elapsed * 0.003 + i) * 0.03; // Smaller vertical movement
         
         return (
-          <mesh key={`particle-${i}`} position={[x, y, z]}>
-            <sphereGeometry args={[0.02, 4, 4]} />
-            <meshBasicMaterial
-              color="#C084FC"
-              transparent
-              opacity={fadeOpacity * 0.5}
-              blending={AdditiveBlending}
-              depthWrite={false}
-            />
-          </mesh>
+          <mesh 
+            key={`particle-${i}`} 
+            position={[x, y, z]}
+            geometry={SOUL_STEAL_GEOMETRIES.particle}
+            material={materials.particle}
+          />
         );
       })}
 

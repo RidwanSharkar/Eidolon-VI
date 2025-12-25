@@ -1,6 +1,14 @@
-import { Vector3, MeshStandardMaterial } from 'three';
+import { Vector3, MeshStandardMaterial, CylinderGeometry, SphereGeometry, ConeGeometry } from 'three';
 import { useMemo, useEffect } from 'react';
 import { WeaponSubclass } from '@/Weapons/weapons';
+
+// Shared geometries - created once at module level for all instances
+const BONE_ARROW_GEOMETRIES = {
+  shaft: new CylinderGeometry(0.04, 0.06, 1.2, 6),
+  joint: new SphereGeometry(0.08, 8, 8),
+  arrowHead: new ConeGeometry(0.1, 0.3, 6),
+  spike: new ConeGeometry(0.02, 0.1, 4),
+};
 
 interface BoneArrowProps {
   position: Vector3;
@@ -46,27 +54,29 @@ export default function BoneArrow({ position, direction, opacity = 1, currentSub
       ]}
     >
       {/* Main bone shaft */}
-      <mesh rotation={[Math.PI/2, 0, 0]}>
-        <cylinderGeometry args={[0.04, 0.06, 1.2, 6]} />
-        <meshStandardMaterial {...boneMaterial} />
-      </mesh>
+      <mesh 
+        rotation={[Math.PI/2, 0, 0]}
+        geometry={BONE_ARROW_GEOMETRIES.shaft}
+        material={boneMaterial}
+      />
 
       {/* Bone joints/decorations */}
       {[-0.3, 0, 0.3].map((offset, i) => (
         <group key={i} position={[0, 0, offset]}>
-          <mesh>
-            <sphereGeometry args={[0.08, 8, 8]} />
-            <meshStandardMaterial {...boneMaterial} />
-          </mesh>
+          <mesh
+            geometry={BONE_ARROW_GEOMETRIES.joint}
+            material={boneMaterial}
+          />
         </group>
       ))}
 
       {/* Arrow head (bone spike) */}
       <group position={[0, 0, -0.7]}>
-        <mesh rotation={[Math.PI/2, 0, 0]}>
-          <coneGeometry args={[0.1, 0.3, 6]} />
-          <meshStandardMaterial {...boneMaterial} />
-        </mesh>
+        <mesh 
+          rotation={[Math.PI/2, 0, 0]}
+          geometry={BONE_ARROW_GEOMETRIES.arrowHead}
+          material={boneMaterial}
+        />
       </group>
 
       {/* Small decorative spikes */}
@@ -80,10 +90,11 @@ export default function BoneArrow({ position, direction, opacity = 1, currentSub
           ]}
           rotation={[0, 0, angle]}
         >
-          <mesh rotation={[Math.PI/2, 0, 0]}>
-            <coneGeometry args={[0.02, 0.1, 4]} />
-            <meshStandardMaterial {...boneMaterial} />
-          </mesh>
+          <mesh 
+            rotation={[Math.PI/2, 0, 0]}
+            geometry={BONE_ARROW_GEOMETRIES.spike}
+            material={boneMaterial}
+          />
         </group>
       ))}
 

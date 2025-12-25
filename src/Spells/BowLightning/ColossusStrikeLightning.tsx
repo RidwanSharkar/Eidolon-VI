@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { AdditiveBlending, MeshStandardMaterial, SphereGeometry } from 'three';
+import { AdditiveBlending, MeshStandardMaterial, MeshBasicMaterial, SphereGeometry, RingGeometry } from 'three';
 
 interface ColossusStrikeLightningProps {
   position: Vector3;
@@ -100,29 +100,50 @@ const ColossusStrikeLightning: React.FC<ColossusStrikeLightningProps> = ({
   // Create geometries and materials
   const geometries = useMemo(() => ({
     bolt: new SphereGeometry(1, 8, 8),
-    impact: new SphereGeometry(0.8, 16, 16)
+    impact: new SphereGeometry(0.8, 16, 16),
+    ring1: new RingGeometry(1, 1.2, 32),
+    ring2: new RingGeometry(1.4, 1.6, 32),
+    ring3: new RingGeometry(1.8, 2.0, 32),
   }), []);
   
   // Updated materials for yellow lightning
   const materials = useMemo(() => ({
     coreBolt: new MeshStandardMaterial({
-      color: new Color('#FFFF00'), // Pure yellow instead of white
-      emissive: new Color('#FFD700'), // Golden yellow
-      emissiveIntensity: 4, // Increased intensity
+      color: new Color('#FFFF00'),
+      emissive: new Color('#FFD700'),
+      emissiveIntensity: 4,
       transparent: true
     }),
     secondaryBolt: new MeshStandardMaterial({
-      color: new Color('#FFDD00'), // Bright yellow
-      emissive: new Color('#FFD700'), // Golden yellow
-      emissiveIntensity: 2, // Increased intensity
+      color: new Color('#FFDD00'),
+      emissive: new Color('#FFD700'),
+      emissiveIntensity: 2,
       transparent: true
     }),
     impact: new MeshStandardMaterial({
-      color: new Color('#FFFF00'), // Pure yellow instead of white
-      emissive: new Color('#FFD700'), // Golden yellow instead of light yellow
-      emissiveIntensity: 1, // Increased intensity
+      color: new Color('#FFFF00'),
+      emissive: new Color('#FFD700'),
+      emissiveIntensity: 1,
       transparent: true
-    })
+    }),
+    ring1: new MeshBasicMaterial({
+      color: '#FFD700',
+      transparent: true,
+      opacity: 0.8,
+      blending: AdditiveBlending
+    }),
+    ring2: new MeshBasicMaterial({
+      color: '#FFD700',
+      transparent: true,
+      opacity: 0.65,
+      blending: AdditiveBlending
+    }),
+    ring3: new MeshBasicMaterial({
+      color: '#FFD700',
+      transparent: true,
+      opacity: 0.5,
+      blending: AdditiveBlending
+    }),
   }), []);
 
   // Cleanup geometries and materials on unmount
@@ -147,6 +168,12 @@ const ColossusStrikeLightning: React.FC<ColossusStrikeLightningProps> = ({
     materials.coreBolt.opacity = fadeOut;
     materials.secondaryBolt.opacity = fadeOut * 0.8;
     materials.impact.opacity = fadeOut * 0.9;
+    
+    // Update ring opacities
+    const ringFade = 1 - progress;
+    materials.ring1.opacity = 0.8 * ringFade;
+    materials.ring2.opacity = 0.65 * ringFade;
+    materials.ring3.opacity = 0.5 * ringFade;
   });
   
   return (
@@ -174,21 +201,22 @@ const ColossusStrikeLightning: React.FC<ColossusStrikeLightningProps> = ({
           scale={[1, 1, 1]}
         />
         
-        {/* Impact rings */}
-        {[1, 1.4, 1.8].map((size, i) => (
-          <mesh 
-            key={i} 
-            rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
-          >
-            <ringGeometry args={[size, size + 0.2, 32]} />
-            <meshBasicMaterial
-              color="#FFD700" // Golden yellow
-              transparent
-              opacity={(0.8 - (i * 0.15)) * (1 - (Date.now() - startTimeRef.current) / (duration * 1000))}
-              blending={AdditiveBlending}
-            />
-          </mesh>
-        ))}
+        {/* Impact rings - using memoized geometries and materials */}
+        <mesh 
+          rotation={[Math.PI / 2, 0, 0]}
+          geometry={geometries.ring1}
+          material={materials.ring1}
+        />
+        <mesh 
+          rotation={[Math.PI / 2, 0.5, 0]}
+          geometry={geometries.ring2}
+          material={materials.ring2}
+        />
+        <mesh 
+          rotation={[Math.PI / 2, 1.0, 0]}
+          geometry={geometries.ring3}
+          material={materials.ring3}
+        />
         
         {/* Enhanced lighting */}
         <pointLight
