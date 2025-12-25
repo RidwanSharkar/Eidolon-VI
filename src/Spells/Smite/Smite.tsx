@@ -181,17 +181,17 @@ export default function Smite({ position, onComplete }: SmiteProps) {
 
       {/* Spiral effect using pre-calculated positions */}
       {spiralPositions.map((props, i) => (
-        <mesh key={i} rotation={props.rotation} geometry={cylinderGeometries.torus} material={materials.spiral} />
+        <mesh key={`spiral-${i}`} rotation={props.rotation} geometry={cylinderGeometries.torus} material={materials.spiral} />
       ))}
 
       {/* Sky spiral effect using pre-calculated positions */}
       {skySpiralPositions.map((props, i) => (
-        <mesh key={i} rotation={props.rotation} position={props.position} geometry={cylinderGeometries.skyTorus} material={materials.skySpiral} />
+        <mesh key={`sky-spiral-${i}`} rotation={props.rotation} position={props.position} geometry={cylinderGeometries.skyTorus} material={materials.skySpiral} />
       ))}
 
       {/* Floating particles using pre-calculated positions */}
       {particlePositions.map((props, i) => (
-        <mesh key={i} position={props.position} geometry={cylinderGeometries.sphere} material={materials.particle} />
+        <mesh key={`particle-${i}`} position={props.position} geometry={cylinderGeometries.sphere} material={materials.particle} />
       ))}
 
       {/* Lights */}

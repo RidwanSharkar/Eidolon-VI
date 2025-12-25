@@ -86,7 +86,7 @@ export default function DeathKnightSword() {
           
           {/* Handle wrappings - darker */}
           {[...Array(10)].map((_, i) => (
-            <mesh key={i} position={[0, +0.56 - i * 0.176, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh key={`wrapping-${i}`} position={[0, +0.56 - i * 0.176, 0]} rotation={[Math.PI / 2, 0, 0]}>
               <torusGeometry args={[0.072, 0.0256, 8, 16]} />
               <meshStandardMaterial color="#0a0a0a" metalness={0.4} roughness={0.6} />
             </mesh>

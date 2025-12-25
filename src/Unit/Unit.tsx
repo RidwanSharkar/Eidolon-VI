@@ -2669,7 +2669,8 @@ export default function Unit({
     cleanup: cleanupBlizzardShield
   } = useBlizzardShield({
     currentWeapon: currentWeapon,
-    currentSubclass: currentSubclass
+    currentSubclass: currentSubclass,
+    stealthKillCount: stealthKillCount
   });
   
   // Combined shield absorption function that handles Divine Shield, Blizzard, and Glacial Shard shields

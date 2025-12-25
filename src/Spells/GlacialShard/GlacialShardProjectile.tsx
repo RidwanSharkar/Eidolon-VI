@@ -383,10 +383,10 @@ function GlacialShardImpact({ position, onComplete }: GlacialShardImpactProps) {
       {/* Ice shards burst - using pre-generated positions */}
       {shardPositions.map((shard, i) => {
         const radius = 2.0 * (1 + elapsed * 1.5);
-        
+
         return (
           <mesh
-            key={i}
+            key={`shard-${i}`}
             position={[
               Math.sin(shard.angle) * radius,
               Math.cos(shard.angle) * radius * 0.3,

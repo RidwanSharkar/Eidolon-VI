@@ -5,9 +5,10 @@ import { WeaponType, WeaponSubclass } from '@/Weapons/weapons';
 interface UseBlizzardShieldProps {
   currentWeapon?: WeaponType;
   currentSubclass?: WeaponSubclass;
+  stealthKillCount?: number;
 }
 
-export function useBlizzardShield({ currentWeapon, currentSubclass }: UseBlizzardShieldProps = {}) {
+export function useBlizzardShield({ currentWeapon, currentSubclass, stealthKillCount = 0 }: UseBlizzardShieldProps = {}) {
   const [hasShield, setHasShield] = useState(false);
   const [shieldAbsorption, setShieldAbsorption] = useState(0);
   const shieldTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -30,7 +31,7 @@ export function useBlizzardShield({ currentWeapon, currentSubclass }: UseBlizzar
     // Set 2-second delay before shield activation
     activationTimeoutRef.current = setTimeout(() => {
       setHasShield(true);
-      setShieldAbsorption(25);
+      setShieldAbsorption(25 + stealthKillCount * 4);
 
       // Shield expires after 5 seconds
       shieldTimeoutRef.current = setTimeout(() => {
@@ -38,7 +39,7 @@ export function useBlizzardShield({ currentWeapon, currentSubclass }: UseBlizzar
         setShieldAbsorption(0);
       }, 6000);
     }, 1500);
-  }, [currentWeapon, currentSubclass]);
+  }, [currentWeapon, currentSubclass, stealthKillCount]);
 
   const absorbDamage = useCallback((damage: number): number => {
     if (!hasShield || shieldAbsorption <= 0) {

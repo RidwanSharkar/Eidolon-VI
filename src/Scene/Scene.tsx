@@ -188,9 +188,9 @@ export default function Scene({
         switch (level) {
           case 1: return 625;
           case 2: return 784;
-          case 3: return 1024;
-          case 4: return 1156;
-          case 5: return 1225;
+          case 3: return 1156;
+          case 4: return 1369;
+          case 5: return 1444;
           default: return 625;
         }
       case 'mage':
@@ -198,30 +198,30 @@ export default function Scene({
           case 1: return 484;
           case 2: return 529;
           case 3: return 625;
-          case 4: return 729;
-          case 5: return 841;
+          case 4: return 841;
+          case 5: return 961;
           default: return 484;
         }
       case 'reaper':
         switch (level) {
-          case 2: return 900;
-          case 3: return 1089;
-          case 4: return 1296;
-          case 5: return 1369;
+          case 2: return 1024;
+          case 3: return 1296;
+          case 4: return 1521;
+          case 5: return 1681;
           default: return 784;
         }
       case 'abomination':
         switch (level) {
-          case 3: return 2304;
+          case 3: return 2500;
           case 4: return 2704;
-          case 5: return 3025;
+          case 5: return 3136;
           default: return 2304;
         }
       case 'ascendant':
         switch (level) {
-          case 4: return 1936;
+          case 4: return 2116;
           case 5: return 2401;
-          default: return 1681;
+          default: return 2116;
         }
       default:
         return 500; // Fallback health
@@ -1064,8 +1064,8 @@ export default function Scene({
         position: spawnPosition.clone(),
         initialPosition: spawnPosition.clone(),
         rotation: 0,
-        health: 1424,
-        maxHealth: 1424,
+        health: 1764,
+        maxHealth: 1764,
         type: 'death-knight' as const,
         ref: { current: group },
         isDying: false
@@ -1563,8 +1563,8 @@ export default function Scene({
           position: spawnPosition.clone(),
           initialPosition: spawnPosition.clone(),
           rotation: 0,
-          health: 6900,
-          maxHealth: 6900,
+          health: 10000,
+          maxHealth: 10000,
           type: 'fallen-titan' as const,
           ref: { current: group }
         };

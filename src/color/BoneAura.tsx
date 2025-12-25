@@ -66,7 +66,7 @@ export default function BoneAura({ parentRef }: BoneAuraProps) {
     <group ref={groupRef}>
       {Array.from({ length: boneCount }).map((_, i) => (
         <mesh
-          key={i}
+          key={`bone-${i}`}
           ref={(el) => {
             if (el) bonesRef.current[i] = el;
           }}

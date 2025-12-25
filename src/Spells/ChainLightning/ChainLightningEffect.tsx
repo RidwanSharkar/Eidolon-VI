@@ -94,11 +94,11 @@ const ChainLightningEffect: React.FC<ChainLightningEffectProps> = ({
                 .lerp(targetPos, segmentProgress)
                 .add(baseOffset)
                 .add(tempWaveOffset);
-              
+
               const thickness = Math.random() * 0.025 + 0.04;
 
               return (
-                <group key={i}>
+                <group key={`${index}-${i}`}>
                   <mesh 
                     position={pos.toArray()}
                     geometry={geometries.segment}

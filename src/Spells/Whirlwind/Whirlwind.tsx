@@ -182,7 +182,7 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
     <group ref={flameParticlesRef}>
       {/* Fire particles */}
       {particleRefs.current.map((_, i) => (
-        <mesh key={i}>
+        <mesh key={`particle-${i}`}>
           <dodecahedronGeometry args={[0.115, 0]} /> {/*  particle size */}
           <meshStandardMaterial
             color="#FF4400"

@@ -144,7 +144,7 @@ export default function BoneVortex({ position, onComplete, isSpawning = false, w
     <group ref={groupRef}>
       {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
         <mesh
-          key={i}
+          key={`death-${i}`}
           ref={(el) => {
             if (el) segmentsRef.current[i] = el;
           }}

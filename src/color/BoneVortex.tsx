@@ -179,7 +179,7 @@ export default function BoneVortex({ parentRef, weaponType, weaponSubclass }: Bo
       {/* Existing vortex pieces */}
       {Array.from({ length: pieceCount }).map((_, i) => (
         <group
-          key={i}
+          key={`vortex-${i}`}
           ref={(el) => {
             if (el) vortexPiecesRef.current[i] = el;
           }}

@@ -1,5 +1,7 @@
 // src/weapons/weapons.ts
 
+import { sign } from "crypto";
+
 export type AbilityType = 'q' | 'e' | 'r' | 'passive' | 'active' | 'special' | 'vault' | 'innate';
 export type AbilityHotkey = 'q' | 'e' | 'r' | '1' | '2' | '3' | 's' | 'w' | 'd' | 'a';
 
@@ -172,10 +174,10 @@ export const getWeaponDamage = (weapon: WeaponType, subclass?: WeaponSubclass, s
       case WeaponSubclass.FROST:
         return 17;
       case WeaponSubclass.ASSASSIN:
-        // Assassin gets +1 damage per stealth kill (permanent bonus)
+        // Assassin gets +2 damage per stealth kill (permanent bonus)
         const baseDamageAssassin = 19;
         const stealthBonus = stealthKillCount ? stealthKillCount : 0;
-        return baseDamageAssassin + stealthBonus;
+        return baseDamageAssassin + stealthBonus*2;
       default:
         return baseDamage;
     }
@@ -362,7 +364,7 @@ export const getModifiedCooldown = (weapon: WeaponType, ability: keyof WeaponAbi
       case WeaponSubclass.FROST:
         return 0.675; // Frost subclass cooldown
       case WeaponSubclass.ASSASSIN:
-        return 0.5875; // Assassin subclass cooldown
+        return 0.6; // Assassin subclass cooldown
       default:
         return currentAbility.cooldown;
     }
@@ -466,10 +468,10 @@ const getAbilityDescription = (weapon: WeaponType, subclass: WeaponSubclass, abi
           switch (abilityType) {
             case 'q': return 'Rapid close range twin sabre strikes.';
             case 'e': return 'Enter stealth mode, becoming invisible and gaining bonus damage on your next attack. The critical strike chance of this ability increases significantly if behind an enemy. If a killing blow is dealt with this ability, heal for 5-7 HP.';
-            case 'r': return 'Create a freezing blizzard that slows and damages enemies around you while shielding you from damage for 4 seconds.';
+            case 'r': return 'Create a freezing blizzard that damages enemies around you while shielding you from damage.';
             case 'passive': return 'Passively consumes Orbs to create frost explosions when hitting enemies with sabres.';
             case 'active': return '2 Charges: slices enemies in front of you, stunning them for 2 seconds and dealing damage to them.';
-            case 'innate': return 'Delivering a killing blow with Blinding Mist permanently increases its damage. Lethality stacks can accumulate without limit and also increases each Sabre\'s base swing damage by 1.';
+            case 'innate': return 'Delivering a killing blow with Blinding Mist grants a stack that permanently increases the damage of your primary weapon attacks and Blinding Mist, as well as the strength of Blizzard\'s Shield.';
           }
           break;
         case WeaponSubclass.FROST:
