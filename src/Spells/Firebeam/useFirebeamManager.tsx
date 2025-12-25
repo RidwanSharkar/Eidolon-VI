@@ -272,8 +272,9 @@ export const useFirebeamManager = ({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-
       stopFirebeam();
+      // Clear accumulated damage time data to prevent memory leaks
+      lastDamageTime.current = {};
     };
   }, [stopFirebeam]);
 

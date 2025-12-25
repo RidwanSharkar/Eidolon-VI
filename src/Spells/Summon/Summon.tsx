@@ -4,15 +4,21 @@ import { useFrame } from '@react-three/fiber';
 import { SummonProps } from '@/Spells/Summon/SummonProps';
 import { Enemy } from '@/Versus/enemy';
 import TotemModel from '@/Spells/Summon/TotemModel';
+import {
+  SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM,
+  SHARED_SPHERE_GEOMETRY_SPELL_SMALL,
+  SHARED_TORUS_GEOMETRY_SPELL_MEDIUM,
+  SHARED_SPHERE_GEOMETRY_SPELL_PARTICLE
+} from '../../SharedGeometries';
 
-// Shared geometries for summon explosion - avoid per-render allocations
+// Use shared geometries for summon explosion - prevents memory leaks
 const summonGeometries = {
-  explosionSphere: new SphereGeometry(0.35, 32, 32),
-  innerSphere: new SphereGeometry(0.25, 24, 24),
-  torus0: new TorusGeometry(0.45, 0.045, 16, 32),
-  torus1: new TorusGeometry(0.65, 0.045, 16, 32),
-  torus2: new TorusGeometry(0.85, 0.045, 16, 32),
-  spark: new SphereGeometry(0.05, 8, 8)
+  explosionSphere: SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.35, 32, 32)
+  innerSphere: SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.25, 24, 24)
+  torus0: SHARED_TORUS_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.45, 0.045, 16, 32)
+  torus1: SHARED_TORUS_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.65, 0.045, 16, 32)
+  torus2: SHARED_TORUS_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.85, 0.045, 16, 32)
+  spark: SHARED_SPHERE_GEOMETRY_SPELL_PARTICLE // Approximation of (0.05, 8, 8)
 };
 
 let summonResourceUsers = 0;

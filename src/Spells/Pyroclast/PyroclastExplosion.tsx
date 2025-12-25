@@ -1,16 +1,24 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Vector3, AdditiveBlending, SphereGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
 
-// Shared geometries for pyroclast explosion - avoid per-render allocations
+// Import shared geometries to prevent memory leaks
+import {
+  SHARED_SPHERE_GEOMETRY_SPELL_LARGE,
+  SHARED_SPHERE_GEOMETRY_LOW,
+  SHARED_TORUS_GEOMETRY_SPELL_MEDIUM
+} from '../../SharedGeometries';
+
+// Use shared geometries for pyroclast explosion - prevents memory leaks
+// Note: Some geometries are approximated with shared ones for efficiency
 const pyroclastGeometries = {
-  coreExplosion: new SphereGeometry(0.5, 32, 32),
-  innerEnergy: new SphereGeometry(0.525, 24, 24),
-  torus0: new TorusGeometry(0.45, 0.06, 16, 32),
-  torus1: new TorusGeometry(0.675, 0.06, 16, 32),
-  torus2: new TorusGeometry(0.8, 0.06, 16, 32),
-  torus3: new TorusGeometry(0.925, 0.06, 16, 32),
-  torus4: new TorusGeometry(1.125, 0.06, 16, 32),
-  spark: new SphereGeometry(0.08, 8, 8)
+  coreExplosion: SHARED_SPHERE_GEOMETRY_SPELL_LARGE, // Approximation of (0.5, 32, 32)
+  innerEnergy: SHARED_SPHERE_GEOMETRY_SPELL_LARGE, // Approximation of (0.525, 24, 24)
+  torus0: SHARED_TORUS_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.45, 0.06, 16, 32)
+  torus1: SHARED_TORUS_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.675, 0.06, 16, 32)
+  torus2: SHARED_TORUS_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.8, 0.06, 16, 32)
+  torus3: SHARED_TORUS_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.925, 0.06, 16, 32)
+  torus4: SHARED_TORUS_GEOMETRY_SPELL_MEDIUM, // Approximation of (1.125, 0.06, 16, 32)
+  spark: SHARED_SPHERE_GEOMETRY_LOW // Approximation of (0.08, 8, 8)
 };
 
 let pyroclastExplosionResourceUsers = 0;

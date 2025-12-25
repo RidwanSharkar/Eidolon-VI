@@ -48,9 +48,14 @@ export default function Breach({
   const nextFireParticleId = useRef(1);
   const enemyHealthTracker = useRef<Record<string, number>>({});
 
-  // Log if reigniteRef is available when the component mounts - removed temp
+  // Cleanup on unmount to prevent memory leaks
   useEffect(() => {
-  }, [reigniteRef]);
+    return () => {
+      hitEnemies.current.clear();
+      enemyHealthTracker.current = {};
+      setFireTrail([]);
+    };
+  }, []);
 
   useFrame(() => {
     if (!isActive || !parentRef.current) return;

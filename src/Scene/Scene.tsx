@@ -1205,7 +1205,13 @@ export default function Scene({
         enemies: enemies.length,
         effects: statusEffectCount,
         summons: summonedUnits.length,
-        runes: criticalRunes.length + critDamageRunes.length
+        runes: criticalRunes.length + critDamageRunes.length,
+        aggroSystem: globalAggroSystem.getTableSize(),
+        previousEnemyStates: previousEnemyStates.current.size,
+        slowedEnemies: Object.keys(slowedEnemies).length,
+        stunnedEnemies: Object.keys(stunnedEnemies).length,
+        frozenEnemies: frozenEnemyIds.length,
+        knockbackEffects: Object.keys(knockbackEffects).length
       });
     }
   }, [MEMORY_CRITICAL_THRESHOLD,  MEMORY_WARNING_THRESHOLD,enemies.length, slowedEnemies, stunnedEnemies, knockbackEffects, frozenEnemyIds, summonedUnits.length, criticalRunes.length, critDamageRunes.length, groupPool, currentLevel, killCount, deathKnightCount, isInRoom, multiplayerEnemies, localEnemies]);
@@ -1217,7 +1223,9 @@ export default function Scene({
       console.log('📊 Live object counts', latest?.objectCounts ?? {
         enemies: enemies.length,
         activeEffects: undefined,
-        damageNumbers: undefined
+        damageNumbers: undefined,
+        projectiles: undefined,
+        fireballs: undefined
       });
       if (gl?.info) {
         console.log('🎛️ WebGL memory', {

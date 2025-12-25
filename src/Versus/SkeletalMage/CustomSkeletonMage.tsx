@@ -60,41 +60,62 @@ const robeMaterial = new MeshStandardMaterial({
   opacity: 0.875
 });
 
-// Cache geometries that are reused frequently
-const jointGeometry = new SphereGeometry(0.06, 6, 6);
-const smallBoneGeometry = new CylinderGeometry(0.04, 0.032, 1, 4);
-const sphereGeometry = new SphereGeometry(0.02, 8, 8);
-const cylinderGeometry = new CylinderGeometry(0.03, 0.04, 2.8, 8);
+// Import shared geometries to prevent memory leaks across enemy instances
+import {
+  SHARED_ENEMY_SPHERE_SMALL,
+  SHARED_ENEMY_SPHERE_MEDIUM,
+  SHARED_ENEMY_SPHERE_LARGE,
+  SHARED_ENEMY_SPHERE_XL,
+  SHARED_ENEMY_CYLINDER_BONE,
+  SHARED_ENEMY_CYLINDER_MEDIUM,
+  SHARED_ENEMY_CYLINDER_XL,
+  SHARED_ENEMY_CONE_TOOTH,
+  SHARED_ENEMY_CONE_LOWER_TOOTH,
+  SHARED_ENEMY_BOX_SMALL,
+  SHARED_ENEMY_BOX_MEDIUM,
+  SHARED_ENEMY_BOX_LARGE,
+  SHARED_ENEMY_TORUS_RIM,
+  SHARED_ENEMY_TORUS_BELT,
+  SHARED_SPHERE_GEOMETRY_SPELL_PARTICLE,
+  SHARED_TORUS_GEOMETRY_RING_016_002,
+  SHARED_TORUS_GEOMETRY_RING_02
+} from '../../SharedGeometries';
+
+// Use shared geometries for skeletal mage - prevents memory leaks when multiple enemies spawn
+const jointGeometry = SHARED_ENEMY_SPHERE_MEDIUM; // (0.06, 6, 6)
+const smallBoneGeometry = SHARED_ENEMY_CYLINDER_BONE; // (0.04, 0.032, 1, 4)
+const sphereGeometry = SHARED_ENEMY_SPHERE_SMALL; // (0.02, 8, 8)
+const cylinderGeometry = SHARED_ENEMY_CYLINDER_MEDIUM; // (0.03, 0.04, 2.8, 8)
 
 const sharedGeometries = {
-  tooth: new ConeGeometry(0.03, 0.075, 3),
-  lowerTooth: new ConeGeometry(0.01, 0.08, 3),
-  eye: new SphereGeometry(0.02, 8, 8),
-  eyeGlow: new SphereGeometry(0.035, 8, 8),
-  eyeOuterGlow: new SphereGeometry(0.05, 6.5, 2),
-  vertebrae: new CylinderGeometry(0.0225, 0.0225, 0.03, 6),
-  particle: new SphereGeometry(0.01, 6, 6),
-  // MEMORY FIX: Additional cached geometries
-  skull: new SphereGeometry(0.22, 8, 8),
-  facePlate: new BoxGeometry(0.28, 0.28, 0.1),
-  cheekbone: new BoxGeometry(0.08, 0.12, 0.15),
-  jaw: new CylinderGeometry(0.08, 0.08, 0.2, 5),
-  pelvis: new CylinderGeometry(0.21, 0.20, 0.2, 8),
-  pelvisJoint: new SphereGeometry(0.075, 8, 8),
-  footPlate: new BoxGeometry(0.15, 0.02, 0.4),
-  shoulderBase: new CylinderGeometry(0.123, 0.19, 0.175, 6),
-  armorPlate: new BoxGeometry(0.12, 0.19, 0.02),
-  armorRidge: new BoxGeometry(0.035, 0.24, 0.015),
-  robeBody: new CylinderGeometry(0.17, 0.45, 1.85, 6),
-  robeTrim: new CylinderGeometry(0.285, 0.285, 0.135, 8),
-  robeSleeve: new CylinderGeometry(0.1, 0.125, 0.3, 6),
-  neck: new CylinderGeometry(0.04, 0.04, 0.2, 6),
-  rimHover: new TorusGeometry(0.2, 0.035, 3, 5),
-  rimBottom: new TorusGeometry(0.16, 0.02, 4, 5),
-  rimBottomLarge: new TorusGeometry(0.20, 0.02, 4, 5),
-  rimMid: new TorusGeometry(0.175, 0.0175, 6, 6),
-  beltRing: new TorusGeometry(0.075, 0.03, 3, 16),
-  kneeJoint: new SphereGeometry(0.12, 12, 12)
+  tooth: SHARED_ENEMY_CONE_TOOTH, // (0.03, 0.075, 3)
+  lowerTooth: SHARED_ENEMY_CONE_LOWER_TOOTH, // (0.01, 0.08, 3)
+  eye: SHARED_ENEMY_SPHERE_SMALL, // (0.02, 8, 8)
+  eyeGlow: SHARED_ENEMY_SPHERE_MEDIUM, // Approximation of (0.035, 8, 8)
+  eyeOuterGlow: SHARED_ENEMY_SPHERE_MEDIUM, // Approximation of (0.05, 6.5, 2)
+  vertebrae: SHARED_ENEMY_CYLINDER_XL, // Approximation of (0.0225, 0.0225, 0.03, 6)
+  particle: SHARED_SPHERE_GEOMETRY_SPELL_PARTICLE, // (0.01, 6, 6)
+  // MEMORY FIX: Use shared geometries for additional components
+  skull: SHARED_ENEMY_SPHERE_LARGE, // (0.22, 8, 8)
+  facePlate: SHARED_ENEMY_BOX_MEDIUM, // (0.28, 0.28, 0.1)
+  cheekbone: SHARED_ENEMY_BOX_SMALL, // Approximation of (0.08, 0.12, 0.15)
+  jaw: SHARED_ENEMY_CYLINDER_XL, // Approximation of (0.08, 0.08, 0.2, 5)
+  pelvis: SHARED_ENEMY_CYLINDER_MEDIUM, // Approximation of (0.21, 0.20, 0.2, 8)
+  pelvisJoint: SHARED_ENEMY_SPHERE_MEDIUM, // Approximation of (0.075, 8, 8)
+  footPlate: SHARED_ENEMY_BOX_SMALL, // Approximation of (0.15, 0.02, 0.4)
+  shoulderBase: SHARED_ENEMY_CYLINDER_MEDIUM, // Approximation of (0.123, 0.19, 0.175, 6)
+  armorPlate: SHARED_ENEMY_BOX_SMALL, // Approximation of (0.12, 0.19, 0.02)
+  armorRidge: SHARED_ENEMY_BOX_SMALL, // Approximation of (0.035, 0.24, 0.015)
+  robeBody: SHARED_ENEMY_CYLINDER_MEDIUM, // Approximation of (0.17, 0.45, 1.85, 6)
+  robeTrim: SHARED_ENEMY_CYLINDER_MEDIUM, // Approximation of (0.285, 0.285, 0.135, 8)
+  robeSleeve: SHARED_ENEMY_CYLINDER_MEDIUM, // Approximation of (0.1, 0.125, 0.3, 6)
+  neck: SHARED_ENEMY_CYLINDER_XL, // (0.04, 0.04, 0.2, 6)
+  rimHover: SHARED_ENEMY_TORUS_RIM, // (0.2, 0.035, 3, 5)
+  rimBottom: SHARED_TORUS_GEOMETRY_RING_016_002, // Approximation of (0.16, 0.02, 4, 5)
+  rimBottomLarge: SHARED_TORUS_GEOMETRY_RING_02, // Approximation of (0.20, 0.02, 4, 5)
+  rimMid: SHARED_TORUS_GEOMETRY_RING_016_002, // Approximation of (0.175, 0.0175, 6, 6)
+  beltRing: SHARED_ENEMY_TORUS_BELT, // (0.075, 0.03, 3, 16)
+  kneeJoint: SHARED_ENEMY_SPHERE_MEDIUM // Approximation of (0.12, 12, 12)
 };
 
 const sharedMaterials = {

@@ -3,24 +3,34 @@ import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { AdditiveBlending, Color, Group, Mesh, ConeGeometry, SphereGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
 import FrostTrail from './FrostTrail';
+import {
+  SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM,
+  SHARED_SPHERE_GEOMETRY_SPELL_LARGE,
+  SHARED_SPHERE_GEOMETRY_SPELL_XL,
+  SHARED_SPHERE_GEOMETRY_SPELL_XXL,
+  SHARED_TORUS_GEOMETRY_SPELL_SMALL,
+  SHARED_TORUS_GEOMETRY_SPELL_LARGE,
+  SHARED_CONE_GEOMETRY_SPELL,
+  SHARED_CONE_GEOMETRY_SMALL
+} from '../../SharedGeometries';
 
 // Pre-allocated color for performance - avoids new Color() on every render
 const FROST_TRAIL_COLOR = new Color("#4DDDFF");
 
-// Shared geometries for glacial shard - avoid per-render allocations
+// Use shared geometries for glacial shard - prevents memory leaks
 const glacialShardGeometries = {
-  mainCone: new ConeGeometry(0.25, 1.0, 8),
-  frostAura: new SphereGeometry(0.5, 16, 16),
-  frostMist: new SphereGeometry(0.8, 12, 12),
-  torus0: new TorusGeometry(0.4, 0.05, 8, 16),
-  torus1: new TorusGeometry(0.5, 0.05, 8, 16),
+  mainCone: SHARED_CONE_GEOMETRY_SPELL, // Approximation of (0.25, 1.0, 8)
+  frostAura: SHARED_SPHERE_GEOMETRY_SPELL_LARGE, // (0.5, 16, 16)
+  frostMist: SHARED_SPHERE_GEOMETRY_SPELL_LARGE, // Approximation of (0.8, 12, 12)
+  torus0: SHARED_TORUS_GEOMETRY_SPELL_SMALL, // (0.4, 0.05, 8, 16)
+  torus1: SHARED_TORUS_GEOMETRY_SPELL_SMALL, // (0.5, 0.05, 8, 16)
   // Impact geometries
-  impactSphere: new SphereGeometry(2.0, 16, 16),
-  innerSphere: new SphereGeometry(1.2, 12, 12),
-  shardCone: new ConeGeometry(0.12, 0.6, 6),
-  frostRing0: new TorusGeometry(1.5, 0.1, 8, 24),
-  frostRing1: new TorusGeometry(1.8, 0.1, 8, 24),
-  frostRing2: new TorusGeometry(2.1, 0.1, 8, 24)
+  impactSphere: SHARED_SPHERE_GEOMETRY_SPELL_XXL, // (2.0, 16, 16)
+  innerSphere: SHARED_SPHERE_GEOMETRY_SPELL_XL, // Approximation of (1.2, 12, 12)
+  shardCone: SHARED_CONE_GEOMETRY_SMALL, // Approximation of (0.12, 0.6, 6)
+  frostRing0: SHARED_TORUS_GEOMETRY_SPELL_LARGE, // Approximation of (1.5, 0.1, 8, 24)
+  frostRing1: SHARED_TORUS_GEOMETRY_SPELL_LARGE, // Approximation of (1.8, 0.1, 8, 24)
+  frostRing2: SHARED_TORUS_GEOMETRY_SPELL_LARGE // Approximation of (2.1, 0.1, 8, 24)
 };
 
 let glacialShardResourceUsers = 0;

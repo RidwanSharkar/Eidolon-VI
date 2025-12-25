@@ -16,12 +16,20 @@ import { ReigniteRef } from '../Reignite/Reignite';
 // Pre-allocated colors for performance - avoids new Color() on every render
 const WHIRLWIND_RED = new Color(0xFF0000);
 
-// Shared geometries for whirlwind - avoid per-render allocations
+// Import shared geometries to prevent memory leaks
+import {
+  SHARED_TORUS_GEOMETRY_SPELL_WIND_0,
+  SHARED_TORUS_GEOMETRY_SPELL_WIND_1,
+  SHARED_TORUS_GEOMETRY_SPELL_WIND_2,
+  SHARED_PLANE_GEOMETRY_TRAIL
+} from '../../SharedGeometries';
+
+// Use shared geometries for whirlwind - prevents memory leaks
 const whirlwindGeometries = {
-  torus0: new TorusGeometry(0.5 * 1.75, 0.1, 16, 32),
-  torus1: new TorusGeometry(1.0 * 1.75, 0.1, 16, 32),
-  torus2: new TorusGeometry(1.5 * 1.75, 0.1, 16, 32),
-  trailPlane: new PlaneGeometry(5.1, 0.25)
+  torus0: SHARED_TORUS_GEOMETRY_SPELL_WIND_0,
+  torus1: SHARED_TORUS_GEOMETRY_SPELL_WIND_1,
+  torus2: SHARED_TORUS_GEOMETRY_SPELL_WIND_2,
+  trailPlane: SHARED_PLANE_GEOMETRY_TRAIL
 };
 
 let whirlwindResourceUsers = 0;
@@ -365,6 +373,8 @@ export default function Whirlwind({
       fireEffectRef.current = false;
       currentHitEnemies.clear();
       rotationSpeed.current = 0;
+      // Clear accumulated hit time data to prevent memory leaks
+      lastHitTime.current = {};
     };
   }, []);
 

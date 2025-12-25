@@ -48,17 +48,26 @@ const STEALTH_ENEMY_FORWARD = new Vector3();
 const STEALTH_TO_PLAYER = new Vector3();
 const STEALTH_EULER = new Euler();
 
-// Shared geometries to prevent memory leaks - created once, reused everywhere
-const SHARED_ARROW_CYLINDER = new CylinderGeometry(0.02, 0.075, 1.75, 6);
-const SHARED_ARROW_RING_0 = new TorusGeometry(0.125, 0.05, 6, 12);
-const SHARED_ARROW_RING_1 = new TorusGeometry(0.165, 0.05, 6, 12);
-const SHARED_ARROW_RING_2 = new TorusGeometry(0.205, 0.05, 6, 12);
-const SHARED_SPEAR_CYLINDER = new CylinderGeometry(0.08, 0.18, 1.5, 4);
-const SHARED_PROJECTILE_SPHERE = new SphereGeometry(0.08, 3, 3);
-const SHARED_PROJECTILE_PARTICLE = new SphereGeometry(0.05, 3, 3);
-const SHARED_PROJECTILE_TORUS = new TorusGeometry(0.25, 0.06, 3, 6);
-const SHARED_PROJECTILE_CONE = new ConeGeometry(0.08, 0.4, 6);
-const SHARED_PROJECTILE_PLANE = new PlaneGeometry(1, 0.1);
+// Import additional shared geometries to prevent memory leaks across all units
+import {
+  SHARED_TORUS_GEOMETRY_RING_02,
+  SHARED_CYLINDER_GEOMETRY_SPEAR,
+  SHARED_SPHERE_GEOMETRY_SPELL_PARTICLE,
+  SHARED_TORUS_GEOMETRY_SPELL_SMALL,
+  SHARED_CONE_GEOMETRY_SMALL
+} from '../SharedGeometries';
+
+// Use shared geometries for projectiles - prevents memory leaks
+const SHARED_ARROW_CYLINDER = SHARED_CYLINDER_GEOMETRY_ARROW; // (0.02, 0.075, 1.75, 6)
+const SHARED_ARROW_RING_0 = SHARED_TORUS_GEOMETRY_RING_013; // Approximation of (0.125, 0.05, 6, 12)
+const SHARED_ARROW_RING_1 = SHARED_TORUS_GEOMETRY_RING_016; // Approximation of (0.165, 0.05, 6, 12)
+const SHARED_ARROW_RING_2 = SHARED_TORUS_GEOMETRY_RING_02; // Approximation of (0.205, 0.05, 6, 12)
+const SHARED_SPEAR_CYLINDER = SHARED_CYLINDER_GEOMETRY_SPEAR; // (0.08, 0.18, 1.5, 4)
+const SHARED_PROJECTILE_SPHERE = SHARED_SPHERE_GEOMETRY_LOW; // (0.08, 3, 3)
+const SHARED_PROJECTILE_PARTICLE = SHARED_SPHERE_GEOMETRY_SPELL_PARTICLE; // (0.05, 3, 3)
+const SHARED_PROJECTILE_TORUS = SHARED_TORUS_GEOMETRY_SPELL_SMALL; // Approximation of (0.25, 0.06, 3, 6)
+const SHARED_PROJECTILE_CONE = SHARED_CONE_GEOMETRY_SMALL; // (0.08, 0.4, 6)
+const SHARED_PROJECTILE_PLANE = SHARED_PLANE_GEOMETRY_1x01; // (1, 0.1)
 
 import Scythe from '@/Weapons/Scythe';
 import Sword from '@/Weapons/Sword';
@@ -423,14 +432,6 @@ export default function Unit({
     targetId?: string; // For effects that need to track specific enemies
   }>>([]);
 
-  // Update performance monitoring for damage numbers and effects
-  useEffect(() => {
-    if (performanceMonitor) {
-      performanceMonitor.updateObjectCount('damageNumbers', damageNumbers.length);
-      performanceMonitor.updateObjectCount('activeEffects', activeEffects.length);
-    }
-  }, [damageNumbers.length, activeEffects.length]);
-  
   // Track summoned units for aggro system
   const [summonedUnitsData, setSummonedUnitsData] = useState<AllSummonedUnitInfo[]>([]);
 
@@ -884,8 +885,18 @@ export default function Unit({
     };
   }, []);
 
-  // PROJECTILES 
+  // PROJECTILES
   const [activeProjectiles, setActiveProjectiles] = useState<PooledProjectile[]>([]);
+
+  // Update performance monitoring for damage numbers, effects, projectiles and fireballs
+  useEffect(() => {
+    if (performanceMonitor) {
+      performanceMonitor.updateObjectCount('damageNumbers', damageNumbers.length);
+      performanceMonitor.updateObjectCount('activeEffects', activeEffects.length);
+      performanceMonitor.updateObjectCount('projectiles', activeProjectiles.length);
+      performanceMonitor.updateObjectCount('fireballs', fireballs.length);
+    }
+  }, [damageNumbers.length, activeEffects.length, activeProjectiles.length, fireballs.length]);
 
   const pendingLightningTargets = useRef<Set<string>>(new Set()); 
   const [collectedBones, ] = useState<number>(15); // LATER
@@ -2276,12 +2287,14 @@ export default function Unit({
 
     // Update projectiles with optimized frame-by-frame movement and AGGRESSIVE cleanup
     const now = Date.now();
+    const expiredProjectiles: PooledProjectile[] = [];
     activeProjectilesRef.current = activeProjectilesRef.current.filter(projectile => {
       const distanceTraveled = projectile.position.distanceTo(projectile.startPosition);
       const timeAlive = now - projectile.startTime;
 
       // ULTRA AGGRESSIVE: Force removal after 3 seconds regardless of state
       if (timeAlive > 3000) {
+        expiredProjectiles.push(projectile);
         return false;
       }
 
@@ -2297,6 +2310,7 @@ export default function Unit({
         projectile.opacity = Math.max(0, 1 - fadeProgress);
 
         if (fadeProgress >= 1) {
+          expiredProjectiles.push(projectile);
           return false; // Remove projectile after fade completes
         }
       }
@@ -2341,6 +2355,7 @@ export default function Unit({
             // Only set hasCollided if it's not a fully charged shot or perfect shot
             if (projectile.power < 1 && !projectile.isPerfectShot) {
               projectile.hasCollided = true;
+              expiredProjectiles.push(projectile);
               return false;
             }
             // Fully charged shots and perfect shots continue through enemies
@@ -2354,15 +2369,21 @@ export default function Unit({
       return projectile.fadeStartTime !== null;
     });
 
+    // Release expired projectiles back to the pool to prevent memory leaks
+    expiredProjectiles.forEach(projectile => {
+      projectilePool.release(projectile);
+    });
+
     // Sync React state with ref only when projectiles are added/removed
     if (activeProjectilesRef.current.length !== activeProjectiles.length) {
       setActiveProjectiles([...activeProjectilesRef.current]);
     }
 
-    // FIREBALLS 
+    // FIREBALLS
+    const expiredFireballs: PooledFireball[] = [];
     activeFireballsRef.current = activeFireballsRef.current.filter(fireball => {
       const distanceTraveled = fireball.position.distanceTo(fireball.startPosition);
-      
+
       if (distanceTraveled < fireball.maxDistance) {
         const speed = 0.4;
         fireball.position.add(
@@ -2397,15 +2418,22 @@ export default function Unit({
             
             handleFireballHit(fireball.id, enemy.id);
             handleFireballImpact(fireball.id, fireball.position.clone());
+            expiredFireballs.push(fireball);
             return false;
           }
         }
     
         return true;
       }
-      
+
       handleFireballImpact(fireball.id);
+      expiredFireballs.push(fireball);
       return false;
+    });
+
+    // Release expired fireballs back to the pool to prevent memory leaks
+    expiredFireballs.forEach(fireball => {
+      fireballPool.release(fireball);
     });
 
     // Sync React state with ref for rendering
@@ -2435,7 +2463,15 @@ export default function Unit({
         return elapsed < effect.duration;
       }
 
-      return true;
+      // Failsafe: Remove effects that have been active for more than 10 seconds
+      // This prevents memory leaks from effects that don't have proper duration/startTime
+      if (effect.startTime) {
+        const elapsed = (Date.now() - effect.startTime) / 1000;
+        return elapsed < 10; // Max 10 second lifetime for any effect
+      }
+
+      // If effect has no startTime at all, remove it immediately (legacy effect)
+      return false;
     }));
 
     // Check whirlwind duration
@@ -3991,6 +4027,16 @@ export default function Unit({
     return () => {
       setIsWhirlwinding(false);
       whirlwindStartTime.current = null;
+
+      // Clear any active timers to prevent memory leaks
+      if (firestormTimerRef.current) {
+        clearTimeout(firestormTimerRef.current);
+        firestormTimerRef.current = null;
+      }
+      if (divineStormTimerRef.current) {
+        clearTimeout(divineStormTimerRef.current);
+        divineStormTimerRef.current = null;
+      }
     };
   }, []);
 

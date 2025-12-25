@@ -21,6 +21,7 @@ interface GameMetrics {
   enemies?: number;
   projectiles?: number;
   statusEffects?: number;
+  fireballs?: number;
 }
 
 declare global {
@@ -37,6 +38,7 @@ interface PerformanceMetrics {
     enemies: number;
     projectiles: number;
     statusEffects: number;
+    fireballs: number;
   };
   frameRate: number;
   timestamp: number;
@@ -133,17 +135,19 @@ class PerformanceMonitor {
         enemies: 0,
         projectiles: 0,
         statusEffects: 0,
+        fireballs: 0,
       };
     }
 
     // These will be updated by the game components
     const metrics = window.__gameMetrics;
     return {
-      damageNumbers: metrics?.damageNumbers || 0,
-      activeEffects: metrics?.activeEffects || 0,
-      enemies: metrics?.enemies || 0,
-      projectiles: metrics?.projectiles || 0,
-      statusEffects: metrics?.statusEffects || 0,
+      damageNumbers: metrics?.damageNumbers ?? 0,
+      activeEffects: metrics?.activeEffects ?? 0,
+      enemies: metrics?.enemies ?? 0,
+      projectiles: metrics?.projectiles ?? 0,
+      statusEffects: metrics?.statusEffects ?? 0,
+      fireballs: metrics?.fireballs ?? 0,
     };
   }
 

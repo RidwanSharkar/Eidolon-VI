@@ -13,6 +13,13 @@ import {
   Vector3
 } from 'three';
 import LegionMeteorTrail from './LegionMeteorTrail';
+import {
+  SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM,
+  SHARED_SPHERE_GEOMETRY_SPELL_XL,
+  SHARED_SPHERE_GEOMETRY_SPELL_SMALL,
+  SHARED_RING_GEOMETRY_WARNING,
+  SHARED_TORUS_GEOMETRY_SPELL_LARGE
+} from '../../SharedGeometries';
 import { calculateDamage } from '@/Weapons/damage';
 
 interface LegionProps {
@@ -69,20 +76,20 @@ export default function Legion({
   const meteorGroupRef = useRef<Group>(null);
   const meteorMeshRef = useRef<Mesh>(null);
 
-  // Create geometries and materials with proper disposal
+  // Use shared geometries - prevents memory leaks when multiple Legion spells are cast
   const geometries = useMemo(() => ({
-    meteorGeometry: new SphereGeometry(0.75, 16, 16),
-    warningRingGeometry: new RingGeometry(DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
-    pulsingRingGeometry: new RingGeometry(DAMAGE_RADIUS - 0.8, DAMAGE_RADIUS - 0.6, WARNING_RING_SEGMENTS),
-    outerGlowGeometry: new RingGeometry(DAMAGE_RADIUS - 0.25, DAMAGE_RADIUS, WARNING_RING_SEGMENTS),
-    particleGeometry: new SphereGeometry(0.1, 8, 8),
-    impactSphereGeometry: new SphereGeometry(1, 32, 32),
-    // Add torus geometries for impact effect to avoid inline allocations
-    impactTorus1: new TorusGeometry(1.0, 0.225, 4, 32),
-    impactTorus2: new TorusGeometry(1.15, 0.225, 4, 32),
-    impactTorus3: new TorusGeometry(1.3, 0.225, 4, 32),
-    impactTorus4: new TorusGeometry(1.45, 0.225, 4, 32),
-    impactTorus5: new TorusGeometry(1.6, 0.225, 4, 32)
+    meteorGeometry: SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.75, 16, 16)
+    warningRingGeometry: SHARED_RING_GEOMETRY_WARNING, // Will be scaled dynamically
+    pulsingRingGeometry: SHARED_RING_GEOMETRY_WARNING, // Will be scaled dynamically
+    outerGlowGeometry: SHARED_RING_GEOMETRY_WARNING, // Will be scaled dynamically
+    particleGeometry: SHARED_SPHERE_GEOMETRY_SPELL_SMALL, // Approximation of (0.1, 8, 8)
+    impactSphereGeometry: SHARED_SPHERE_GEOMETRY_SPELL_XL, // Approximation of (1, 32, 32)
+    // Use shared torus geometries for impact effect
+    impactTorus1: SHARED_TORUS_GEOMETRY_SPELL_LARGE, // Approximation of (1.0, 0.225, 4, 32)
+    impactTorus2: SHARED_TORUS_GEOMETRY_SPELL_LARGE, // Approximation of (1.15, 0.225, 4, 32)
+    impactTorus3: SHARED_TORUS_GEOMETRY_SPELL_LARGE, // Approximation of (1.3, 0.225, 4, 32)
+    impactTorus4: SHARED_TORUS_GEOMETRY_SPELL_LARGE, // Approximation of (1.45, 0.225, 4, 32)
+    impactTorus5: SHARED_TORUS_GEOMETRY_SPELL_LARGE // Approximation of (1.6, 0.225, 4, 32)
   }), []);
 
   const materials = useMemo(() => ({

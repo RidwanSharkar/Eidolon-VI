@@ -61,6 +61,18 @@ export function useUnitControls({
   const isGameOver = useRef(false);
   const movementDirection = useRef(new Vector3());
 
+  // Reusable Vector3 objects to prevent memory leaks
+  const tempCameraDirection = useRef(new Vector3());
+  const tempCameraRight = useRef(new Vector3());
+  const tempMoveDirection = useRef(new Vector3());
+  const tempMovement = useRef(new Vector3());
+  const tempPotentialPosition = useRef(new Vector3());
+  const tempCurrentPos = useRef(new Vector3());
+  const tempToCenter = useRef(new Vector3());
+  const tempTangent = useRef(new Vector3());
+  const tempTangentMovement = useRef(new Vector3());
+  const tempNewPosition = useRef(new Vector3());
+
   // Inside the function, calculate the actual multiplier based on parameters
   // Only Elemental Bow subclass gets enhanced movement speed while charging (at level 1)
   // Venom Bow subclass should never get this bonus
@@ -110,35 +122,34 @@ export function useUnitControls({
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
-    
+
     // Update camera rotation speed based on charging state
     if (controlsRef.current) {
-      const targetRotateSpeed = isCharging 
-        ? BASE_CAMERA_ROTATE_SPEED * CHARGING_CAMERA_ROTATE_MULTIPLIER 
+      const targetRotateSpeed = isCharging
+        ? BASE_CAMERA_ROTATE_SPEED * CHARGING_CAMERA_ROTATE_MULTIPLIER
         : BASE_CAMERA_ROTATE_SPEED;
       controlsRef.current.rotateSpeed = targetRotateSpeed;
     }
-    
+
     if (isGameOver.current) {
       return;
     }
-    
+
     if (isStunned) {
       return;
     }
-    
-    const cameraDirection = new Vector3();
+
+    // Reuse Vector3 objects to prevent memory leaks
+    const cameraDirection = tempCameraDirection.current;
     camera.getWorldDirection(cameraDirection);
     cameraDirection.y = 0;
     cameraDirection.normalize();
 
-    const cameraRight = new Vector3(
-      -cameraDirection.z,
-      0,
-      cameraDirection.x
-    );
+    const cameraRight = tempCameraRight.current;
+    cameraRight.set(-cameraDirection.z, 0, cameraDirection.x);
 
-    const moveDirection = new Vector3(0, 0, 0);
+    const moveDirection = tempMoveDirection.current;
+    moveDirection.set(0, 0, 0);
 
     if (keys.current.w) moveDirection.add(cameraDirection);
     if (keys.current.s) moveDirection.sub(cameraDirection);
@@ -175,10 +186,13 @@ export function useUnitControls({
         frameSpeed *= STEALTH_SPEED_MULTIPLIER;
       }
 
-      // Calculate new position
-      const movement = moveDirection.multiplyScalar(frameSpeed);
-      const potentialPosition = groupRef.current.position.clone().add(movement);
-      
+      // Calculate new position - reuse Vector3 objects
+      const movement = tempMovement.current;
+      movement.copy(moveDirection).multiplyScalar(frameSpeed);
+
+      const potentialPosition = tempPotentialPosition.current;
+      potentialPosition.copy(groupRef.current.position).add(movement);
+
       // Check if we would exceed the boundary
       const distanceFromCenter = potentialPosition.length();
       if (distanceFromCenter < PLAY_AREA_RADIUS) {
@@ -187,15 +201,22 @@ export function useUnitControls({
       } else {
         // If we hit the boundary, calculate the tangent movement
         // Project the movement vector onto the circular boundary
-        const currentPos = groupRef.current.position.clone();
-        const toCenter = currentPos.clone().normalize();
-        const tangent = new Vector3(-toCenter.z, 0, toCenter.x);
-        
+        const currentPos = tempCurrentPos.current;
+        currentPos.copy(groupRef.current.position);
+
+        const toCenter = tempToCenter.current;
+        toCenter.copy(currentPos).normalize();
+
+        const tangent = tempTangent.current;
+        tangent.set(-toCenter.z, 0, toCenter.x);
+
         // Project our movement onto the tangent
-        const tangentMovement = tangent.multiplyScalar(movement.dot(tangent));
-        
+        const tangentMovement = tempTangentMovement.current;
+        tangentMovement.copy(tangent).multiplyScalar(movement.dot(tangent));
+
         // Apply the tangential movement while keeping distance to center constant
-        const newPosition = currentPos.add(tangentMovement);
+        const newPosition = tempNewPosition.current;
+        newPosition.copy(currentPos).add(tangentMovement);
         newPosition.normalize().multiplyScalar(PLAY_AREA_RADIUS);
         groupRef.current.position.copy(newPosition);
       }

@@ -3,24 +3,32 @@ import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { AdditiveBlending, Color, Group, Mesh, SphereGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
 import LavaLashTrail from './LavaLashTrail';
+import {
+  SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM,
+  SHARED_SPHERE_GEOMETRY_SPELL_XL,
+  SHARED_SPHERE_GEOMETRY_SPELL_XXL,
+  SHARED_SPHERE_GEOMETRY_LOW,
+  SHARED_TORUS_GEOMETRY_RING_016,
+  SHARED_TORUS_GEOMETRY_SPELL_LARGE
+} from '../../SharedGeometries';
 
 // Pre-allocated color for performance - avoids new Color() on every render
 const LAVA_TRAIL_COLOR = new Color("#FF4500");
 
-// Shared geometries for lava lash projectile - avoid per-render allocations
+// Use shared geometries for lava lash projectile - prevents memory leaks
 const lavaLashGeometries = {
-  core: new SphereGeometry(0.25, 16, 16),
-  innerCore: new SphereGeometry(0.2, 12, 12),
-  outerAura: new SphereGeometry(0.35, 12, 12),
-  ring0: new TorusGeometry(0.375, 0.04, 6, 12),
-  ring1: new TorusGeometry(0.475, 0.04, 6, 12),
+  core: SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.25, 16, 16)
+  innerCore: SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.2, 12, 12)
+  outerAura: SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM, // Approximation of (0.35, 12, 12)
+  ring0: SHARED_TORUS_GEOMETRY_RING_016, // Approximation of (0.375, 0.04, 6, 12)
+  ring1: SHARED_TORUS_GEOMETRY_RING_016, // Approximation of (0.475, 0.04, 6, 12)
   // Impact geometries
-  impactCore: new SphereGeometry(1.8, 16, 16),
-  impactInner: new SphereGeometry(1.0, 12, 12),
-  impactSpark: new SphereGeometry(0.08, 8, 8),
-  impactRing0: new TorusGeometry(1.2, 0.08, 6, 16),
-  impactRing1: new TorusGeometry(1.5, 0.08, 6, 16),
-  impactRing2: new TorusGeometry(1.8, 0.08, 6, 16)
+  impactCore: SHARED_SPHERE_GEOMETRY_SPELL_XXL, // Approximation of (1.8, 16, 16)
+  impactInner: SHARED_SPHERE_GEOMETRY_SPELL_XL, // Approximation of (1.0, 12, 12)
+  impactSpark: SHARED_SPHERE_GEOMETRY_LOW, // Approximation of (0.08, 8, 8)
+  impactRing0: SHARED_TORUS_GEOMETRY_SPELL_LARGE, // Approximation of (1.2, 0.08, 6, 16)
+  impactRing1: SHARED_TORUS_GEOMETRY_SPELL_LARGE, // Approximation of (1.5, 0.08, 6, 16)
+  impactRing2: SHARED_TORUS_GEOMETRY_SPELL_LARGE // Approximation of (1.8, 0.08, 6, 16)
 };
 
 let lavaLashResourceUsers = 0;
