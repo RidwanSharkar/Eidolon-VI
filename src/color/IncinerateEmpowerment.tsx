@@ -10,13 +10,43 @@ import {
   ShaderMaterial,
   AdditiveBlending,
   MeshBasicMaterial,
-  DoubleSide
+  DoubleSide,
+  RingGeometry,
+  SphereGeometry
 } from 'three';
 
 interface IncinerateEmpowermentProps {
   position: Vector3;
   isEmpowered: boolean; // When true, show the empowerment effect
 }
+
+// SHARED GEOMETRIES - Created once, reused for all instances to prevent memory leaks
+const INCINERATE_SHARED_GEOMETRIES = {
+  innerRing: new RingGeometry(1.2, 1.4, 32),
+  outerRing: new RingGeometry(1.6, 1.8, 32),
+  centralGlow: new SphereGeometry(0.3, 16, 16)
+};
+
+// SHARED MATERIALS - Created once, reused for all instances to prevent memory leaks
+const INCINERATE_SHARED_MATERIALS = {
+  innerRing: new MeshBasicMaterial({
+    color: "#ff4500",
+    transparent: true,
+    opacity: 0.6,
+    side: DoubleSide
+  }),
+  outerRing: new MeshBasicMaterial({
+    color: "#ff6600",
+    transparent: true,
+    opacity: 0.4,
+    side: DoubleSide
+  }),
+  centralGlow: new MeshBasicMaterial({
+    color: "#ffaa00",
+    transparent: true,
+    opacity: 0.3
+  })
+};
 
 export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentProps) {
   const groupRef = useRef<Group>(null);
@@ -124,56 +154,49 @@ export function IncinerateEmpowerment({  isEmpowered }: IncinerateEmpowermentPro
       material.uniforms.time.value = time;
     }
 
-    // Animate rings
+    // Animate rings - update opacity on shared materials
     if (innerRingRef.current) {
       innerRingRef.current.rotation.y = time * 2;
-      (innerRingRef.current.material as MeshBasicMaterial).opacity = 0.6 + Math.sin(time * 4) * 0.2;
+      INCINERATE_SHARED_MATERIALS.innerRing.opacity = 0.6 + Math.sin(time * 4) * 0.2;
     }
 
     if (outerRingRef.current) {
       outerRingRef.current.rotation.y = -time * 1.5;
-      (outerRingRef.current.material as MeshBasicMaterial).opacity = 0.4 + Math.sin(time * 3) * 0.2;
+      INCINERATE_SHARED_MATERIALS.outerRing.opacity = 0.4 + Math.sin(time * 3) * 0.2;
     }
   });
 
   if (!isEmpowered) return null;
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} scale={[0.6, 0.6, 0.6]}>
       {/* Particle system */}
       <points ref={particlesRef} geometry={particleSystem.geometry} material={particleSystem.material} />
       
-      {/* Inner ring */}
-      <mesh ref={innerRingRef} position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.2, 1.4, 32]} />
-        <meshBasicMaterial
-          color="#ff4500"
-          transparent
-          opacity={0.6}
-          side={DoubleSide}
-        />
-      </mesh>
+      {/* Inner ring - using shared geometry and material */}
+      <mesh 
+        ref={innerRingRef} 
+        position={[0, 0.1, 0]} 
+        rotation={[-Math.PI / 2, 0, 0]}
+        geometry={INCINERATE_SHARED_GEOMETRIES.innerRing}
+        material={INCINERATE_SHARED_MATERIALS.innerRing}
+      />
       
-      {/* Outer ring */}
-      <mesh ref={outerRingRef} position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.6, 1.8, 32]} />
-        <meshBasicMaterial
-          color="#ff6600"
-          transparent
-          opacity={0.4}
-          side={DoubleSide}
-        />
-      </mesh>
+      {/* Outer ring - using shared geometry and material */}
+      <mesh 
+        ref={outerRingRef} 
+        position={[0, 0.05, 0]} 
+        rotation={[-Math.PI / 2, 0, 0]}
+        geometry={INCINERATE_SHARED_GEOMETRIES.outerRing}
+        material={INCINERATE_SHARED_MATERIALS.outerRing}
+      />
       
-      {/* Central glow */}
-      <mesh position={[0, 0.2, 0]}>
-        <sphereGeometry args={[0.3, 16, 16]} />
-        <meshBasicMaterial
-          color="#ffaa00"
-          transparent
-          opacity={0.3}
-        />
-      </mesh>
+      {/* Central glow - using shared geometry and material */}
+      <mesh 
+        position={[0, 0.2, 0]}
+        geometry={INCINERATE_SHARED_GEOMETRIES.centralGlow}
+        material={INCINERATE_SHARED_MATERIALS.centralGlow}
+      />
     </group>
   );
 }

@@ -1,9 +1,16 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState, useMemo, useEffect } from 'react';
 import { Group, Vector3 } from 'three';
-import { AdditiveBlending, Mesh, MeshStandardMaterial } from 'three';
+import { AdditiveBlending, Mesh, MeshStandardMaterial, SphereGeometry } from 'three';
 import { useReigniteManager } from './useReigniteManager';
 import { ChargeStatus } from '@/color/ChargedOrbitals';
 import { useFrame } from '@react-three/fiber';
+
+// SHARED GEOMETRIES - Created once, reused forever to prevent memory leaks
+const REIGNITE_SHARED_GEOMETRIES = {
+  // Use scale to change size instead of recreating geometry
+  explosion: new SphereGeometry(1, 24, 24), // Base size 1, will be scaled
+  flameParticle: new SphereGeometry(0.4, 8, 8)
+};
 
 interface ReigniteProps {
   parentRef: React.RefObject<Group>;
@@ -145,22 +152,40 @@ const Reignite = forwardRef<ReigniteRef, ReigniteProps>(({
   // Don't render anything if not active
   if (!isActive) return null;
 
+  // Memoized material for explosion - created once per component instance
+  const explosionMaterial = useMemo(() => new MeshStandardMaterial({
+    color: "#ff3300",
+    emissive: "#ff0000",
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 0.9,
+    depthWrite: false,
+    blending: AdditiveBlending
+  }), []);
+
+  // Cleanup material on unmount
+  useEffect(() => {
+    return () => {
+      explosionMaterial.dispose();
+    };
+  }, [explosionMaterial]);
+
+  // Update material opacity based on scale
+  useFrame(() => {
+    if (showExplosion) {
+      explosionMaterial.opacity = Math.max(0, 1 - (explosionScaleRef.current / 3));
+    }
+  });
+
   return (
     <group ref={groupRef}>
-      {/* Simple explosion effect */}
+      {/* Simple explosion effect - using shared geometry with SCALE instead of new geometry */}
       {showExplosion && (
-        <mesh>
-          <sphereGeometry args={[explosionScaleRef.current, 24, 24]} />
-          <meshStandardMaterial
-            color="#ff3300"
-            emissive="#ff0000"
-            emissiveIntensity={2}
-            transparent
-            opacity={1 - (explosionScaleRef.current / 3)} // Fade out as it expands
-            depthWrite={false}
-            blending={AdditiveBlending}
-          />
-        </mesh>
+        <mesh 
+          geometry={REIGNITE_SHARED_GEOMETRIES.explosion}
+          material={explosionMaterial}
+          scale={[explosionScaleRef.current, explosionScaleRef.current, explosionScaleRef.current]}
+        />
       )}
 
       {/* Optional glow light */}
@@ -188,10 +213,31 @@ const Reignite = forwardRef<ReigniteRef, ReigniteProps>(({
 // Add display name to fix linter error
 Reignite.displayName = 'Reignite';
 
+// SHARED MATERIAL for flame particles - Created once, properties updated per-instance
+const FLAME_PARTICLE_SHARED_MATERIAL = new MeshStandardMaterial({
+  color: "#ff6600",
+  emissive: "#ff4400",
+  emissiveIntensity: 2.5,
+  transparent: true,
+  opacity: 0.9,
+  depthWrite: false,
+  blending: AdditiveBlending
+});
+
 // Flame particle component for upward fire effects
 function FlameParticle({ position, life }: { position: Vector3; life: number }) {
   const particleRef = useRef<Mesh>(null);
   const maxLife = useRef(life);
+  
+  // Create a cloned material for this particle so we can modify opacity individually
+  const material = useMemo(() => FLAME_PARTICLE_SHARED_MATERIAL.clone(), []);
+  
+  // Cleanup cloned material on unmount
+  useEffect(() => {
+    return () => {
+      material.dispose();
+    };
+  }, [material]);
   
   useFrame(() => {
     if (!particleRef.current) return;
@@ -203,32 +249,23 @@ function FlameParticle({ position, life }: { position: Vector3; life: number }) 
     particleRef.current.scale.set(scale, scale, scale);
     
     // Fade out
-    const material = particleRef.current.material as MeshStandardMaterial;
-    if (material) {
-      material.opacity = Math.max(0, 1 - lifeProgress);
-      
-      // Color transition from bright orange to red
-      const r = 1.0;
-      const g = Math.max(0.2, 0.8 - lifeProgress * 0.6);
-      const b = 0.0;
-      material.color.setRGB(r, g, b);
-      material.emissive.setRGB(r * 0.8, g * 0.6, b);
-    }
+    material.opacity = Math.max(0, 1 - lifeProgress);
+    
+    // Color transition from bright orange to red
+    const r = 1.0;
+    const g = Math.max(0.2, 0.8 - lifeProgress * 0.6);
+    const b = 0.0;
+    material.color.setRGB(r, g, b);
+    material.emissive.setRGB(r * 0.8, g * 0.6, b);
   });
   
   return (
-    <mesh ref={particleRef} position={[position.x, position.y, position.z]}>
-      <sphereGeometry args={[0.4, 8, 8]} />
-      <meshStandardMaterial 
-        color="#ff6600"
-        emissive="#ff4400"
-        emissiveIntensity={2.5}
-        transparent={true}
-        opacity={0.9}
-        depthWrite={false}
-        blending={AdditiveBlending}
-      />
-    </mesh>
+    <mesh 
+      ref={particleRef} 
+      position={[position.x, position.y, position.z]}
+      geometry={REIGNITE_SHARED_GEOMETRIES.flameParticle}
+      material={material}
+    />
   );
 }
 

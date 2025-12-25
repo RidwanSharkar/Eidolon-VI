@@ -1,11 +1,17 @@
 // src/weapons/Sabres.tsx
   import { useRef, useState, useEffect, useMemo } from 'react';
-  import { Group, Shape, Vector3, ExtrudeGeometry, Color, Mesh, AdditiveBlending } from 'three';
+  import { Group, Shape, Vector3, ExtrudeGeometry, Color, Mesh, AdditiveBlending, IcosahedronGeometry, MeshStandardMaterial } from 'three';
   import { useFrame } from '@react-three/fiber';
   import FireballTrail from '../Spells/Fireball/FireballTrail';
 
   // Pre-allocated color for performance - avoids new THREE.Color() on every render
   const SABRE_TRAIL_COLOR = new Color("#0088ff");
+
+  // =============================================================================
+  // SHARED FROST EXPLOSION RESOURCES - Created ONCE to prevent memory leaks
+  // =============================================================================
+  
+  const FROST_EXPLOSION_SHARED_GEOMETRY = new IcosahedronGeometry(1, 0);
 
   const lerp = (start: number, end: number, t: number) => {
     return start * (1 - t) + end * t;
@@ -568,8 +574,12 @@
     return (
       <group>
         {particles.map((particle, i) => (
-          <mesh key={i} position={particle.position.toArray()} scale={[particle.scale, particle.scale, particle.scale]}>
-            <icosahedronGeometry args={[1, 0]} />
+          <mesh 
+            key={i} 
+            position={particle.position.toArray()} 
+            scale={[particle.scale, particle.scale, particle.scale]}
+            geometry={FROST_EXPLOSION_SHARED_GEOMETRY}
+          >
             <meshStandardMaterial
               color="#A5F3FC"
               emissive="#A5F3FC"

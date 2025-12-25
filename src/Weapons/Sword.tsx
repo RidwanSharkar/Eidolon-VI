@@ -1,5 +1,10 @@
 // src/weapons/Sword.tsx
 
+import { useRef } from 'react';
+import { Group, Shape, Vector3, Color, AdditiveBlending, ExtrudeGeometry, CylinderGeometry, TorusGeometry, ConeGeometry, SphereGeometry, MeshStandardMaterial } from 'three';
+import { useFrame } from '@react-three/fiber';
+import { WeaponSubclass } from './weapons';
+
 // Pre-allocated colors for performance - avoids new THREE.Color() on every render
 const SWORD_COLORS = {
   // Chain lightning colors
@@ -13,6 +18,193 @@ const SWORD_COLORS = {
   divineGold: new Color(0xFFD700),
   divineCornsilk: new Color(0xFFF8DC),
 } as const;
+
+// =============================================================================
+// SHARED SHAPES - Created ONCE at module load to prevent memory leaks
+// =============================================================================
+
+const createBladeShapeOnce = (): Shape => {
+  const shape = new Shape();
+  
+  // Start at center
+  shape.moveTo(0, 0);
+  
+  // Left side guard (fixed symmetry)
+  shape.lineTo(-0.25, 0.25);  
+  shape.lineTo(-0.15, -0.15); 
+  shape.lineTo(0, 0);
+  
+  // Right side guard (matches left exactly)
+  shape.lineTo(0.25, 0.25);
+  shape.lineTo(0.15, -0.15);
+  shape.lineTo(0, 0);
+  
+  // Blade shape with symmetry
+  shape.lineTo(0, 0.08);
+  shape.lineTo(0.2, 0.2);
+  shape.quadraticCurveTo(0.8, 0.15, 1.5, 0.18);
+  shape.quadraticCurveTo(2.0, 0.1, 2.2, 0);
+  
+  shape.quadraticCurveTo(2.0, -0.1, 1.5, -0.18);
+  shape.quadraticCurveTo(0.8, -0.15, 0.2, -0.2);
+  shape.lineTo(0, -0.08);
+  shape.lineTo(0, 0);
+  
+  return shape;
+};
+
+const createInnerBladeShapeOnce = (): Shape => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  
+  shape.lineTo(0, 0.06);   
+  shape.lineTo(0.15, 0.15); 
+  shape.quadraticCurveTo(1.2, 0.12, 1.5, 0.15); 
+  shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);    
+  shape.quadraticCurveTo(2.0, -0.08, 1.5, -0.15); 
+  shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.15);
+  shape.lineTo(0, -0.05);  
+  shape.lineTo(0, 0);
+  
+  return shape;
+};
+
+// Create shapes once
+const BLADE_SHAPE = createBladeShapeOnce();
+const INNER_BLADE_SHAPE = createInnerBladeShapeOnce();
+
+// Extrude settings (static, never change)
+const BLADE_EXTRUDE_SETTINGS = {
+  steps: 2,
+  depth: 0.05,
+  bevelEnabled: true,
+  bevelThickness: 0.014,
+  bevelSize: 0.02,
+  bevelOffset: 0.04,
+  bevelSegments: 2
+};
+
+const INNER_BLADE_EXTRUDE_SETTINGS = {
+  ...BLADE_EXTRUDE_SETTINGS,
+  depth: 0.06,
+  bevelThickness: 0.02,
+  bevelSize: 0.02,
+  bevelOffset: 0,
+  bevelSegments: 6
+};
+
+const ELECTRICAL_AURA_EXTRUDE_SETTINGS = {
+  ...BLADE_EXTRUDE_SETTINGS,
+  depth: 0.07
+};
+
+// =============================================================================
+// SHARED GEOMETRIES - Created ONCE at module load to prevent memory leaks
+// =============================================================================
+
+const SWORD_SHARED_GEOMETRIES = {
+  // Handle
+  handle: new CylinderGeometry(0.03, 0.04, 0.9, 12),
+  handleWrapping: new TorusGeometry(0.045, 0.016, 8, 16),
+  
+  // Guard
+  guardTorus: new TorusGeometry(0.26, 0.07, 16, 32),
+  guardSpike: new ConeGeometry(0.070, 0.55, 3),
+  
+  // Orb spheres
+  orbCore: new SphereGeometry(0.155, 16, 16),
+  orbGlow1: new SphereGeometry(0.1, 16, 16),
+  orbGlow2: new SphereGeometry(0.145, 16, 16),
+  orbGlow3: new SphereGeometry(0.175, 16, 16),
+  
+  // Blades
+  blade: new ExtrudeGeometry(BLADE_SHAPE, BLADE_EXTRUDE_SETTINGS),
+  innerBlade: new ExtrudeGeometry(INNER_BLADE_SHAPE, INNER_BLADE_EXTRUDE_SETTINGS),
+  electricalAura: new ExtrudeGeometry(BLADE_SHAPE, ELECTRICAL_AURA_EXTRUDE_SETTINGS),
+  
+  // Effects
+  sparkParticle: new SphereGeometry(1.25, 6, 6),
+  divineOrb: new SphereGeometry(1.05, 16, 16),
+  divineAura: new SphereGeometry(0.95, 12, 12)
+};
+
+// =============================================================================
+// SHARED MATERIALS - Created ONCE at module load to prevent memory leaks
+// =============================================================================
+
+const SWORD_SHARED_MATERIALS = {
+  handle: new MeshStandardMaterial({ color: "#2a3b4c", roughness: 0.7 }),
+  handleWrapping: new MeshStandardMaterial({ color: "#1a2b3c", metalness: 0.6, roughness: 0.4 }),
+  guard: new MeshStandardMaterial({ color: "#4a5b6c", metalness: 0.9, roughness: 0.1 }),
+  orbCore: new MeshStandardMaterial({
+    color: SWORD_COLORS.swordYellow,
+    emissive: SWORD_COLORS.swordOrange,
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 1
+  }),
+  orbGlow1: new MeshStandardMaterial({
+    color: SWORD_COLORS.swordYellow,
+    emissive: SWORD_COLORS.swordYellow,
+    emissiveIntensity: 40,
+    transparent: true,
+    opacity: 0.8
+  }),
+  orbGlow2: new MeshStandardMaterial({
+    color: SWORD_COLORS.swordYellow,
+    emissive: SWORD_COLORS.swordOrange,
+    emissiveIntensity: 35,
+    transparent: true,
+    opacity: 0.6
+  }),
+  orbGlow3: new MeshStandardMaterial({
+    color: SWORD_COLORS.swordYellow,
+    emissive: SWORD_COLORS.swordOrange,
+    emissiveIntensity: 30,
+    transparent: true,
+    opacity: 0.4
+  }),
+  blade: new MeshStandardMaterial({
+    color: SWORD_COLORS.swordOrange,
+    emissive: SWORD_COLORS.swordOrange,
+    emissiveIntensity: 2.5,
+    metalness: 0.3,
+    roughness: 0.1
+  }),
+  innerBlade: new MeshStandardMaterial({
+    color: SWORD_COLORS.swordBrightOrange,
+    emissive: SWORD_COLORS.swordOrange,
+    emissiveIntensity: 5,
+    metalness: 0.2,
+    roughness: 0.1,
+    opacity: 0.8,
+    transparent: true
+  }),
+  electricalAura: new MeshStandardMaterial({
+    color: SWORD_COLORS.chainLightningGold,
+    emissive: SWORD_COLORS.chainLightningOrange,
+    emissiveIntensity: 1.5,
+    transparent: true,
+    opacity: 0.3,
+    blending: AdditiveBlending
+  }),
+  divineOrb: new MeshStandardMaterial({
+    color: SWORD_COLORS.divineGold,
+    emissive: SWORD_COLORS.divineGold,
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 0.3,
+    blending: AdditiveBlending
+  }),
+  divineAura: new MeshStandardMaterial({
+    color: SWORD_COLORS.divineCornsilk,
+    emissive: SWORD_COLORS.divineGold,
+    emissiveIntensity: 1,
+    transparent: true,
+    opacity: 0.15,
+    blending: AdditiveBlending
+  })
+};
 
 interface SwordProps {
   isSwinging: boolean;
@@ -112,12 +304,6 @@ interface SwordProps {
   playerPosition?: Vector3;
 }
 
-import { useRef } from 'react';
-import { Group, Shape, Vector3 } from 'three';
-import { useFrame } from '@react-three/fiber';
-import { Color, AdditiveBlending } from 'three';
-import { WeaponSubclass } from './weapons';
-
 export default function Sword({ 
   isSwinging, 
   isSmiting, 
@@ -145,7 +331,7 @@ export default function Sword({
   const colossusStrikeProgress = useRef(0);
   const divineStormRotation = useRef(0);
   const lastDivineStormHitTime = useRef<Record<string, number>>({});
-  const basePosition = [-1.18, 0.225, 0.3] as const; // POSITIONING
+  const basePosition = [-1.18, 0.225, 0.3] as const;
   
   // Chain Lightning Sparks
   const sparkParticles = useRef<Array<{
@@ -161,8 +347,6 @@ export default function Sword({
     lastTickTime: number;
     duration: number;
   }>>({});
-
-
 
   useFrame((_, delta) => {
     if (!swordRef.current) return;
@@ -194,7 +378,7 @@ export default function Sword({
               position: enemy.position.clone(),
               isCritical: false,
               isHolyBurn: true,
-              createdAt: Date.now() // MEMORY FIX: Required for cleanup
+              createdAt: Date.now()
             }]);
           }
           
@@ -232,74 +416,58 @@ export default function Sword({
     }
 
     if (isDivineStorming) {
-      const TARGET_ROTATIONS = 1; // 1 full rotation
-      const MAX_ROTATION = TARGET_ROTATIONS * Math.PI * 4; // 2π radians
+      const TARGET_ROTATIONS = 1;
+      const MAX_ROTATION = TARGET_ROTATIONS * Math.PI * 4;
       
-      // Use constant fast rotation speed
       const CONSTANT_ROTATION_SPEED = 20;
       
-      // Update rotation based on constant speed
       divineStormRotation.current += delta * CONSTANT_ROTATION_SPEED;
       
-      // Check if we've completed the target rotations
       if (divineStormRotation.current >= MAX_ROTATION) {
-        // Reset everything immediately
         divineStormRotation.current = 0;
         lastDivineStormHitTime.current = {};
         
-        // Reset position and rotation to base values
         swordRef.current.position.set(...basePosition);
         swordRef.current.rotation.set(0, 0, 0);
         
-        // Call completion callback
         onDivineStormComplete?.();
         return;
       }
       
-      // Orbit parameters
-      const orbitRadius = 1.5; // Radius of orbit circle
+      const orbitRadius = 1.5;
       const angle = divineStormRotation.current;
       
-      // Positional calculations
       const orbitalX = Math.cos(angle) * orbitRadius;
       const orbitalZ = Math.sin(angle) * orbitRadius;
       
-      // Constant height above ground plane
       const fixedHeight = 0.65; 
       
-      // Set rotation to make sword lay flat and point outward from center (like spear whirlwind)
       swordRef.current.rotation.set(
-        Math.PI/2.25,      // X rotation: lay flat on ground (60 degrees)
-        -angle + Math.PI,              // Y rotation: point outward
-        1               // Z rotation: no roll
+        Math.PI/2.25,
+        -angle + Math.PI,
+        1
       );
       
-      // Rotate around Y axis to make it follow the circle (like spear)
       swordRef.current.rotateY(-angle + Math.PI);
       
-      // Apply position after rotation is set
       swordRef.current.position.set(orbitalX, fixedHeight, orbitalZ);
       
-      // Damage detection - check distance from player center, not sword position
-      const now = Date.now();
+      // Damage detection
+      const damageNow = Date.now();
       enemyData.forEach(enemy => {
         if (!enemy.health || enemy.health <= 0) return;
         
         const lastHitTime = lastDivineStormHitTime.current[enemy.id] || 0;
-        if (now - lastHitTime < 200) return; // 200ms cooldown between hits on same enemy
+        if (damageNow - lastHitTime < 200) return;
         
-        // Calculate distance from actual player position
-        // Use the passed playerPosition or fallback to origin
         const actualPlayerPosition = playerPosition || new Vector3(0, 0, 0);
         const distance = actualPlayerPosition.distanceTo(enemy.position);
         
-        if (distance <= 5.0) { // Hit range from player center - 5 distance radius as specified
-          lastDivineStormHitTime.current[enemy.id] = now;
+        if (distance <= 5.0) {
+          lastDivineStormHitTime.current[enemy.id] = damageNow;
           
-          // Deal 120 holy damage
           onHit?.(enemy.id, 79);
           
-          // Add damage number
           if (setDamageNumbers && nextDamageNumberId) {
             setDamageNumbers(prev => [...prev, {
               id: nextDamageNumberId.current++,
@@ -307,26 +475,24 @@ export default function Sword({
               position: enemy.position.clone(),
               isCritical: false,
               isDivineStorm: true,
-              createdAt: Date.now() // MEMORY FIX: Required for cleanup
+              createdAt: Date.now()
             }]);
           }
           
-          // Apply DoT effect (29 damage per second for 3 seconds)
           divineStormDoTEnemies.current[enemy.id] = {
-            startTime: now,
-            lastTickTime: now,
-            duration: 3000 // 3 seconds
+            startTime: damageNow,
+            lastTickTime: damageNow,
+            duration: 3000
           };
           
-          // Add holy burn visual effect
           if (setActiveEffects) {
             setActiveEffects(prev => [...prev, {
               id: Date.now() + Math.random(),
               type: 'holyBurn',
               position: enemy.position.clone(),
               direction: new Vector3(0, 1, 0),
-              duration: 3.0, // 3 seconds
-              startTime: now,
+              duration: 3.0,
+              startTime: damageNow,
               targetId: enemy.id
             }]);
           }
@@ -343,22 +509,18 @@ export default function Sword({
       let rotationX, rotationY, positionX, positionY, positionZ;
       
       if (smitePhase < 0.5) {
-        // Wind-up phase: pull back and up, with more movement towards center
         const windupPhase = smitePhase * 0.45;
         rotationX = -Math.PI/3 - (windupPhase * Math.PI/3);
         rotationY = windupPhase * Math.PI/4;
         
-        // Move towards center during windup
         positionX = basePosition[0] + (windupPhase * 1.5);
         positionY = basePosition[1] + windupPhase * 1.5;
         positionZ = basePosition[2] - windupPhase * 1.5;
       } else {
-        // Strike phase: swing down towards center point
         const strikePhase = (smitePhase - 0.5) * 2;
         rotationX = -2*Math.PI/3 + (strikePhase * 3*Math.PI/2);
         rotationY = (Math.PI/4) * (1 - strikePhase);
       
-        // Strike  towards center
         positionX = basePosition[0] + (1.5 * (1 - strikePhase));
         positionY = basePosition[1] + (1.5 - strikePhase * 2.0);
         positionZ = basePosition[2] - (1.5 - strikePhase * 3.0);
@@ -388,22 +550,18 @@ export default function Sword({
       let rotationX, rotationY, positionX, positionY, positionZ;
       
       if (colossusPhase < 0.5) {
-        // Wind-up phase: pull back and up, with more movement towards center
         const windupPhase = colossusPhase * 0.45;
         rotationX = -Math.PI/3 - (windupPhase * Math.PI/3);
         rotationY = windupPhase * Math.PI/4;
         
-        // Move towards center during windup
         positionX = basePosition[0] + (windupPhase * 1.5);
         positionY = basePosition[1] + windupPhase * 1.5;
         positionZ = basePosition[2] - windupPhase * 1.5;
       } else {
-        // Strike phase: swing down towards center point
         const strikePhase = (colossusPhase - 0.5) * 2;
         rotationX = -2*Math.PI/3 + (strikePhase * 3*Math.PI/2);
         rotationY = (Math.PI/4) * (1 - strikePhase);
       
-        // Strike  towards center
         positionX = basePosition[0] + (1.5 * (1 - strikePhase));
         positionY = basePosition[1] + (1.5 - strikePhase * 2.0);
         positionZ = basePosition[2] - (1.5 - strikePhase * 3.0);
@@ -430,11 +588,8 @@ export default function Sword({
       swingProgress.current += delta * 7.5;
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
       
-      // Different swing animations based on combo step - only for VENGEANCE subclass
-      // DIVINITY always uses the first combo animation (regular swing)
       const effectiveComboStep = currentSubclass === WeaponSubclass.VENGEANCE ? comboStep : 1;
       
-      // Different completion timing for 3rd swing (takes longer to show full downstrike)
       const completionThreshold = effectiveComboStep === 3 ? Math.PI * 0.9 : Math.PI * 0.55;
       
       if (swingProgress.current >= completionThreshold) {
@@ -445,7 +600,6 @@ export default function Sword({
         return;
       }
       if (effectiveComboStep === 1) {
-        // 1st Hit: Original swing (top-right to bottom-left)
         const forwardPhase = swingPhase <= 0.25
           ? swingPhase * 2
           : (0.725 - (swingPhase - 0.115) * 1.1);
@@ -462,74 +616,61 @@ export default function Sword({
         
         swordRef.current.rotation.set(rotationX, rotationY, rotationZ);
       } else if (effectiveComboStep === 2) {
-        // 2nd Hit: Mirrored swing (top-left to bottom-right)
         const forwardPhase = swingPhase <= 0.275
           ? swingPhase * 2
           : (0.625 - (swingPhase - 0.075) * 1.20);
         
-        // Shift origin point further to the left for better left-side swing appearance
-        const leftOffset = 2.5; // Additional left offset
-        const pivotX = basePosition[0] + leftOffset - Math.sin(forwardPhase * Math.PI) * 2.5; // Mirrored X with left shift
+        const leftOffset = 2.5;
+        const pivotX = basePosition[0] + leftOffset - Math.sin(forwardPhase * Math.PI) * 2.5;
         const pivotY = basePosition[1] + Math.sin(forwardPhase * Math.PI) * -0.2;
         const pivotZ = basePosition[2] + Math.cos(forwardPhase * Math.PI) * 1.1;
         
         swordRef.current.position.set(pivotX, pivotY, pivotZ);
         
         const rotationX = Math.sin(forwardPhase * Math.PI) * (-0.75) +1.5;
-        const rotationY = -Math.sin(forwardPhase * Math.PI) * Math.PI; // Mirrored Y rotation
-        const rotationZ = -Math.sin(forwardPhase * Math.PI) * (Math.PI/1.75); // Mirrored Z rotation
+        const rotationY = -Math.sin(forwardPhase * Math.PI) * Math.PI;
+        const rotationZ = -Math.sin(forwardPhase * Math.PI) * (Math.PI/1.75);
         
         swordRef.current.rotation.set(rotationX, rotationY, rotationZ);
       } else if (effectiveComboStep === 3) {
-        // 3rd Hit: Smite-like animation (top to center down)
         let rotationX, rotationY, positionX, positionY, positionZ;
         
-        // Store initial position when swing starts to create smooth transition
-        if (swingProgress.current <= delta * 3) { // First frame of swing
-          // Store current position as starting point for smooth transition
+        if (swingProgress.current <= delta * 3) {
           const currentPos = swordRef.current.position;
           const currentRot = swordRef.current.rotation;
           
-          // Use current position as base for this swing instead of basePosition
           swordRef.current.userData = {
             startPos: [currentPos.x, currentPos.y, currentPos.z],
             startRot: [currentRot.x, currentRot.y, currentRot.z]
           };
         }
         
-        // Get stored starting position or fallback to base position
         const startPos = swordRef.current.userData?.startPos || basePosition;
         const startRot = swordRef.current.userData?.startRot || [0, 0, 0];
         
         if (swingPhase < 0.2) {
-          // Quick wind-up phase: smoothly transition from current position to windup position
-          const windupPhase = swingPhase * 5; // Multiply by 5 since we're using 0-0.2 range
+          const windupPhase = swingPhase * 5;
           
-          // Target windup position
           const targetWindupX = basePosition[0] + 1.5;
           const targetWindupY = basePosition[1] + 1.5;
           const targetWindupZ = basePosition[2] - 1.5;
           
-          // Smoothly interpolate from start position to windup position
           positionX = startPos[0] + (targetWindupX - startPos[0]) * windupPhase;
           positionY = startPos[1] + (targetWindupY - startPos[1]) * windupPhase;
           positionZ = startPos[2] + (targetWindupZ - startPos[2]) * windupPhase;
           
-          // Rotation interpolation
           const targetRotX = -Math.PI/3 - Math.PI/3;
           const targetRotY = Math.PI/4;
           rotationX = startRot[0] + (targetRotX - startRot[0]) * windupPhase;
           rotationY = startRot[1] + (targetRotY - startRot[1]) * windupPhase;
         } else {
-          // Strike phase: powerful downward swing to ground
-          const strikePhase = (swingPhase - 0.2) * 2; // Normalize from 0.2-1.0 range
+          const strikePhase = (swingPhase - 0.2) * 2;
           rotationX = -2*Math.PI/3 + (strikePhase * 3*Math.PI/2);
           rotationY = (Math.PI/4) * (1 - strikePhase);
         
-          // Deep strike towards ground - much deeper Y movement
           positionX = basePosition[0] + (1.5 * (1 - strikePhase));
-          positionY = basePosition[1] + (2 - strikePhase * 5); // Increased from 3.5 to 5.0 for full ground impact
-          positionZ = basePosition[2] - (1.5 - strikePhase * 3.5); // Keep the forward reach
+          positionY = basePosition[1] + (2 - strikePhase * 5);
+          positionZ = basePosition[2] - (1.5 - strikePhase * 3.5);
         }
         
         swordRef.current.position.set(positionX, positionY, positionZ);
@@ -554,10 +695,8 @@ export default function Sword({
 
     // Handle electrical effects when Chain Lightning is unlocked
     if (hasChainLightning && swordRef.current) {
-      // Spawn new sparks more frequently and along the blade
-      if (Math.random() < 0.8) { // Increased spawn rate even more
-        // Spawn multiple particles per frame
-        for (let i = 0; i < 3; i++) { // Spawn 3 particles at once
+      if (Math.random() < 0.8) {
+        for (let i = 0; i < 3; i++) {
           const randomLength = Math.random() * 2.2;
           const randomOffset = new Vector3(
             (Math.random() - 0.5) * 0.4,
@@ -573,12 +712,11 @@ export default function Sword({
               (Math.random() - 0.5) * 4
             ).multiplyScalar(0.8),
             life: 1.0,
-            scale: Math.random() * 0.02 + 0.005  // Much smaller scale range
+            scale: Math.random() * 0.02 + 0.005
           });
         }
       }
 
-      // Update existing sparks with dynamic movement
       sparkParticles.current.forEach(spark => {
         spark.velocity.x += Math.sin(Date.now() * 0.01) * delta * 0.5;
         spark.velocity.z += Math.cos(Date.now() * 0.01) * delta * 0.5;
@@ -587,129 +725,13 @@ export default function Sword({
         spark.velocity.y += delta * 0.5;
       });
 
-      // Limit total particles
-      if (sparkParticles.current.length > 120) { // Increased maximum particles
+      if (sparkParticles.current.length > 120) {
         sparkParticles.current = sparkParticles.current.slice(-120);
       }
 
-      // Remove dead sparks
       sparkParticles.current = sparkParticles.current.filter(spark => spark.life > 0);
     }
   });
-
-  // Create custom sword blade shape
-  const createBladeShape = () => {
-    const shape = new Shape();
-    
-    // Start at center
-    shape.moveTo(0, 0);
-    
-    // Left side guard (fixed symmetry)
-    shape.lineTo(-0.25, 0.25);  
-    shape.lineTo(-0.15, -0.15); 
-    shape.lineTo(0, 0);
-    
-    // Right side guard (matches left exactly)
-    shape.lineTo(0.25, 0.25);
-    shape.lineTo(0.15, -0.15);
-    shape.lineTo(0, 0);
-    
-    // Blade shape with symmetry
-    shape.lineTo(0, 0.08);    // Reduced from 0.12
-    shape.lineTo(0.2, 0.2);   // Reduced from 0.25
-    shape.quadraticCurveTo(0.8, 0.15, 1.5, 0.18); // Reduced y values
-    shape.quadraticCurveTo(2.0, 0.1, 2.2, 0);     // Reduced y value
-    
-    shape.quadraticCurveTo(2.0, -0.1, 1.5, -0.18); // Mirror of upper curve
-    shape.quadraticCurveTo(0.8, -0.15, 0.2, -0.2);
-    shape.lineTo(0, -0.08);   // Reduced from -0.12
-    shape.lineTo(0, 0);
-    
-    return shape;
-  };
-
-  // inner blade shape 
-  const createInnerBladeShape = () => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    
-    shape.lineTo(0, 0.06);   
-    shape.lineTo(0.15, 0.15); 
-    shape.quadraticCurveTo(1.2, 0.12, 1.5, 0.15); 
-    shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);    
-    shape.quadraticCurveTo(2.0, -0.08, 1.5, -0.15); 
-    shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.15);
-    shape.lineTo(0, -0.05);  
-    shape.lineTo(0, 0);
-    
-    return shape;
-  };
-
-  const bladeExtrudeSettings = {
-    steps: 2,
-    depth: 0.05,
-    bevelEnabled: true,
-    bevelThickness: 0.014,
-    bevelSize: 0.02,
-    bevelOffset: 0.04,
-    bevelSegments: 2
-  };
-
-  const innerBladeExtrudeSettings = {
-    ...bladeExtrudeSettings,
-    depth: 0.06,
-    bevelThickness: 0.02,
-    bevelSize: 0.02,
-    bevelOffset: 0,
-    bevelSegments: 6
-  };
-
-  // Consolidated electrical effects
-  const createElectricalEffects = () => {
-    return (
-      <group>
-        {hasChainLightning && (
-          <>
-            {/* Electrical aura around blade */}
-            <group position={[0, 1, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]} scale={[0.95, 1.10, 0.95]}>
-              <mesh>
-                <extrudeGeometry args={[createBladeShape(), { ...bladeExtrudeSettings, depth: 0.07 }]} />
-                <meshStandardMaterial
-                  color={SWORD_COLORS.chainLightningGold}
-                  emissive={SWORD_COLORS.chainLightningOrange}
-                  emissiveIntensity={1.5}
-                  transparent
-                  opacity={0.3}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
-            </group>
-
-            {/* Enhanced spark particles */}
-            {sparkParticles.current.map((spark, index) => (
-              <mesh 
-                key={index} 
-                position={spark.position.toArray()}
-                scale={[spark.scale, spark.scale, spark.scale]}
-              >
-                <sphereGeometry args={[1.25, 6, 6]} />
-                <meshStandardMaterial
-                  color={SWORD_COLORS.chainLightningGold}
-                  emissive={SWORD_COLORS.chainLightningOrange}
-                  emissiveIntensity={3 * spark.life}
-                  transparent
-                  opacity={spark.life * 0.6}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
-            ))}
-
-
-          </>
-        )}
-      </group>
-    );
-  };
 
   return (
     <group rotation={[-0.575, 0, 0.2]}>
@@ -721,31 +743,24 @@ export default function Sword({
       >
         {/* Handle */}
         <group position={[-0.025, -0.55, 0.35]} rotation={[0, 0, -Math.PI]}>
-          <mesh>
-            <cylinderGeometry args={[0.03, 0.04, 0.9, 12]} />
-            <meshStandardMaterial color="#2a3b4c" roughness={0.7} />
-          </mesh>
+          <mesh geometry={SWORD_SHARED_GEOMETRIES.handle} material={SWORD_SHARED_MATERIALS.handle} />
           
           {/* Handle wrappings */}
           {[...Array(8)].map((_, i) => (
-            <mesh key={i} position={[0, +0.35 - i * 0.11, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.045, 0.016, 8, 16]} />
-              <meshStandardMaterial color="#1a2b3c" metalness={0.6} roughness={0.4} />
-            </mesh>
+            <mesh 
+              key={i} 
+              position={[0, +0.35 - i * 0.11, 0]} 
+              rotation={[Math.PI / 2, 0, 0]}
+              geometry={SWORD_SHARED_GEOMETRIES.handleWrapping}
+              material={SWORD_SHARED_MATERIALS.handleWrapping}
+            />
           ))}
         </group>
         
         {/* CIRCLE CONNECTION POINT */}
         <group position={[-0.025, 0.225, 0.35]} rotation={[Math.PI, 1.5, Math.PI]}>
           {/* Large torus */}
-          <mesh>
-            <torusGeometry args={[0.26, 0.07, 16, 32]} />
-            <meshStandardMaterial 
-              color="#4a5b6c" 
-              metalness={0.9}
-              roughness={0.1}
-            />
-          </mesh>
+          <mesh geometry={SWORD_SHARED_GEOMETRIES.guardTorus} material={SWORD_SHARED_MATERIALS.guard} />
           
           {/* Decorative spikes around torus */}
           {[...Array(8)].map((_, i) => (
@@ -757,61 +772,16 @@ export default function Sword({
                 0
               ]}
               rotation={[0, 0, i * Math.PI / 4 - Math.PI / 2]}
-            >
-              <coneGeometry args={[0.070, 0.55, 3]} />
-              <meshStandardMaterial 
-                color="#4a5b6c"
-                metalness={0.9}
-                roughness={0.1}
-              />
-            </mesh>
+              geometry={SWORD_SHARED_GEOMETRIES.guardSpike}
+              material={SWORD_SHARED_MATERIALS.guard}
+            />
           ))}
           
-          {/* REAL Core orb -   yellow */}
-          <mesh>
-            <sphereGeometry args={[0.155, 16, 16]} />
-            <meshStandardMaterial
-              color={SWORD_COLORS.swordYellow}         // Pure yellow
-              emissive={SWORD_COLORS.swordOrange}      // Yellow emission
-              emissiveIntensity={2}                    // Orange 
-              transparent
-              opacity={1}
-            />
-          </mesh>
-          
-          {/* Multiple glow layers for depth */}
-          <mesh>
-            <sphereGeometry args={[0.1, 16, 16]} />
-            <meshStandardMaterial
-              color={SWORD_COLORS.swordYellow}
-              emissive={SWORD_COLORS.swordYellow}
-              emissiveIntensity={40}
-              transparent
-              opacity={0.8}
-            />
-          </mesh>
-          
-          <mesh>
-            <sphereGeometry args={[0.145, 16, 16]} />
-            <meshStandardMaterial
-              color={SWORD_COLORS.swordYellow}
-              emissive={SWORD_COLORS.swordOrange}
-              emissiveIntensity={35}
-              transparent
-              opacity={0.6}
-            />
-          </mesh>
-          
-          <mesh>
-            <sphereGeometry args={[.175, 16, 16]} />
-            <meshStandardMaterial
-              color={SWORD_COLORS.swordYellow}
-              emissive={SWORD_COLORS.swordOrange}
-              emissiveIntensity={30}
-              transparent
-              opacity={0.4}
-            />
-          </mesh>
+          {/* Core orb and glow layers */}
+          <mesh geometry={SWORD_SHARED_GEOMETRIES.orbCore} material={SWORD_SHARED_MATERIALS.orbCore} />
+          <mesh geometry={SWORD_SHARED_GEOMETRIES.orbGlow1} material={SWORD_SHARED_MATERIALS.orbGlow1} />
+          <mesh geometry={SWORD_SHARED_GEOMETRIES.orbGlow2} material={SWORD_SHARED_MATERIALS.orbGlow2} />
+          <mesh geometry={SWORD_SHARED_GEOMETRIES.orbGlow3} material={SWORD_SHARED_MATERIALS.orbGlow3} />
 
           {/* Enhanced point light */}
           <pointLight 
@@ -822,68 +792,52 @@ export default function Sword({
           />
         </group>
         
-        {/* Blade*/}
+        {/* Blade */}
         <group position={[0, 0.5, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
           {/* Base blade */}
-          <mesh>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
-            <meshStandardMaterial 
-              color={SWORD_COLORS.swordOrange}  
-              emissive={SWORD_COLORS.swordOrange}
-              emissiveIntensity={2.5}
-              metalness={0.3}
-              roughness={0.1}
-            />
-          </mesh>
+          <mesh geometry={SWORD_SHARED_GEOMETRIES.blade} material={SWORD_SHARED_MATERIALS.blade} />
           
           {/* BLADE Glowing core */}
-          <mesh>
-            <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
-            <meshStandardMaterial 
-              color={SWORD_COLORS.swordBrightOrange}  
-              emissive={SWORD_COLORS.swordOrange}
-              emissiveIntensity={5}
-              metalness={0.2}
-              roughness={0.1}
-              opacity={0.8}
-              transparent
-            />
-          </mesh>
-
+          <mesh geometry={SWORD_SHARED_GEOMETRIES.innerBlade} material={SWORD_SHARED_MATERIALS.innerBlade} />
         </group>
 
-        {createElectricalEffects()}
+        {/* Electrical effects */}
+        {hasChainLightning && (
+          <group>
+            {/* Electrical aura around blade */}
+            <group position={[0, 1, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]} scale={[0.95, 1.10, 0.95]}>
+              <mesh geometry={SWORD_SHARED_GEOMETRIES.electricalAura} material={SWORD_SHARED_MATERIALS.electricalAura} />
+            </group>
+
+            {/* Enhanced spark particles */}
+            {sparkParticles.current.map((spark, index) => (
+              <mesh 
+                key={index} 
+                position={spark.position.toArray()}
+                scale={[spark.scale, spark.scale, spark.scale]}
+                geometry={SWORD_SHARED_GEOMETRIES.sparkParticle}
+              >
+                <meshStandardMaterial
+                  color={SWORD_COLORS.chainLightningGold}
+                  emissive={SWORD_COLORS.chainLightningOrange}
+                  emissiveIntensity={3 * spark.life}
+                  transparent
+                  opacity={spark.life * 0.6}
+                  blending={AdditiveBlending}
+                />
+              </mesh>
+            ))}
+          </group>
+        )}
 
         {/* Divine Storm Holy Energy Effects */}
         {isDivineStorming && (
           <group>
             {/* Central holy orb */}
-            <mesh position={[0, 0, 0]}>
-              <sphereGeometry args={[1.05, 16, 16]} />
-              <meshStandardMaterial
-                color={SWORD_COLORS.divineGold}
-                emissive={SWORD_COLORS.divineGold}
-                emissiveIntensity={2}
-                transparent
-                opacity={0.3}
-                blending={AdditiveBlending}
-              />
-            </mesh>
+            <mesh geometry={SWORD_SHARED_GEOMETRIES.divineOrb} material={SWORD_SHARED_MATERIALS.divineOrb} />
 
             {/* Outer divine aura */}
-            <mesh position={[0, 0, 0]}>
-              <sphereGeometry args={[0.95, 12, 12]} />
-              <meshStandardMaterial
-                color={SWORD_COLORS.divineCornsilk}
-                emissive={SWORD_COLORS.divineGold}
-                emissiveIntensity={1}
-                transparent
-                opacity={0.15}
-                blending={AdditiveBlending}
-              />
-            </mesh>
-
-
+            <mesh geometry={SWORD_SHARED_GEOMETRIES.divineAura} material={SWORD_SHARED_MATERIALS.divineAura} />
 
             {/* Divine light */}
             <pointLight 
@@ -897,4 +851,4 @@ export default function Sword({
       </group>
     </group>
   );
-} 
+}

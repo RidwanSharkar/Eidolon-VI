@@ -1,7 +1,7 @@
 // src/weapons/Spear.tsx
 
 import { useRef, useEffect } from 'react';
-import { Group, Shape, Vector3, Color, DoubleSide } from 'three';
+import { Group, Shape, Vector3, Color, DoubleSide, ExtrudeGeometry, CylinderGeometry, TorusGeometry, SphereGeometry, ConeGeometry, MeshStandardMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { DamageNumber } from '@/Unit/useDamageNumbers';
 import { WeaponSubclass, getWeaponDamage, WeaponType } from '@/Weapons/weapons';
@@ -9,6 +9,146 @@ import { calculateDamage } from '@/Weapons/damage';
 
 // Pre-allocated colors for performance - avoids new THREE.Color() on every render
 const SPEAR_COLOR = new Color(0xFF544E);
+
+// =============================================================================
+// SHARED GEOMETRIES - Created ONCE at module load to prevent memory leaks
+// These are reused across all Spear instances and re-renders
+// =============================================================================
+
+// Create blade shape once at module level
+const createBladeShapeOnce = (): Shape => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(0.15, -0.230);
+  shape.bezierCurveTo(0.8, 0.22, 1.13, 0.5, 1.8, 1.6);
+  shape.lineTo(1.125, 0.75);
+  shape.bezierCurveTo(0.5, 0.2, 0.225, 0.0, 0.1, 0.7);
+  shape.lineTo(0, 0);
+  return shape;
+};
+
+// Create inner blade shape once at module level
+const createInnerBladeShapeOnce = (): Shape => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(0, 0.06);
+  shape.lineTo(0.15, 0.15);
+  shape.quadraticCurveTo(1.2, 0.12, 1.5, 0.15);
+  shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);
+  shape.quadraticCurveTo(2.0, -0.08, 1.5, -0.15);
+  shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.15);
+  shape.lineTo(0, -0.05);
+  shape.lineTo(0, 0);
+  return shape;
+};
+
+// Extrude settings (static, never change)
+const BLADE_EXTRUDE_SETTINGS = {
+  steps: 2,
+  depth: 0.05,
+  bevelEnabled: true,
+  bevelThickness: 0.014,
+  bevelSize: 0.02,
+  bevelOffset: 0.04,
+  bevelSegments: 2
+};
+
+const INNER_BLADE_EXTRUDE_SETTINGS = {
+  steps: 2,
+  depth: 0.06,
+  bevelEnabled: true,
+  bevelThickness: 0.02,
+  bevelSize: 0.02,
+  bevelOffset: 0,
+  bevelSegments: 6
+};
+
+// Create shapes once
+const BLADE_SHAPE = createBladeShapeOnce();
+const INNER_BLADE_SHAPE = createInnerBladeShapeOnce();
+
+// SHARED GEOMETRIES - Created once, reused forever
+const SPEAR_SHARED_GEOMETRIES = {
+  // Shaft
+  shaft: new CylinderGeometry(0.03, 0.04, 2.2, 12),
+  shaftRing: new TorusGeometry(0.045, 0.016, 8, 16),
+  
+  // Guard
+  guardTorus: new TorusGeometry(0.26, 0.07, 16, 32),
+  guardSpike: new ConeGeometry(0.070, 0.55, 3),
+  
+  // Orb spheres
+  orbCore: new SphereGeometry(0.155, 16, 16),
+  orbGlow1: new SphereGeometry(0.1, 16, 16),
+  orbGlow2: new SphereGeometry(0.145, 16, 16),
+  orbGlow3: new SphereGeometry(0.175, 16, 16),
+  
+  // Blades - extruded geometries
+  blade: new ExtrudeGeometry(BLADE_SHAPE, BLADE_EXTRUDE_SETTINGS),
+  innerBlade: new ExtrudeGeometry(INNER_BLADE_SHAPE, BLADE_EXTRUDE_SETTINGS),
+  innerBladeGlow: new ExtrudeGeometry(INNER_BLADE_SHAPE, INNER_BLADE_EXTRUDE_SETTINGS)
+};
+
+// SHARED MATERIALS - Created once, reused forever
+const SPEAR_SHARED_MATERIALS = {
+  shaft: new MeshStandardMaterial({ color: "#2a3b4c", roughness: 0.7 }),
+  shaftRing: new MeshStandardMaterial({ color: "#1a2b3c", metalness: 0.6, roughness: 0.4 }),
+  guard: new MeshStandardMaterial({ color: "#4a5b6c", metalness: 0.9, roughness: 0.1 }),
+  orbCore: new MeshStandardMaterial({
+    color: SPEAR_COLOR,
+    emissive: SPEAR_COLOR,
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 1
+  }),
+  orbGlow1: new MeshStandardMaterial({
+    color: SPEAR_COLOR,
+    emissive: SPEAR_COLOR,
+    emissiveIntensity: 40,
+    transparent: true,
+    opacity: 0.8
+  }),
+  orbGlow2: new MeshStandardMaterial({
+    color: SPEAR_COLOR,
+    emissive: SPEAR_COLOR,
+    emissiveIntensity: 35,
+    transparent: true,
+    opacity: 0.6
+  }),
+  orbGlow3: new MeshStandardMaterial({
+    color: SPEAR_COLOR,
+    emissive: SPEAR_COLOR,
+    emissiveIntensity: 30,
+    transparent: true,
+    opacity: 0.4
+  }),
+  blade: new MeshStandardMaterial({
+    color: SPEAR_COLOR,
+    emissive: SPEAR_COLOR,
+    emissiveIntensity: 1.55,
+    metalness: 0.8,
+    roughness: 0.1,
+    opacity: 0.8,
+    transparent: true,
+    side: DoubleSide
+  }),
+  innerBlade: new MeshStandardMaterial({
+    color: SPEAR_COLOR,
+    emissive: SPEAR_COLOR,
+    emissiveIntensity: 1.5,
+    metalness: 0.3,
+    roughness: 0.1
+  }),
+  innerBladeGlow: new MeshStandardMaterial({
+    color: SPEAR_COLOR,
+    emissive: SPEAR_COLOR,
+    emissiveIntensity: 1,
+    metalness: 0.2,
+    roughness: 0.1,
+    opacity: 0.8,
+    transparent: true
+  })
+};
 
 interface SpearProps {
   isSwinging: boolean;
@@ -369,61 +509,8 @@ export default function Spear({
 
   });
 
-  const createBladeShape = () => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    
-    shape.lineTo(0.15, -0.230);
-    shape.bezierCurveTo(
-      0.8, 0.22,
-      1.13, 0.5,
-      1.8, 1.6
-    );
-    
-    shape.lineTo(1.125, 0.75);
-    shape.bezierCurveTo(
-      0.5, 0.2,
-      0.225, 0.0,
-      0.1, 0.7
-    );
-    shape.lineTo(0, 0);
-    return shape;
-  };
-
-  const createInnerBladeShape = () => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    
-    shape.lineTo(0, 0.06);   
-    shape.lineTo(0.15, 0.15); 
-    shape.quadraticCurveTo(1.2, 0.12, 1.5, 0.15); 
-    shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);    
-    shape.quadraticCurveTo(2.0, -0.08, 1.5, -0.15); 
-    shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.15);
-    shape.lineTo(0, -0.05);  
-    shape.lineTo(0, 0);
-    
-    return shape;
-  };
-
-  const bladeExtrudeSettings = {
-    steps: 2,
-    depth: 0.05,
-    bevelEnabled: true,
-    bevelThickness: 0.014,
-    bevelSize: 0.02,
-    bevelOffset: 0.04,
-    bevelSegments: 2
-  };
-
-  const innerBladeExtrudeSettings = {
-    ...bladeExtrudeSettings,
-    depth: 0.06,
-    bevelThickness: 0.02,
-    bevelSize: 0.02,
-    bevelOffset: 0,
-    bevelSegments: 6
-  };
+  // Note: All geometries and materials are now shared at module level
+  // This prevents memory leaks from recreating them on every render
 
   return (
     <>
@@ -438,29 +525,24 @@ export default function Spear({
         rotation={[Math.PI/2, 0, 0]}
         scale={[0.8, 0.8, 0.7]}
       >
+        {/* Shaft section */}
         <group position={[-0.025, -0.55, 0.35]} rotation={[0, 0, -Math.PI]}>
-          <mesh>
-            <cylinderGeometry args={[0.03, 0.04, 2.2, 12]} />
-            <meshStandardMaterial color="#2a3b4c" roughness={0.7} />
-          </mesh>
+          <mesh geometry={SPEAR_SHARED_GEOMETRIES.shaft} material={SPEAR_SHARED_MATERIALS.shaft} />
           
           {[...Array(12)].map((_, i) => (
-            <mesh key={i} position={[0, 1.0 - i * 0.18, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.045, 0.016, 8, 16]} />
-              <meshStandardMaterial color="#1a2b3c" metalness={0.6} roughness={0.4} />
-            </mesh>
+            <mesh 
+              key={i} 
+              position={[0, 1.0 - i * 0.18, 0]} 
+              rotation={[Math.PI / 2, 0, 0]}
+              geometry={SPEAR_SHARED_GEOMETRIES.shaftRing}
+              material={SPEAR_SHARED_MATERIALS.shaftRing}
+            />
           ))}
         </group>
         
+        {/* Guard and orb section */}
         <group position={[-0.025, .45, 0.35]} rotation={[Math.PI, 1.5, Math.PI]}>
-          <mesh>
-            <torusGeometry args={[0.26, 0.07, 16, 32]} />
-            <meshStandardMaterial 
-              color="#4a5b6c" 
-              metalness={0.9}
-              roughness={0.1}
-            />
-          </mesh>
+          <mesh geometry={SPEAR_SHARED_GEOMETRIES.guardTorus} material={SPEAR_SHARED_MATERIALS.guard} />
           
           {[...Array(8)].map((_, i) => (
             <mesh 
@@ -471,59 +553,16 @@ export default function Spear({
                 0
               ]}
               rotation={[0, 0, i * Math.PI / 4 - Math.PI / 2]}
-            >
-              <coneGeometry args={[0.070, 0.55, 3]} />
-              <meshStandardMaterial 
-                color="#4a5b6c"
-                metalness={0.9}
-                roughness={0.1}
-              />
-            </mesh>
+              geometry={SPEAR_SHARED_GEOMETRIES.guardSpike}
+              material={SPEAR_SHARED_MATERIALS.guard}
+            />
           ))}
           
-          <mesh>
-            <sphereGeometry args={[0.155, 16, 16]} />
-            <meshStandardMaterial
-              color={SPEAR_COLOR}         // Spear red to match GhostTrail
-              emissive={SPEAR_COLOR}      // Spear red emission
-              emissiveIntensity={2}                    // for orange 
-              transparent
-              opacity={1}
-            />
-          </mesh>
-          
-          <mesh>
-            <sphereGeometry args={[0.1, 16, 16]} />
-            <meshStandardMaterial
-              color={SPEAR_COLOR}
-              emissive={SPEAR_COLOR}
-              emissiveIntensity={40}
-              transparent
-              opacity={0.8}
-            />
-          </mesh>
-          
-          <mesh>
-            <sphereGeometry args={[0.145, 16, 16]} />
-            <meshStandardMaterial
-              color={SPEAR_COLOR}
-              emissive={SPEAR_COLOR}
-              emissiveIntensity={35}
-              transparent
-              opacity={0.6}
-            />
-          </mesh>
-          
-          <mesh>
-            <sphereGeometry args={[.175, 16, 16]} />
-            <meshStandardMaterial
-              color={SPEAR_COLOR}
-              emissive={SPEAR_COLOR}
-              emissiveIntensity={30}
-              transparent
-              opacity={0.4}
-            />
-          </mesh>
+          {/* Orb core and glow layers */}
+          <mesh geometry={SPEAR_SHARED_GEOMETRIES.orbCore} material={SPEAR_SHARED_MATERIALS.orbCore} />
+          <mesh geometry={SPEAR_SHARED_GEOMETRIES.orbGlow1} material={SPEAR_SHARED_MATERIALS.orbGlow1} />
+          <mesh geometry={SPEAR_SHARED_GEOMETRIES.orbGlow2} material={SPEAR_SHARED_MATERIALS.orbGlow2} />
+          <mesh geometry={SPEAR_SHARED_GEOMETRIES.orbGlow3} material={SPEAR_SHARED_MATERIALS.orbGlow3} />
 
           <pointLight 
             color={SPEAR_COLOR}
@@ -533,87 +572,31 @@ export default function Spear({
           />
         </group>
         
+        {/* Blade section - three outer blades */}
         <group position={[0, 0.75, 0.35]}>
           <group rotation={[0, 0, 0]}>
             <group rotation={[0, 0, 0.7]} scale={[0.4, 0.4, -0.4]}>
-              <mesh>
-                <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
-                <meshStandardMaterial 
-                  color={SPEAR_COLOR}
-                  emissive={SPEAR_COLOR}
-                  emissiveIntensity={1.55}
-                  metalness={0.8}
-                  roughness={0.1}
-                  opacity={0.8}
-                  transparent
-                  side={DoubleSide}
-                />
-              </mesh>
+              <mesh geometry={SPEAR_SHARED_GEOMETRIES.blade} material={SPEAR_SHARED_MATERIALS.blade} />
             </group>
           </group>
 
           <group rotation={[0, (2 * Math.PI) / 3, Math.PI/2]}>
             <group rotation={[0, 0., 5.33]} scale={[0.4, 0.4, -0.4]}>
-              <mesh>
-                <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
-                <meshStandardMaterial 
-                  color={SPEAR_COLOR}
-                  emissive={SPEAR_COLOR}
-                  emissiveIntensity={1.55}
-                  metalness={0.8}
-                  roughness={0.1}
-                  opacity={0.8}
-                  transparent
-                  side={DoubleSide}
-                />
-              </mesh>
+              <mesh geometry={SPEAR_SHARED_GEOMETRIES.blade} material={SPEAR_SHARED_MATERIALS.blade} />
             </group>
           </group>
 
           <group rotation={[0, (4 * Math.PI) / 3, Math.PI/2]}>
             <group rotation={[0, 0, 5.33]} scale={[0.4, 0.4, -0.4]}>
-              <mesh>
-                <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
-                <meshStandardMaterial 
-                  color={SPEAR_COLOR}
-                  emissive={SPEAR_COLOR}
-                  emissiveIntensity={1.55}
-                  metalness={0.8}
-                  roughness={0.1}
-                  opacity={0.8}
-                  transparent
-                  side={DoubleSide}
-                />
-              </mesh>
+              <mesh geometry={SPEAR_SHARED_GEOMETRIES.blade} material={SPEAR_SHARED_MATERIALS.blade} />
             </group>
           </group>
         </group>
 
+        {/* Inner blade section */}
         <group position={[0, 0.65, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]} scale={[0.8, 0.8, 0.5]}>
-          <mesh>
-            <extrudeGeometry args={[createInnerBladeShape(), bladeExtrudeSettings]} />
-            <meshStandardMaterial 
-              color={SPEAR_COLOR}
-              emissive={SPEAR_COLOR}
-              emissiveIntensity={1.5}
-              metalness={0.3}
-              roughness={0.1}
-            />
-          </mesh>
-          
-          <mesh>
-            <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
-            <meshStandardMaterial 
-              color={SPEAR_COLOR}
-              emissive={SPEAR_COLOR}
-              emissiveIntensity={1}
-              metalness={0.2}
-              roughness={0.1}
-              opacity={0.8}
-              transparent
-            />
-          </mesh>
-
+          <mesh geometry={SPEAR_SHARED_GEOMETRIES.innerBlade} material={SPEAR_SHARED_MATERIALS.innerBlade} />
+          <mesh geometry={SPEAR_SHARED_GEOMETRIES.innerBladeGlow} material={SPEAR_SHARED_MATERIALS.innerBladeGlow} />
         </group>
 
       </group>

@@ -1,7 +1,10 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Vector3, Color, Group, MeshBasicMaterial } from 'three';
+import { Mesh, Vector3, Color, Group, MeshBasicMaterial, SphereGeometry } from 'three';
 import { WeaponType, WeaponSubclass } from '../Weapons/weapons';
+
+// SHARED GEOMETRY - Created once, reused for all trail spheres to prevent memory leaks
+const GHOST_TRAIL_SHARED_GEOMETRY = new SphereGeometry(0.43, 8, 8);
 
 interface GhostTrailProps {
   parentRef: React.RefObject<Group>;
@@ -106,13 +109,30 @@ export default function GhostTrail({ parentRef, weaponType, weaponSubclass, targ
         trail.scale.setScalar(scale);
         
         if (trail.material && trail.material instanceof MeshBasicMaterial) {
-          trail.material.opacity = (1 - i / trailCount) * 0.2;
+          trail.material.opacity = (1 - i / trailCount) * 0.8;
         }
       }
     });
   });
 
   const trailColor = useMemo(() => new Color(getTrailColor()), [weaponType, weaponSubclass]);
+
+  // Create shared material with the trail color - memoized to avoid recreation
+  const trailMaterial = useMemo(() => {
+    return new MeshBasicMaterial({
+      color: trailColor,
+      transparent: true,
+      opacity: 0.6,
+      depthWrite: false
+    });
+  }, [trailColor]);
+
+  // Cleanup material on unmount
+  useEffect(() => {
+    return () => {
+      trailMaterial.dispose();
+    };
+  }, [trailMaterial]);
 
   // Only render trails after initialization
   if (!isInitialized) return null;
@@ -125,15 +145,9 @@ export default function GhostTrail({ parentRef, weaponType, weaponSubclass, targ
           ref={(el) => {
             if (el) trailsRef.current[i] = el;
           }}
-        >
-          <sphereGeometry args={[0.43, 8, 8]} />
-          <meshBasicMaterial
-            color={trailColor}
-            transparent
-            opacity={0.3}
-            depthWrite={false}
-          />
-        </mesh>
+          geometry={GHOST_TRAIL_SHARED_GEOMETRY}
+          material={trailMaterial}
+        />
       ))}
     </>
   );
