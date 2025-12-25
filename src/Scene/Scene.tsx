@@ -14,7 +14,8 @@ import { SceneProps as SceneType } from '@/Scene/SceneProps';
 import { UnitProps } from '../Unit/UnitProps';
 import Planet from '../Environment/Planet';
 import CustomSky from '../Environment/Sky';
-import { generateRandomPosition, generateMountains, generateMushrooms } from '../Environment/terrainGenerators';
+import { generateRandomPosition, generateMountains, generateMushrooms, generateClusteredTrees } from '../Environment/terrainGenerators';
+import DetailedTrees from '../Environment/DetailedTrees';
 import { Enemy } from '../Versus/enemy';
 import {
   BufferGeometry,
@@ -150,6 +151,7 @@ export default function Scene({
   // TERRAIN
   const mountainData = useMemo(() => generateMountains(), []);
   const mushroomData = useMemo(() => generateMushrooms(), []);
+  const treeData = useMemo(() => generateClusteredTrees(), []);
 
   // Renderer info for GPU memory tracking
   const { gl } = useThree();
@@ -1859,7 +1861,7 @@ export default function Scene({
         <Planet />
         <Terrain />
         <InstancedVegetation />
-
+        <DetailedTrees trees={treeData} />
 
         <InstancedMountains mountains={mountainData} />
         <InstancedMushrooms mushrooms={mushroomData} />

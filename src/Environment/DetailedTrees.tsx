@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
 import {
   BufferGeometry,
   Color,
@@ -7,7 +8,8 @@ import {
   Group,
   Mesh,
   MeshStandardMaterial,
-  Quaternion
+  Quaternion,
+  BufferAttribute
 } from 'three';
 import { Vector3 } from 'three';
 import { DetailedTree } from './terrainGenerators';
@@ -142,8 +144,8 @@ const generateTreeStructure = (seed: number): TreeBranch[] => {
   return [trunk];
 };
 
-// Function to create branch geometry
-const createBranchGeometry = (branch: TreeBranch): BufferGeometry => {
+// Function to create branch geometry with natural imperfections
+const createBranchGeometry = (branch: TreeBranch, rng: SeededRandom): BufferGeometry => {
   const direction = branch.end.clone().sub(branch.start);
   const length = direction.length();
   
@@ -152,8 +154,30 @@ const createBranchGeometry = (branch: TreeBranch): BufferGeometry => {
     branch.radius * 0.8, // Top radius (slightly smaller)
     branch.radius,        // Bottom radius
     length,
-    6                     // 6 segments for natural look
+    6,                    // 6 radial segments
+    2                     // 2 height segments for bend
   );
+  
+  // Add natural imperfections by displacing vertices slightly
+  const positions = geometry.attributes.position;
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i);
+    const y = positions.getY(i);
+    const z = positions.getZ(i);
+    
+    // Add small random displacement for organic feel (0-3% variation)
+    const displacement = 0.03;
+    positions.setX(i, x * (1 + (rng.random() - 0.5) * displacement));
+    positions.setZ(i, z * (1 + (rng.random() - 0.5) * displacement));
+    
+    // Add slight bend in the middle of branches
+    const heightFactor = (y + length / 2) / length; // 0 to 1
+    const bendAmount = Math.sin(heightFactor * Math.PI) * 0.05; // Subtle arc
+    positions.setX(i, x + bendAmount * (rng.random() - 0.5));
+  }
+  
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals(); // Recompute normals after vertex manipulation
   
   // Position cylinder so it starts at origin and extends along Y-axis
   geometry.translate(0, length / 2, 0);
@@ -161,51 +185,105 @@ const createBranchGeometry = (branch: TreeBranch): BufferGeometry => {
   return geometry;
 };
 
-// Function to create foliage cone geometry - reduced segments for better performance
+// Function to create foliage cone geometry with organic shape
 const createFoliageCone = (rng: SeededRandom, scale: number = 1): ConeGeometry => {
   const coneRadius = 0.3 + rng.random() * 0.4; // 0.3-0.7 radius
-  const coneHeight = 0.3 + rng.random() * 0.5; // 0.6-1.4 height
+  const coneHeight = 0.3 + rng.random() * 0.5; // 0.3-0.8 height
   
-  return new ConeGeometry(
+  const geometry = new ConeGeometry(
     coneRadius * scale,
     coneHeight * scale,
-    6, // 6 segments for better performance (was 8)
+    6, // 6 segments for better performance
     1  // 1 height segment
   );
+  
+  // Add organic irregularity to foliage
+  const positions = geometry.attributes.position;
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i);
+    const y = positions.getY(i);
+    const z = positions.getZ(i);
+    
+    // Only displace the sides (not tip or base) for natural leaf clumping
+    if (y !== coneHeight * scale / 2 && y !== -coneHeight * scale / 2) {
+      const displacement = 0.15; // 15% variation for leafy appearance
+      positions.setX(i, x * (1 + (rng.random() - 0.5) * displacement));
+      positions.setZ(i, z * (1 + (rng.random() - 0.5) * displacement));
+    }
+  }
+  
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+  
+  return geometry;
 };
 
 const DetailedTrees: React.FC<DetailedTreesProps> = ({ trees }) => {
   const treeGroupsRef = useRef<Group[]>([]);
+  const windTimeRef = useRef(0);
 
   // Generate tree structures using seeds for consistency
   const treeStructures = useMemo(() => {
     return trees.map(tree => ({
       ...tree,
-      branches: generateTreeStructure(tree.seed || 1)
+      branches: generateTreeStructure(tree.seed || 1),
+      // Store wind parameters per tree for natural variation
+      windSpeed: 0.5 + Math.random() * 0.5, // 0.5-1.0
+      windPhase: Math.random() * Math.PI * 2, // Random phase offset
+      windStrength: 0.015 + Math.random() * 0.01 // 0.015-0.025 subtle sway
     }));
   }, [trees]);
+
+  // Animate trees with gentle wind effect
+  useFrame((state, delta) => {
+    windTimeRef.current += delta;
+    
+    treeGroupsRef.current.forEach((treeGroup, index) => {
+      if (treeGroup && treeStructures[index]) {
+        const tree = treeStructures[index];
+        const time = windTimeRef.current * tree.windSpeed + tree.windPhase;
+        
+        // Primary wind sway (side-to-side)
+        const swayX = Math.sin(time * 0.8) * tree.windStrength;
+        const swayZ = Math.cos(time * 0.6) * tree.windStrength * 0.7;
+        
+        // Secondary subtle movement (circular micro-motion)
+        const microSwayX = Math.sin(time * 2.3) * tree.windStrength * 0.3;
+        const microSwayZ = Math.cos(time * 1.9) * tree.windStrength * 0.3;
+        
+        // Apply combined rotation (very subtle)
+        treeGroup.rotation.x = (tree.rotationX || 0) + swayX + microSwayX;
+        treeGroup.rotation.z = (tree.rotationZ || 0) + swayZ + microSwayZ;
+        
+        // Optional: Slight height bob (barely noticeable)
+        const heightBob = Math.sin(time * 1.2) * 0.02;
+        treeGroup.position.y = heightBob;
+      }
+    });
+  });
 
   // Shared materials for better performance - created once and reused
   const sharedMaterials = useMemo(() => {
     const foliageColors = [
+      new Color(0x1a6b1a), // Deep forest green
       new Color(0x228B22), // Forest green
-      new Color(0x32CD32), // Lime green
-      new Color(0x90EE90), // Light green
-      new Color(0x00FF7F), // Spring green
-      new Color(0x3CB371), // Medium sea green
+      new Color(0x2d8b2d), // Medium forest green
+      new Color(0x3a9b3a), // Brighter green
       new Color(0x2E8B57), // Sea green
-      new Color(0x98FB98), // Pale green
-      new Color(0x00FA9A)  // Medium spring green
+      new Color(0x3CB371), // Medium sea green
+      new Color(0x1f7a1f), // Dark green
+      new Color(0x266b26)  // Pine green
     ];
     
     return {
-      foliageMaterials: foliageColors.map(color => 
+      foliageMaterials: foliageColors.map((color, index) => 
         new MeshStandardMaterial({
           color: color,
-          roughness: 0.85,
+          roughness: 0.9 + Math.random() * 0.08, // 0.9-0.98 for leafy texture
           metalness: 0.0,
-          emissive: color.clone().multiplyScalar(0.1),
-          emissiveIntensity: 0.25
+          emissive: color.clone().multiplyScalar(0.08),
+          emissiveIntensity: 0.15 + index * 0.02, // Slight variation 0.15-0.29
+          flatShading: true // Adds geometric faceted look for stylized leaves
         })
       )
     };
@@ -238,52 +316,74 @@ const DetailedTrees: React.FC<DetailedTreesProps> = ({ trees }) => {
       const treeGroup = new Group();
       const rng = new SeededRandom(tree.seed || 1);
       
-      // Create trunk with reduced segments for better performance
+      // Create trunk with natural imperfections
       const trunkGeometry = new CylinderGeometry(
-        tree.trunkRadius * 0.8,
-        tree.trunkRadius,
+        tree.trunkRadius * 0.85,
+        tree.trunkRadius * 1.05, // Slightly wider at base
         tree.height,
-        6 // Reduced from 8 to 6 segments
+        6, // 6 radial segments
+        3  // 3 height segments for organic bending
       );
       
+      // Add natural bark texture through vertex displacement
+      const trunkPositions = trunkGeometry.attributes.position;
+      for (let i = 0; i < trunkPositions.count; i++) {
+        const x = trunkPositions.getX(i);
+        const y = trunkPositions.getY(i);
+        const z = trunkPositions.getZ(i);
+        
+        // Add bark-like bumps (5% variation)
+        const bumpAmount = 0.05;
+        const heightFactor = (y + tree.height / 2) / tree.height;
+        trunkPositions.setX(i, x * (1 + (rng.random() - 0.5) * bumpAmount * (1 - heightFactor * 0.5)));
+        trunkPositions.setZ(i, z * (1 + (rng.random() - 0.5) * bumpAmount * (1 - heightFactor * 0.5)));
+      }
+      trunkPositions.needsUpdate = true;
+      trunkGeometry.computeVertexNormals();
+      
       // Create more realistic bark material with color variation
-      const barkColorVariation = 0.2; // 20% color variation
-      const trunkColorWithVariation = tree.trunkColor.clone().multiplyScalar(
-        1.0 + rng.random() * barkColorVariation
-      );
+      const barkColorVariation = 0.25; // 25% color variation
+      const darkenFactor = 0.85 + rng.random() * 0.2; // 0.85-1.05
+      const trunkColorWithVariation = tree.trunkColor.clone().multiplyScalar(darkenFactor);
       
       const trunkMaterial = new MeshStandardMaterial({
         color: trunkColorWithVariation,
-        roughness: 0.85 + rng.random() * 0.1, // 0.85-0.95 for bark texture
-        metalness: 0.05 + rng.random() * 0.05, // 0.05-0.1 for subtle variation
-        emissive: trunkColorWithVariation.clone().multiplyScalar(0.05),
-        emissiveIntensity: 0.15 + rng.random() * 0.1
+        roughness: 0.92 + rng.random() * 0.06, // 0.92-0.98 for rough bark
+        metalness: 0.02 + rng.random() * 0.03, // 0.02-0.05 minimal metallic
+        emissive: trunkColorWithVariation.clone().multiplyScalar(0.03),
+        emissiveIntensity: 0.1 + rng.random() * 0.08, // 0.1-0.18
+        flatShading: false // Smooth shading for bark
       });
       
       const trunkMesh = new Mesh(trunkGeometry, trunkMaterial);
       trunkMesh.position.y = tree.height / 2;
+      trunkMesh.castShadow = true;
+      trunkMesh.receiveShadow = true;
       treeGroup.add(trunkMesh);
 
       // Create branches recursively - using shared materials for better performance
       const createBranches = (branches: TreeBranch[], parentGroup: Group) => {
         branches.forEach(branch => {
-          const branchGeometry = createBranchGeometry(branch);
+          const branchGeometry = createBranchGeometry(branch, rng);
           
           // Create branch material with color variation based on branch size
-          const branchColorVariation = 0.2; // 20% color variation for branches
-          const branchColor = tree.trunkColor.clone().multiplyScalar(
-            0.85 + rng.random() * branchColorVariation
-          );
+          // Branches are slightly darker than trunk
+          const branchColorVariation = 0.25; // 25% color variation for branches
+          const darkenFactor = 0.8 + rng.random() * 0.25; // 0.8-1.05
+          const branchColor = tree.trunkColor.clone().multiplyScalar(darkenFactor);
           
           const branchMaterial = new MeshStandardMaterial({
             color: branchColor,
-            roughness: 0.9 + rng.random() * 0.08,
-            metalness: 0.02 + rng.random() * 0.03,
-            emissive: branchColor.clone().multiplyScalar(0.03),
-            emissiveIntensity: 0.08 + rng.random() * 0.07
+            roughness: 0.91 + rng.random() * 0.07, // 0.91-0.98
+            metalness: 0.015 + rng.random() * 0.025, // 0.015-0.04
+            emissive: branchColor.clone().multiplyScalar(0.025),
+            emissiveIntensity: 0.07 + rng.random() * 0.06, // 0.07-0.13
+            flatShading: false
           });
           
           const branchMesh = new Mesh(branchGeometry, branchMaterial);
+          branchMesh.castShadow = true;
+          branchMesh.receiveShadow = true;
           
           // Position branch at start point
           branchMesh.position.copy(branch.start);
@@ -301,27 +401,42 @@ const DetailedTrees: React.FC<DetailedTreesProps> = ({ trees }) => {
           
           // Add foliage cones at terminal branches (branches with no children)
           if (branch.children.length === 0) {
-            const coneGeometry = createFoliageCone(rng, tree.scale);
+            // Create 1-2 foliage clusters per terminal branch for fuller appearance
+            const foliageCount = 1 + (rng.random() > 0.6 ? 1 : 0); // 40% chance of 2 clusters
             
-            // Use shared foliage material for better performance
-            const foliageMaterial = sharedMaterials.foliageMaterials[
-              Math.floor(rng.random() * sharedMaterials.foliageMaterials.length)
-            ];
-            
-            const coneMesh = new Mesh(coneGeometry, foliageMaterial);
-            
-            // Position cone at the end of the branch
-            coneMesh.position.copy(branch.end);
-            
-            // Add slight random rotation for natural variation
-            coneMesh.rotation.x = (rng.random() - 0.5) * 0.3;
-            coneMesh.rotation.z = (rng.random() - 0.5) * 0.3;
-            coneMesh.rotation.y = rng.random() * Math.PI * 2;
-            
-            // Slightly offset the cone upward so it sits naturally on the branch
-            coneMesh.position.y += 0.1;
-            
-            parentGroup.add(coneMesh);
+            for (let f = 0; f < foliageCount; f++) {
+              const coneGeometry = createFoliageCone(rng, tree.scale);
+              
+              // Use shared foliage material with slight variation
+              const materialIndex = Math.floor(rng.random() * sharedMaterials.foliageMaterials.length);
+              const foliageMaterial = sharedMaterials.foliageMaterials[materialIndex];
+              
+              const coneMesh = new Mesh(coneGeometry, foliageMaterial);
+              coneMesh.castShadow = true;
+              coneMesh.receiveShadow = true;
+              
+              // Position with slight offset for clustering effect
+              const clusterOffset = new Vector3(
+                (rng.random() - 0.5) * 0.15,
+                (rng.random() - 0.5) * 0.1,
+                (rng.random() - 0.5) * 0.15
+              );
+              coneMesh.position.copy(branch.end).add(clusterOffset);
+              
+              // Natural rotation variation (tilted in various directions)
+              coneMesh.rotation.x = (rng.random() - 0.5) * 0.5; // -0.25 to 0.25 radians
+              coneMesh.rotation.z = (rng.random() - 0.5) * 0.5;
+              coneMesh.rotation.y = rng.random() * Math.PI * 2; // Full rotation
+              
+              // Slight upward offset for natural appearance
+              coneMesh.position.y += 0.08 + rng.random() * 0.05;
+              
+              // Random scale variation per cone (0.85-1.15)
+              const scaleVar = 0.85 + rng.random() * 0.3;
+              coneMesh.scale.setScalar(scaleVar);
+              
+              parentGroup.add(coneMesh);
+            }
           }
           
           // Recursively add child branches

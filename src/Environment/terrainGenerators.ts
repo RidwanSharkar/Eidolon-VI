@@ -56,26 +56,100 @@ export const generateMountains = (): Array<{ position: Vector3; scale: number }>
   return mountains;
 };
 
-export const generateTrees = (): DetailedTree[] => {
-  return [
-    // 6 TREES with fixed rotations and seeds for consistency
-    { position: new Vector3(-15, 0, -5), scale: 1.3, trunkColor: new Color(trunkColors[1]), height: 4.2, trunkRadius: 0.22, rotationY: 0.5, rotationX: -0.02, rotationZ: 0.03, seed: 1 },
-    { position: new Vector3(-12, 0, -8), scale: 1.25, trunkColor: new Color(trunkColors[1]), height: 3.8, trunkRadius: 0.20, rotationY: 2.1, rotationX: 0.04, rotationZ: -0.01, seed: 2 },
-    { position: new Vector3(-11, 0, 5), scale: 1.3, trunkColor: new Color(trunkColors[1]), height: 4.3, trunkRadius: 0.24, rotationY: 4.7, rotationX: 0.01, rotationZ: 0.05, seed: 3 },
-    { position: new Vector3(-12, 0, 12), scale: 0.8, trunkColor: new Color(trunkColors[2]), height: 3.3, trunkRadius: 0.16, rotationY: 1.8, rotationX: -0.03, rotationZ: -0.02, seed: 4 },
-    { position: new Vector3(-5, 0, -15), scale: 0.85, trunkColor: new Color(trunkColors[1]), height: 3.6, trunkRadius: 0.18, rotationY: 3.4, rotationX: 0.02, rotationZ: 0.04, seed: 5 },
-    { position: new Vector3(5, 0, -18), scale: 0.85, trunkColor: new Color(trunkColors[2]), height: 3.4, trunkRadius: 0.17, rotationY: 5.5, rotationX: -0.04, rotationZ: -0.03, seed: 6 },
-  ];
+// Seeded random for consistent tree generation across sessions
+class SeededRandom {
+  private seed: number;
+  
+  constructor(seed: number) {
+    this.seed = seed;
+  }
+  
+  random(): number {
+    const x = Math.sin(this.seed++) * 10000;
+    return x - Math.floor(x);
+  }
+}
+
+/**
+ * Generate 3-6 clustered trees with proper distribution
+ * Trees spawn in clusters to create natural forest areas
+ */
+export const generateClusteredTrees = (): DetailedTree[] => {
+  const rng = new SeededRandom(42); // Fixed seed for consistent generation
+  const trees: DetailedTree[] = [];
+  
+  // Generate 2-3 clusters
+  const numClusters = 1 + Math.floor(rng.random() * 3); // 2-3 clusters
+  
+  for (let i = 0; i < numClusters; i++) {
+    // Random cluster center position (keep away from center spawn area)
+    const clusterAngle = (i / numClusters) * Math.PI * 2 + (rng.random() - 0.5) * Math.PI;
+    const clusterDistance = 20 + rng.random() * 15; // 20-35 units from center
+    const clusterX = Math.cos(clusterAngle) * clusterDistance;
+    const clusterZ = Math.sin(clusterAngle) * clusterDistance;
+    
+    // Generate 1-3 trees per cluster
+    const treesInCluster = 1 + Math.floor(rng.random() * 3); // 1-3 trees
+    
+    for (let j = 0; j < treesInCluster; j++) {
+      // Position trees within cluster (2-5 units from cluster center)
+      const treeAngle = rng.random() * Math.PI * 2;
+      const treeDistance = 2 + rng.random() * 3; // 2-5 units from cluster center
+      const treeX = clusterX + Math.cos(treeAngle) * treeDistance;
+      const treeZ = clusterZ + Math.sin(treeAngle) * treeDistance;
+      
+      // Vary tree properties for visual diversity
+      const scale = 0.8 + rng.random() * 0.6; // 0.8-1.4 scale
+      const height = 3.2 + rng.random() * 1.3; // 3.2-4.5 height
+      const trunkRadius = 0.16 + rng.random() * 0.08; // 0.16-0.24 radius
+      
+      // Choose trunk color (80% chance for color 1, 20% for color 2)
+      const colorIndex = rng.random() < 0.8 ? 1 : 2;
+      
+      trees.push({
+        position: new Vector3(treeX, 0, treeZ),
+        scale: scale,
+        trunkColor: new Color(trunkColors[colorIndex]),
+        height: height,
+        trunkRadius: trunkRadius,
+        rotationY: rng.random() * Math.PI * 2,
+        rotationX: (rng.random() - 0.5) * 0.1,
+        rotationZ: (rng.random() - 0.5) * 0.1,
+        seed: i * 100 + j // Unique seed for each tree
+      });
+    }
+  }
+  
+  // Ensure we have at least 3 trees and at most 6
+  while (trees.length < 3) {
+    // Add extra single trees if we have less than 3
+    const angle = rng.random() * Math.PI * 2;
+    const distance = 25 + rng.random() * 10;
+    trees.push({
+      position: new Vector3(Math.cos(angle) * distance, 0, Math.sin(angle) * distance),
+      scale: 0.9 + rng.random() * 0.5,
+      trunkColor: new Color(trunkColors[1]),
+      height: 3.5 + rng.random() * 1.0,
+      trunkRadius: 0.18 + rng.random() * 0.06,
+      rotationY: rng.random() * Math.PI * 2,
+      rotationX: (rng.random() - 0.5) * 0.1,
+      rotationZ: (rng.random() - 0.5) * 0.1,
+      seed: 999 + trees.length
+    });
+  }
+  
+  // Limit to 6 trees maximum
+  return trees.slice(0, 6);
 };
 
 export const generateMushrooms = (): Array<{ position: Vector3; scale: number; variant: 'pink' | 'green' | 'blue' | 'orange' }> => {
   const mushrooms: Array<{ position: Vector3; scale: number; variant: 'pink' | 'green' | 'blue' | 'orange' }> = [];
-  const numberOfMushrooms = 16;
-  const trees = generateTrees(); // Get tree positions for reference
+  const numberOfMushrooms = 10;
+  const trees = generateClusteredTrees(); // Get tree positions for reference
 
   for (let i = 0; i < numberOfMushrooms; i++) {
     let x: number, z: number;
-    const scale = 0.325 + Math.random() * 0.375;
+    const scale = 0.375 + Math.random() * 0.375;
 
     // 70% chance to spawn near trees, 30% chance for random placement
     if (Math.random() < 0.7 && trees.length > 0) {
