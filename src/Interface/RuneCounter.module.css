@@ -16,11 +16,44 @@
   box-shadow: 0 2px 12px rgba(230, 126, 34, 0.3);
   z-index: 1000;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .runeCounter:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 25px rgba(230, 126, 34, 0.4);
+}
+
+.runeCounter.minimized {
+  padding: 4px 8px;
+  gap: 6px;
+}
+
+.runeCounter.minimized .runeInfo {
+  gap: 0;
+}
+
+.toggleIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: #e67e22;
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+
+.runeCounter:hover .toggleIcon {
+  opacity: 1;
+}
+
+.minimizedContent {
+  font-size: 10px;
+  font-weight: 600;
+  color: #f39c12;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
 }
 
 .runeIcon {
@@ -73,6 +106,37 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+.controls {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(230, 126, 34, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.controlTitle {
+  font-size: 9px;
+  font-weight: 700;
+  color: #f39c12;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.controlKeys {
+  font-size: 8px;
+  font-weight: 500;
+  color: #e67e22;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .runeCounter {
@@ -94,5 +158,28 @@
   .critChance,
   .critDamage {
     font-size: 9px;
+  }
+
+  .controls {
+    margin-top: 6px;
+    padding-top: 6px;
+    gap: 4px;
+  }
+
+  .controlTitle {
+    font-size: 8px;
+  }
+
+  .controlKeys {
+    font-size: 7px;
+  }
+
+  .minimizedContent {
+    font-size: 9px;
+  }
+
+  .toggleIcon {
+    width: 14px;
+    height: 14px;
   }
 }
