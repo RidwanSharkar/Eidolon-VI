@@ -50,7 +50,20 @@ function HomePageContent() {
   useEffect(() => {
     console.log('HomePageContent: Setting up background music...');
 
-    const audio = new Audio('/audio/Eidolon.mp3');
+    // Array of available audio tracks for randomization
+    const audioTracks = [
+      '/audio/Eidolon.mp3',
+      '/audio/Eidolon2.mp3',
+      '/audio/Eidolon3.mp3',
+      '/audio/Eidolon4.mp3',
+      '/audio/Eidolon5.mp3'
+    ];
+
+    // Randomly select a track
+    const randomTrack = audioTracks[Math.floor(Math.random() * audioTracks.length)];
+    console.log('HomePageContent: Selected random track:', randomTrack);
+
+    const audio = new Audio(randomTrack);
     audio.loop = true;
     audio.volume = 0.7; // 70% volume
     audio.preload = 'auto';

@@ -14,10 +14,10 @@
 /* Experience Ring - wraps around the health orb */
 .experienceRing {
   position: absolute;
-  top: 5.5px;
-  left: 5.5px;
-  width: 170px;
-  height: 170px;
+  top: 5.4px;
+  left: 5.4px;
+  width: 171px;
+  height: 171px;
   transform: rotate(-90deg); /* Start from top */
   z-index: 1;
 }
@@ -317,8 +317,8 @@
   }
   
   .experienceRing {
-    width: 150px;
-    height: 150px;
+    width: 148px;
+    height: 148px;
   }
   
   .orbContainer {
