@@ -534,7 +534,8 @@ const SoulReaper = forwardRef<SoulReaperRef, SoulReaperProps>(({
         damage: damage,
         position: currentPosition.clone().add(new Vector3(0, 1, 0)),
         isCritical: false,
-        isSoulReaper: true
+        isSoulReaper: true,
+        createdAt: Date.now() // MEMORY FIX: Required for cleanup
       }]);
       
       // Check if enemy will be killed by this damage

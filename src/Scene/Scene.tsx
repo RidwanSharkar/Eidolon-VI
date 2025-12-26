@@ -1089,6 +1089,7 @@ export default function Scene({
 
   // MEMORY FIX: Memory pressure detection and emergency cleanup
   const lastEmergencyCleanup = useRef(0);
+  const lastMemoryWarningLog = useRef(0);
   const EMERGENCY_CLEANUP_COOLDOWN = 3000; // Reduced from 5s to 3s between emergency cleanups
   const MEMORY_WARNING_THRESHOLD = 100 * 1024 * 1024; // Reduced from 150MB to 100MB warning
   const MEMORY_CRITICAL_THRESHOLD = 150 * 1024 * 1024; // Reduced from 250MB to 150MB critical - trigger cleanup
@@ -1201,8 +1202,9 @@ export default function Scene({
       });
     }
 
-    // More aggressive logging - log warnings more frequently
-    if (memoryUsage > MEMORY_WARNING_THRESHOLD && Math.random() < 0.2) { // Increased from 0.1 to 0.2
+    // More aggressive logging - log warnings once per second
+    if (memoryUsage > MEMORY_WARNING_THRESHOLD && now - lastMemoryWarningLog.current > 1000) {
+      lastMemoryWarningLog.current = now;
       console.warn(`⚠️ Memory pressure: ${Math.round(memoryUsage / 1024 / 1024)}MB`, {
         enemies: enemies.length,
         effects: statusEffectCount,

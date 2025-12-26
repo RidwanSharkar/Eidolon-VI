@@ -106,6 +106,14 @@ export default function GlacialShardProjectile({
       transparent: true,
       opacity: 0.6,
       blending: AdditiveBlending
+    }),
+    torusOuter: new MeshStandardMaterial({
+      color: "#4DDDFF",
+      emissive: "#4DDDFF",
+      emissiveIntensity: 1.5,
+      transparent: true,
+      opacity: 0.4,
+      blending: AdditiveBlending
     })
   }), []);
 
@@ -210,23 +218,17 @@ export default function GlacialShardProjectile({
               material={materials.frostMist}
             />
 
-            {/* Rotating ice rings for more dynamic effect */}
-            {[0, 1].map((i) => (
-              <mesh
-                key={`ring-${i}`}
-                rotation={[Math.PI/2, 0, Date.now() * 0.002 + i * Math.PI]}
-                geometry={i === 0 ? glacialShardGeometries.torus0 : glacialShardGeometries.torus1}
-              >
-                <meshStandardMaterial
-                  color="#4DDDFF"
-                  emissive="#4DDDFF"
-                  emissiveIntensity={1.5}
-                  transparent
-                  opacity={0.6 - i * 0.2}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
-            ))}
+            {/* Rotating ice rings for more dynamic effect - using memoized materials */}
+            <mesh
+              rotation={[Math.PI/2, 0, Date.now() * 0.002]}
+              geometry={glacialShardGeometries.torus0}
+              material={materials.torus}
+            />
+            <mesh
+              rotation={[Math.PI/2, 0, Date.now() * 0.002 + Math.PI]}
+              geometry={glacialShardGeometries.torus1}
+              material={materials.torusOuter}
+            />
 
             {/* Enhanced light source */}
             <pointLight
@@ -289,12 +291,28 @@ function GlacialShardImpact({ position, onComplete }: GlacialShardImpactProps) {
       transparent: true,
       opacity: 0.9
     }),
-    frostRing: new MeshStandardMaterial({
+    frostRing0: new MeshStandardMaterial({
       color: "#AAEEFF",
       emissive: "#AAEEFF",
       emissiveIntensity: 1.8,
       transparent: true,
       opacity: 0.6,
+      blending: AdditiveBlending
+    }),
+    frostRing1: new MeshStandardMaterial({
+      color: "#AAEEFF",
+      emissive: "#AAEEFF",
+      emissiveIntensity: 1.8,
+      transparent: true,
+      opacity: 0.48,
+      blending: AdditiveBlending
+    }),
+    frostRing2: new MeshStandardMaterial({
+      color: "#AAEEFF",
+      emissive: "#AAEEFF",
+      emissiveIntensity: 1.8,
+      transparent: true,
+      opacity: 0.36,
       blending: AdditiveBlending
     })
   }), []);
@@ -358,7 +376,13 @@ function GlacialShardImpact({ position, onComplete }: GlacialShardImpactProps) {
   impactMaterials.secondaryExplosion.emissiveIntensity = 3 * fade;
   impactMaterials.shard.opacity = 0.9 * fade;
   impactMaterials.shard.emissiveIntensity = 2 * fade;
-  impactMaterials.frostRing.emissiveIntensity = 1.8 * fade;
+  // Update frost ring materials with fade and per-ring opacity multipliers
+  impactMaterials.frostRing0.opacity = 0.6 * fade;
+  impactMaterials.frostRing0.emissiveIntensity = 1.8 * fade;
+  impactMaterials.frostRing1.opacity = 0.48 * fade;
+  impactMaterials.frostRing1.emissiveIntensity = 1.8 * fade;
+  impactMaterials.frostRing2.opacity = 0.36 * fade;
+  impactMaterials.frostRing2.emissiveIntensity = 1.8 * fade;
 
   const mainScale = 1 + elapsed * 2;
   const innerScale = 1 + elapsed * 3;
@@ -399,27 +423,25 @@ function GlacialShardImpact({ position, onComplete }: GlacialShardImpactProps) {
         );
       })}
 
-      {/* Expanding frost rings */}
-      {[0, 1, 2].map((i) => {
-        const opacity = 0.6 * fade * (1 - i * 0.2);
-        return (
-          <mesh
-            key={`frost-ring-${i}`}
-            rotation={[-Math.PI/2, 0, i * Math.PI/3]}
-            geometry={getFrostRingGeometry(i)}
-            scale={[ringScale, ringScale, ringScale]}
-          >
-            <meshStandardMaterial
-              color="#AAEEFF"
-              emissive="#AAEEFF"
-              emissiveIntensity={1.8 * fade}
-              transparent
-              opacity={opacity}
-              blending={AdditiveBlending}
-            />
-          </mesh>
-        );
-      })}
+      {/* Expanding frost rings - using memoized materials */}
+      <mesh
+        rotation={[-Math.PI/2, 0, 0]}
+        geometry={glacialShardGeometries.frostRing0}
+        scale={[ringScale, ringScale, ringScale]}
+        material={impactMaterials.frostRing0}
+      />
+      <mesh
+        rotation={[-Math.PI/2, 0, Math.PI/3]}
+        geometry={glacialShardGeometries.frostRing1}
+        scale={[ringScale, ringScale, ringScale]}
+        material={impactMaterials.frostRing1}
+      />
+      <mesh
+        rotation={[-Math.PI/2, 0, 2 * Math.PI/3]}
+        geometry={glacialShardGeometries.frostRing2}
+        scale={[ringScale, ringScale, ringScale]}
+        material={impactMaterials.frostRing2}
+      />
 
       {/* Enhanced bright flash */}
       <pointLight

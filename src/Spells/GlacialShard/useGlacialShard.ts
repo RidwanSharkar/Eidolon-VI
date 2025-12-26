@@ -115,6 +115,7 @@ export function useGlacialShard({
   const [hasShield, setHasShield] = useState(false);
   const [shieldAbsorption, setShieldAbsorption] = useState(SHIELD_ABSORPTION);
   const shieldStartTime = useRef<number | null>(null);
+  const shieldTimeoutRef = useRef<NodeJS.Timeout | null>(null); // MEMORY FIX: Track timeout for cleanup
 
   // Track Glacial Shard kill count for Frost subclass
   const [glacialShardKillCount, setGlacialShardKillCount] = useState(0);
@@ -148,6 +149,16 @@ export function useGlacialShard({
     window.addEventListener('gameReset', handleGameReset);
     return () => window.removeEventListener('gameReset', handleGameReset);
   }, [resetGlacialShardKillCount]);
+
+  // MEMORY FIX: Cleanup shield timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (shieldTimeoutRef.current) {
+        clearTimeout(shieldTimeoutRef.current);
+        shieldTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Track enemy health for kill detection
   const enemyHealthTracker = useRef<Record<string, number>>({});
@@ -218,11 +229,17 @@ export function useGlacialShard({
       }
     }
 
+    // MEMORY FIX: Clear any existing timeout before creating new one
+    if (shieldTimeoutRef.current) {
+      clearTimeout(shieldTimeoutRef.current);
+    }
+
     // Automatically remove shield after duration
-    setTimeout(() => {
+    shieldTimeoutRef.current = setTimeout(() => {
       setHasShield(false);
       setShieldAbsorption(SHIELD_ABSORPTION);
       shieldStartTime.current = null;
+      shieldTimeoutRef.current = null;
     }, SHIELD_DURATION);
   }, [setActiveEffects, parentRef, isInRoom, isPlayer, sendEffect]);
 
