@@ -1275,6 +1275,11 @@ export default function Unit({
         maxDistance: 0,
         startPosition: new Vector3(),
         hasCollided: false,
+        isFullyCharged: false,
+        hitEnemies: new Set<string>(),
+        opacity: 1,
+        fadeStartTime: null,
+        isPerfectShot: false,
         previousPosition: new Vector3()
       }),
       (proj) => {
@@ -1285,6 +1290,11 @@ export default function Unit({
         proj.maxDistance = 0;
         proj.startPosition.set(0, 0, 0);
         proj.hasCollided = false;
+        proj.isFullyCharged = false;
+        proj.hitEnemies?.clear(); // Clear the Set instead of creating new one to avoid GC
+        proj.opacity = 1;
+        proj.fadeStartTime = null;
+        proj.isPerfectShot = false;
         proj.previousPosition?.set(0, 0, 0);
       }
     )
@@ -1426,6 +1436,13 @@ export default function Unit({
     
     // Store perfect shot status for damage calculation
     newProjectile.isPerfectShot = isPerfectShot;
+    
+    // Clear hitEnemies to ensure fresh state (in case pool reset didn't fire)
+    if (newProjectile.hitEnemies) {
+      newProjectile.hitEnemies.clear();
+    } else {
+      newProjectile.hitEnemies = new Set<string>();
+    }
     
     // If this is a perfect shot, set the auto-release flag to prevent duplicate shots
     if (isPerfectShot) {
@@ -2386,12 +2403,13 @@ export default function Unit({
             handleProjectileHit(projectile.id, enemy.id, projectile.power, projectile.position);
             
             // Only set hasCollided if it's not a fully charged shot or perfect shot
-            if (projectile.power < 1 && !projectile.isPerfectShot) {
+            // Use isFullyCharged (power >= 0.95) to match damage calculation logic
+            if (!projectile.isFullyCharged && !projectile.isPerfectShot) {
               projectile.hasCollided = true;
               expiredProjectiles.push(projectile);
               return false;
             }
-            // Fully charged shots and perfect shots continue through enemies
+            // Fully charged shots and perfect shots continue through enemies (pierce)
           }
         }
         

@@ -41,16 +41,16 @@ const DashChargeOrb: React.FC<{
   return (
     <div className={styles.orbContainer}>
       {/* Glass orb shell */}
-      <div className={styles.glassOrb}>
+      <div className={`${styles.glassOrb} ${isAvailable ? styles.fullyCharged : ''}`}>
         {/* Inner fluid container */}
         <div className={styles.fluidContainer}>
           {/* Animated fluid fill */}
           <div 
-            className={`${styles.fluid} ${shouldFill ? styles.filling : ''} ${shouldDrain ? styles.draining : ''}`}
+            className={`${styles.fluid} ${shouldFill ? styles.filling : ''} ${shouldDrain ? styles.draining : ''} ${isAvailable ? styles.fluidReady : ''}`}
             style={{
               backgroundColor: weaponColor,
               height: shouldDrain ? '100%' : `${fillPercentage}%`,
-              boxShadow: `0 0 10px ${weaponColor}40`,
+              boxShadow: `0 0 15px ${weaponColor}60, inset 0 0 10px ${weaponColor}30`,
               transition: isAvailable ? 'none' : shouldDrain ? 'none' : 'height 0.15s ease-out'
             }}
           />
@@ -82,10 +82,10 @@ const DashChargeOrb: React.FC<{
       
       {/* Glow effect */}
       <div 
-        className={styles.orbGlow}
+        className={`${styles.orbGlow} ${isAvailable ? styles.glowActive : ''}`}
         style={{
-          backgroundColor: `${weaponColor}20`,
-          boxShadow: `0 0 20px ${weaponColor}30`
+          backgroundColor: `${weaponColor}${isAvailable ? '40' : '20'}`,
+          boxShadow: `0 0 ${isAvailable ? '30px' : '20px'} ${weaponColor}${isAvailable ? '50' : '30'}`
         }}
       />
     </div>

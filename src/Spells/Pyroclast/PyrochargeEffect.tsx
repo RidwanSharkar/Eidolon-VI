@@ -217,7 +217,7 @@ export default function PyrochargeEffect({
 
       {/* Ground fire ring */}
       <mesh
-        position={[0, 0.5, 0]}
+        position={[0, 0, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         scale={[groundRingRadius, groundRingRadius, 1]}
         geometry={pyrochargeGeometries.groundRing}
@@ -226,7 +226,7 @@ export default function PyrochargeEffect({
 
       {/* Center fire pillar */}
       <mesh
-        position={[0, 0, 0]}
+        position={[0, -0.4, 0]}
         geometry={pyrochargeGeometries.centerPillar}
         material={materials.centerPillar}
         scale={[1, pillarHeight, 1]}
