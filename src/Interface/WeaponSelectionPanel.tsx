@@ -11,11 +11,11 @@ interface WeaponSelectionPanelProps {
   onStart: () => void;
 }
 
-export default function WeaponSelectionPanel({ 
-  onWeaponSelect, 
+export default function WeaponSelectionPanel({
+  onWeaponSelect,
   selectedWeapon,
   selectedSubclass,
-  onStart 
+  onStart
 }: WeaponSelectionPanelProps) {
   const [tooltipContent, setTooltipContent] = useState<{
     title: string;

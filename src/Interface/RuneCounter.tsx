@@ -35,12 +35,12 @@ export function RuneCounter({
       <div className={styles.runeInfo}>
         {isMinimized ? (
           <div className={styles.minimizedContent}>
-            Crit Runes: {criticalRuneCount + critDamageRuneCount}
+            RUNES: {criticalRuneCount + critDamageRuneCount}
           </div>
         ) : (
           <>
             <div className={styles.runeCount}>
-              Runes: {criticalRuneCount + critDamageRuneCount}
+              RUNES: {criticalRuneCount + critDamageRuneCount}
             </div>
             <div className={styles.critChance}>
               Crit Chance: {(criticalChance * 100).toFixed(1)}%

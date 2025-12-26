@@ -43,6 +43,67 @@ function HomePageContent() {
   // Player stun ref for lightning strikes
   const playerStunRef = useRef<{ triggerStun: (duration: number) => void } | null>(null);
 
+  // Background music management
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Manage background music throughout the game session
+  useEffect(() => {
+    console.log('HomePageContent: Setting up background music...');
+
+    const audio = new Audio('/audio/Eidolon.mp3');
+    audio.loop = true;
+    audio.volume = 0.7; // 70% volume
+    audio.preload = 'auto';
+
+    audioRef.current = audio;
+
+    // Add event listeners for debugging
+    audio.addEventListener('loadstart', () => console.log('Background Audio: Load started'));
+    audio.addEventListener('canplay', () => console.log('Background Audio: Can play'));
+    audio.addEventListener('error', (e) => console.error('Background Audio error:', e));
+    audio.addEventListener('play', () => console.log('Background Audio: Started playing'));
+    audio.addEventListener('pause', () => console.log('Background Audio: Paused'));
+
+    // Attempt to play the audio when weapon selection screen is shown
+    const playAudio = async () => {
+      try {
+        console.log('Background Audio: Attempting to play...');
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+          console.log('Background Audio: Play promise resolved successfully');
+        }
+      } catch (error) {
+        console.error('Background Audio playback failed:', error);
+        // Audio may require user interaction, this is expected in some browsers
+        // Try to play on first user interaction instead
+        const handleFirstInteraction = () => {
+          console.log('Background Audio: Attempting to play on user interaction');
+          audio.play().catch(e => console.error('Background Audio play on interaction failed:', e));
+          document.removeEventListener('click', handleFirstInteraction);
+          document.removeEventListener('keydown', handleFirstInteraction);
+        };
+        document.addEventListener('click', handleFirstInteraction);
+        document.addEventListener('keydown', handleFirstInteraction);
+      }
+    };
+
+    // Start playing when entering weapon selection (when no weapon is selected)
+    if (!currentWeapon) {
+      playAudio();
+    }
+
+    // Cleanup function to stop audio when component unmounts (end of game session)
+    return () => {
+      if (audioRef.current) {
+        console.log('HomePageContent: Stopping background music');
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+    };
+  }, [currentWeapon]); // Re-run when weapon selection changes
+
   const handleWeaponSelect = (weapon: WeaponType, subclass?: WeaponSubclass) => {
     setCurrentWeapon(weapon);
     setCurrentSubclass(subclass || null);
@@ -188,9 +249,11 @@ function HomePageContent() {
     setSkeletonCount(0);
     setCurrentWeapon(null);  // FORCES WEAPON RESELECTION
     setCurrentSubclass(null); // FORCES SUBCLASS RESELECTION
-    
+
     // Dispatch reset event for other components
     window.dispatchEvent(new CustomEvent('gameReset'));
+
+    // Note: Background music continues playing during reset
   };
 
   // Add this cooldown management system in index.tsx
