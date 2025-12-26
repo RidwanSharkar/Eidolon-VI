@@ -1,7 +1,16 @@
 // src/Versus/Reaper/ReaperBloodPool.tsx - Blood Vortex Effect
 import React, { useRef, useEffect, useState } from 'react';
-import { Vector3, Group } from 'three';
+import { Vector3, Group, SphereGeometry, TorusGeometry, CircleGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
+
+// MEMORY FIX: Static shared geometries - created once at module load, reused for all instances
+// Use base scale of 1.0 and apply dynamic scale via mesh scale prop
+const BLOOD_SPHERE_GEOMETRY = new SphereGeometry(0.6, 12, 8);
+const BLOOD_INNER_SPHERE_GEOMETRY = new SphereGeometry(0.6, 8, 6);
+const BLOOD_RING_1_GEOMETRY = new TorusGeometry(0.8, 0.1, 6, 12);
+const BLOOD_RING_2_GEOMETRY = new TorusGeometry(0.6, 0.08, 6, 10);
+const BLOOD_SPLATTER_GEOMETRY = new CircleGeometry(1.2, 16);
+const BLOOD_MIST_GEOMETRY = new SphereGeometry(1.2, 8, 6);
 
 interface ReaperBloodVortexProps {
   position: Vector3;
@@ -66,9 +75,9 @@ export default function ReaperBloodVortex({
       ref={groupRef}
       position={[position.x, position.y + 0.8, position.z]}
     >
-      {/* Central blood sphere with swirling effect */}
-      <mesh>
-        <sphereGeometry args={[scale * 0.6, 12, 8]} />
+      {/* MEMORY FIX: Central blood sphere - use shared geometry with scale transform */}
+      <mesh scale={[scale, scale, scale]}>
+        <primitive object={BLOOD_SPHERE_GEOMETRY} attach="geometry" />
         <meshBasicMaterial 
           color="#66d9ff" // Light blue
           transparent 
@@ -76,9 +85,9 @@ export default function ReaperBloodVortex({
         />
       </mesh>
 
-      {/* Inner darker core */}
-      <mesh scale={[0.7, 0.7, 0.7]}>
-        <sphereGeometry args={[scale * 0.6, 8, 6]} />
+      {/* MEMORY FIX: Inner darker core - use shared geometry with scale */}
+      <mesh scale={[scale * 0.7, scale * 0.7, scale * 0.7]}>
+        <primitive object={BLOOD_INNER_SPHERE_GEOMETRY} attach="geometry" />
         <meshBasicMaterial 
           color="#4db8e6" // Darker light blue
           transparent 
@@ -86,12 +95,13 @@ export default function ReaperBloodVortex({
         />
       </mesh>
 
-      {/* Swirling ring effects */}
+      {/* MEMORY FIX: Swirling ring effects - use shared geometry with scale */}
       <mesh 
         position={[0, 0.3, 0]}
         rotation={[Math.PI / 6, 0, 0]}
+        scale={[scale, scale, scale]}
       >
-        <torusGeometry args={[scale * 0.8, scale * 0.1, 6, 12]} />
+        <primitive object={BLOOD_RING_1_GEOMETRY} attach="geometry" />
         <meshBasicMaterial 
           color="#80e6ff"
           transparent 
@@ -102,8 +112,9 @@ export default function ReaperBloodVortex({
       <mesh 
         position={[0, 0.15, 0]}
         rotation={[-Math.PI / 6, 0, 0]}
+        scale={[scale, scale, scale]}
       >
-        <torusGeometry args={[scale * 0.6, scale * 0.08, 6, 10]} />
+        <primitive object={BLOOD_RING_2_GEOMETRY} attach="geometry" />
         <meshBasicMaterial 
           color="#5cd1ff"
           transparent 
@@ -111,9 +122,9 @@ export default function ReaperBloodVortex({
         />
       </mesh>
 
-      {/* Ground blood splatter */}
-      <mesh position={[0, 0.15, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[scale * 1.2, 16]} />
+      {/* MEMORY FIX: Ground blood splatter - use shared geometry with scale */}
+      <mesh position={[0, 0.15, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[scale, scale, 1]}>
+        <primitive object={BLOOD_SPLATTER_GEOMETRY} attach="geometry" />
         <meshBasicMaterial 
           color="#33a3cc"
           transparent 
@@ -121,9 +132,9 @@ export default function ReaperBloodVortex({
         />
       </mesh>
 
-      {/* Outer blood mist */}
-      <mesh>
-        <sphereGeometry args={[scale * 1.2, 8, 6]} />
+      {/* MEMORY FIX: Outer blood mist - use shared geometry with scale */}
+      <mesh scale={[scale, scale, scale]}>
+        <primitive object={BLOOD_MIST_GEOMETRY} attach="geometry" />
         <meshBasicMaterial 
           color="#2e7399"
           transparent 

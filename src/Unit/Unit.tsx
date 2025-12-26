@@ -326,6 +326,7 @@ export default function Unit({
   const [isSwinging, setIsSwinging] = useState(false);
   const [fireballs, setFireballs] = useState<FireballData[]>([]);
   const nextFireballId = useRef(0);
+  const nextProjectileId = useRef(0); // MEMORY FIX: Use counter instead of Date.now() to prevent duplicate keys
   const { camera } = useThree();
   const [isBowCharging, setIsBowCharging] = useState(false);
   
@@ -1004,6 +1005,7 @@ export default function Unit({
       // Reset ID counters to prevent overflow
       nextDamageNumberId.current = 0;
       nextFireballId.current = 0;
+      nextProjectileId.current = 0;
       nextSmiteId.current = 0;
       nextEffectId.current = 0;
       
@@ -1419,7 +1421,7 @@ export default function Unit({
     tempVec3_2.applyQuaternion(groupRef.current.quaternion);
 
     const newProjectile = projectilePool.acquire();
-    newProjectile.id = Date.now();
+    newProjectile.id = nextProjectileId.current++; // MEMORY FIX: Use counter instead of Date.now() to prevent duplicate key warnings
     newProjectile.position.copy(tempVec3);
     newProjectile.direction.copy(tempVec3_2);
     newProjectile.power = power;

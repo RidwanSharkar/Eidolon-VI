@@ -21,11 +21,8 @@ const summonGeometries = {
   spark: SHARED_SPHERE_GEOMETRY_SPELL_PARTICLE // Approximation of (0.05, 8, 8)
 };
 
-let summonResourceUsers = 0;
-
-const disposeSummonResources = () => {
-  Object.values(summonGeometries).forEach(geo => geo.dispose());
-};
+// MEMORY FIX: Removed resource disposal - these are global shared geometries
+// from SharedGeometries.ts that should NEVER be disposed per-instance
 
 export default function SummonedHandler({
   position,
@@ -41,16 +38,8 @@ export default function SummonedHandler({
   const groupRef = useRef<Group>(null);
   const [currentTarget, setCurrentTarget] = useState<Enemy | null>(null);
 
-  // Resource management
-  useEffect(() => {
-    summonResourceUsers += 1;
-    return () => {
-      summonResourceUsers = Math.max(0, summonResourceUsers - 1);
-      if (summonResourceUsers === 0) {
-        disposeSummonResources();
-      }
-    };
-  }, []);
+  // MEMORY FIX: Removed resource disposal tracking - shared geometries from SharedGeometries.ts
+  // are managed globally and should NEVER be disposed per-instance
 
   // Shared materials - memoized to avoid recreation
   const explosionMaterials = useMemo(() => ({

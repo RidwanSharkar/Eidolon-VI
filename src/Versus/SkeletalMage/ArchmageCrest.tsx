@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { DoubleSide, Group, MeshStandardMaterial, SphereGeometry } from 'three';
 import { Shape, ExtrudeGeometry } from 'three';
 
@@ -77,6 +77,14 @@ export default function ArchmageCrest({ position = [0, 0, 0], scale = 1 }: Archm
     centerCore: new SphereGeometry(0.12, 12, 12),
     energyWisp: new SphereGeometry(0.04, 6, 6)
   }), [bladeShape, bladeExtrudeSettings]);
+
+  // Cleanup geometries and materials on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
+    };
+  }, [geometries, materials]);
 
   // Animation
   useFrame((state) => {

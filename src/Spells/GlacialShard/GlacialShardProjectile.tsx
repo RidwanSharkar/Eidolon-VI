@@ -33,11 +33,8 @@ const glacialShardGeometries = {
   frostRing2: SHARED_TORUS_GEOMETRY_SPELL_LARGE // Approximation of (2.1, 0.1, 8, 24)
 };
 
-let glacialShardResourceUsers = 0;
-
-const disposeGlacialShardResources = () => {
-  Object.values(glacialShardGeometries).forEach(geo => geo.dispose());
-};
+// MEMORY FIX: Removed resource disposal - these are global shared geometries
+// that should NEVER be disposed per-instance. They are managed by SharedGeometries.ts
 
 interface GlacialShardProjectileProps {
   id: number;
@@ -61,16 +58,8 @@ export default function GlacialShardProjectile({
   const [showImpact, setShowImpact] = useState(false);
   const [impactPosition, setImpactPosition] = useState<Vector3 | null>(null);
 
-  // Resource management
-  useEffect(() => {
-    glacialShardResourceUsers += 1;
-    return () => {
-      glacialShardResourceUsers = Math.max(0, glacialShardResourceUsers - 1);
-      if (glacialShardResourceUsers === 0) {
-        disposeGlacialShardResources();
-      }
-    };
-  }, []);
+  // MEMORY FIX: Removed resource tracking - shared geometries are global singletons
+  // Only dispose materials created by this component
 
   // Shared materials - memoized
   const materials = useMemo(() => ({

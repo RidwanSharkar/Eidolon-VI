@@ -32,11 +32,8 @@ const whirlwindGeometries = {
   trailPlane: SHARED_PLANE_GEOMETRY_TRAIL
 };
 
-let whirlwindResourceUsers = 0;
-
-const disposeWhirlwindResources = () => {
-  Object.values(whirlwindGeometries).forEach(geo => geo.dispose());
-};
+// MEMORY FIX: Removed resource disposal - these are global shared geometries
+// that should NEVER be disposed per-instance. They are managed by SharedGeometries.ts
 
 interface WhirlwindProps {
   parentRef: React.RefObject<Group>;
@@ -257,16 +254,8 @@ export default function Whirlwind({
   const fireEffectRef = useRef<boolean>(false);
   const prevActiveState = useRef<boolean>(false);
 
-  // Resource management
-  useEffect(() => {
-    whirlwindResourceUsers += 1;
-    return () => {
-      whirlwindResourceUsers = Math.max(0, whirlwindResourceUsers - 1);
-      if (whirlwindResourceUsers === 0) {
-        disposeWhirlwindResources();
-      }
-    };
-  }, []);
+  // MEMORY FIX: Removed resource disposal tracking - shared geometries from SharedGeometries.ts
+  // are managed globally and should NEVER be disposed per-instance
 
   // Shared materials - memoized to avoid recreation
   const ringMaterial = useMemo(() => new MeshStandardMaterial({

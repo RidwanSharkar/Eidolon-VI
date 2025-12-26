@@ -2,9 +2,103 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Color } from 'three';
-import { AdditiveBlending, Material, Mesh } from 'three';
+import { AdditiveBlending, Material, Mesh, SphereGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
 import MageFireballTrail from './MageFireballTrail';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
+
+// MEMORY FIX: Static shared geometries for explosion effect - created once, reused for all instances
+// Use base size of 1.0 and scale via mesh scale prop to avoid recreating geometry every frame
+const EXPLOSION_CORE_GEOMETRY = new SphereGeometry(0.35, 32, 32);
+const EXPLOSION_INNER_GEOMETRY = new SphereGeometry(0.4, 24, 24);
+const EXPLOSION_RING_GEOMETRIES = [
+  new TorusGeometry(0.45, 0.045, 16, 32),
+  new TorusGeometry(0.675, 0.045, 16, 32),
+  new TorusGeometry(0.9, 0.045, 16, 32),
+  new TorusGeometry(1.175, 0.045, 16, 32)
+];
+
+// MEMORY FIX: Pre-baked rotation values to avoid Math.random() causing re-renders
+const RING_ROTATIONS = [
+  [0.8, 1.2, 0.3],
+  [2.1, 0.5, 1.8],
+  [1.5, 2.8, 0.9],
+  [0.3, 1.9, 2.4]
+] as const;
+
+// MEMORY FIX: Memoized explosion component using shared geometries
+interface MageFireballExplosionProps {
+  position: Vector3;
+  explosionStartTime: number | null;
+}
+
+function MageFireballExplosion({ position, explosionStartTime }: MageFireballExplosionProps) {
+  const [, forceUpdate] = useState({});
+  
+  useFrame(() => {
+    forceUpdate({});
+  });
+  
+  const elapsed = explosionStartTime ? (Date.now() - explosionStartTime) / 1000 : 0;
+  const duration = 0.2;
+  const fade = Math.max(0, 1 - (elapsed / duration));
+  
+  // MEMORY FIX: Use scale transform instead of dynamic geometry args
+  const coreScale = 1 + elapsed * 2;
+  const innerScale = 1 + elapsed * 3;
+  const ringScale = 1 + elapsed * 3;
+  
+  return (
+    <group position={position.toArray()}>
+      {/* Core explosion sphere - MEMORY FIX: use shared geometry with scale */}
+      <mesh scale={[coreScale, coreScale, coreScale]}>
+        <primitive object={EXPLOSION_CORE_GEOMETRY} attach="geometry" />
+        <meshStandardMaterial
+          color="#8A2BE2"
+          emissive="#9370DB"
+          emissiveIntensity={2 * fade}
+          transparent
+          opacity={0.8 * fade}
+          depthWrite={false}
+          blending={AdditiveBlending}
+        />
+      </mesh>
+      
+      {/* Projectile core - MEMORY FIX: use shared geometry with scale */}
+      <mesh scale={[innerScale, innerScale, innerScale]}>
+        <primitive object={EXPLOSION_INNER_GEOMETRY} attach="geometry" />
+        <meshStandardMaterial
+          color="#6A0DAD"
+          emissive="#6A0DAD"
+          emissiveIntensity={1 * fade}
+          transparent
+          opacity={0.9 * fade}
+          depthWrite={false}
+          blending={AdditiveBlending}
+        />
+      </mesh>
+
+      {/* Multiple expanding rings - MEMORY FIX: use shared geometries with scale */}
+      {EXPLOSION_RING_GEOMETRIES.map((geometry, i) => (
+        <mesh 
+          key={i} 
+          rotation={RING_ROTATIONS[i] as unknown as [number, number, number]}
+          scale={[ringScale, ringScale, ringScale]}
+        >
+          <primitive object={geometry} attach="geometry" />
+          <meshStandardMaterial
+            color="#6A0DAD"
+            emissive="#6A0DAD"
+            emissiveIntensity={0.8 * fade}
+            transparent
+            opacity={0.5 * fade * (1 - i * 0.2)}
+            depthWrite={false}
+            blending={AdditiveBlending}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
 
 interface FireballProps {
   position: Vector3;
@@ -167,65 +261,11 @@ export default function MageFireball({
           </group>
         </>
       ) : (
-        // explosion effect copied from Unit.tsx - positioned at fireball's last position
-        <group position={fireballRef.current?.position || position}>
-          {/* Calculate fade  */}
-          {(() => {
-            const elapsed = explosionStartTime ? (Date.now() - explosionStartTime) / 1000 : 0;
-            const duration = 0.2;
-            const fade = Math.max(0, 1 - (elapsed / duration));
-            
-            return (
-              <>
-                {/* Core explosion sphere */}
-                <mesh>
-                  <sphereGeometry args={[0.35 * (1 + elapsed * 2), 32, 32]} />
-                  <meshStandardMaterial
-                    color="#8A2BE2"
-                    emissive="#9370DB"
-                    emissiveIntensity={2 * fade}
-                    transparent
-                    opacity={0.8 * fade}
-                    depthWrite={false}
-                    blending={AdditiveBlending}
-                  />
-                </mesh>
-                
-                {/* projectile core */}
-                <mesh>
-                  <sphereGeometry args={[0.4 * (1 + elapsed * 3), 24, 24]} />
-                  <meshStandardMaterial
-                    color="#6A0DAD"
-                    emissive="#6A0DAD"
-                    emissiveIntensity={1 * fade}
-                    transparent
-                    opacity={0.9 * fade}
-                    depthWrite={false}
-                    blending={AdditiveBlending}
-                  />
-                </mesh>
-
-                {/* Multiple expanding rings */}
-                {[0.45, 0.675, 0.9, 1.175].map((size, i) => (
-                  <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-                    <torusGeometry args={[size * (1 + elapsed * 3), 0.045, 16, 32]} />
-                    <meshStandardMaterial
-                      color="#6A0DAD"
-                      emissive="#6A0DAD"
-                      emissiveIntensity={0.8 * fade}
-                      transparent
-                      opacity={0.5 * fade * (1 - i * 0.2)}
-                      depthWrite={false}
-                      blending={AdditiveBlending}
-                    />
-                  </mesh>
-                ))}
-
-
-              </>
-            );
-          })()}
-        </group>
+        // MEMORY FIX: explosion effect using shared geometries with scale transform
+        <MageFireballExplosion 
+          position={fireballRef.current?.position || position}
+          explosionStartTime={explosionStartTime}
+        />
       )}
     </group>
   );

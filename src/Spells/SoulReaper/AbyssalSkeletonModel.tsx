@@ -134,49 +134,68 @@ const jointGeometry = ABYSSAL_SKELETON_GEOMETRIES.jointSmall;
 const largeBoneGeometry = ABYSSAL_SKELETON_GEOMETRIES.largeBone;
 const clawGeometry = ABYSSAL_SKELETON_GEOMETRIES.claw;
 
-// Simplified blade decoration component
+// MEMORY FIX: Shared blade decoration geometry and material at module level
+const BLADE_DECORATION_SHAPE = (() => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(0.15, -0.05);
+  shape.bezierCurveTo(0.3, 0.08, 0.5, 0.18, 0.6, 0.2);
+  shape.lineTo(0.4, 0.28);
+  shape.bezierCurveTo(0.2, 0.08, 0.08, 0.0, 0.04, 0.25);
+  shape.lineTo(0, 0);
+  return shape;
+})();
+
+const BLADE_DECORATION_EXTRUDE_SETTINGS = {
+  steps: 2,
+  depth: 0.02,
+  bevelEnabled: true,
+  bevelThickness: 0.015,
+  bevelSize: 0.02,
+  bevelSegments: 2,
+  curveSegments: 12
+} as const;
+
+const BLADE_DECORATION_GEOMETRY = new ExtrudeGeometry(BLADE_DECORATION_SHAPE, BLADE_DECORATION_EXTRUDE_SETTINGS);
+const BLADE_DECORATION_MATERIAL = new MeshStandardMaterial({
+  color: "#00b359",
+  emissive: "#00b359",
+  emissiveIntensity: 0.8,
+  metalness: 0.9,
+  roughness: 0.1,
+  transparent: true,
+  opacity: 1.0
+});
+
+// Register for global disposal
+let registeredBladeDecorationResources = false;
+const registerBladeDecorationResources = () => {
+  if (registeredBladeDecorationResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      BLADE_DECORATION_GEOMETRY.dispose();
+      BLADE_DECORATION_MATERIAL.dispose();
+    }, 'BladeDecoration');
+    registeredBladeDecorationResources = true;
+  } catch (error) {
+    console.warn('Failed to register BladeDecoration resources:', error);
+  }
+};
+
+// Simplified blade decoration component - now uses shared geometry/material
 function BladeDecoration({ scale = 1, position = [0, 0, 0], rotation = [0, 0, 0] }: { 
   scale?: number; 
   position?: [number, number, number]; 
   rotation?: [number, number, number]; 
 }) {
-  // Create a simplified blade shape
-  const bladeShape = useMemo(() => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    shape.lineTo(0.15, -0.05);
-    shape.bezierCurveTo(0.3, 0.08, 0.5, 0.18, 0.6, 0.2);
-    shape.lineTo(0.4, 0.28);
-    shape.bezierCurveTo(0.2, 0.08, 0.08, 0.0, 0.04, 0.25);
-    shape.lineTo(0, 0);
-    return shape;
+  // Register shared resources on first render
+  useEffect(() => {
+    registerBladeDecorationResources();
   }, []);
-
-  const bladeExtrudeSettings = useMemo(() => ({
-    steps: 2,
-    depth: 0.02,
-    bevelEnabled: true,
-    bevelThickness: 0.015,
-    bevelSize: 0.02,
-    bevelSegments: 2,
-    curveSegments: 12
-  }), []);
-
-  const bladeGeometry = useMemo(() => new ExtrudeGeometry(bladeShape, bladeExtrudeSettings), [bladeShape, bladeExtrudeSettings]);
-
-  const bladeMaterial = useMemo(() => new MeshStandardMaterial({
-    color: "#00b359",
-    emissive: "#00b359",
-    emissiveIntensity: 0.8,
-    metalness: 0.9,
-    roughness: 0.1,
-    transparent: true,
-    opacity: 1.0
-  }), []);
 
   return (
     <group position={position} rotation={rotation} scale={[scale, scale, scale]}>
-      <mesh geometry={bladeGeometry} material={bladeMaterial} />
+      <mesh geometry={BLADE_DECORATION_GEOMETRY} material={BLADE_DECORATION_MATERIAL} />
     </group>
   );
 }

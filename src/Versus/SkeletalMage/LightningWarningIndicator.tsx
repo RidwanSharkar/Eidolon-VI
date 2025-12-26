@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Vector3 } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { DoubleSide, RingGeometry, SphereGeometry } from 'three';
+import { registerGlobalSharedResource } from '../../Scene/EffectPools';
 
 interface LightningWarningIndicatorProps {
   position: Vector3;
@@ -18,6 +19,28 @@ const warningRingGeometry = new RingGeometry(DAMAGE_RADIUS - 0.2, DAMAGE_RADIUS,
 const pulsingRingGeometry = new RingGeometry(DAMAGE_RADIUS - 0.6, DAMAGE_RADIUS - 0.4, WARNING_RING_SEGMENTS);
 const outerGlowGeometry = new RingGeometry(DAMAGE_RADIUS - 0.15, DAMAGE_RADIUS, WARNING_RING_SEGMENTS);
 const particleGeometry = new SphereGeometry(0.08, 8, 8);
+
+// Register for global disposal
+let registeredLightningWarningResources = false;
+const registerLightningWarningResources = () => {
+  if (registeredLightningWarningResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      warningRingGeometry.dispose();
+      pulsingRingGeometry.dispose();
+      outerGlowGeometry.dispose();
+      particleGeometry.dispose();
+    }, 'LightningWarningIndicator');
+    registeredLightningWarningResources = true;
+  } catch (error) {
+    console.warn('Failed to register LightningWarning resources:', error);
+  }
+};
+
+// Auto-register when module loads
+if (typeof window !== 'undefined') {
+  registerLightningWarningResources();
+}
 
 export default function LightningWarningIndicator({ position, duration, onComplete }: LightningWarningIndicatorProps) {
   const startTimeRef = useRef(Date.now());

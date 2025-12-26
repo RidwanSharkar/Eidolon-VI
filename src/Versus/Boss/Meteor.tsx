@@ -15,6 +15,7 @@ import MeteorTrail from './MeteorTrail';
 import { Enemy } from '@/Versus/enemy';
 import { calculateDamage } from '@/Weapons/damage';
 import { SHARED_SPHERE_GEOMETRY_MEDIUM, SHARED_SPHERE_GEOMETRY_HIGH, SHARED_COLOR_METEOR_RED } from '../../SharedGeometries';
+import { registerGlobalSharedResource } from '../../Scene/EffectPools';
 
 interface MeteorProps {
   targetId: string;
@@ -45,6 +46,30 @@ const particleGeometry = new SphereGeometry(0.05, 8, 8); // Half size for partic
 // Reusable vectors to avoid allocations
 const tempPlayerGroundPos = new Vector3();
 const tempTargetGroundPos = new Vector3();
+
+// Register for global disposal
+let registeredMeteorResources = false;
+const registerMeteorResources = () => {
+  if (registeredMeteorResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      meteorGeometry.dispose();
+      meteorMaterial.dispose();
+      warningRingGeometry.dispose();
+      pulsingRingGeometry.dispose();
+      outerGlowGeometry.dispose();
+      particleGeometry.dispose();
+    }, 'Meteor');
+    registeredMeteorResources = true;
+  } catch (error) {
+    console.warn('Failed to register Meteor resources:', error);
+  }
+};
+
+// Auto-register when module loads
+if (typeof window !== 'undefined') {
+  registerMeteorResources();
+}
 
 const createMeteorImpactEffect = (position: Vector3, startTime: number, onComplete: () => void) => {
   const elapsed = (Date.now() - startTime) / 1000;

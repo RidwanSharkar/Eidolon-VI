@@ -187,13 +187,14 @@ export default function Legion({
     );
   };
 
-  // Dispose geometries and materials on unmount
+  // MEMORY FIX: Only dispose materials, NOT shared geometries
+  // Shared geometries are managed globally and disposed on scene cleanup
   useEffect(() => {
     return () => {
-      Object.values(geometries).forEach(geo => geo.dispose());
+      // Only dispose materials - geometries are shared singletons
       Object.values(materials).forEach(mat => mat.dispose());
     };
-  }, [geometries, materials]);
+  }, [materials]);
 
   // useMemo for initial calculations
   const [initialTargetPos, startPos, trajectory] = React.useMemo(() => {

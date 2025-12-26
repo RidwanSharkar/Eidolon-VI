@@ -65,7 +65,7 @@ function HomePageContent() {
 
     const audio = new Audio(randomTrack);
     audio.loop = true;
-    audio.volume = 0.4; // 70% volume
+    audio.volume = 0.325; // VOLUME
     audio.preload = 'auto';
 
     audioRef.current = audio;

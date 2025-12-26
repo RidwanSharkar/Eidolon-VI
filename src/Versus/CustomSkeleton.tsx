@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import BonePlate from '../gear/BonePlate';
 import SkullShield from '../Weapons/SkullShield';
 import BoneSabre from '../Weapons/BoneSabre';
+import { registerGlobalSharedResource } from '../Scene/EffectPools';
 
 interface CustomSkeletonProps {
   position: [number, number, number];
@@ -91,6 +92,21 @@ const CACHED_GEOMETRIES = {
   elbowJoint: new SphereGeometry(0.12, 12, 12),
   handBase: new BoxGeometry(0.2, 0.15, 0.08),
   jawCylinder: new CylinderGeometry(0.08, 0.08, 0.2, 5)
+};
+
+// Register for global disposal
+let registeredCustomSkeletonResources = false;
+const registerCustomSkeletonResources = () => {
+  if (registeredCustomSkeletonResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      Object.values(CACHED_GEOMETRIES).forEach(geo => geo.dispose());
+      Object.values(CACHED_MATERIALS).forEach(mat => mat.dispose());
+    }, 'CustomSkeleton');
+    registeredCustomSkeletonResources = true;
+  } catch (error) {
+    console.warn('Failed to register CustomSkeleton resources:', error);
+  }
 };
 
 // Legacy aliases for compatibility
@@ -267,6 +283,11 @@ export default function CustomSkeleton({ position, isAttacking, isWalking, onHit
 
   const walkSpeed = 4;
   const attackSpeed = 1.35;
+
+  // Register resources for global disposal on mount
+  useEffect(() => {
+    registerCustomSkeletonResources();
+  }, []);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;

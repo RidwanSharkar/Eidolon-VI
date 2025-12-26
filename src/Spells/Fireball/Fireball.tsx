@@ -27,7 +27,9 @@ export default function Fireball({ position, direction, onImpact }: FireballProp
   // Reusable raycaster and direction vector to avoid allocations every frame
   const raycasterRef = useRef(new Raycaster());
 
-  const geometry = useMemo(() => new SphereGeometry(size, 32, 32), [size]);
+  // MEMORY FIX: Remove size dependency since size is constant (0.28) and
+  // creating new geometry on size change would cause leaks
+  const geometry = useMemo(() => new SphereGeometry(0.28, 32, 32), []);
   const material = useMemo(() => new MeshStandardMaterial({
     emissive: color,
     emissiveIntensity: 2,

@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, Vector3, CylinderGeometry, MeshStandardMaterial } from 'three';
+import { registerGlobalSharedResource } from '../Scene/EffectPools';
 
 interface BoneVortexProps {
   position: Vector3;
@@ -18,6 +19,26 @@ const SHARED_VORTEX_MATERIAL = new MeshStandardMaterial({
   emissive: "#FF0000",
   emissiveIntensity: 0.75
 });
+
+// Register for global disposal
+let registeredSpawnAnimationResources = false;
+const registerSpawnAnimationResources = () => {
+  if (registeredSpawnAnimationResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      SHARED_VORTEX_GEOMETRY.dispose();
+      SHARED_VORTEX_MATERIAL.dispose();
+    }, 'SpawnAnimation');
+    registeredSpawnAnimationResources = true;
+  } catch (error) {
+    console.warn('Failed to register SpawnAnimation resources:', error);
+  }
+};
+
+// Auto-register when module loads
+if (typeof window !== 'undefined') {
+  registerSpawnAnimationResources();
+}
 
 // MEMORY FIX:
 const LAYER_COUNT = 12; 

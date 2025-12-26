@@ -1,6 +1,8 @@
 import {
   AdditiveBlending,
+  BoxGeometry,
   BufferGeometry,
+  CircleGeometry,
   ConeGeometry,
   CylinderGeometry,
   DoubleSide,
@@ -147,6 +149,12 @@ class GeometryPools {
 
   // Reaper effect geometries
   public reaperMistParticle: ObjectPool<SphereGeometry>;
+  public reaperSubmergeParticle: ObjectPool<SphereGeometry>;
+
+  // Abomination effect geometries
+  public abominationShockwaveCircle: ObjectPool<CircleGeometry>;
+  public abominationShockwaveRing: ObjectPool<RingGeometry>;
+  public abominationShockwaveBox: ObjectPool<BoxGeometry>;
 
   // DeathKnight effect geometries (reuse skeleton patterns)
   public deathKnightSlashTorus: ObjectPool<TorusGeometry>;
@@ -248,6 +256,27 @@ class GeometryPools {
     this.reaperMistParticle = new ObjectPool(
       () => new SphereGeometry(0.25, 8, 8),
       60, 120 // High count since mist creates many particles and is used twice per use
+    );
+
+    this.reaperSubmergeParticle = new ObjectPool(
+      () => new SphereGeometry(0.25, 12, 12), // Larger particles for submerge effect
+      40, 80 // 40 particles per effect
+    );
+
+    // Abomination effect pools
+    this.abominationShockwaveCircle = new ObjectPool(
+      () => new CircleGeometry(2.0, 16),
+      5, 15 // Multiple rings per effect
+    );
+
+    this.abominationShockwaveRing = new ObjectPool(
+      () => new RingGeometry(0.8, 1.0, 24),
+      10, 30 // Multiple rings per effect
+    );
+
+    this.abominationShockwaveBox = new ObjectPool(
+      () => new BoxGeometry(0.2, 0.2, 0.2),
+      12, 36 // 12 debris particles per effect
     );
 
     // DeathKnight effect pools (REDUCED for memory management)
@@ -412,6 +441,10 @@ class GeometryPools {
     this.mageLightningCylinder.dispose();
     this.mageLightningRing.dispose();
     this.reaperMistParticle.dispose();
+    this.reaperSubmergeParticle.dispose();
+    this.abominationShockwaveCircle.dispose();
+    this.abominationShockwaveRing.dispose();
+    this.abominationShockwaveBox.dispose();
     this.deathKnightSlashTorus.dispose();
     this.deathKnightSlashParticle.dispose();
     this.deathKnightChargingArea.dispose();
@@ -464,6 +497,8 @@ class MaterialPools {
 
   // Reaper materials
   public reaperMist: ObjectPool<MeshStandardMaterial>;
+  public reaperSubmerge: ObjectPool<MeshStandardMaterial>;
+  public abominationShockwave: ObjectPool<MeshBasicMaterial>;
 
   // DeathKnight materials
   public deathKnightSlash: ObjectPool<MeshStandardMaterial>;
@@ -720,6 +755,33 @@ class MaterialPools {
       }
     );
 
+    this.reaperSubmerge = new ObjectPool(
+      () => new MeshStandardMaterial({
+        color: '#8B0000', // Dark red for better visibility
+        emissive: '#FF4500', // Bright orange-red emissive
+        transparent: true,
+        opacity: 0.9,
+        blending: AdditiveBlending,
+        depthWrite: false
+      }),
+      40, 80,
+      (material) => {
+        material.opacity = 0.9;
+      }
+    );
+
+    this.abominationShockwave = new ObjectPool(
+      () => new MeshBasicMaterial({
+        color: "#8B4513",
+        transparent: true,
+        opacity: 0.8
+      }),
+      15, 45, // Multiple materials per effect
+      (material) => {
+        material.opacity = 0.8;
+      }
+    );
+
     // DeathKnight material pools
     this.deathKnightSlash = new ObjectPool(
       () => new MeshStandardMaterial({
@@ -938,6 +1000,8 @@ class MaterialPools {
     this.mageLightning.dispose();
     this.mageLightningRing.dispose();
     this.reaperMist.dispose();
+    this.reaperSubmerge.dispose();
+    this.abominationShockwave.dispose();
     this.deathKnightSlash.dispose();
     this.deathKnightSlashParticle.dispose();
     this.deathKnightChargingArea.dispose();

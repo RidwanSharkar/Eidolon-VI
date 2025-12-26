@@ -2,6 +2,7 @@ import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Group, Vector3, CylinderGeometry, MeshStandardMaterial } from 'three';
 import { WeaponType, WeaponSubclass } from '../Weapons/weapons';
+import { registerGlobalSharedResource } from '../Scene/EffectPools';
 
 interface BoneVortexProps {
   position: Vector3;
@@ -31,6 +32,27 @@ const getOrCreateMaterial = (color: string): MeshStandardMaterial => {
   }
   return MATERIAL_CACHE.get(color)!;
 };
+
+// Register for global disposal
+let registeredDeathAnimationResources = false;
+const registerDeathAnimationResources = () => {
+  if (registeredDeathAnimationResources || typeof window === 'undefined') return;
+  try {
+    registerGlobalSharedResource(() => {
+      SHARED_DEATH_GEOMETRY.dispose();
+      MATERIAL_CACHE.forEach(mat => mat.dispose());
+      MATERIAL_CACHE.clear();
+    }, 'DeathAnimation');
+    registeredDeathAnimationResources = true;
+  } catch (error) {
+    console.warn('Failed to register DeathAnimation resources:', error);
+  }
+};
+
+// Auto-register when module loads
+if (typeof window !== 'undefined') {
+  registerDeathAnimationResources();
+}
 
 const getVortexColor = (weaponType: WeaponType, weaponSubclass?: WeaponSubclass) => {
   if (weaponSubclass) {

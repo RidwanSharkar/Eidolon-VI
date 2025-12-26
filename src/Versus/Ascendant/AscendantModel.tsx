@@ -1,6 +1,6 @@
 // src/Versus/Ascendant/AscendantModel.tsx
 import React, { useRef } from 'react';
-import { Group, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry } from 'three';
+import { Group, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, BoxGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../../gear/BonePlate';  
 import AscendantBoneWings from './AscendantBoneWings';  
@@ -24,26 +24,44 @@ interface AscendantModelProps {
   onLightningStart?: (hand: 'left' | 'right') => void;
 }
 
-// Materials for the arms
-const standardBoneMaterial = new MeshStandardMaterial({
-  color: "#e8e8e8",
-  roughness: 0.4,
-  metalness: 0.3
-});
+// Shared geometries for all AscendantModel instances
+const SHARED_GEOMETRIES = {
+  armJoint: new SphereGeometry(0.06, 6, 6),
+  armBone: new CylinderGeometry(0.06, 0.048, 1, 4),
+  claw: new ConeGeometry(0.03, 0.15, 6),
+  elbowJoint: new SphereGeometry(0.12, 12, 12),
+  handBox: new BoxGeometry(0.2, 0.15, 0.08),
+  palmGlow: new SphereGeometry(0.06, 8, 8)
+};
 
-const darkBoneMaterial = new MeshStandardMaterial({
-  color: "#d4d4d4",
-  roughness: 0.3,
-  metalness: 0.4
-});
+// Shared materials for all AscendantModel instances
+const SHARED_MATERIALS = {
+  standardBone: new MeshStandardMaterial({
+    color: "#e8e8e8",
+    roughness: 0.4,
+    metalness: 0.3
+  }),
+  darkBone: new MeshStandardMaterial({
+    color: "#d4d4d4",
+    roughness: 0.3,
+    metalness: 0.4
+  }),
+  palmGlow: new MeshStandardMaterial({
+    color: "#FF0000",
+    emissive: "#FF0000",
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 0.8
+  })
+};
 
-// Cache geometries for arm components - scaled to match Boss proportions
-const armJointGeometry = new SphereGeometry(0.06, 6, 6);
-armJointGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
-const armBoneGeometry = new CylinderGeometry(0.06, 0.048, 1, 4);
-armBoneGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
-const clawGeometry = new ConeGeometry(0.03, 0.15, 6);
-clawGeometry.userData = { shared: true }; // Mark as shared to prevent disposal
+// Mark all as shared to prevent disposal
+Object.values(SHARED_GEOMETRIES).forEach(geo => {
+  geo.userData = { shared: true };
+});
+Object.values(SHARED_MATERIALS).forEach(mat => {
+  mat.userData = { shared: true };
+});
 
 function AscendantArm({ isRaised = false }: { isRaised?: boolean }) {
   const armRef = useRef<Group>(null);
@@ -60,11 +78,11 @@ function AscendantArm({ isRaised = false }: { isRaised?: boolean }) {
   });
 
   const createBoneSegment = (length: number, width: number) => (
-    <mesh geometry={armBoneGeometry} material={standardBoneMaterial} scale={[width/0.06, length, width/0.06]} />
+    <mesh geometry={SHARED_GEOMETRIES.armBone} material={SHARED_MATERIALS.standardBone} scale={[width/0.06, length, width/0.06]} />
   );
 
   const createJoint = (size: number) => (
-    <mesh geometry={armJointGeometry} material={standardBoneMaterial} scale={[size/0.06, size/0.06, size/0.06]} />
+    <mesh geometry={SHARED_GEOMETRIES.armJoint} material={SHARED_MATERIALS.standardBone} scale={[size/0.06, size/0.06, size/0.06]} />
   );
 
   const createParallelBones = (length: number, spacing: number) => (
@@ -92,10 +110,7 @@ function AscendantArm({ isRaised = false }: { isRaised?: boolean }) {
         
         {/* Elbow joint */}
         <group position={[0, -0.6, 0]}>
-          <mesh>
-            <sphereGeometry args={[0.12, 12, 12]} />
-            <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.3} />
-          </mesh>
+          <mesh geometry={SHARED_GEOMETRIES.elbowJoint} material={SHARED_MATERIALS.standardBone} />
           
           {/* Forearm */}
           <group position={[0, -0.35, 0.275]} rotation={[-0.7, 0, 0]}>
@@ -107,10 +122,7 @@ function AscendantArm({ isRaised = false }: { isRaised?: boolean }) {
               
               {/* Hand structure - similar to Boss claw proportions */}
               <group position={[0, -0.1, 0]} scale={[1.2, 1.2, 1.2]}>
-                <mesh>
-                  <boxGeometry args={[0.2, 0.15, 0.08]} />
-                  <meshStandardMaterial color="#e8e8e8" roughness={0.4} />
-                </mesh>
+                <mesh geometry={SHARED_GEOMETRIES.handBox} material={SHARED_MATERIALS.standardBone} />
                 
                 {/* Fingers for spell casting */}
                 {[-0.08, -0.04, 0, 0.04, 0.08].map((offset, i) => (
@@ -121,7 +133,7 @@ function AscendantArm({ isRaised = false }: { isRaised?: boolean }) {
                   >
                     {createBoneSegment(0.5, 0.02)}
                     <group position={[0.025, -0.3, 0]} rotation={[0, 0, Math.PI/8]} scale={[1.2, 1.2, 1.2]}>
-                      <mesh geometry={clawGeometry} material={darkBoneMaterial} />
+                      <mesh geometry={SHARED_GEOMETRIES.claw} material={SHARED_MATERIALS.darkBone} />
                     </group>
                   </group>
                 ))}
@@ -129,17 +141,8 @@ function AscendantArm({ isRaised = false }: { isRaised?: boolean }) {
                 {/* Palm energy glow when raised (for lightning casting) */}
                 {isRaised && (
                   <group position={[0, -0.05, 0.1]}>
-                    <mesh>
-                      <sphereGeometry args={[0.06, 8, 8]} />
-                      <meshStandardMaterial
-                        color="#FF0000"
-                        emissive="#FF0000"
-                        emissiveIntensity={2}
-                        transparent
-                        opacity={0.8}
-                      />
-                    </mesh>
-                    <pointLight 
+                    <mesh geometry={SHARED_GEOMETRIES.palmGlow} material={SHARED_MATERIALS.palmGlow} />
+                    <pointLight
                       color="#FF0000"
                       intensity={1.5}
                       distance={2}
