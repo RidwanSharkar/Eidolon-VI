@@ -1233,6 +1233,7 @@ export default function Unit({
     opacity?: number;
     fadeStartTime?: number | null;
     isPerfectShot?: boolean;
+    previousPosition?: Vector3; // For interpolation-based collision detection
   }
 
   interface PooledFireball {
@@ -1273,7 +1274,8 @@ export default function Unit({
         startTime: 0,
         maxDistance: 0,
         startPosition: new Vector3(),
-        hasCollided: false
+        hasCollided: false,
+        previousPosition: new Vector3()
       }),
       (proj) => {
         proj.position.set(0, 0, 0);
@@ -1283,6 +1285,7 @@ export default function Unit({
         proj.maxDistance = 0;
         proj.startPosition.set(0, 0, 0);
         proj.hasCollided = false;
+        proj.previousPosition?.set(0, 0, 0);
       }
     )
   }), []);
@@ -1401,8 +1404,8 @@ export default function Unit({
     tempVec3.copy(groupRef.current.position);
     tempVec3.y += 1;
 
-    // Reuse tempVec3_2 for direction
-    tempVec3_2.set(0, 0, 1);
+    // Reuse tempVec3_2 for direction - add slight downward angle for better aiming at ground-level enemies
+    tempVec3_2.set(0, -0.05, 1);
     tempVec3_2.applyQuaternion(groupRef.current.quaternion);
 
     const newProjectile = projectilePool.acquire();
@@ -1416,6 +1419,7 @@ export default function Unit({
     newProjectile.hasCollided = false;
     newProjectile.opacity = 1;
     newProjectile.fadeStartTime = null;
+    newProjectile.previousPosition = tempVec3.clone(); // Initialize for interpolation
 
     // Store additional projectile data for debuff checking
     newProjectile.isFullyCharged = power >= 0.95;
@@ -2322,6 +2326,13 @@ export default function Unit({
       }
       
       if (distanceTraveled < projectile.maxDistance && !projectile.hasCollided && !projectile.fadeStartTime) {
+        // Store previous position for interpolation before moving
+        if (!projectile.previousPosition) {
+          projectile.previousPosition = projectile.position.clone();
+        } else {
+          projectile.previousPosition.copy(projectile.position);
+        }
+        
         const speed = (projectile.power >= 1 || projectile.isPerfectShot) ? 0.925 : 0.55; // PROJECTILE SPEED - includes perfect shots 
         projectile.position.add(
           projectile.direction
@@ -2334,25 +2345,41 @@ export default function Unit({
           projectile.hitEnemies = new Set();
         }
 
+        const HIT_RADIUS = 1.3;
+        
         // Check collisions only if projectile is within range and not fading
         for (const enemy of enemyData) {
-          // Skip dead enemies - add this check
-          if (enemy.health <= 0 || enemy.isDying) continue;
+          // Skip dead enemies or already hit enemies
+          if (enemy.health <= 0 || enemy.isDying || projectile.hitEnemies.has(enemy.id)) continue;
           
-          const projectilePos2D = new Vector3(
-            projectile.position.x,
-            0,
-            projectile.position.z
-          );
-          const enemyPos2D = new Vector3(
-            enemy.position.x,
-            0,
-            enemy.position.z
-          );
-          const distanceToEnemy = projectilePos2D.distanceTo(enemyPos2D);
+          const enemyPos2D = new Vector3(enemy.position.x, 0, enemy.position.z);
           
-          // Only process collision if we haven't hit this enemy before
-          if (distanceToEnemy < 1.3 && !projectile.hitEnemies.has(enemy.id)) {
+          // First check current position
+          const currentPos2D = new Vector3(projectile.position.x, 0, projectile.position.z);
+          let hit = currentPos2D.distanceTo(enemyPos2D) < HIT_RADIUS;
+          
+          // If not hit at current position, use interpolation to check path
+          if (!hit && projectile.previousPosition) {
+            const prevPos2D = new Vector3(projectile.previousPosition.x, 0, projectile.previousPosition.z);
+            const pathLength = currentPos2D.distanceTo(prevPos2D);
+            
+            // Only interpolate if movement is significant
+            if (pathLength > 0.1) {
+              const steps = Math.ceil(pathLength / (HIT_RADIUS * 0.5));
+              
+              for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const interpolatedPos = prevPos2D.clone().lerp(currentPos2D, t);
+                
+                if (interpolatedPos.distanceTo(enemyPos2D) < HIT_RADIUS) {
+                  hit = true;
+                  break;
+                }
+              }
+            }
+          }
+          
+          if (hit) {
             // Add enemy to hit list
             projectile.hitEnemies.add(enemy.id);
             
@@ -3546,6 +3573,10 @@ export default function Unit({
   const handleProjectileHit = (projectileId: number, targetId: string, power: number, projectilePosition: Vector3) => {
     const projectile = activeProjectilesRef.current.find(p => p.id === projectileId);
     if (!projectile) return;
+
+    // Find the enemy to get their position for damage numbers
+    const enemy = enemyData.find(e => e.id === targetId);
+    if (!enemy) return;
     
     // Calculate base damage based on charge level
     let baseDamage;
@@ -3634,7 +3665,7 @@ export default function Unit({
       {
         id: nextDamageNumberId.current++,
         damage: damage,
-        position: projectilePosition.clone().add(new Vector3(0, 0, 0)),
+        position: enemy.position.clone(),
         isCritical: isCritical, 
         isLightning: false,
         isBowLightning: !isFullyChargedBehavior && currentSubclass === WeaponSubclass.ELEMENTAL && abilities[WeaponType.BOW].passive.isUnlocked,

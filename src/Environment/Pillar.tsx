@@ -10,7 +10,7 @@ const Pillar: React.FC<PillarProps> = ({ position = [0, 0, 0], level = 1 }) => {
   // Get level-based colors
   const getLevelColors = (level: number) => {
     switch (level) {
-      case 1: return { color: '#00ff00', emissive: '#006600' }; // Green
+      case 1: return { color: '#33ff33', emissive: '#006600' }; // Light Green
       case 2: return { color: '#ffa500', emissive: '#cc8400' }; // Orange
       case 3: return { color: '#87ceeb', emissive: '#4682b4' }; // Light Blue
       case 4: return { color: '#dda0dd', emissive: '#9370db' }; // Light Purple
