@@ -213,10 +213,25 @@ function ScytheModel({
         <RotatingRing position={-0.005} geometry={SCYTHE_SHARED_GEOMETRIES.glowRing2} material={glowRingMaterial} speed={-2} />
         <RotatingRing position={0.1} geometry={SCYTHE_SHARED_GEOMETRIES.glowRing3} material={glowRingMaterial} speed={-2} />
         
-        {/* Handle rings */}
-        <RotatingRing position={-0.35} geometry={SCYTHE_SHARED_GEOMETRIES.handleRing} material={glowRingMaterial} speed={-2} />
-        <RotatingRing position={-0.54} geometry={SCYTHE_SHARED_GEOMETRIES.handleRing} material={glowRingMaterial} speed={-2} />
-        <RotatingRing position={-0.74} geometry={SCYTHE_SHARED_GEOMETRIES.handleRing} material={glowRingMaterial} speed={-2} />
+        {/* Handle rings - static glow */}
+        <mesh
+          position-y={-0.35}
+          rotation={[Math.PI/2, 0, 0]}
+          geometry={SCYTHE_SHARED_GEOMETRIES.handleRing}
+          material={glowRingMaterial}
+        />
+        <mesh
+          position-y={-0.54}
+          rotation={[Math.PI/2, 0, 0]}
+          geometry={SCYTHE_SHARED_GEOMETRIES.handleRing}
+          material={glowRingMaterial}
+        />
+        <mesh
+          position-y={-0.74}
+          rotation={[Math.PI/2, 0, 0]}
+          geometry={SCYTHE_SHARED_GEOMETRIES.handleRing}
+          material={glowRingMaterial}
+        />
 
         {/* Static outer glow */}
         <mesh geometry={SCYTHE_SHARED_GEOMETRIES.connectorGlow} material={connectorGlowMaterial} />

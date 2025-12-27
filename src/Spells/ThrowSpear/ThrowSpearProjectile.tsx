@@ -1,6 +1,6 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Group, Vector3, Shape, TorusGeometry, CylinderGeometry, ConeGeometry, SphereGeometry } from 'three';
+import { Group, Vector3, Shape, TorusGeometry, CylinderGeometry, ConeGeometry, SphereGeometry, ExtrudeGeometry } from 'three';
 import { AdditiveBlending, Color, DoubleSide } from 'three';
 
 // Pre-allocated colors for performance - avoids new Color() on every render
@@ -33,6 +33,69 @@ const SPEAR_GEOMETRIES = {
   energyCoreOuter: new SphereGeometry(0.175, 16, 16),
   trailSphere: new SphereGeometry(0.15, 8, 8),
   trailGlow: new SphereGeometry(0.2, 6, 6),
+};
+
+// MEMORY FIX: Create static blade shapes and extrude settings outside component
+const SPEAR_BLADE_SHAPE_STATIC = (() => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+
+  shape.lineTo(0.15, -0.230);
+  shape.bezierCurveTo(
+    0.8, 0.22,
+    1.13, 0.5,
+    1.8, 1.6
+  );
+
+  shape.lineTo(1.125, 0.75);
+  shape.bezierCurveTo(
+    0.5, 0.2,
+    0.225, 0.0,
+    0.1, 0.7
+  );
+  shape.lineTo(0, 0);
+  return shape;
+})();
+
+const SPEAR_INNER_BLADE_SHAPE_STATIC = (() => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+
+  shape.lineTo(0, 0.06);
+  shape.lineTo(0.15, 0.15);
+  shape.quadraticCurveTo(1.2, 0.12, 1.5, 0.15);
+  shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);
+  shape.quadraticCurveTo(2.0, -0.08, 1.5, -0.15);
+  shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.15);
+  shape.lineTo(0, -0.05);
+  shape.lineTo(0, 0);
+
+  return shape;
+})();
+
+const SPEAR_BLADE_EXTRUDE_SETTINGS_STATIC = {
+  steps: 2,
+  depth: 0.05,
+  bevelEnabled: true,
+  bevelThickness: 0.014,
+  bevelSize: 0.02,
+  bevelOffset: 0.04,
+  bevelSegments: 2
+};
+
+const SPEAR_INNER_BLADE_EXTRUDE_SETTINGS_STATIC = {
+  ...SPEAR_BLADE_EXTRUDE_SETTINGS_STATIC,
+  depth: 0.06,
+  bevelThickness: 0.02,
+  bevelSize: 0.02,
+  bevelOffset: 0,
+  bevelSegments: 6
+};
+
+// MEMORY FIX: Pre-create extrude geometries
+const SPEAR_BLADE_GEOMETRIES = {
+  blade: new ExtrudeGeometry(SPEAR_BLADE_SHAPE_STATIC, SPEAR_BLADE_EXTRUDE_SETTINGS_STATIC),
+  innerBlade: new ExtrudeGeometry(SPEAR_INNER_BLADE_SHAPE_STATIC, SPEAR_INNER_BLADE_EXTRUDE_SETTINGS_STATIC)
 };
 
 interface ThrowSpearProjectileProps {
@@ -77,62 +140,6 @@ export default function ThrowSpearProjectile({
     groupRef.current.rotation.set(rotationX, rotationY, 0);
   });
 
-  // Create spear blade shape
-  const createBladeShape = () => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    
-    shape.lineTo(0.15, -0.230);
-    shape.bezierCurveTo(
-      0.8, 0.22,
-      1.13, 0.5,
-      1.8, 1.6
-    );
-    
-    shape.lineTo(1.125, 0.75);
-    shape.bezierCurveTo(
-      0.5, 0.2,
-      0.225, 0.0,
-      0.1, 0.7
-    );
-    shape.lineTo(0, 0);
-    return shape;
-  };
-
-  const createInnerBladeShape = () => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    
-    shape.lineTo(0, 0.06);   
-    shape.lineTo(0.15, 0.15); 
-    shape.quadraticCurveTo(1.2, 0.12, 1.5, 0.15); 
-    shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);    
-    shape.quadraticCurveTo(2.0, -0.08, 1.5, -0.15); 
-    shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.15);
-    shape.lineTo(0, -0.05);  
-    shape.lineTo(0, 0);
-    
-    return shape;
-  };
-
-  const bladeExtrudeSettings = {
-    steps: 2,
-    depth: 0.05,
-    bevelEnabled: true,
-    bevelThickness: 0.014,
-    bevelSize: 0.02,
-    bevelOffset: 0.04,
-    bevelSegments: 2
-  };
-
-  const innerBladeExtrudeSettings = {
-    ...bladeExtrudeSettings,
-    depth: 0.06,
-    bevelThickness: 0.02,
-    bevelSize: 0.02,
-    bevelOffset: 0,
-    bevelSegments: 6
-  };
 
   // Colors get more intense with higher charge
   const baseEmissiveIntensity = 1.5 + (chargeIntensity * 2); // 1.5 to 3.5
@@ -273,7 +280,7 @@ export default function ThrowSpearProjectile({
             <group rotation={[0, 0, 0]}>
               <group rotation={[0, 0, 0.7]} scale={[0.4, 0.4, -0.4]}>
                 <mesh>
-                  <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+                  <primitive object={SPEAR_BLADE_GEOMETRIES.blade} attach="geometry" />
                   <meshStandardMaterial 
                     color={spearColor}
                     emissive={spearColor}
@@ -292,7 +299,7 @@ export default function ThrowSpearProjectile({
             <group rotation={[0, (2 * Math.PI) / 3, Math.PI/2]}>
               <group rotation={[0, 0., 5.33]} scale={[0.4, 0.4, -0.4]}>
                 <mesh>
-                  <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+                  <primitive object={SPEAR_BLADE_GEOMETRIES.blade} attach="geometry" />
                   <meshStandardMaterial 
                     color={spearColor}
                     emissive={spearColor}
@@ -310,7 +317,7 @@ export default function ThrowSpearProjectile({
             <group rotation={[0, (4 * Math.PI) / 3, Math.PI/2]}>
               <group rotation={[0, 0, 5.33]} scale={[0.4, 0.4, -0.4]}>
                 <mesh>
-                  <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+                  <primitive object={SPEAR_BLADE_GEOMETRIES.blade} attach="geometry" />
                   <meshStandardMaterial 
                     color={spearColor}
                     emissive={spearColor}
@@ -329,7 +336,7 @@ export default function ThrowSpearProjectile({
           {/* Inner blade component */}
           <group position={[0, 0.65, 0.35]} rotation={[0, -Math.PI / 2, Math.PI / 2]} scale={[0.8, 0.8, 0.5]}>
             <mesh>
-              <extrudeGeometry args={[createInnerBladeShape(), bladeExtrudeSettings]} />
+              <primitive object={SPEAR_BLADE_GEOMETRIES.innerBlade} attach="geometry" />
               <meshStandardMaterial 
                 color={spearColor}
                 emissive={spearColor}
@@ -342,7 +349,7 @@ export default function ThrowSpearProjectile({
             </mesh>
             
             <mesh>
-              <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
+              <primitive object={SPEAR_BLADE_GEOMETRIES.innerBlade} attach="geometry" />
               <meshStandardMaterial 
                 color={spearColor}
                 emissive={spearColor}

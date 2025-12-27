@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Group, Vector3, Shape, Color, CylinderGeometry, TorusGeometry, ConeGeometry, SphereGeometry } from 'three';
+import { Group, Vector3, Shape, Color, CylinderGeometry, TorusGeometry, ConeGeometry, SphereGeometry, ExtrudeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Enemy } from '@/Versus/enemy';
 
@@ -22,6 +22,78 @@ const SOUL_REAPER_SWORD_GEOMETRIES = {
   impactExplosion: new SphereGeometry(2, 12, 12),
   impactRing: new TorusGeometry(2.5, 0.3, 8, 16),
   impactSpike: new ConeGeometry(0.2, 1.5, 6)
+};
+
+// MEMORY FIX: Create static blade shapes and extrude settings outside component
+const BLADE_SHAPE_STATIC = (() => {
+  const shape = new Shape();
+
+  // Start at center
+  shape.moveTo(0, 0);
+
+  // Left side guard (fixed symmetry)
+  shape.lineTo(-0.25, 0.25);
+  shape.lineTo(-0.15, -0.15);
+  shape.lineTo(0, 0);
+
+  // Right side guard (matches left exactly)
+  shape.lineTo(0.25, 0.25);
+  shape.lineTo(0.15, -0.15);
+  shape.lineTo(0, 0);
+
+  // Blade shape with symmetry
+  shape.lineTo(0, 0.08);
+  shape.lineTo(0.2, 0.2);
+  shape.quadraticCurveTo(0.8, 0.15, 1.5, 0.18);
+  shape.quadraticCurveTo(2.0, 0.1, 2.2, 0);
+
+  shape.quadraticCurveTo(2.0, -0.1, 1.5, -0.18);
+  shape.quadraticCurveTo(0.8, -0.15, 0.2, -0.2);
+  shape.lineTo(0, -0.08);
+  shape.lineTo(0, 0);
+
+  return shape;
+})();
+
+const INNER_BLADE_SHAPE_STATIC = (() => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+
+  shape.lineTo(0, 0.06);
+  shape.lineTo(0.15, 0.15);
+  shape.quadraticCurveTo(1.2, 0.12, 1.5, 0.15);
+  shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);
+  shape.quadraticCurveTo(2.0, -0.08, 1.5, -0.15);
+  shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.15);
+  shape.lineTo(0, -0.05);
+  shape.lineTo(0, 0);
+
+  return shape;
+})();
+
+const BLADE_EXTRUDE_SETTINGS_STATIC = {
+  steps: 2,
+  depth: 0.05,
+  bevelEnabled: true,
+  bevelThickness: 0.014,
+  bevelSize: 0.02,
+  bevelOffset: 0.04,
+  bevelSegments: 2
+};
+
+const INNER_BLADE_EXTRUDE_SETTINGS_STATIC = {
+  ...BLADE_EXTRUDE_SETTINGS_STATIC,
+  depth: 0.06,
+  bevelThickness: 0.02,
+  bevelSize: 0.02,
+  bevelOffset: 0,
+  bevelSegments: 6
+};
+
+// MEMORY FIX: Pre-create extrude geometries
+const SOUL_REAPER_BLADE_GEOMETRIES = {
+  blade: new ExtrudeGeometry(BLADE_SHAPE_STATIC, BLADE_EXTRUDE_SETTINGS_STATIC),
+  innerBlade: new ExtrudeGeometry(INNER_BLADE_SHAPE_STATIC, INNER_BLADE_EXTRUDE_SETTINGS_STATIC)
 };
 
 interface SoulReaperSwordProps {
@@ -125,72 +197,6 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
     }
   });
 
-  // Create custom sword blade shape (similar to main Sword component)
-  const createBladeShape = () => {
-    const shape = new Shape();
-    
-    // Start at center
-    shape.moveTo(0, 0);
-    
-    // Left side guard (fixed symmetry)
-    shape.lineTo(-0.25, 0.25);  
-    shape.lineTo(-0.15, -0.15); 
-    shape.lineTo(0, 0);
-    
-    // Right side guard (matches left exactly)
-    shape.lineTo(0.25, 0.25);
-    shape.lineTo(0.15, -0.15);
-    shape.lineTo(0, 0);
-    
-    // Blade shape with symmetry
-    shape.lineTo(0, 0.08);    
-    shape.lineTo(0.2, 0.2);   
-    shape.quadraticCurveTo(0.8, 0.15, 1.5, 0.18);
-    shape.quadraticCurveTo(2.0, 0.1, 2.2, 0);     
-    
-    shape.quadraticCurveTo(2.0, -0.1, 1.5, -0.18);
-    shape.quadraticCurveTo(0.8, -0.15, 0.2, -0.2);
-    shape.lineTo(0, -0.08);   
-    shape.lineTo(0, 0);
-    
-    return shape;
-  };
-
-  // inner blade shape 
-  const createInnerBladeShape = () => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    
-    shape.lineTo(0, 0.06);   
-    shape.lineTo(0.15, 0.15); 
-    shape.quadraticCurveTo(1.2, 0.12, 1.5, 0.15); 
-    shape.quadraticCurveTo(2.0, 0.08, 2.15, 0);    
-    shape.quadraticCurveTo(2.0, -0.08, 1.5, -0.15); 
-    shape.quadraticCurveTo(1.2, -0.12, 0.15, -0.15);
-    shape.lineTo(0, -0.05);  
-    shape.lineTo(0, 0);
-    
-    return shape;
-  };
-
-  const bladeExtrudeSettings = {
-    steps: 2,
-    depth: 0.05,
-    bevelEnabled: true,
-    bevelThickness: 0.014,
-    bevelSize: 0.02,
-    bevelOffset: 0.04,
-    bevelSegments: 2
-  };
-
-  const innerBladeExtrudeSettings = {
-    ...bladeExtrudeSettings,
-    depth: 0.06,
-    bevelThickness: 0.02,
-    bevelSize: 0.02,
-    bevelOffset: 0,
-    bevelSegments: 6
-  };
 
   // Don't render anything if impact effect is done
   if (hasImpacted && !showImpactEffect) return null;
@@ -305,7 +311,7 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
           <group position={[0, -0.5, 0.35]} rotation={[0, -Math.PI / 2, -Math.PI / 2]}>
             {/* Base blade */}
             <mesh>
-              <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+              <primitive object={SOUL_REAPER_BLADE_GEOMETRIES.blade} attach="geometry" />
               <meshStandardMaterial 
                 color={COLORS.blueViolet}  
                 emissive={COLORS.blueViolet}
@@ -317,7 +323,7 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
             
             {/* BLADE Glowing core */}
             <mesh>
-              <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
+              <primitive object={SOUL_REAPER_BLADE_GEOMETRIES.innerBlade} attach="geometry" />
               <meshStandardMaterial 
                 color={COLORS.mediumPurple}  
                 emissive={COLORS.mediumPurple}

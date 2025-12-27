@@ -1,4 +1,4 @@
-import { BoxGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, Shape, SphereGeometry, InstancedMesh, Matrix4, Vector3, Euler, Quaternion } from 'three';
+import { BoxGeometry, ConeGeometry, CylinderGeometry, ExtrudeGeometry, Group, Mesh, MeshStandardMaterial, Shape, SphereGeometry, InstancedMesh, Matrix4, Vector3, Euler, Quaternion } from 'three';
 import { DoubleSide, DynamicDrawUsage } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../../gear/BonePlate';
@@ -25,6 +25,36 @@ function setMatrixAt(
   tempMatrix.compose(position, tempQuaternion, scale);
   instancedMesh.setMatrixAt(index, tempMatrix);
 }
+
+// Create blade shape and settings (moved outside component to prevent recreation)
+const BLADE_SHAPE_STATIC = (() => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(0.4, -0.130);
+  shape.bezierCurveTo(
+    0.8, 0.22,
+    1.33, 0.5,
+    1.6, 0.515
+  );
+  shape.lineTo(1.125, 0.75);
+  shape.bezierCurveTo(
+    0.5, 0.2,
+    0.225, 0.0,
+    0.1, 0.7
+  );
+  shape.lineTo(0, 0);
+  return shape;
+})();
+
+const BLADE_EXTRUDE_SETTINGS_STATIC = {
+  steps: 1,
+  depth: 0.00010,
+  bevelEnabled: true,
+  bevelThickness: 0.030,
+  bevelSize: 0.035,
+  bevelSegments: 1,
+  curveSegments: 16
+};
 
 // Create shared geometries
 const SHARED_GEOMETRIES = {
@@ -58,7 +88,9 @@ const SHARED_GEOMETRIES = {
   toothSmall: new ConeGeometry(0.01, 0.08, 3),
   // Pelvis geometries
   pelvis: new CylinderGeometry(0.35, 0.34, 0.27, 8),
-  pelvisJoint: new SphereGeometry(0.075, 8, 8)
+  pelvisJoint: new SphereGeometry(0.075, 8, 8),
+  // MEMORY FIX: Shared blade geometry to prevent inline JSX geometry creation
+  blade: new ExtrudeGeometry(BLADE_SHAPE_STATIC, BLADE_EXTRUDE_SETTINGS_STATIC)
 };
 
 // Create shared materials - GREEN THEMED
@@ -299,34 +331,6 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
     </group>
   );
 
-  const BLADE_SHAPE = (() => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    shape.lineTo(0.4, -0.130);
-    shape.bezierCurveTo(
-      0.8, 0.22,
-      1.33, 0.5,
-      1.6, 0.515
-    );
-    shape.lineTo(1.125, 0.75);
-    shape.bezierCurveTo(
-      0.5, 0.2,
-      0.225, 0.0,
-      0.1, 0.7
-    );
-    shape.lineTo(0, 0);
-    return shape;
-  })();
-
-  const BLADE_EXTRUDE_SETTINGS = {
-    steps: 1,
-    depth: 0.00010,
-    bevelEnabled: true,
-    bevelThickness: 0.030,
-    bevelSize: 0.035,
-    bevelSegments: 1,
-    curveSegments: 16
-  };
 
   return (
     <group>
@@ -349,8 +353,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
                   rotation={[2 + Math.PI/4, -1, Math.PI*2.675 + 0.85]} 
                   scale={[1.4, 0.55, 1.4]}
                 >
-                  <mesh>
-                    <extrudeGeometry args={[BLADE_SHAPE, BLADE_EXTRUDE_SETTINGS]} />
+                  <mesh geometry={SHARED_GEOMETRIES.blade}>
                     <meshStandardMaterial 
                       color="#00FF44"
                       emissive="#00FF44"

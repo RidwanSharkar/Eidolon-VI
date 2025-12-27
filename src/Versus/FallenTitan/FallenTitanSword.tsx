@@ -1,6 +1,6 @@
 // src/Versus/FallenTitan/FallenTitanSword.tsx
 import React from 'react';
-import { Shape, CylinderGeometry, TorusGeometry, ConeGeometry, SphereGeometry } from 'three';
+import { Shape, CylinderGeometry, TorusGeometry, ConeGeometry, SphereGeometry, ExtrudeGeometry } from 'three';
 import { AdditiveBlending, Color } from 'three';
 
 // MEMORY FIX: Create static geometries once
@@ -16,73 +16,79 @@ const FALLEN_TITAN_SWORD_GEOMETRIES = {
   energyAura: new SphereGeometry(1.2, 12, 12)
 };
 
+// MEMORY FIX: Create static blade shapes and extrude settings outside component
+const FALLEN_TITAN_BLADE_SHAPE_STATIC = (() => {
+  const shape = new Shape();
+
+  // Start at center
+  shape.moveTo(0, 0);
+
+  // Left side guard
+  shape.lineTo(-0.4, 0.4);
+  shape.lineTo(-0.24, -0.24);
+  shape.lineTo(0, 0);
+
+  // Right side guard
+  shape.lineTo(0.4, 0.4);
+  shape.lineTo(0.24, -0.24);
+  shape.lineTo(0, 0);
+
+  // Blade shape - scaled up
+  shape.lineTo(0, 0.12);
+  shape.lineTo(0.32, 0.32);
+  shape.quadraticCurveTo(1.28, 0.24, 2.4, 0.29);
+  shape.quadraticCurveTo(3.2, 0.16, 3.52, 0);
+
+  shape.quadraticCurveTo(3.2, -0.16, 2.4, -0.29);
+  shape.quadraticCurveTo(1.28, -0.24, 0.32, -0.32);
+  shape.lineTo(0, -0.12);
+  shape.lineTo(0, 0);
+
+  return shape;
+})();
+
+const FALLEN_TITAN_INNER_BLADE_SHAPE_STATIC = (() => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+
+  shape.lineTo(0, 0.096);
+  shape.lineTo(0.24, 0.24);
+  shape.quadraticCurveTo(1.92, 0.19, 2.4, 0.24);
+  shape.quadraticCurveTo(3.2, 0.13, 3.44, 0);
+  shape.quadraticCurveTo(3.2, -0.13, 2.4, -0.24);
+  shape.quadraticCurveTo(1.92, -0.19, 0.24, -0.24);
+  shape.lineTo(0, -0.08);
+  shape.lineTo(0, 0);
+
+  return shape;
+})();
+
+const FALLEN_TITAN_BLADE_EXTRUDE_SETTINGS_STATIC = {
+  steps: 2,
+  depth: 0.08,
+  bevelEnabled: true,
+  bevelThickness: 0.022,
+  bevelSize: 0.032,
+  bevelOffset: 0.064,
+  bevelSegments: 2
+};
+
+const FALLEN_TITAN_INNER_BLADE_EXTRUDE_SETTINGS_STATIC = {
+  ...FALLEN_TITAN_BLADE_EXTRUDE_SETTINGS_STATIC,
+  depth: 0.096,
+  bevelThickness: 0.032,
+  bevelSize: 0.032,
+  bevelOffset: 0,
+  bevelSegments: 6
+};
+
+// MEMORY FIX: Pre-create extrude geometries
+const FALLEN_TITAN_BLADE_GEOMETRIES = {
+  blade: new ExtrudeGeometry(FALLEN_TITAN_BLADE_SHAPE_STATIC, FALLEN_TITAN_BLADE_EXTRUDE_SETTINGS_STATIC),
+  innerBlade: new ExtrudeGeometry(FALLEN_TITAN_INNER_BLADE_SHAPE_STATIC, FALLEN_TITAN_INNER_BLADE_EXTRUDE_SETTINGS_STATIC)
+};
+
 export default function FallenTitanSword() {
-  // Create custom sword blade shape - larger version
-  const createBladeShape = () => {
-    const shape = new Shape();
-    
-    // Start at center
-    shape.moveTo(0, 0);
-    
-    // Left side guard
-    shape.lineTo(-0.4, 0.4);  
-    shape.lineTo(-0.24, -0.24); 
-    shape.lineTo(0, 0);
-    
-    // Right side guard
-    shape.lineTo(0.4, 0.4);
-    shape.lineTo(0.24, -0.24);
-    shape.lineTo(0, 0);
-    
-    // Blade shape - scaled up
-    shape.lineTo(0, 0.12);
-    shape.lineTo(0.32, 0.32);
-    shape.quadraticCurveTo(1.28, 0.24, 2.4, 0.29);
-    shape.quadraticCurveTo(3.2, 0.16, 3.52, 0);
-    
-    shape.quadraticCurveTo(3.2, -0.16, 2.4, -0.29);
-    shape.quadraticCurveTo(1.28, -0.24, 0.32, -0.32);
-    shape.lineTo(0, -0.12);
-    shape.lineTo(0, 0);
-    
-    return shape;
-  };
-
-  // Inner blade shape - larger version
-  const createInnerBladeShape = () => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    
-    shape.lineTo(0, 0.096);   
-    shape.lineTo(0.24, 0.24); 
-    shape.quadraticCurveTo(1.92, 0.19, 2.4, 0.24); 
-    shape.quadraticCurveTo(3.2, 0.13, 3.44, 0);    
-    shape.quadraticCurveTo(3.2, -0.13, 2.4, -0.24); 
-    shape.quadraticCurveTo(1.92, -0.19, 0.24, -0.24);
-    shape.lineTo(0, -0.08);  
-    shape.lineTo(0, 0);
-    
-    return shape;
-  };
-
-  const bladeExtrudeSettings = {
-    steps: 2,
-    depth: 0.08,
-    bevelEnabled: true,
-    bevelThickness: 0.022,
-    bevelSize: 0.032,
-    bevelOffset: 0.064,
-    bevelSegments: 2
-  };
-
-  const innerBladeExtrudeSettings = {
-    ...bladeExtrudeSettings,
-    depth: 0.096,
-    bevelThickness: 0.032,
-    bevelSize: 0.032,
-    bevelOffset: 0,
-    bevelSegments: 6
-  };
 
   return (
     <group rotation={[-0.575, 0, 0.2]} scale={[1.6, 1.6, 1.6]}>
@@ -191,7 +197,7 @@ export default function FallenTitanSword() {
         <group position={[0, 0.8, 0.56]} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
           {/* Base blade */}
           <mesh>
-            <extrudeGeometry args={[createBladeShape(), bladeExtrudeSettings]} />
+            <primitive object={FALLEN_TITAN_BLADE_GEOMETRIES.blade} attach="geometry" />
             <meshStandardMaterial 
               color={new Color(0x2B0000)}  // Very dark red
               emissive={new Color(0x4B0000)} // Dark red emission
@@ -203,7 +209,7 @@ export default function FallenTitanSword() {
           
           {/* BLADE Glowing core - darker */}
           <mesh>
-            <extrudeGeometry args={[createInnerBladeShape(), innerBladeExtrudeSettings]} />
+            <primitive object={FALLEN_TITAN_BLADE_GEOMETRIES.innerBlade} attach="geometry" />
             <meshStandardMaterial 
               color={new Color(0x6B0000)}  // Dark red
               emissive={new Color(0x4B0000)} // Dark red emission
