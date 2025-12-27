@@ -1,6 +1,6 @@
 // src/Spells/SoulReaper/AbyssalSkeletonSword.tsx
-import React, { useMemo } from 'react';
-import { Shape } from 'three';
+import React from 'react';
+import { Shape, ExtrudeGeometry, CylinderGeometry, TorusGeometry, ConeGeometry } from 'three';
 import { AdditiveBlending, Color } from 'three';
 import {
   SHARED_SPHERE_GEOMETRY_WEAPON_SMALL,
@@ -16,74 +16,71 @@ const COLORS = {
   darkGreen: new Color(0x0d2818),
 } as const;
 
+// Create custom sword blade shape - larger version
+const createBladeShape = () => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(-0.4, 0.4);
+  shape.lineTo(-0.24, -0.24);
+  shape.lineTo(0, 0);
+  shape.lineTo(0.4, 0.4);
+  shape.lineTo(0.24, -0.24);
+  shape.lineTo(0, 0);
+  shape.lineTo(0, 0.12);
+  shape.lineTo(0.32, 0.32);
+  shape.quadraticCurveTo(1.28, 0.24, 2.4, 0.29);
+  shape.quadraticCurveTo(3.2, 0.16, 3.52, 0);
+  shape.quadraticCurveTo(3.2, -0.16, 2.4, -0.29);
+  shape.quadraticCurveTo(1.28, -0.24, 0.32, -0.32);
+  shape.lineTo(0, -0.12);
+  shape.lineTo(0, 0);
+  return shape;
+};
+
+const createInnerBladeShape = () => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(0, 0.096);
+  shape.lineTo(0.24, 0.24);
+  shape.quadraticCurveTo(1.92, 0.19, 2.4, 0.24);
+  shape.quadraticCurveTo(3.2, 0.13, 3.44, 0);
+  shape.quadraticCurveTo(3.2, -0.13, 2.4, -0.24);
+  shape.quadraticCurveTo(1.92, -0.19, 0.24, -0.24);
+  shape.lineTo(0, -0.08);
+  shape.lineTo(0, 0);
+  return shape;
+};
+
+const bladeExtrudeSettings = {
+  steps: 2,
+  depth: 0.08,
+  bevelEnabled: true,
+  bevelThickness: 0.022,
+  bevelSize: 0.032,
+  bevelOffset: 0.064,
+  bevelSegments: 2
+};
+
+const innerBladeExtrudeSettings = {
+  ...bladeExtrudeSettings,
+  depth: 0.096,
+  bevelThickness: 0.032,
+  bevelSize: 0.032,
+  bevelOffset: 0,
+  bevelSegments: 6
+};
+
+// MEMORY FIX: Create static geometries once
+const ABYSSAL_SWORD_GEOMETRIES = {
+  handle: new CylinderGeometry(0.048, 0.064, 1.44, 12),
+  handleWrap: new TorusGeometry(0.072, 0.0256, 8, 16),
+  guardTorus: new TorusGeometry(0.416, 0.112, 16, 32),
+  guardSpike: new ConeGeometry(0.112, 0.88, 3),
+  blade: new ExtrudeGeometry(createBladeShape(), bladeExtrudeSettings),
+  innerBlade: new ExtrudeGeometry(createInnerBladeShape(), innerBladeExtrudeSettings)
+};
+
 export default function AbyssalSkeletonSword() {
-  // Create custom sword blade shape - larger version (memoized to prevent memory leaks)
-  const bladeShape = useMemo(() => {
-    const shape = new Shape();
-
-    // Start at center
-    shape.moveTo(0, 0);
-
-    // Left side guard
-    shape.lineTo(-0.4, 0.4);
-    shape.lineTo(-0.24, -0.24);
-    shape.lineTo(0, 0);
-
-    // Right side guard
-    shape.lineTo(0.4, 0.4);
-    shape.lineTo(0.24, -0.24);
-    shape.lineTo(0, 0);
-
-    // Blade shape - scaled up
-    shape.lineTo(0, 0.12);
-    shape.lineTo(0.32, 0.32);
-    shape.quadraticCurveTo(1.28, 0.24, 2.4, 0.29);
-    shape.quadraticCurveTo(3.2, 0.16, 3.52, 0);
-
-    shape.quadraticCurveTo(3.2, -0.16, 2.4, -0.29);
-    shape.quadraticCurveTo(1.28, -0.24, 0.32, -0.32);
-    shape.lineTo(0, -0.12);
-    shape.lineTo(0, 0);
-
-    return shape;
-  }, []);
-
-  // Inner blade shape - larger version (memoized to prevent memory leaks)
-  const innerBladeShape = useMemo(() => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-
-    shape.lineTo(0, 0.096);
-    shape.lineTo(0.24, 0.24);
-    shape.quadraticCurveTo(1.92, 0.19, 2.4, 0.24);
-    shape.quadraticCurveTo(3.2, 0.13, 3.44, 0);
-    shape.quadraticCurveTo(3.2, -0.13, 2.4, -0.24);
-    shape.quadraticCurveTo(1.92, -0.19, 0.24, -0.24);
-    shape.lineTo(0, -0.08);
-    shape.lineTo(0, 0);
-
-    return shape;
-  }, []);
-
-  const bladeExtrudeSettings = {
-    steps: 2,
-    depth: 0.08,
-    bevelEnabled: true,
-    bevelThickness: 0.022,
-    bevelSize: 0.032,
-    bevelOffset: 0.064,
-    bevelSegments: 2
-  };
-
-  const innerBladeExtrudeSettings = {
-    ...bladeExtrudeSettings,
-    depth: 0.096,
-    bevelThickness: 0.032,
-    bevelSize: 0.032,
-    bevelOffset: 0,
-    bevelSegments: 6
-  };
-
   return (
     <group rotation={[-0.575, 0, 0.2]} scale={[1.6, 1.6, 1.6]}>
       <group 
@@ -93,15 +90,13 @@ export default function AbyssalSkeletonSword() {
       >
         {/* Handle - darker green theme */}
         <group position={[-0.04, -0.88, 0.56]} rotation={[0, 0, -Math.PI]}>
-          <mesh>
-            <cylinderGeometry args={[0.048, 0.064, 1.44, 12]} />
+          <mesh geometry={ABYSSAL_SWORD_GEOMETRIES.handle}>
             <meshStandardMaterial color="#0d2818" roughness={0.8} metalness={0.2} />
           </mesh>
           
           {/* Handle wrappings - darker green */}
           {[...Array(10)].map((_, i) => (
-            <mesh key={i} position={[0, +0.56 - i * 0.176, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.072, 0.0256, 8, 16]} />
+            <mesh key={i} position={[0, +0.56 - i * 0.176, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={ABYSSAL_SWORD_GEOMETRIES.handleWrap}>
               <meshStandardMaterial color="#0a1a0f" metalness={0.4} roughness={0.6} />
             </mesh>
           ))}
@@ -110,8 +105,7 @@ export default function AbyssalSkeletonSword() {
         {/* CIRCLE CONNECTION POINT - malachite green theme */}
         <group position={[-0.04, 0.36, 0.56]} rotation={[Math.PI, 1.5, Math.PI]}>
           {/* Large torus */}
-          <mesh>
-            <torusGeometry args={[0.416, 0.112, 16, 32]} />
+          <mesh geometry={ABYSSAL_SWORD_GEOMETRIES.guardTorus}>
             <meshStandardMaterial 
               color="#00b359" 
               metalness={0.7}
@@ -129,8 +123,8 @@ export default function AbyssalSkeletonSword() {
                 0
               ]}
               rotation={[0, 0, i * Math.PI / 4 - Math.PI / 2]}
+              geometry={ABYSSAL_SWORD_GEOMETRIES.guardSpike}
             >
-              <coneGeometry args={[0.112, 0.88, 3]} />
               <meshStandardMaterial 
                 color="#0d2818"
                 metalness={0.8}
@@ -140,8 +134,7 @@ export default function AbyssalSkeletonSword() {
           ))}
           
           {/* CORE ORB - bright malachite green matching Scythe */}
-          <mesh>
-            <primitive object={SHARED_SPHERE_GEOMETRY_WEAPON_LARGE} />
+          <mesh geometry={SHARED_SPHERE_GEOMETRY_WEAPON_LARGE}>
             <meshStandardMaterial
               color={COLORS.malachiteGreen}
               emissive={COLORS.malachiteGreen}
@@ -152,8 +145,7 @@ export default function AbyssalSkeletonSword() {
           </mesh>
           
           {/* Multiple glow layers for depth - Scythe green theme */}
-          <mesh>
-            <primitive object={SHARED_SPHERE_GEOMETRY_WEAPON_SMALL} />
+          <mesh geometry={SHARED_SPHERE_GEOMETRY_WEAPON_SMALL}>
             <meshStandardMaterial
               color={COLORS.malachiteGreen}
               emissive={COLORS.malachiteGreen}
@@ -163,8 +155,7 @@ export default function AbyssalSkeletonSword() {
             />
           </mesh>
           
-          <mesh>
-            <primitive object={SHARED_SPHERE_GEOMETRY_WEAPON_MEDIUM} />
+          <mesh geometry={SHARED_SPHERE_GEOMETRY_WEAPON_MEDIUM}>
             <meshStandardMaterial
               color={COLORS.malachiteGreen}
               emissive={COLORS.malachiteGreen}
@@ -174,8 +165,7 @@ export default function AbyssalSkeletonSword() {
             />
           </mesh>
 
-          <mesh>
-            <primitive object={SHARED_SPHERE_GEOMETRY_WEAPON_XL} />
+          <mesh geometry={SHARED_SPHERE_GEOMETRY_WEAPON_XL}>
             <meshStandardMaterial
               color={COLORS.malachiteGreen}
               emissive={COLORS.malachiteGreen}
@@ -197,8 +187,7 @@ export default function AbyssalSkeletonSword() {
         {/* Blade - Scythe malachite green colors */}
         <group position={[0, 0.8, 0.56]} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
           {/* Base blade */}
-          <mesh>
-            <extrudeGeometry args={[bladeShape, bladeExtrudeSettings]} />
+          <mesh geometry={ABYSSAL_SWORD_GEOMETRIES.blade}>
             <meshStandardMaterial 
               color={COLORS.darkGreen}
               emissive={COLORS.malachiteGreen}
@@ -209,8 +198,7 @@ export default function AbyssalSkeletonSword() {
           </mesh>
           
           {/* BLADE Glowing core - bright Scythe malachite */}
-          <mesh>
-            <extrudeGeometry args={[innerBladeShape, innerBladeExtrudeSettings]} />
+          <mesh geometry={ABYSSAL_SWORD_GEOMETRIES.innerBlade}>
             <meshStandardMaterial 
               color={COLORS.malachiteGreen}
               emissive={COLORS.malachiteGreen}
@@ -225,8 +213,7 @@ export default function AbyssalSkeletonSword() {
 
         {/* Scythe malachite green energy aura around the weapon */}
         <group position={[0, 0.4, 0.56]}>
-          <mesh>
-            <primitive object={SHARED_SPHERE_GEOMETRY_WEAPON_EFFECT} />
+          <mesh geometry={SHARED_SPHERE_GEOMETRY_WEAPON_EFFECT}>
             <meshStandardMaterial
               color={COLORS.darkGreen}
               emissive={COLORS.malachiteGreen}

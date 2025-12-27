@@ -1,6 +1,6 @@
 // src/versus/Reaper/ReaperLysScythe.tsx
 import { useRef } from 'react';
-import { Group, Shape, DoubleSide } from 'three';
+import { Group, Shape, DoubleSide, CylinderGeometry, TorusGeometry, ExtrudeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 
 interface ReaperScytheProps {
@@ -9,12 +9,54 @@ interface ReaperScytheProps {
   parentRef: React.RefObject<Group>;
 }
 
+// MEMORY FIX: Create static blade geometry once
+const createBladeShape = () => {
+  const shape = new Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(0.12, -0.18);
+  shape.bezierCurveTo(0.65, 0.18, 0.9, 0.4, 1.3, 0.48);
+  shape.lineTo(0.9, 0.6);
+  shape.bezierCurveTo(0.4, 0.16, 0.18, 0.0, 0.08, 0.56);
+  shape.lineTo(0, 0);
+  return shape;
+};
+
+const bladeExtradeSettings = {
+  steps: 1,
+  depth: 0.00008,
+  bevelEnabled: true,
+  bevelThickness: 0.024,
+  bevelSize: 0.028,
+  bevelSegments: 1,
+  curveSegments: 14
+};
+
+const REAPER_SCYTHE_GEOMETRIES = {
+  handle: new CylinderGeometry(0.04, 0.04, 2.0, 10),
+  handleWrap: new TorusGeometry(0.05, 0.008, 8, 14),
+  connector: new CylinderGeometry(0.065, 0.065, 0.24, 8),
+  ringSmall: new TorusGeometry(0.115, 0.016, 14, 28),
+  ringLarge: new TorusGeometry(0.14, 0.016, 14, 28),
+  glowCylinder: new CylinderGeometry(0.105, 0.088, 0.26, 8),
+  blade: new ExtrudeGeometry(createBladeShape(), { ...bladeExtradeSettings, depth: 0.024 })
+};
+
 export default function ReaperLysScythe({ isSwinging, onSwingComplete }: ReaperScytheProps) {
   const scytheRef = useRef<Group>(null);
+  const ring1Ref = useRef<Group>(null);
+  const ring2Ref = useRef<Group>(null);
   const swingProgress = useRef(0);
   const basePosition = [-0.85, 0.88, 0.28] as const; // Adjusted for smaller reaper
   
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
+    // Animate rings
+    if (ring1Ref.current) {
+      ring1Ref.current.rotation.x = state.clock.getElapsedTime() * 2;
+    }
+    if (ring2Ref.current) {
+      ring2Ref.current.rotation.x = -state.clock.getElapsedTime() * 2;
+    }
+
     if (isSwinging && scytheRef.current) {
       swingProgress.current += delta * 3.0; // Slightly faster than boss
       const swingPhase = Math.min(swingProgress.current / Math.PI/1.5, 1);
@@ -53,27 +95,6 @@ export default function ReaperLysScythe({ isSwinging, onSwingComplete }: ReaperS
     }
   });
 
-  const createBladeShape = () => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    shape.lineTo(0.12, -0.18);
-    shape.bezierCurveTo(0.65, 0.18, 0.9, 0.4, 1.3, 0.48);
-    shape.lineTo(0.9, 0.6);
-    shape.bezierCurveTo(0.4, 0.16, 0.18, 0.0, 0.08, 0.56);
-    shape.lineTo(0, 0);
-    return shape;
-  };
-
-  const bladeExtradeSettings = {
-    steps: 1,
-    depth: 0.00008,
-    bevelEnabled: true,
-    bevelThickness: 0.024,
-    bevelSize: 0.028,
-    bevelSegments: 1,
-    curveSegments: 14
-  };
-
   return (
     <group 
       ref={scytheRef} 
@@ -83,8 +104,7 @@ export default function ReaperLysScythe({ isSwinging, onSwingComplete }: ReaperS
     >
       {/* Handle - shorter */}
       <group position={[0, -0.56, 0]} rotation={[0, 0, -Math.PI]}>
-        <mesh>
-          <cylinderGeometry args={[0.04, 0.04, 2.0, 10]} />
+        <mesh geometry={REAPER_SCYTHE_GEOMETRIES.handle}>
           <meshStandardMaterial 
             color="#2c1810" 
             roughness={0.7} 
@@ -94,8 +114,7 @@ export default function ReaperLysScythe({ isSwinging, onSwingComplete }: ReaperS
         </mesh>
         
         {[...Array(6)].map((_, i) => (
-          <mesh key={i} position={[0, 0.65 - i * 0.25, 0]} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.05, 0.008, 8, 14]} />
+          <mesh key={i} position={[0, 0.65 - i * 0.25, 0]} rotation={[Math.PI/2, 0, 0]} geometry={REAPER_SCYTHE_GEOMETRIES.handleWrap}>
             <meshStandardMaterial 
               color="#8B4513" 
               metalness={0.3} 
@@ -109,14 +128,12 @@ export default function ReaperLysScythe({ isSwinging, onSwingComplete }: ReaperS
       
       {/* Blade connector - smaller */}
       <group position={[0, 0.28, 0]} rotation={[Math.PI / 1, 0, Math.PI]}>
-        <mesh>
-          <cylinderGeometry args={[0.065, 0.065, 0.24, 8]} />
+        <mesh geometry={REAPER_SCYTHE_GEOMETRIES.connector}>
           <meshStandardMaterial color="#2c1810" roughness={0.6} />
         </mesh>
 
-        <group rotation-x={useFrame((state) => state.clock.getElapsedTime() * 2)}>
-          <mesh position-y={-0.06} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.115, 0.016, 14, 28]} />
+        <group ref={ring1Ref}>
+          <mesh position-y={-0.06} rotation={[Math.PI/2, 0, 0]} geometry={REAPER_SCYTHE_GEOMETRIES.ringSmall}>
             <meshStandardMaterial
               color="#33ccff"
               emissive="#33ccff"
@@ -127,9 +144,8 @@ export default function ReaperLysScythe({ isSwinging, onSwingComplete }: ReaperS
           </mesh>
         </group>
 
-        <group rotation-x={useFrame((state) => -state.clock.getElapsedTime() * 2)}>
-          <mesh position-y={0.024} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.14, 0.016, 14, 28]} />
+        <group ref={ring2Ref}>
+          <mesh position-y={0.024} rotation={[Math.PI/2, 0, 0]} geometry={REAPER_SCYTHE_GEOMETRIES.ringLarge}>
             <meshStandardMaterial
               color="#66d9ff"
               emissive="#66d9ff"
@@ -140,8 +156,7 @@ export default function ReaperLysScythe({ isSwinging, onSwingComplete }: ReaperS
           </mesh>
         </group>
 
-        <mesh>
-          <cylinderGeometry args={[0.105, 0.088, 0.26, 8]} />
+        <mesh geometry={REAPER_SCYTHE_GEOMETRIES.glowCylinder}>
           <meshStandardMaterial
             color="#80e6ff"
             emissive="#80e6ff"
@@ -154,8 +169,7 @@ export default function ReaperLysScythe({ isSwinging, onSwingComplete }: ReaperS
       
       {/* BLADE - smaller */}
       <group position={[0, 0.3, 0.94]} rotation={[-0.8, -Math.PI / 2, Math.PI / 2.2]}>
-        <mesh>
-          <extrudeGeometry args={[createBladeShape(), { ...bladeExtradeSettings, depth: 0.024 }]} />
+        <mesh geometry={REAPER_SCYTHE_GEOMETRIES.blade}>
           <meshStandardMaterial 
             color="#66d9ff"
             emissive="#66d9ff"

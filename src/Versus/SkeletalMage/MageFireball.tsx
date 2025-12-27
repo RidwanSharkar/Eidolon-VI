@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Color } from 'three';
-import { AdditiveBlending, Material, Mesh, SphereGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
+import { AdditiveBlending, Mesh, SphereGeometry, TorusGeometry, MeshStandardMaterial } from 'three';
 import MageFireballTrail from './MageFireballTrail';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
 
@@ -24,6 +24,10 @@ const RING_ROTATIONS = [
   [1.5, 2.8, 0.9],
   [0.3, 1.9, 2.4]
 ] as const;
+
+// MEMORY FIX: Constant color objects to prevent recreating them every frame
+const FIREBALL_COLOR = new Color("#9370DB");
+const FIREBALL_GLOW_COLOR = new Color("#6A0DAD");
 
 // MEMORY FIX: Memoized explosion component using shared geometries
 interface MageFireballExplosionProps {
@@ -108,19 +112,6 @@ interface FireballProps {
   getCurrentPlayerPosition?: () => Vector3;
 } 
 
-const fireballPool: Group[] = [];
-const MAX_POOL_SIZE = 5;
-
-export function getFireballFromPool(): Group | null {
-  return fireballPool.pop() || null;
-}
-
-export function returnFireballToPool(fireball: Group) {
-  if (fireballPool.length < MAX_POOL_SIZE) {
-    fireballPool.push(fireball);
-  }
-}
-
 export default function MageFireball({ 
   position, 
   target, 
@@ -129,8 +120,7 @@ export default function MageFireball({
   getCurrentPlayerPosition 
 }: FireballProps) {
   const fireballRef = useRef<Group>(null);
-  const meshRef = useRef<Mesh>(null);
-  const initialDirection = target.clone().sub(position).normalize();
+  const initialDirection = useMemo(() => target.clone().sub(position).normalize(), [target, position]);
   const speed = 0.225
   const hitRadius = 1.2;
   const [showExplosion, setShowExplosion] = useState(false);
@@ -156,10 +146,7 @@ export default function MageFireball({
   }, [pooledResources]);
 
   useFrame(() => {
-    if (!fireballRef.current) {
-      // Don't spam logs - fireball might be in cleanup phase
-      return;
-    }
+    if (!fireballRef.current) return;
     
     if (showExplosion) {
       forceUpdate({});
@@ -168,77 +155,48 @@ export default function MageFireball({
     
     fireballRef.current.position.add(initialDirection.clone().multiplyScalar(speed));
     
-    // Get current player position (use fresh position if available, otherwise fallback to prop)
     const currentPlayerPos = getCurrentPlayerPosition ? getCurrentPlayerPosition() : playerPosition;
-    
     const distanceToPlayer = fireballRef.current.position.distanceTo(currentPlayerPos);
     const directHitRadius = 1.2;
     
     if (distanceToPlayer < directHitRadius) {
-
-      // Deal damage immediately when hit is detected, not in next frame
       if (!hasDealtDamage.current) {
         hasDealtDamage.current = true;
         onHit(true);
       }
-      
       setShowExplosion(true);
       setExplosionStartTime(Date.now());
       return;
     }
     
     const distanceToTarget = fireballRef.current.position.distanceTo(target);
-    
     if (distanceToTarget < hitRadius) {
       const playerDistanceToTarget = currentPlayerPos.distanceTo(target);
       if (playerDistanceToTarget < hitRadius) {
-        
-        // Deal damage immediately when area hit is detected, not in next frame
         if (!hasDealtDamage.current) {
           hasDealtDamage.current = true;
           onHit(true);
         }
-        
         setShowExplosion(true);
         setExplosionStartTime(Date.now());
       } else {
-        onHit(false); // Clean up the fireball when player escapes
+        onHit(false);
       }
-      return; // Stop processing this fireball after reaching target
+      return;
     }
 
     const distanceFromStart = fireballRef.current.position.distanceTo(position);
-    // Only destroy the fireball after it travels the maximum distance
     if (distanceFromStart > MAX_TRAVEL_DISTANCE) {
       onHit(false);
     }
   });
 
-  useEffect(() => {
-    const mesh = meshRef.current;
-    return () => {
-      if (mesh) {
-        if (mesh.geometry) {
-          mesh.geometry.dispose();
-        }
-        if (mesh.material) {
-          const material = mesh.material as Material;
-          material.dispose();
-        }
-      }
-    };
-  }, []);
-
-
-
-
   return (
     <group>
       {!showExplosion ? (
         <>
-          {/* Fireball trail effect - outside the moving group to avoid coordinate conflicts */}
           <MageFireballTrail
-            color={new Color("#9370DB")}
+            color={FIREBALL_COLOR}
             size={0.235}
             meshRef={fireballRef}
             opacity={0.8}
@@ -246,14 +204,13 @@ export default function MageFireball({
           
           <group ref={fireballRef} position={position}>
             <mesh 
-              ref={meshRef}
               geometry={pooledResources.geometry}
               material={pooledResources.material}
-              scale={[0.67, 0.67, 0.67]} // Scale down from default 0.3 to 0.20 radius
+              scale={[0.67, 0.67, 0.67]}
             />
 
             <pointLight 
-              color="#6A0DAD" 
+              color={FIREBALL_GLOW_COLOR} 
               intensity={2} 
               distance={3}
               decay={2}
@@ -261,7 +218,6 @@ export default function MageFireball({
           </group>
         </>
       ) : (
-        // MEMORY FIX: explosion effect using shared geometries with scale transform
         <MageFireballExplosion 
           position={fireballRef.current?.position || position}
           explosionStartTime={explosionStartTime}
@@ -269,4 +225,4 @@ export default function MageFireball({
       )}
     </group>
   );
-} 
+}

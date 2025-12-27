@@ -1,17 +1,19 @@
-// src/versus/Reaper/ReaperBoneVortex.tsx
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Group, MeshStandardMaterial } from 'three';
+import { Mesh, Group, MeshStandardMaterial, BoxGeometry, SphereGeometry } from 'three';
 
 interface AscendantBoneVortexProps {
   parentRef: React.RefObject<Group>;
 }
 
+// MEMORY FIX: Shared geometries to prevent recreation in loop
+const VORTEX_BOX_GEOMETRY = new BoxGeometry(0.045, 0.012, 0.012);
+const VORTEX_SPHERE_GEOMETRY = new SphereGeometry(0.023, 6, 6);
+
 const createVortexPiece = () => (
   <group>
     {/* Main vortex fragment */}
-    <mesh>
-      <boxGeometry args={[0.045, 0.012, 0.012]} />
+    <mesh geometry={VORTEX_BOX_GEOMETRY}>
       <meshStandardMaterial 
         color="#cc0000"
         transparent
@@ -22,8 +24,7 @@ const createVortexPiece = () => (
     </mesh>
     
     {/* Glowing core */}
-    <mesh>
-      <sphereGeometry args={[0.023, 6, 6]} />
+    <mesh geometry={VORTEX_SPHERE_GEOMETRY}>
       <meshStandardMaterial 
         color="#cc0000"
         emissive="#cc0000"

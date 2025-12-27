@@ -11,11 +11,16 @@ interface AscendantBoneAuraProps {
   parentRef: React.RefObject<Group>;
 }
 
+// MEMORY FIX: Shared constants to prevent recreation
+const JOINT_POSITION_UP = new Vector3(0, 0.375, 0);
+const JOINT_POSITION_DOWN = new Vector3(0, -0.375, 0);
+const JOINT_ROTATION_UP = new Euler(0, 0, Math.PI / 3);
+const JOINT_ROTATION_DOWN = new Euler(0, 0, -Math.PI / 3);
+
 const createBonePiece = () => (
   <group rotation={[Math.PI / 3.75, 0, 0]}>
     {/* Main bone shaft - MEMORY FIX: Use shared geometry */}
-    <mesh>
-      <primitive object={ASCENDANT_BONE_SHAFT_GEOMETRY} attach="geometry" />
+    <mesh geometry={ASCENDANT_BONE_SHAFT_GEOMETRY}>
       <meshStandardMaterial 
         color="#ffffff"
         roughness={0.4}
@@ -24,8 +29,7 @@ const createBonePiece = () => (
     </mesh>
     
     {/* Bone joints - more pronounced - MEMORY FIX: Use shared geometry */}
-    <mesh position={new Vector3(0, 0.375, 0)} rotation={new Euler(0, 0, Math.PI / 3)}>
-      <primitive object={ASCENDANT_BONE_JOINT_GEOMETRY} attach="geometry" />
+    <mesh position={JOINT_POSITION_UP} rotation={JOINT_ROTATION_UP} geometry={ASCENDANT_BONE_JOINT_GEOMETRY}>
       <meshStandardMaterial 
         color="#ffffff"
         roughness={0.5}
@@ -33,8 +37,7 @@ const createBonePiece = () => (
       />
     </mesh>
 
-    <mesh position={new Vector3(0, -0.375, 0)} rotation={new Euler(0, 0, -Math.PI / 3)}>
-      <primitive object={ASCENDANT_BONE_JOINT_GEOMETRY} attach="geometry" />
+    <mesh position={JOINT_POSITION_DOWN} rotation={JOINT_ROTATION_DOWN} geometry={ASCENDANT_BONE_JOINT_GEOMETRY}>
       <meshStandardMaterial 
         color="#ffffff"
         roughness={0.5}

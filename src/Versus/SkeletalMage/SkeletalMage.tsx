@@ -752,25 +752,19 @@ export default function SkeletalMage({
             <mesh geometry={LIGHTNING_CORE_GEOMETRY} material={LIGHTNING_CORE_MATERIAL} />
             <pointLight color="#80D9FF" intensity={3} distance={4} />
             
-            {/* Electric crackling around mage - MEMORY FIX: Use shared geometry and material */}
-            {[...Array(6)].map((_, i) => {
-              // Clone material for dynamic opacity per spark
-              const sparkMaterial = LIGHTNING_SPARK_MATERIAL.clone();
-              sparkMaterial.opacity = 0.7 + Math.sin(Date.now() * 0.015 + i) * 0.3;
-              
-              return (
-                <mesh
-                  key={i}
-                  position={[
-                    Math.sin(Date.now() * 0.01 + i) * 0.5,
-                    Math.sin(Date.now() * 0.008 + i) * 0.3,
-                    Math.cos(Date.now() * 0.01 + i) * 0.5
-                  ]}
-                  geometry={LIGHTNING_SPARK_GEOMETRY}
-                  material={sparkMaterial}
-                />
-              );
-            })}
+            {/* Electric crackling around mage - MEMORY FIX: Use shared geometry and avoid material cloning in loop */}
+            {[...Array(6)].map((_, i) => (
+              <mesh
+                key={i}
+                position={[
+                  Math.sin(Date.now() * 0.01 + i) * 0.5,
+                  Math.sin(Date.now() * 0.008 + i) * 0.3,
+                  Math.cos(Date.now() * 0.01 + i) * 0.5
+                ]}
+                geometry={LIGHTNING_SPARK_GEOMETRY}
+                material={LIGHTNING_SPARK_MATERIAL}
+              />
+            ))}
           </group>
         )}
 

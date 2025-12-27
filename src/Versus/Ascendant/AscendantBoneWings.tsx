@@ -51,6 +51,10 @@ const EXTRUDE_SETTINGS = {
 } as const;
 
 
+// Static vectors and eulers to prevent recreation
+const WING_POSITION = new Vector3(0, -0.2, 0);
+const WING_ROTATION = new Euler(0, 0, 0);
+
 export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneWingsProps) {
   const wingsRef = useRef<Group>(null);
 
@@ -97,8 +101,8 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
     };
   }, [featherGeometry, redMarkingGeometry, sharedMaterials]);
 
-  // Wing segment definitions - creating layered angel wing structure with better spacing
-  const wingSegments: WingSegment[] = [
+  // Wing segment definitions - memoized to prevent recreation every frame
+  const wingSegments = useMemo(() => [
     // Primary feathers (outermost, longest) - increased spacing
     { 
       pos: new Vector3(isLeftWing ? -1.0 : 1.0, 0.3, -0.15), 
@@ -169,7 +173,7 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
       hasRedMarking: false
     },
     
-  ];
+  ], [isLeftWing]);
 
   // Create individual wing feather with optional red marking
   const createWingFeather = (segment: WingSegment, index: number) => (
@@ -211,8 +215,8 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
   return (
     <group 
       ref={wingsRef}
-      position={new Vector3(0, -0.2, 0)}
-      rotation={new Euler(0, 0, 0)}
+      position={WING_POSITION}
+      rotation={WING_ROTATION}
     >
 
       
