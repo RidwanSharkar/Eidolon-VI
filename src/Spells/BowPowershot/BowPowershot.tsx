@@ -76,26 +76,26 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
     };
   }, [subclass, isElementalShotsUnlocked]);
 
-  // Memoize materials to prevent recreation on every render
+  // MEMORY FIX: Create materials once, update properties instead of recreating
   const materials = useMemo(() => ({
     coreBeam: new MeshStandardMaterial({
       color: colors.core,
       emissive: colors.emissive,
-      emissiveIntensity: isPerfectShot ? 15 : 12,
+      emissiveIntensity: 12,
       transparent: true,
       opacity: 0.95
     }),
     innerGlow: new MeshStandardMaterial({
       color: colors.core,
       emissive: colors.emissive,
-      emissiveIntensity: isPerfectShot ? 10 : 8,
+      emissiveIntensity: 8,
       transparent: true,
       opacity: 0.7
     }),
     outerGlow: new MeshStandardMaterial({
       color: colors.outer,
       emissive: colors.emissive,
-      emissiveIntensity: isPerfectShot ? 6 : 4,
+      emissiveIntensity: 4,
       transparent: true,
       opacity: 0.5
     }),
@@ -131,7 +131,14 @@ const BowPowershot: React.FC<BowPowershotProps> = ({
       opacity: 0.3,
       blending: AdditiveBlending
     })
-  }), [colors, isPerfectShot]);
+  }), [colors]);  // REMOVED isPerfectShot from dependencies
+
+  // MEMORY FIX: Update material properties when isPerfectShot changes
+  useEffect(() => {
+    materials.coreBeam.emissiveIntensity = isPerfectShot ? 15 : 12;
+    materials.innerGlow.emissiveIntensity = isPerfectShot ? 10 : 8;
+    materials.outerGlow.emissiveIntensity = isPerfectShot ? 6 : 4;
+  }, [isPerfectShot, materials]);
 
   // Cleanup materials on unmount
   useEffect(() => {

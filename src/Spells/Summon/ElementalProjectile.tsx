@@ -1,11 +1,15 @@
 import { useRef, useEffect, useState } from 'react';
-import { Vector3 } from 'three';
+import { Vector3, ConeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { AdditiveBlending, Color, Group, Mesh } from 'three';
+import { AdditiveBlending, Color, Group, Mesh, SphereGeometry } from 'three';
 import ElementalTrail from './ElementalTrail';
 
 // Pre-allocated color for performance - avoids new Color() on every render
 const ELEMENTAL_TRAIL_COLOR = new Color("#4FC3F7");
+
+// MEMORY FIX: Static shared geometries - use scale instead of dynamic args
+const ELEMENTAL_EXPLOSION_SPHERE = new SphereGeometry(0.6, 16, 16);
+const ELEMENTAL_SHARD_CONE = new ConeGeometry(0.175, 0.6, 8);
 
 interface ElementalProjectileProps {
   id: number;
@@ -121,9 +125,9 @@ export default function ElementalProjectile({
                 Math.PI/4
               ]}
             >
-              {/* Main ice shard - larger and more prominent */}
+              {/* Main ice shard - larger and more prominent - MEMORY FIX: Use shared geometry */}
               <mesh ref={projectileMeshRef} rotation={[Math.PI/2, 0, 0]}>
-                <coneGeometry args={[0.175, 0.6, 8]} />
+                <primitive object={ELEMENTAL_SHARD_CONE} attach="geometry" />
                 <meshStandardMaterial
                   color="#4FC3F7"
                   emissive="#29B6F6"
@@ -185,11 +189,14 @@ function ElementalImpact({ position, onComplete }: ElementalImpactProps) {
 
   const fade = Math.max(0, 1 - (elapsed / duration));
 
+  // MEMORY FIX: Use scale instead of dynamic geometry args
+  const explosionScale = 1 + elapsed * 2;
+
   return (
     <group position={position.toArray()}>
-      {/* Water explosion effect */}
-      <mesh>
-        <sphereGeometry args={[0.6 * (1 + elapsed * 2), 16, 16]} />
+      {/* Water explosion effect - FIXED: Use scale instead of dynamic geometry */}
+      <mesh scale={explosionScale}>
+        <primitive object={ELEMENTAL_EXPLOSION_SPHERE} />
         <meshStandardMaterial
           color="#4FC3F7"
           emissive="#29B6F6"

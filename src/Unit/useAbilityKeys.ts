@@ -7,6 +7,9 @@ import { OrbShieldRef } from '../Spells/Avalanche/OrbShield';
 import { ORBITAL_COOLDOWN } from '../color/ChargedOrbitals';
 import { SynchronizedEffect } from '../Multiplayer/MultiplayerContext';
 
+// MEMORY FIX: Counter for unique effect IDs to prevent duplicate React keys
+let nextEffectId = 1;
+
 interface UseAbilityKeysProps {
   keys: React.MutableRefObject<Record<string, boolean>>;
   groupRef: React.RefObject<Group>;
@@ -903,7 +906,7 @@ export function useAbilityKeys({
               const aegisActivated = activateAegis();
               if (aegisActivated) {
                 setActiveEffects(prev => [...prev, {
-                  id: Math.random(),
+                  id: nextEffectId++,
                   type: 'aegis',
                   position: groupRef.current!.position.clone(),
                   direction: new Vector3(0, 0, 0), // No direction needed for shield
@@ -982,7 +985,7 @@ export function useAbilityKeys({
               const aegisActivated = activateAegis();
               if (aegisActivated) {
                 setActiveEffects(prev => [...prev, {
-                  id: Math.random(),
+                  id: nextEffectId++,
                   type: 'aegis',
                   position: groupRef.current!.position.clone(),
                   direction: new Vector3(0, 0, 0), // No direction needed for shield
@@ -1076,7 +1079,7 @@ export function useAbilityKeys({
             if (result) {
               setIsOathstriking(true);
               setActiveEffects(prev => [...prev, {
-                id: Math.random(),
+                id: nextEffectId++,
                 type: 'oathstrike',
                 position: result.position,
                 direction: result.direction
@@ -1142,7 +1145,7 @@ export function useAbilityKeys({
               case WeaponType.SABRES:
                 // Both Sabres subclasses use Blizzard for 'r'
                 setActiveEffects(prev => [...prev, {
-                  id: Math.random(),
+                  id: nextEffectId++,
                   type: 'blizzard',
                   position: groupRef.current!.position.clone(),
                   direction: new Vector3(0, 0, 0) // unit origin
@@ -1171,7 +1174,7 @@ export function useAbilityKeys({
               case WeaponType.SCYTHE:
                 // Default behavior for other scythe subclasses (non-Chaos)
                 setActiveEffects(prev => [...prev, {
-                  id: Math.random(),
+                  id: nextEffectId++,
                   type: 'boneclaw',
                   position: groupRef.current!.position.clone(),
                   direction: new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion)

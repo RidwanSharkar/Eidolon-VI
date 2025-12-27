@@ -4434,7 +4434,7 @@ export default function Unit({
           </>
         )}
 
-        {/* Enemy HP Bar */}
+        {/* Enemy HP Bar - MEMORY FIX: Use scale instead of dynamic geometry args */}
         {!isPlayer && (
           <Billboard
             position={[0, 2, 0]}
@@ -4446,8 +4446,11 @@ export default function Unit({
               <primitive object={SHARED_PLANE_GEOMETRY_1x01} />
               <primitive object={SHARED_MESH_BASIC_MATERIAL_HEALTH_BAR_BG} />
             </mesh>
-            <mesh position={[0.5 + (health / maxHealth) * 0.5, 0, 0.001]}>
-              <planeGeometry args={[(health / maxHealth), 0.08]} />
+            <mesh 
+              position={[0.5 + (health / maxHealth) * 0.5, 0, 0.001]}
+              scale={[health / maxHealth, 1, 1]}
+            >
+              <primitive object={UNIT_GEOMETRIES.healthBarFill} />
             </mesh>
           </Billboard>
         )}
@@ -5467,12 +5470,15 @@ export default function Unit({
           const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
           const duration = effect.duration || 0.225;
           const fade = Math.max(0, 1 - (elapsed / duration));
+          // MEMORY FIX: Use scale instead of dynamic geometry args
+          const coreScale = 1 + elapsed * 2;
+          const innerScale = 1 + elapsed * 3;
           
           return (
             <group key={effect.id} position={effect.position}>
-              {/* Core explosion sphere */}
-              <mesh>
-                <sphereGeometry args={[0.3 * (1 + elapsed * 2), 32, 32]} />
+              {/* Core explosion sphere - FIXED: Use scale instead of dynamic geometry */}
+              <mesh scale={coreScale}>
+                <primitive object={UNIT_GEOMETRIES.explosionCore} />
                 <meshStandardMaterial
                   color="#00ff44"
                   emissive="#33ff66"
@@ -5484,9 +5490,9 @@ export default function Unit({
                 />
               </mesh>
               
-              {/* Inner energy sphere */}
-              <mesh>
-                <sphereGeometry args={[0.2 * (1 + elapsed * 3), 24, 24]} />
+              {/* Inner energy sphere - FIXED: Use scale instead of dynamic geometry */}
+              <mesh scale={innerScale}>
+                <primitive object={UNIT_GEOMETRIES.explosionInner} />
                 <meshStandardMaterial
                   color="#66ff88"
                   emissive="#ffffff"
@@ -5498,29 +5504,63 @@ export default function Unit({
                 />
               </mesh>
 
-              {/* Multiple expanding rings */}
-              {[0.4, 0.6, 0.8].map((size, i) => (
-                <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-                  <torusGeometry args={[size * (1 + elapsed * 3), 0.045, 16, 32]} />
-                  <meshStandardMaterial
-                    color="#00ff44"
-                    emissive="#33ff66"
-                    emissiveIntensity={0.8 * fade}
-                    transparent
-                    opacity={0.5 * fade * (1 - i * 0.2)}
-                    depthWrite={false}
-                    blending={AdditiveBlending}
-                  />
-                </mesh>
-              ))}
+              {/* Multiple expanding rings - FIXED: Use scale instead of dynamic geometry */}
+              {[UNIT_GEOMETRIES.explosionTorus0, UNIT_GEOMETRIES.explosionTorus1, UNIT_GEOMETRIES.explosionTorus2].map((torusGeom, i) => {
+                // Create dynamic spinning rotation using effect.id for deterministic randomness
+                const seed = effect.id + i;
+                const spinSpeedX = ((seed % 7) / 7) * 3 + 2; // 2-5 range
+                const spinSpeedY = ((seed % 11) / 11) * 4 + 3; // 3-7 range
+                const spinSpeedZ = ((seed % 13) / 13) * 3 + 1; // 1-4 range
+                
+                return (
+                  <mesh 
+                    key={`explosion-torus-${effect.id}-${i}`} 
+                    scale={innerScale} 
+                    rotation={[
+                      elapsed * spinSpeedX + i * 0.5,
+                      elapsed * spinSpeedY + i * 1.2,
+                      elapsed * spinSpeedZ + i * 0.8
+                    ]}
+                  >
+                    <primitive object={torusGeom} />
+                    <meshStandardMaterial
+                      color="#00ff44"
+                      emissive="#33ff66"
+                      emissiveIntensity={0.8 * fade}
+                      transparent
+                      opacity={0.5 * fade * (1 - i * 0.2)}
+                      depthWrite={false}
+                      blending={AdditiveBlending}
+                    />
+                  </mesh>
+                );
+              })}
+
+              {/* Ground-perpendicular ring - largest and always horizontal */}
+              <mesh 
+                key={`explosion-torus-ground-${effect.id}`} 
+                scale={innerScale} 
+                rotation={[-Math.PI / 2, elapsed * 4, 0]}
+              >
+                <primitive object={UNIT_GEOMETRIES.explosionTorusGround} />
+                <meshStandardMaterial
+                  color="#00ff44"
+                  emissive="#33ff66"
+                  emissiveIntensity={0.6 * fade}
+                  transparent
+                  opacity={0.4 * fade}
+                  depthWrite={false}
+                  blending={AdditiveBlending}
+                />
+              </mesh>
 
               {/* Particle sparks */}
               {[...Array(8)].map((_, i) => {
                 const angle = (i / 8) * Math.PI * 2;
-                const radius = 0.5 * (1 + elapsed * 2);
+                const radius = 0.5 * coreScale;
                 return (
                   <mesh
-                    key={`spark-${i}`}
+                    key={`explosion-spark-${effect.id}-${i}`}
                     position={[
                       Math.sin(angle) * radius,
                       Math.cos(angle) * radius,
@@ -5578,17 +5618,13 @@ export default function Unit({
             }
           }}
         >
-          {/* Main rectangular charge area */}
+          {/* Main rectangular charge area - FIXED: Use scale instead of dynamic geometry */}
           <mesh 
             rotation={[-Math.PI / 2, 0, 0]}
             position={[0, 0.15, (bowGroundEffectProgress * 15 -4.5)]}
+            scale={[1, Math.max(0.1, bowGroundEffectProgress * 30 - 4), 1]}
           >
-            <planeGeometry 
-              args={[
-                0.4,
-                bowGroundEffectProgress * 30 -4,
-              ]} 
-            />
+            <primitive object={UNIT_GEOMETRIES.bowPlaneMain} />
             <meshStandardMaterial
               color={
                 currentSubclass === WeaponSubclass.ELEMENTAL && isPerfectShotWindow ? "#00ff40" : "#C18C4B"
@@ -5606,14 +5642,15 @@ export default function Unit({
             />
           </mesh>
 
-          {/* Side lines */}
+          {/* Side lines - FIXED: Use scale instead of dynamic geometry */}
           {[-0.4, 0.4].map((xOffset, i) => (
-            <mesh 
-              key={i}
+            <mesh
+              key={`bow-side-${i}`}
               position={[xOffset, 0.1, (bowGroundEffectProgress * 7.5+3.5)]}
               rotation={[-Math.PI / 2, 0, 0]}
+              scale={[1, Math.max(0.1, bowGroundEffectProgress * 15 + 10), 1]}
             >
-              <planeGeometry args={[0.125, bowGroundEffectProgress * 15+10]} />
+              <primitive object={UNIT_GEOMETRIES.bowPlaneSide} />
               <meshStandardMaterial
                 color={
                   currentSubclass === WeaponSubclass.ELEMENTAL && isPerfectShotWindow ? "#00ff40" : "#C18C4B"
@@ -5634,8 +5671,8 @@ export default function Unit({
 
           {/* Cross lines */}
           {[...Array(10)].map((_, i) => (
-            <mesh 
-              key={i}
+            <mesh
+              key={`bow-cross-${i}`}
               position={[0, 0.1, (i * 2.5 * bowGroundEffectProgress) + (bowGroundEffectProgress * 3 -2)]}
               rotation={[-Math.PI / 2, 0, 0]}
             >

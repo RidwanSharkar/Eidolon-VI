@@ -77,6 +77,9 @@ export default function FallenTitanUnit({
   
   const targetRotation = useRef(0);
 
+  // MEMORY FIX: Track timeouts for cleanup to prevent memory leaks
+  const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
+
   // Get the target using aggro system (can be player or summoned unit)
   const getTargetPlayer = useCallback((): TargetInfo | null => {
     // Initialize enemy in aggro system
@@ -339,7 +342,9 @@ export default function FallenTitanUnit({
         const attackStartPosition = currentPosition.current.clone();
         
         // Longer telegraph for powerful attack
-        setTimeout(() => {
+        const currentTimeouts = activeTimeouts.current; // Capture current ref value
+        const damageTimeout = setTimeout(() => {
+          currentTimeouts.delete(damageTimeout);
           const finalTargetPlayerPosition = getTargetPlayerPosition();
           const finalDistanceToPlayer = currentPosition.current.distanceTo(finalTargetPlayerPosition);
           
@@ -350,12 +355,15 @@ export default function FallenTitanUnit({
             onAttackPlayer(ATTACK_DAMAGE);
           }
         }, 1800); // Longer telegraph
+        currentTimeouts.add(damageTimeout);
         
         lastAttackTime.current = currentTime;
 
-        setTimeout(() => {
+        const attackResetTimeout = setTimeout(() => {
+          currentTimeouts.delete(attackResetTimeout);
           setIsAttacking(false);
         }, 800); // Longer attack animation
+        currentTimeouts.add(attackResetTimeout);
       }
     }
 
@@ -392,6 +400,17 @@ export default function FallenTitanUnit({
       return () => clearTimeout(cleanup);
     }
   }, [isDead]);
+
+  // MEMORY FIX: Cleanup all active timeouts on unmount to prevent memory leaks
+  useEffect(() => {
+    const currentTimeouts = activeTimeouts.current;
+    
+    return () => {
+      currentTimeouts.forEach(timeout => clearTimeout(timeout));
+      currentTimeouts.clear();
+      console.log(`🧹 FallenTitan ${id} cleanup: All timeouts cleared`);
+    };
+  }, [id]);
 
   useEffect(() => {
     const handleStealthBreak = () => {

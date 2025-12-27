@@ -93,10 +93,10 @@ export default function DeathKnightUnit({
 
   // Separate state for complex objects to reduce re-renders
   const [activeEffects, setActiveEffects] = useState<{
-    deathGrasp: { id: string; startPosition: Vector3; targetPosition: Vector3 } | null;
-    frostStrike: { id: string; position: Vector3; direction: Vector3 } | null;
-    chargingIndicator: { id: string; position: Vector3; direction: Vector3 } | null;
-    slashEffect: { id: string; position: Vector3; direction: Vector3 } | null;
+    deathGrasp: { id: string; startPosition: Vector3; targetPosition: Vector3; createdAt: number } | null;
+    frostStrike: { id: string; position: Vector3; direction: Vector3; createdAt: number } | null;
+    chargingIndicator: { id: string; position: Vector3; direction: Vector3; createdAt: number } | null;
+    slashEffect: { id: string; position: Vector3; direction: Vector3; createdAt: number } | null;
   }>({
     deathGrasp: null,
     frostStrike: null,
@@ -264,7 +264,8 @@ export default function DeathKnightUnit({
       deathGrasp: {
         id: `death-grasp-${Date.now()}`,
         startPosition: handPosition,
-        targetPosition: targetPlayerPosition.clone()
+        targetPosition: targetPlayerPosition.clone(),
+        createdAt: Date.now()
       }
     }));
   }, [getTargetPlayerPosition]);
@@ -300,7 +301,8 @@ export default function DeathKnightUnit({
       frostStrike: {
         id: `frost-strike-${Date.now()}`,
         position: spellPosition,
-        direction: direction
+        direction: direction,
+        createdAt: Date.now()
       }
     }));
 
@@ -536,7 +538,8 @@ export default function DeathKnightUnit({
           chargingIndicator: {
             id: `charging-${currentTime}`,
             position: currentPosition.current.clone(),
-            direction: attackDirection
+            direction: attackDirection,
+            createdAt: currentTime
           }
         }));
       }
@@ -569,7 +572,8 @@ export default function DeathKnightUnit({
             slashEffect: {
               id: `slash-${Date.now()}`,
               position: attackStartPosition.clone().add(new Vector3(0, 1, 0)), // Slightly elevated
-              direction: slashDirection
+              direction: slashDirection,
+              createdAt: Date.now()
             }
           }));
         }
@@ -708,19 +712,23 @@ export default function DeathKnightUnit({
     // safety cleanup - check every 2 seconds for stuck effects
     const ultraFastCleanupInterval = 2000; // 2 seconds
     if (now % ultraFastCleanupInterval < 100) { // Check roughly every 2 seconds
-      const stuckEffects = Object.entries(activeEffects).filter(([, effect]) => {
+      const stuckEffects = Object.entries(activeEffects).filter(([key, effect]) => {
         if (!effect) return false;
-        // Consider effects stuck if they've been active for more than 3 seconds
-        return true; // Simplified - in real implementation, track creation time
+        // Consider effects stuck if they've been active for more than 5 seconds
+        const effectAge = now - effect.createdAt;
+        const maxAge = key === 'deathGrasp' ? 2000 : key === 'frostStrike' ? 1500 : key === 'chargingIndicator' ? 1000 : 2000;
+        return effectAge > maxAge;
       });
 
       if (stuckEffects.length > 0) {
-        console.warn(`🚨 DeathKnight ${id} has ${stuckEffects.length} stuck effects, forcing cleanup`);
-        setActiveEffects({
-          deathGrasp: null,
-          frostStrike: null,
-          chargingIndicator: null,
-          slashEffect: null,
+        console.warn(`🚨 DeathKnight ${id} has ${stuckEffects.length} stuck effects, forcing cleanup`, stuckEffects.map(([key, effect]) => `${key}: ${now - effect!.createdAt}ms old`));
+        // Clear only the stuck effects, not all effects
+        setActiveEffects(prev => {
+          const newEffects = { ...prev };
+          stuckEffects.forEach(([key]) => {
+            newEffects[key as keyof typeof newEffects] = null;
+          });
+          return newEffects;
         });
       }
     }

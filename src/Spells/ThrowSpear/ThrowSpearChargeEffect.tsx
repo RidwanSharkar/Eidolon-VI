@@ -1,10 +1,21 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { AdditiveBlending, Color, Group, Mesh } from 'three';
+import { AdditiveBlending, Color, CylinderGeometry, Group, Mesh, SphereGeometry, TorusGeometry } from 'three';
 
 // Pre-allocated colors for performance - avoids new Color() on every render
 const LIGHTNING_COLOR = new Color(0xFF0000); // Red lightning
 const CORE_COLOR = new Color(0xFFFF00); // Yellow core
+
+// MEMORY FIX: Static shared geometries - use scale instead of dynamic args
+const CHARGE_GEOMETRIES = {
+  coreOrb: new SphereGeometry(0.2, 16, 16),       // Base size, scale by (1 + chargeProgress * 1.5)
+  outerShell: new SphereGeometry(0.4, 12, 12),   // Base size, scale by (1 + chargeProgress * 1.25)
+  particle: new SphereGeometry(0.08, 8, 8),
+  arc: new CylinderGeometry(0.02, 0.02, 0.5, 4), // Fixed size for lightning arcs
+  ring0: new TorusGeometry(0.8, 0.05, 8, 16),    // Scale for chargeProgress
+  ring1: new TorusGeometry(1.1, 0.05, 8, 16),
+  ring2: new TorusGeometry(1.4, 0.05, 8, 16),
+};
 
 interface ThrowSpearChargeEffectProps {
   parentRef: React.RefObject<Group>;
@@ -77,11 +88,16 @@ export default function ThrowSpearChargeEffect({
   // Color intensity based on charge progress
   const baseIntensity = 1 + chargeProgress * 3;
 
+  // MEMORY FIX: Calculate scales once instead of using dynamic geometry args
+  const coreScale = 1 + chargeProgress * 1.5;
+  const shellScale = 1 + chargeProgress * 1.25;
+  const ringScale = 1 + chargeProgress * 0.5;
+
   return (
     <group ref={effectGroupRef}>
-      {/* Central charging orb */}
-      <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[0.2 + chargeProgress * 0.3, 16, 16]} />
+      {/* Central charging orb - FIXED: Use scale instead of dynamic geometry */}
+      <mesh position={[0, 0, 0]} scale={coreScale}>
+        <primitive object={CHARGE_GEOMETRIES.coreOrb} />
         <meshStandardMaterial
           color={CORE_COLOR}
           emissive={CORE_COLOR}
@@ -93,9 +109,9 @@ export default function ThrowSpearChargeEffect({
         />
       </mesh>
       
-      {/* Outer energy shell */}
-      <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[0.4 + chargeProgress * 0.5, 12, 12]} />
+      {/* Outer energy shell - FIXED: Use scale instead of dynamic geometry */}
+      <mesh position={[0, 0, 0]} scale={shellScale}>
+        <primitive object={CHARGE_GEOMETRIES.outerShell} />
         <meshStandardMaterial
           color={LIGHTNING_COLOR}
           emissive={LIGHTNING_COLOR}
@@ -107,7 +123,7 @@ export default function ThrowSpearChargeEffect({
         />
       </mesh>
 
-      {/* Orbiting energy particles */}
+      {/* Orbiting energy particles - FIXED: Use shared geometry */}
       {[...Array(6)].map((_, i) => (
         <mesh
           key={`particle-${i}`}
@@ -115,7 +131,7 @@ export default function ThrowSpearChargeEffect({
             if (el) particleRefs.current[i] = el;
           }}
         >
-          <sphereGeometry args={[0.08, 8, 8]} />
+          <primitive object={CHARGE_GEOMETRIES.particle} />
           <meshStandardMaterial
             color={LIGHTNING_COLOR}
             emissive={LIGHTNING_COLOR}
@@ -128,22 +144,23 @@ export default function ThrowSpearChargeEffect({
         </mesh>
       ))}
 
-      {/* Lightning arcs - more intense with higher charge */}
+      {/* Lightning arcs - FIXED: Use shared geometry with fixed size */}
       {chargeProgress > 0.3 && [...Array(Math.floor(chargeProgress * 8))].map((_, i) => (
         <mesh
           key={`arc-${i}`}
           position={[
-            (Math.random() - 0.5) * 2,
-            (Math.random() - 0.5) * 1,
-            (Math.random() - 0.5) * 2
+            (Math.sin(i * 1.3) * 0.5) * 2,
+            (Math.cos(i * 0.7) * 0.5) * 1,
+            (Math.sin(i * 2.1) * 0.5) * 2
           ]}
           rotation={[
-            Math.random() * Math.PI,
-            Math.random() * Math.PI,
-            Math.random() * Math.PI
+            i * 0.5,
+            i * 0.7,
+            i * 0.3
           ]}
+          scale={[1, 1 + (i % 3) * 0.3, 1]}
         >
-          <cylinderGeometry args={[0.02, 0.02, 0.5 + Math.random() * 0.5, 4]} />
+          <primitive object={CHARGE_GEOMETRIES.arc} />
           <meshStandardMaterial
             color={LIGHTNING_COLOR}
             emissive={LIGHTNING_COLOR}
@@ -156,14 +173,15 @@ export default function ThrowSpearChargeEffect({
         </mesh>
       ))}
 
-      {/* Ground energy rings */}
-      {[...Array(3)].map((_, i) => (
+      {/* Ground energy rings - FIXED: Use shared geometries with scale */}
+      {[CHARGE_GEOMETRIES.ring0, CHARGE_GEOMETRIES.ring1, CHARGE_GEOMETRIES.ring2].map((ringGeom, i) => (
         <mesh
           key={`ring-${i}`}
           position={[0, -0.4, 0]}
           rotation={[Math.PI / 2, 0, Date.now() * 0.001 * (i + 1)]}
+          scale={ringScale}
         >
-          <torusGeometry args={[0.8 + i * 0.3 + chargeProgress * 0.5, 0.05, 8, 16]} />
+          <primitive object={ringGeom} />
           <meshStandardMaterial
             color={LIGHTNING_COLOR}
             emissive={LIGHTNING_COLOR}

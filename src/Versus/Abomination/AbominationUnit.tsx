@@ -1,6 +1,6 @@
 // src/Versus/Abomination/AbominationUnit.tsx
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, CircleGeometry, MeshBasicMaterial } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { HEALTHBAR_GEOMETRIES, HEALTHBAR_MATERIALS } from '@/Versus/HealthBarResources';
@@ -15,7 +15,14 @@ import AbominationLeapIndicator from './AbominationLeapIndicator';
 import AbominationShockwaveEffect from './AbominationShockwaveEffect';
 import AbominationTrailEffect from './AbominationTrailEffect';
 
-
+// MEMORY FIX: Pre-create shared geometry and material for leap shadow at module level
+const LEAP_SHADOW_GEOMETRY = new CircleGeometry(2.0, 32);
+const LEAP_SHADOW_MATERIAL = new MeshBasicMaterial({
+  color: "#000000",
+  transparent: true,
+  opacity: 0.3,
+  depthWrite: false
+});
 
 export default function AbominationUnit({
   id,
@@ -667,17 +674,14 @@ export default function AbominationUnit({
         <AbominationTrailEffect parentRef={enemyRef} />
       )}
 
-      {/* Ground shadow during leap to show landing position */}
+      {/* Ground shadow during leap to show landing position - MEMORY FIX: Use shared geometry and material */}
       {leapPhase === 'airborne' && (
-        <mesh position={[currentPosition.current.x, 0.01, currentPosition.current.z]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[2.0, 32]} />
-          <meshBasicMaterial 
-            color="#000000" 
-            opacity={0.3} 
-            transparent 
-            depthWrite={false}
-          />
-        </mesh>
+        <mesh 
+          position={[currentPosition.current.x, 0.01, currentPosition.current.z]} 
+          rotation={[-Math.PI / 2, 0, 0]}
+          geometry={LEAP_SHADOW_GEOMETRY}
+          material={LEAP_SHADOW_MATERIAL}
+        />
       )}
     </>
   );

@@ -1,7 +1,10 @@
-import React, { useRef, useMemo } from 'react';
-import { Mesh, Vector3, Clock, Color, Group, Raycaster } from 'three';
+import React, { useRef, useMemo, useEffect } from 'react';
+import { Mesh, Vector3, Clock, Color, Group, Raycaster, SphereGeometry, MeshStandardMaterial } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import CrossentropyBoltTrail from './CrossentropyBoltTrail';
+
+// MEMORY FIX: Static shared geometry - created once, reused for all bolts
+const BOLT_GEOMETRY = new SphereGeometry(0.28, 32, 32);
 
 interface CrossentropyBoltProps {
   position: Vector3;
@@ -19,6 +22,20 @@ export default function CrossentropyBolt({ position, direction, onImpact }: Cros
   const { scene } = useThree();
   const size = 0.28;
   const color = useMemo(() => new Color('#00ff44'), []);
+  
+  // MEMORY FIX: Create material once per component instance
+  const material = useMemo(() => new MeshStandardMaterial({
+    emissive: new Color('#00ff44'),
+    emissiveIntensity: 2,
+    toneMapped: false,
+  }), []);
+  
+  // Cleanup material on unmount
+  useEffect(() => {
+    return () => {
+      material.dispose();
+    };
+  }, [material]);
   const impactGroup = useRef<Group>(null);
   const explosionStartTime = useRef<number | null>(null);
   const explosionRef = useRef<Group>(null);
@@ -133,22 +150,21 @@ export default function CrossentropyBolt({ position, direction, onImpact }: Cros
 
   return (
     <group name="crossentropy-bolt-group">
-      <mesh ref={fireball1Ref} position={currentPosition.current}>
-        <sphereGeometry args={[size, 32, 32]} />
-        <meshStandardMaterial
-          emissive={color}
-          emissiveIntensity={2}
-          toneMapped={false}
-        />
+      {/* MEMORY FIX: Use shared geometry and material */}
+      <mesh 
+        ref={fireball1Ref} 
+        position={currentPosition.current}
+        geometry={BOLT_GEOMETRY}
+        material={material}
+      >
         <pointLight color={color} intensity={5} distance={12} />
       </mesh>
-      <mesh ref={fireball2Ref} position={currentPosition.current}>
-        <sphereGeometry args={[size, 32, 32]} />
-        <meshStandardMaterial
-          emissive={color}
-          emissiveIntensity={2}
-          toneMapped={false}
-        />
+      <mesh 
+        ref={fireball2Ref} 
+        position={currentPosition.current}
+        geometry={BOLT_GEOMETRY}
+        material={material}
+      >
         <pointLight color={color} intensity={5} distance={12} />
       </mesh>
       <group ref={impactGroup} visible={false}>

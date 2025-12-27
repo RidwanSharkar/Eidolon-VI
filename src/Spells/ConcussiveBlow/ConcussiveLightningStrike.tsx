@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { AdditiveBlending, MeshStandardMaterial, SphereGeometry } from 'three';
+import { AdditiveBlending, MeshStandardMaterial, SphereGeometry, RingGeometry } from 'three';
 
 interface ConcussiveLightningStrikeProps {
   position: Vector3;
@@ -107,9 +107,13 @@ const ConcussiveLightningStrike: React.FC<ConcussiveLightningStrikeProps> = ({
   }, [position, skyPosition]);
   
   // Create geometries and materials
+  // MEMORY FIX: Include impact ring geometries to avoid inline JSX recreation
   const geometries = useMemo(() => ({
     bolt: new SphereGeometry(1, 8, 8),
-    impact: new SphereGeometry(0.8, 16, 16)
+    impact: new SphereGeometry(0.8, 16, 16),
+    impactRing1: new RingGeometry(1.2, 1.2 + 0.25, 32),
+    impactRing2: new RingGeometry(1.6, 1.6 + 0.25, 32),
+    impactRing3: new RingGeometry(2.0, 2.0 + 0.25, 32),
   }), []);
   
   const materials = useMemo(() => ({
@@ -182,15 +186,15 @@ const ConcussiveLightningStrike: React.FC<ConcussiveLightningStrikeProps> = ({
           scale={[0.75, 0.75, 0.75]}
         />
         
-        {/* Impact rings */}
-        {[1.2, 1.6, 2.0].map((size, i) => (
+        {/* Impact rings - MEMORY FIX: Use pre-computed geometries */}
+        {[geometries.impactRing1, geometries.impactRing2, geometries.impactRing3].map((ringGeom, i) => (
           <mesh 
             key={i} 
             rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
+            geometry={ringGeom}
           >
-            <ringGeometry args={[size, size + 0.25, 32]} />
             <meshBasicMaterial
-              color="#CC0000" // Deep red rings
+              color="#CC0000"
               transparent
               opacity={(0.9 - (i * 0.2)) * (1 - (Date.now() - startTimeRef.current) / (duration * 1000))}
               blending={AdditiveBlending}

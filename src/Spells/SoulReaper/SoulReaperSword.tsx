@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Group, Vector3, Shape, Color } from 'three';
+import { Group, Vector3, Shape, Color, CylinderGeometry, TorusGeometry, ConeGeometry, SphereGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Enemy } from '@/Versus/enemy';
 
@@ -8,6 +8,21 @@ const COLORS = {
   blueViolet: new Color(0x8A2BE2),
   mediumPurple: new Color(0x9370DB),
 } as const;
+
+// MEMORY FIX: Create static geometries once
+const SOUL_REAPER_SWORD_GEOMETRIES = {
+  handle: new CylinderGeometry(0.03, 0.04, 0.9, 12),
+  handleWrapping: new TorusGeometry(0.045, 0.016, 8, 16),
+  guardTorus: new TorusGeometry(0.26, 0.07, 16, 32),
+  guardSpike: new ConeGeometry(0.070, 0.55, 3),
+  coreOrb: new SphereGeometry(0.155, 16, 16),
+  glowInner: new SphereGeometry(0.1, 16, 16),
+  glowMid: new SphereGeometry(0.145, 16, 16),
+  fallingTrail: new CylinderGeometry(0.15, 0.4, 4, 8),
+  impactExplosion: new SphereGeometry(2, 12, 12),
+  impactRing: new TorusGeometry(2.5, 0.3, 8, 16),
+  impactSpike: new ConeGeometry(0.2, 1.5, 6)
+};
 
 interface SoulReaperSwordProps {
   targetId: string;
@@ -185,10 +200,9 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
       {/* Soul Reaper Sword - pointing downward */}
       {isVisible && !hasImpacted && (
         <group ref={swordRef} rotation={[Math.PI, 0, Math.PI]} scale={[1.2, 1.2, 1.0]}>
-          {/* Handle */}
+          {/* Handle - MEMORY FIX: Use shared geometry */}
           <group position={[-0.025, 0.55, 0.35]} rotation={[0, 0, 0]}>
-            <mesh>
-              <cylinderGeometry args={[0.03, 0.04, 0.9, 12]} />
+            <mesh geometry={SOUL_REAPER_SWORD_GEOMETRIES.handle}>
                           <meshStandardMaterial 
               color="#8A2BE2" 
               emissive="#9370DB"
@@ -197,10 +211,9 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
             />
             </mesh>
             
-            {/* Handle wrappings */}
+            {/* Handle wrappings - MEMORY FIX: Use shared geometry */}
             {[...Array(8)].map((_, i) => (
-              <mesh key={i} position={[0, +0.35 - i * 0.11, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[0.045, 0.016, 8, 16]} />
+              <mesh key={i} position={[0, +0.35 - i * 0.11, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={SOUL_REAPER_SWORD_GEOMETRIES.handleWrapping}>
                 <meshStandardMaterial 
                   color="#8A2BE2" 
                   emissive="#9370DB"
@@ -212,11 +225,10 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
             ))}
           </group>
           
-          {/* CIRCLE CONNECTION POINT */}
+          {/* CIRCLE CONNECTION POINT - MEMORY FIX: Use shared geometries */}
           <group position={[-0.025, -0.225, 0.35]} rotation={[0, 1.5, 0]}>
             {/* Large torus */}
-            <mesh>
-              <torusGeometry args={[0.26, 0.07, 16, 32]} />
+            <mesh geometry={SOUL_REAPER_SWORD_GEOMETRIES.guardTorus}>
               <meshStandardMaterial 
                 color="#8A2BE2" 
                 emissive="#9370DB"
@@ -226,7 +238,7 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
               />
             </mesh>
             
-            {/* Decorative spikes around torus */}
+            {/* Decorative spikes around torus - MEMORY FIX: Use shared geometry */}
             {[...Array(8)].map((_, i) => (
               <mesh 
                 key={`spike-${i}`} 
@@ -236,8 +248,8 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
                   0
                 ]}
                 rotation={[0, 0, i * Math.PI / 4 - Math.PI / 2]}
+                geometry={SOUL_REAPER_SWORD_GEOMETRIES.guardSpike}
               >
-                <coneGeometry args={[0.070, 0.55, 3]} />
                 <meshStandardMaterial 
                   color="#8A2BE2"
                   emissive="#9370DB"
@@ -248,9 +260,8 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
               </mesh>
             ))}
             
-            {/* Core orb - purple */}
-            <mesh>
-              <sphereGeometry args={[0.155, 16, 16]} />
+            {/* Core orb - purple - MEMORY FIX: Use shared geometry */}
+            <mesh geometry={SOUL_REAPER_SWORD_GEOMETRIES.coreOrb}>
               <meshStandardMaterial
                 color={COLORS.blueViolet}         
                 emissive={COLORS.mediumPurple}      
@@ -260,9 +271,8 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
               />
             </mesh>
             
-            {/* Multiple glow layers for depth */}
-            <mesh>
-              <sphereGeometry args={[0.1, 16, 16]} />
+            {/* Multiple glow layers for depth - MEMORY FIX: Use shared geometries */}
+            <mesh geometry={SOUL_REAPER_SWORD_GEOMETRIES.glowInner}>
               <meshStandardMaterial
                 color={COLORS.blueViolet}
                 emissive={COLORS.mediumPurple}
@@ -272,8 +282,7 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
               />
             </mesh>
             
-            <mesh>
-              <sphereGeometry args={[0.145, 16, 16]} />
+            <mesh geometry={SOUL_REAPER_SWORD_GEOMETRIES.glowMid}>
               <meshStandardMaterial
                 color={COLORS.blueViolet}
                 emissive={COLORS.mediumPurple}
@@ -321,9 +330,8 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
             </mesh>
           </group>
 
-          {/* Falling trail effect - aligned with sword center */}
-          <mesh position={[0, 3, 0.35]} scale={[0.8, 8, 0.8]}>
-            <cylinderGeometry args={[0.15, 0.4, 4, 8]} />
+          {/* Falling trail effect - aligned with sword center - MEMORY FIX: Use shared geometry */}
+          <mesh position={[0, 3, 0.35]} scale={[0.8, 8, 0.8]} geometry={SOUL_REAPER_SWORD_GEOMETRIES.fallingTrail}>
             <meshStandardMaterial 
               color="#8A2BE2"
               emissive="#9370DB"
@@ -337,12 +345,11 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
         </group>
       )}
 
-      {/* Impact Effect */}
+      {/* Impact Effect - MEMORY FIX: Use shared geometries */}
       {showImpactEffect && (
         <group position={[0, 0.1, 0]}>
           {/* Main explosion */}
-          <mesh>
-            <sphereGeometry args={[2, 12, 12]} />
+          <mesh geometry={SOUL_REAPER_SWORD_GEOMETRIES.impactExplosion}>
             <meshStandardMaterial 
               color="#8A2BE2"
               emissive="#9370DB"
@@ -353,8 +360,7 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
           </mesh>
 
           {/* Energy ring */}
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[2.5, 0.3, 8, 16]} />
+          <mesh rotation={[Math.PI / 2, 0, 0]} geometry={SOUL_REAPER_SWORD_GEOMETRIES.impactRing}>
             <meshStandardMaterial 
               color="#8A2BE2"
               emissive="#9370DB"
@@ -370,8 +376,7 @@ export default function SoulReaperSword({ targetId, enemyData, fallbackPosition,
             const x = Math.cos(angle) * 2;
             const z = Math.sin(angle) * 2;
             return (
-              <mesh key={index} position={[x, 0, z]} rotation={[0, angle, 0]}>
-                <coneGeometry args={[0.2, 1.5, 6]} />
+              <mesh key={index} position={[x, 0, z]} rotation={[0, angle, 0]} geometry={SOUL_REAPER_SWORD_GEOMETRIES.impactSpike}>
                 <meshStandardMaterial 
                   color="#8A2BE2"
                   emissive="#9370DB"

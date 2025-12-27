@@ -1,9 +1,20 @@
 // src/Versus/DeathKnight/DeathKnightSlashEffect.tsx
 import { useRef, useMemo, useEffect } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, SphereGeometry, MeshStandardMaterial } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { AdditiveBlending } from 'three';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
+
+// MEMORY FIX: Pre-create shared geometries for wisps at module level
+const WISP_GEOMETRY = new SphereGeometry(0.04, 6, 6);
+const WISP_MATERIAL = new MeshStandardMaterial({
+  color: "#9C27B0",
+  emissive: "#7B1FA2",
+  emissiveIntensity: 2.0,
+  transparent: true,
+  opacity: 0.6,
+  blending: AdditiveBlending
+});
 
 interface DeathKnightSlashEffectProps {
   startPosition: Vector3;
@@ -172,7 +183,7 @@ export default function DeathKnightSlashEffect({
         position={[0, 0.5, 0]}
       />
       
-      {/* Additional dark energy wisps */}
+      {/* Additional dark energy wisps - MEMORY FIX: Use shared geometry and material */}
       {Array.from({ length: 4 }, (_, i) => {
         const angle = (i / 4) * Math.PI * 2;
         const radius = 0.8;
@@ -183,17 +194,9 @@ export default function DeathKnightSlashEffect({
           <mesh
             key={`wisp-${i}`}
             position={[x, y, 0.2]}
-          >
-            <sphereGeometry args={[0.04, 6, 6]} />
-            <meshStandardMaterial
-              color="#9C27B0"
-              emissive="#7B1FA2"
-              emissiveIntensity={2.0}
-              transparent
-              opacity={0.6}
-              blending={AdditiveBlending}
-            />
-          </mesh>
+            geometry={WISP_GEOMETRY}
+            material={WISP_MATERIAL}
+          />
         );
       })}
     </group>

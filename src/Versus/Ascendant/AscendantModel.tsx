@@ -1,6 +1,6 @@
 // src/Versus/Ascendant/AscendantModel.tsx
 import React, { useRef } from 'react';
-import { Group, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, BoxGeometry } from 'three';
+import { Group, MeshStandardMaterial, SphereGeometry, CylinderGeometry, ConeGeometry, BoxGeometry, TorusGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import BonePlate from '../../gear/BonePlate';  
 import AscendantBoneWings from './AscendantBoneWings';  
@@ -24,17 +24,21 @@ interface AscendantModelProps {
   onLightningStart?: (hand: 'left' | 'right') => void;
 }
 
-// Shared geometries for all AscendantModel instances
+// MEMORY FIX: Shared geometries for all AscendantModel instances
 const SHARED_GEOMETRIES = {
   armJoint: new SphereGeometry(0.06, 6, 6),
   armBone: new CylinderGeometry(0.06, 0.048, 1, 4),
   claw: new ConeGeometry(0.03, 0.15, 6),
   elbowJoint: new SphereGeometry(0.12, 12, 12),
   handBox: new BoxGeometry(0.2, 0.15, 0.08),
-  palmGlow: new SphereGeometry(0.06, 8, 8)
+  palmGlow: new SphereGeometry(0.06, 8, 8),
+  // MEMORY FIX: Add shoulder geometries
+  shoulderSphere: new SphereGeometry(0.25, 16, 16),
+  shoulderRing: new TorusGeometry(0.325, 0.05, 8, 16),
+  energyAura: new SphereGeometry(0.8, 16, 16)
 };
 
-// Shared materials for all AscendantModel instances
+// MEMORY FIX: Shared materials for all AscendantModel instances
 const SHARED_MATERIALS = {
   standardBone: new MeshStandardMaterial({
     color: "#e8e8e8",
@@ -52,6 +56,33 @@ const SHARED_MATERIALS = {
     emissiveIntensity: 2,
     transparent: true,
     opacity: 0.8
+  }),
+  // MEMORY FIX: Add shoulder materials
+  shoulderSphere: new MeshStandardMaterial({
+    color: "#CC0000",
+    emissive: "#FF0000",
+    emissiveIntensity: 0.4,
+    transparent: true,
+    opacity: 0.9,
+    metalness: 0.7,
+    roughness: 0.3
+  }),
+  shoulderRing: new MeshStandardMaterial({
+    color: "#FF4444",
+    emissive: "#FF0000",
+    emissiveIntensity: 0.6,
+    transparent: true,
+    opacity: 0.95,
+    metalness: 0.8,
+    roughness: 0.2
+  }),
+  energyAura: new MeshStandardMaterial({
+    color: "#440000",
+    emissive: "#660000",
+    emissiveIntensity: 0.5,
+    transparent: true,
+    opacity: 0.15,
+    blending: AdditiveBlending
   })
 };
 
@@ -311,80 +342,26 @@ export default function AscendantModel({
         />
       </group>
 
-      {/* Left Shoulder Sphere */}
-      <mesh position={[-0.5, 1.7, 0]}>
-        <sphereGeometry args={[0.25, 16, 16]} />
-        <meshStandardMaterial
-          color="#CC0000"
-          emissive="#FF0000"
-          emissiveIntensity={0.4}
-          transparent
-          opacity={0.9}
-          metalness={0.7}
-          roughness={0.3}
-        />
-      </mesh>
+      {/* Left Shoulder Sphere - MEMORY FIX: Use shared geometry and material */}
+      <mesh position={[-0.5, 1.7, 0]} geometry={SHARED_GEOMETRIES.shoulderSphere} material={SHARED_MATERIALS.shoulderSphere} />
 
-      {/* Left Shoulder Ring */}
-      <mesh position={[-0.5, 1.7, 0]} rotation={[Math.PI / 2, -Math.PI / 4, 0]}>
-        <torusGeometry args={[0.325, 0.05, 8, 16]} />
-        <meshStandardMaterial
-          color="#FF4444"
-          emissive="#FF0000"
-          emissiveIntensity={0.6}
-          transparent
-          opacity={0.95}
-          metalness={0.8}
-          roughness={0.2}
-        />
-      </mesh>
+      {/* Left Shoulder Ring - MEMORY FIX: Use shared geometry and material */}
+      <mesh position={[-0.5, 1.7, 0]} rotation={[Math.PI / 2, -Math.PI / 4, 0]} geometry={SHARED_GEOMETRIES.shoulderRing} material={SHARED_MATERIALS.shoulderRing} />
 
-      {/* Right Shoulder Sphere */}
-      <mesh position={[0.5, 1.7, 0]}>
-        <sphereGeometry args={[0.25, 16, 16]} />
-        <meshStandardMaterial
-          color="#CC0000"
-          emissive="#FF0000"
-          emissiveIntensity={0.4}
-          transparent
-          opacity={0.9}
-          metalness={0.7}
-          roughness={0.3}
-        />
-      </mesh>
+      {/* Right Shoulder Sphere - MEMORY FIX: Use shared geometry and material */}
+      <mesh position={[0.5, 1.7, 0]} geometry={SHARED_GEOMETRIES.shoulderSphere} material={SHARED_MATERIALS.shoulderSphere} />
 
-      {/* Right Shoulder Ring */}
-      <mesh position={[0.5, 1.7, 0]} rotation={[Math.PI / 2, Math.PI / 4, 0]}>
-        <torusGeometry args={[0.325, 0.05, 8, 16]} />
-        <meshStandardMaterial
-          color="#FF4444"
-          emissive="#FF0000"
-          emissiveIntensity={0.6}
-          transparent
-          opacity={0.95}
-          metalness={0.8}
-          roughness={0.2}
-        />
-      </mesh>
+      {/* Right Shoulder Ring - MEMORY FIX: Use shared geometry and material */}
+      <mesh position={[0.5, 1.7, 0]} rotation={[Math.PI / 2, Math.PI / 4, 0]} geometry={SHARED_GEOMETRIES.shoulderRing} material={SHARED_MATERIALS.shoulderRing} />
 
       {/* Bone Aura */}
       <group position={[0, 0.12, 0]} scale={[0.65, 0.65, 0.65]}>
         <AscendantBoneAura parentRef={groupRef} />
       </group>
 
-      {/* Enhanced red energy aura for Ascendant */}
+      {/* Enhanced red energy aura for Ascendant - MEMORY FIX: Use shared geometry and material */}
       <group position={[0, 1.2, 0]}>
-        <mesh>
-          <sphereGeometry args={[0.8, 16, 16]} />
-          <meshStandardMaterial
-            color="#440000"
-            emissive="#660000"
-            emissiveIntensity={0.5}
-            transparent
-            opacity={0.15}
-            blending={AdditiveBlending}
-          />
-        </mesh>
+        <mesh geometry={SHARED_GEOMETRIES.energyAura} material={SHARED_MATERIALS.energyAura} />
       </group>
 
  

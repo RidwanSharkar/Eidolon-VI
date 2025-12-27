@@ -1,7 +1,17 @@
 // src/Versus/Ascendant/AscendantBlink.tsx
 import React, { useRef, useEffect, useState } from 'react';
-import { Vector3, AdditiveBlending } from 'three';
+import { Vector3, AdditiveBlending, SphereGeometry, TorusGeometry, RingGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
+
+// MEMORY FIX: Static shared geometries - use scale instead of dynamic args
+const BLINK_GEOMETRIES = {
+  portalSphere: new SphereGeometry(1.5, 24, 24),
+  torusLarge: new TorusGeometry(1.8, 0.2, 8, 16),
+  torusMedium: new TorusGeometry(1.4, 0.15, 8, 14),
+  particle: new SphereGeometry(0.2, 8, 8),
+  trail: new SphereGeometry(0.3, 8, 8),
+  groundRing: new RingGeometry(1.0, 1.0, 16), // Use scaleX/scaleY for dynamic outer radius
+};
 
 interface AscendantBlinkProps {
   startPosition: Vector3;
@@ -51,9 +61,9 @@ export default function AscendantBlink({
     <>
       {/* Start position portal effect */}
       <group position={[startPosition.x, startPosition.y + 1, startPosition.z]}>
-        {/* Disappearing portal */}
+        {/* Disappearing portal - FIXED: Use shared geometry */}
         <mesh>
-          <sphereGeometry args={[1.5, 24, 24]} />
+          <primitive object={BLINK_GEOMETRIES.portalSphere} />
           <meshStandardMaterial
             color="#4466ff"
             emissive="#2244cc"
@@ -65,9 +75,9 @@ export default function AscendantBlink({
           />
         </mesh>
 
-        {/* Swirling energy rings */}
+        {/* Swirling energy rings - FIXED: Use shared geometry */}
         <mesh rotation={[0, progress * Math.PI * 4, 0]}>
-          <torusGeometry args={[1.8, 0.2, 8, 16]} />
+          <primitive object={BLINK_GEOMETRIES.torusLarge} />
           <meshStandardMaterial 
             color="#6688ff"
             emissive="#4466dd"
@@ -80,7 +90,7 @@ export default function AscendantBlink({
         </mesh>
 
         <mesh rotation={[Math.PI / 2, progress * Math.PI * -3, 0]}>
-          <torusGeometry args={[1.4, 0.15, 8, 14]} />
+          <primitive object={BLINK_GEOMETRIES.torusMedium} />
           <meshStandardMaterial 
             color="#88aaff"
             emissive="#6688ee"
@@ -92,7 +102,7 @@ export default function AscendantBlink({
           />
         </mesh>
 
-        {/* Energy particles spiraling inward */}
+        {/* Energy particles spiraling inward - FIXED: Use shared geometry */}
         {Array.from({ length: 8 }, (_, i) => {
           const angle = (i / 8) * Math.PI * 2 + progress * Math.PI * 3;
           const radius = 2.5 * (1 - progress * 0.8);
@@ -106,7 +116,7 @@ export default function AscendantBlink({
               position={[x, y, z]}
               scale={[0.3, 0.3, 0.3]}
             >
-              <sphereGeometry args={[0.2, 8, 8]} />
+              <primitive object={BLINK_GEOMETRIES.particle} />
               <meshStandardMaterial 
                 color="#aaccff"
                 emissive="#88aaee"
@@ -131,9 +141,9 @@ export default function AscendantBlink({
 
       {/* End position portal effect */}
       <group position={[endPosition.x, endPosition.y + 1, endPosition.z]}>
-        {/* Appearing portal */}
+        {/* Appearing portal - FIXED: Use shared geometry */}
         <mesh scale={[portalScale, portalScale, portalScale]}>
-          <sphereGeometry args={[1.5, 24, 24]} />
+          <primitive object={BLINK_GEOMETRIES.portalSphere} />
           <meshStandardMaterial
             color="#ff4466"
             emissive="#cc2244"
@@ -145,12 +155,12 @@ export default function AscendantBlink({
           />
         </mesh>
 
-        {/* Expanding energy rings */}
+        {/* Expanding energy rings - FIXED: Use shared geometry */}
         <mesh 
           rotation={[0, -progress * Math.PI * 4, 0]}
           scale={[portalScale, portalScale, portalScale]}
         >
-          <torusGeometry args={[1.8, 0.2, 8, 16]} />
+          <primitive object={BLINK_GEOMETRIES.torusLarge} />
           <meshStandardMaterial 
             color="#ff6688"
             emissive="#dd4466"
@@ -166,7 +176,7 @@ export default function AscendantBlink({
           rotation={[Math.PI / 2, -progress * Math.PI * 3, 0]}
           scale={[portalScale, portalScale, portalScale]}
         >
-          <torusGeometry args={[1.4, 0.15, 8, 14]} />
+          <primitive object={BLINK_GEOMETRIES.torusMedium} />
           <meshStandardMaterial 
             color="#ff88aa"
             emissive="#ee6688"
@@ -178,7 +188,7 @@ export default function AscendantBlink({
           />
         </mesh>
 
-        {/* Energy particles spiraling outward */}
+        {/* Energy particles spiraling outward - FIXED: Use shared geometry */}
         {Array.from({ length: 8 }, (_, i) => {
           const angle = (i / 8) * Math.PI * 2 - progress * Math.PI * 3;
           const radius = 1.0 + progress * 2.0;
@@ -192,7 +202,7 @@ export default function AscendantBlink({
               position={[x, y, z]}
               scale={[0.3, 0.3, 0.3]}
             >
-              <sphereGeometry args={[0.2, 8, 8]} />
+              <primitive object={BLINK_GEOMETRIES.particle} />
               <meshStandardMaterial 
                 color="#ffaacc"
                 emissive="#eeaacc"
@@ -214,9 +224,9 @@ export default function AscendantBlink({
           decay={2}
         />
 
-        {/* Ground impact effect */}
-        <mesh position={[0, -0.8, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[1.0, 3.0 * portalScale, 16]} />
+        {/* Ground impact effect - FIXED: Use scale instead of dynamic geometry */}
+        <mesh position={[0, -0.8, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[3.0 * portalScale, 3.0 * portalScale, 1]}>
+          <primitive object={BLINK_GEOMETRIES.groundRing} />
           <meshStandardMaterial 
             color="#ff6688"
             emissive="#cc4466"
@@ -229,7 +239,7 @@ export default function AscendantBlink({
         </mesh>
       </group>
 
-      {/* Energy trail connecting start and end positions */}
+      {/* Energy trail connecting start and end positions - FIXED: Use shared geometry */}
       {progress > 0.2 && progress < 0.8 && (
         <group>
           {Array.from({ length: 10 }, (_, i) => {
@@ -245,7 +255,7 @@ export default function AscendantBlink({
                 position={[trailPosition.x, trailPosition.y, trailPosition.z]}
                 scale={[0.4, 0.4, 0.4]}
               >
-                <sphereGeometry args={[0.3, 8, 8]} />
+                <primitive object={BLINK_GEOMETRIES.trail} />
                 <meshStandardMaterial 
                   color="#8866ff"
                   emissive="#6644dd"

@@ -107,6 +107,11 @@ const registerAbominationResources = () => {
     registerGlobalSharedResource(() => {
       Object.values(SHARED_GEOMETRIES).forEach(geo => geo.dispose());
       Object.values(SHARED_MATERIALS).forEach(mat => mat.dispose());
+      // MEMORY FIX: Also dispose horn geometries and materials
+      HORN_CYLINDER_GEOMETRIES.forEach(geo => geo.dispose());
+      HORN_RIDGE_GEOMETRIES.forEach(geo => geo.dispose());
+      HORN_CYLINDER_MATERIALS.forEach(mat => mat.dispose());
+      HORN_RIDGE_MATERIALS.forEach(mat => mat.dispose());
     }, 'CustomAbomination');
     registeredAbominationResources = true;
   } catch (error) {
@@ -401,18 +406,53 @@ function ShoulderPlate() {
   );
 }
 
+// MEMORY FIX: Pre-computed horn segment geometries - created once, reused for all horn instances
+const HORN_SEGMENTS = 10;
+const HORN_HEIGHT_PER_SEGMENT = 0.12;
+const HORN_BASE_WIDTH = 0.15;
+
+// Pre-compute cylinder geometries for each segment (avoid dynamic args in JSX)
+const HORN_CYLINDER_GEOMETRIES = Array.from({ length: HORN_SEGMENTS }).map((_, i) => {
+  const progress = i / (HORN_SEGMENTS - 1);
+  const width = HORN_BASE_WIDTH * (1 - progress * 0.8);
+  return new CylinderGeometry(width, width * 0.92, HORN_HEIGHT_PER_SEGMENT, 4);
+});
+
+// Pre-compute box geometries for ridge details (4 per segment)
+const HORN_RIDGE_GEOMETRIES = Array.from({ length: HORN_SEGMENTS }).map((_, i) => {
+  const progress = i / (HORN_SEGMENTS - 1);
+  const width = HORN_BASE_WIDTH * (1 - progress * 0.8);
+  return new BoxGeometry(width * 0.4, HORN_HEIGHT_PER_SEGMENT * 1.1, width * 0.2);
+});
+
+// Pre-compute materials for each segment (avoids dynamic color string in JSX)
+const HORN_CYLINDER_MATERIALS = Array.from({ length: HORN_SEGMENTS }).map((_, i) => {
+  const progress = i / (HORN_SEGMENTS - 1);
+  return new MeshStandardMaterial({
+    color: `rgb(${Math.round(139 - progress * 80)}, ${Math.round(0 + progress * 20)}, ${Math.round(0 + progress * 20)})`,
+    roughness: 0.7,
+    metalness: 0.4
+  });
+});
+
+const HORN_RIDGE_MATERIALS = Array.from({ length: HORN_SEGMENTS }).map((_, i) => {
+  const progress = i / (HORN_SEGMENTS - 1);
+  return new MeshStandardMaterial({
+    color: `rgb(${Math.round(159 - progress * 100)}, ${Math.round(20 + progress * 20)}, ${Math.round(20 + progress * 20)})`,
+    roughness: 0.8,
+    metalness: 0.3
+  });
+});
+
 function CustomHorn({ isLeft = false }: { isLeft?: boolean }) {
-  const segments = 10;
-  const heightPerSegment = 0.12;
-  const baseWidth = 0.15;
   const twistAmount = Math.PI * 1.2;
   const curveAmount = 1.4;
   
   return (
     <group rotation={[-0.25, isLeft ? -0.3 : 0.3, isLeft ? -0.4 : 0.4]}>
-      {Array.from({ length: segments }).map((_, i) => {
-        const progress = i / (segments - 1);
-        const width = baseWidth * (1 - progress * 0.8);
+      {Array.from({ length: HORN_SEGMENTS }).map((_, i) => {
+        const progress = i / (HORN_SEGMENTS - 1);
+        const width = HORN_BASE_WIDTH * (1 - progress * 0.8);
         const twist = Math.pow(progress, 1.2) * twistAmount;
         const curve = Math.pow(progress, 1.3) * curveAmount;
         
@@ -421,36 +461,28 @@ function CustomHorn({ isLeft = false }: { isLeft?: boolean }) {
             key={i}
             position={[
               curve * (isLeft ? -0.15 : 0.15),
-              i * heightPerSegment,
+              i * HORN_HEIGHT_PER_SEGMENT,
               -curve * 0.6
             ]}
             rotation={[-0.8 * progress, twist, 0]}
           >
-            <mesh>
-              <cylinderGeometry 
-                args={[width, width * 0.92, heightPerSegment, 4]}
-              />
-              <meshStandardMaterial 
-                color={`rgb(${139 - progress * 80}, ${0 + progress * 20}, ${0 + progress * 20})`}
-                roughness={0.7}
-                metalness={0.4}
-              />
-            </mesh>
+            {/* MEMORY FIX: Use pre-computed geometry and material */}
+            <mesh
+              geometry={HORN_CYLINDER_GEOMETRIES[i]}
+              material={HORN_CYLINDER_MATERIALS[i]}
+            />
             
-            {/* Ridge details - now with 4 faces to match reference */}
+            {/* Ridge details - MEMORY FIX: Use pre-computed geometry and material */}
             {Array.from({ length: 4 }).map((_, j) => (
               <group 
                 key={j} 
                 rotation={[0, (j * Math.PI * 2) / 4, 0]}
               >
-                <mesh position={[width * 0.95, 0, 0]}>
-                  <boxGeometry args={[width * 0.4, heightPerSegment * 1.1, width * 0.2]} />
-                  <meshStandardMaterial 
-                    color={`rgb(${159 - progress * 100}, ${20 + progress * 20}, ${20 + progress * 20})`}
-                    roughness={0.8}
-                    metalness={0.3}
-                  />
-                </mesh>
+                <mesh 
+                  position={[width * 0.95, 0, 0]}
+                  geometry={HORN_RIDGE_GEOMETRIES[i]}
+                  material={HORN_RIDGE_MATERIALS[i]}
+                />
               </group>
             ))}
           </group>

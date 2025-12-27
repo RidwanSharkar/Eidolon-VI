@@ -149,10 +149,8 @@ const Reignite = forwardRef<ReigniteRef, ReigniteProps>(({
     });
   });
 
-  // Don't render anything if not active
-  if (!isActive) return null;
-
   // Memoized material for explosion - created once per component instance
+  // Always create this, but only dispose if it exists
   const explosionMaterial = useMemo(() => new MeshStandardMaterial({
     color: "#ff3300",
     emissive: "#ff0000",
@@ -166,16 +164,21 @@ const Reignite = forwardRef<ReigniteRef, ReigniteProps>(({
   // Cleanup material on unmount
   useEffect(() => {
     return () => {
-      explosionMaterial.dispose();
+      if (explosionMaterial) {
+        explosionMaterial.dispose();
+      }
     };
   }, [explosionMaterial]);
 
   // Update material opacity based on scale
   useFrame(() => {
-    if (showExplosion) {
+    if (showExplosion && explosionMaterial) {
       explosionMaterial.opacity = Math.max(0, 1 - (explosionScaleRef.current / 3));
     }
   });
+
+  // Don't render anything if not active
+  if (!isActive) return null;
 
   return (
     <group ref={groupRef}>

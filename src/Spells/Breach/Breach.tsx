@@ -1,12 +1,12 @@
 import { useRef, useState, useEffect } from 'react';
-import { Vector3, Group } from 'three';
+import { Vector3, Group, SphereGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, MeshStandardMaterial } from 'three';
 import { ReigniteRef } from '../Reignite/Reignite';
 import { calculateDamage } from '@/Weapons/damage';
 
-// Import the constant from useUnitControls or define it here
-const PLAY_AREA_RADIUS = 28.5; // MAP BOUNDARY (same as in useUnitControls)
+// Import PLAY_AREA_RADIUS from useUnitControls for consistency
+const PLAY_AREA_RADIUS = 29; // MAP BOUNDARY - must match useUnitControls
 
 interface BreachProps {
   parentRef: React.RefObject<Group>;
@@ -44,7 +44,8 @@ export default function Breach({
   const direction = useRef<Vector3>(new Vector3());
   const lastPosition = useRef<Vector3 | null>(null);
   const hitEnemies = useRef<Set<string>>(new Set());
-  const [fireTrail, setFireTrail] = useState<Array<{id: number, position: Vector3}>>([]);
+  const fireTrail = useRef<Array<{id: number, position: Vector3}>>([]);
+  const [fireTrailState, setFireTrailState] = useState<Array<{id: number, position: Vector3}>>([]); // For rendering only
   const nextFireParticleId = useRef(1);
   const enemyHealthTracker = useRef<Record<string, number>>({});
 
@@ -53,7 +54,8 @@ export default function Breach({
     return () => {
       hitEnemies.current.clear();
       enemyHealthTracker.current = {};
-      setFireTrail([]);
+      fireTrail.current = [];
+      setFireTrailState([]);
     };
   }, []);
 
@@ -82,7 +84,8 @@ export default function Breach({
       }
       
       // Initialize fire trail
-      setFireTrail([]);
+      fireTrail.current = [];
+      setFireTrailState([]);
 
       // Initialize health tracker
       if (enemyData) {
@@ -116,54 +119,40 @@ export default function Breach({
     const displacement = forwardDirection.multiplyScalar(BREACH_DISTANCE * easeOutQuad);
     const newPosition = startPosition.current.clone().add(displacement);
 
-    // Bounds checking: Ensure position is within reasonable limits (like Vault does)
+    // Bounds checking: Use same logic as useUnitControls for consistent movement
     const distanceFromOrigin = newPosition.length();
-    if (distanceFromOrigin > MAX_BREACH_BOUNDS) {
-      // Cancel breach if it would move too far from origin
-      onComplete();
-      startTime.current = null;
-      startPosition.current = null;
-      lastPosition.current = null;
-      return;
-    }
 
-    // Additional check for play area boundary
-    let adjustedProgress = progress;
+    // If we would exceed the boundary, calculate tangential movement like regular movement
     if (distanceFromOrigin >= PLAY_AREA_RADIUS) {
-      // If we'd breach the boundary, clamp the position to stay inside
-      // Calculate how far along the breach direction we can go while staying within bounds
-      const dirToNewPos = newPosition.clone().sub(startPosition.current);
-      const dirLength = dirToNewPos.length();
-      
-      if (dirLength > 0) {
-        // Find the maximum distance we can travel in this direction
-        const startDist = startPosition.current.length();
-        
-        // Project the movement onto the boundary - scale back the displacement
-        const maxAllowedDist = PLAY_AREA_RADIUS * 0.95;
-        
-        // If start position is already near boundary, just clamp to current position
-        if (startDist >= maxAllowedDist) {
-          newPosition.copy(startPosition.current);
-        } else {
-          // Calculate the point where the movement path intersects the boundary
-          // and clamp to slightly inside that
-          const normalizedDir = dirToNewPos.clone().normalize();
-          const maxTravel = Math.max(0, maxAllowedDist - startDist);
-          const actualTravel = Math.min(dirLength, maxTravel);
-          
-          newPosition.copy(startPosition.current).add(normalizedDir.multiplyScalar(actualTravel));
-        }
+      // Get the current position (before this movement)
+      const currentPos = lastPosition.current || startPosition.current;
+      if (!currentPos) {
+        onComplete();
+        startTime.current = null;
+        startPosition.current = null;
+        lastPosition.current = null;
+        return;
       }
-      
-      // End the breach effect early
-      if (adjustedProgress < 0.9) {
-        adjustedProgress = 0.9;
-      }
+
+      // Calculate the movement vector
+      const movement = newPosition.clone().sub(currentPos);
+
+      // Project the movement vector onto the circular boundary
+      const toCenter = currentPos.clone().normalize();
+      const tangent = new Vector3(-toCenter.z, 0, toCenter.x);
+
+      // Project our movement onto the tangent
+      const tangentMovement = tangent.clone().multiplyScalar(movement.dot(tangent));
+
+      // Apply the tangential movement while keeping distance to center constant
+      const adjustedPosition = currentPos.clone().add(tangentMovement);
+      adjustedPosition.normalize().multiplyScalar(PLAY_AREA_RADIUS);
+
+      newPosition.copy(adjustedPosition);
     }
 
     // Create fire particles between last position and current position
-    if (lastPosition.current && adjustedProgress < 1) {
+    if (lastPosition.current && progress < 1) {
       const particlePositions: Array<{id: number, position: Vector3}> = [];
       
       // Only add particles occasionally
@@ -184,7 +173,9 @@ export default function Breach({
       }
       
       if (particlePositions.length > 0) {
-        setFireTrail(prev => [...prev, ...particlePositions]);
+        fireTrail.current.push(...particlePositions);
+        // Update state for rendering (debounced to prevent too many re-renders)
+        setFireTrailState([...fireTrail.current]);
       }
     }
 
@@ -251,7 +242,7 @@ export default function Breach({
     lastPosition.current = newPosition.clone();
 
     // Complete breach when finished
-    if (adjustedProgress === 1) {
+    if (progress === 1) {
       onComplete();
       startTime.current = null;
       startPosition.current = null;
@@ -259,7 +250,8 @@ export default function Breach({
       
       // Clear fire trail after a delay
       setTimeout(() => {
-        setFireTrail([]);
+        fireTrail.current = [];
+        setFireTrailState([]);
       }, 1500);
     }
   });
@@ -267,7 +259,7 @@ export default function Breach({
   return (
     <>
       {/* Render fire particles */}
-      {fireTrail.map(particle => (
+      {fireTrailState.map(particle => (
         <FireParticle key={particle.id} position={particle.position} />
       ))}
     </>
@@ -291,6 +283,9 @@ function distanceToLineSegment(lineStart: Vector3, lineEnd: Vector3, point: Vect
   // Return distance
   return point.distanceTo(closestPoint);
 }
+
+// MEMORY FIX: Static shared geometry for fire particles - use scale instead of dynamic args
+const FIRE_PARTICLE_GEOMETRY = new SphereGeometry(0.5, 8, 8);
 
 // Fire particle component
 function FireParticle({ position }: { position: Vector3 }) {
@@ -323,7 +318,7 @@ function FireParticle({ position }: { position: Vector3 }) {
   
   return (
     <mesh ref={particleRef} position={[position.x, position.y, position.z]}>
-      <sphereGeometry args={[0.5, 8, 8]} />
+      <primitive object={FIRE_PARTICLE_GEOMETRY} />
       <meshStandardMaterial 
         color="#ff4500"
         emissive="#ff7700"

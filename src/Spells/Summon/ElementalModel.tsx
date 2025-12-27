@@ -1,8 +1,21 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Group, AdditiveBlending } from 'three';
+import { Group, AdditiveBlending, OctahedronGeometry, SphereGeometry, TorusGeometry, CylinderGeometry, ConeGeometry } from 'three';
 import { MathUtils, Mesh } from 'three';
 import ElementalVortex from './ElementalVortex';
+
+// MEMORY FIX: Create static geometries once
+const ELEMENTAL_GEOMETRIES = {
+  body: new OctahedronGeometry(0.8, 0),
+  head: new OctahedronGeometry(0.4, 0),
+  shoulder: new SphereGeometry(0.325, 16, 16),
+  shoulderRing: new TorusGeometry(0.4, 0.05, 8, 16),
+  arm: new CylinderGeometry(0.15, 0.15, 1.0, 6),
+  aura: new SphereGeometry(1.35, 16, 16),
+  iceSpike: new ConeGeometry(0.1, 0.8, 6),
+  iceSpikeSmall: new ConeGeometry(0.08, 0.6, 6),
+  icicleOrbital: new ConeGeometry(0.075, 0.3, 6)
+};
 
 interface ElementalModelProps {
   isAttacking?: boolean;
@@ -50,9 +63,8 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
 
   return (
     <group ref={groupRef}>
-      {/* Main body - ice crystal structure */}
-      <mesh position={[0, 1.15, 0]}>
-        <octahedronGeometry args={[0.8, 0]} />
+      {/* Main body - ice crystal structure - MEMORY FIX: Use shared geometry */}
+      <mesh position={[0, 1.15, 0]} geometry={ELEMENTAL_GEOMETRIES.body}>
         <meshStandardMaterial
           color="#4FC3F7"
           emissive="#29B6F6"
@@ -64,9 +76,8 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
         />
       </mesh>
 
-      {/* Head */}
-      <mesh position={[0, 1.85, 0]}>
-        <octahedronGeometry args={[0.4, 0]} />
+      {/* Head - MEMORY FIX: Use shared geometry */}
+      <mesh position={[0, 1.85, 0]} geometry={ELEMENTAL_GEOMETRIES.head}>
         <meshStandardMaterial
           color="#81D4FA"
           emissive="#4FC3F7"
@@ -78,9 +89,8 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
         />
       </mesh>
 
-      {/* Left Shoulder */}
-      <mesh position={[-0.7, 1.5, 0]}>
-        <sphereGeometry args={[0.325, 16, 16]} />
+      {/* Left Shoulder - MEMORY FIX: Use shared geometry */}
+      <mesh position={[-0.7, 1.5, 0]} geometry={ELEMENTAL_GEOMETRIES.shoulder}>
         <meshStandardMaterial
           color="#81D4FA"
           emissive="#4FC3F7"
@@ -92,9 +102,8 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
         />
       </mesh>
 
-      {/* Left Shoulder Ring */}
-      <mesh position={[-0.7, 1.5, 0]} rotation={[Math.PI / 2, -Math.PI / 4, 0]}>
-        <torusGeometry args={[0.4, 0.05, 8, 16]} />
+      {/* Left Shoulder Ring - MEMORY FIX: Use shared geometry */}
+      <mesh position={[-0.7, 1.5, 0]} rotation={[Math.PI / 2, -Math.PI / 4, 0]} geometry={ELEMENTAL_GEOMETRIES.shoulderRing}>
         <meshStandardMaterial
           color="#E1F5FE"
           emissive="#B3E5FC"
@@ -106,13 +115,13 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
         />
       </mesh>
 
-      {/* Left Arm - animated for attacks */}
+      {/* Left Arm - animated for attacks - MEMORY FIX: Use shared geometry */}
       <mesh 
         name="LeftArm"
         position={[-0.7, 1.0, 0.4]} 
         rotation={[0, 0, 0]} // Default down position
+        geometry={ELEMENTAL_GEOMETRIES.arm}
       >
-        <cylinderGeometry args={[0.15, 0.15, 1.0, 6]} />
         <meshStandardMaterial
           color="#4FC3F7"
           emissive="#29B6F6"
@@ -124,9 +133,8 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
         />
       </mesh>
 
-      {/* Right Shoulder */}
-      <mesh position={[0.7, 1.5, 0]}>
-        <sphereGeometry args={[0.325, 16, 16]} />
+      {/* Right Shoulder - MEMORY FIX: Use shared geometry */}
+      <mesh position={[0.7, 1.5, 0]} geometry={ELEMENTAL_GEOMETRIES.shoulder}>
         <meshStandardMaterial
           color="#81D4FA"
           emissive="#4FC3F7"
@@ -138,9 +146,8 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
         />
       </mesh>
 
-      {/* Right Shoulder Ring */}
-      <mesh position={[0.7, 1.5, 0]} rotation={[Math.PI / 2,  Math.PI / 4, 0]}>
-        <torusGeometry args={[0.4, 0.05, 8, 16]} />
+      {/* Right Shoulder Ring - MEMORY FIX: Use shared geometry */}
+      <mesh position={[0.7, 1.5, 0]} rotation={[Math.PI / 2,  Math.PI / 4, 0]} geometry={ELEMENTAL_GEOMETRIES.shoulderRing}>
         <meshStandardMaterial
           color="#E1F5FE"
           emissive="#B3E5FC"
@@ -152,9 +159,8 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
         />
       </mesh>
 
-      {/* Right Arm - stays down */}
-      <mesh position={[0.7, 1.0, 0]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[0.15, 0.15, 1.0, 6]} />
+      {/* Right Arm - stays down - MEMORY FIX: Use shared geometry */}
+      <mesh position={[0.7, 1.0, 0]} rotation={[0, 0, 0]} geometry={ELEMENTAL_GEOMETRIES.arm}>
         <meshStandardMaterial
           color="#4FC3F7"
           emissive="#29B6F6"
@@ -168,9 +174,8 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
 
 
 
-      {/* Water aura effect */}
-      <mesh position={[0, 1.0, 0]}>
-        <sphereGeometry args={[1.35, 16, 16]} />
+      {/* Water aura effect - MEMORY FIX: Use shared geometry */}
+      <mesh position={[0, 1.0, 0]} geometry={ELEMENTAL_GEOMETRIES.aura}>
         <meshStandardMaterial
           color="#29B6F6"
           emissive="#0277BD"
@@ -183,11 +188,10 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
       </mesh>
 
 
-      {/* Attack animation - ice spikes when attacking */}
+      {/* Attack animation - ice spikes when attacking - MEMORY FIX: Use shared geometries */}
       {isAttacking && (
         <>
-          <mesh position={[0, 1.2, 1.5]} rotation={[Math.PI / 2, 0, 0]}>
-            <coneGeometry args={[0.1, 0.8, 6]} />
+          <mesh position={[0, 1.2, 1.5]} rotation={[Math.PI / 2, 0, 0]} geometry={ELEMENTAL_GEOMETRIES.iceSpike}>
             <meshStandardMaterial
               color="#E1F5FE"
               emissive="#81D4FA"
@@ -199,8 +203,7 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
             />
           </mesh>
           
-          <mesh position={[0.5, 1.2, 1.3]} rotation={[Math.PI / 2, 0, Math.PI / 6]}>
-            <coneGeometry args={[0.08, 0.6, 6]} />
+          <mesh position={[0.5, 1.2, 1.3]} rotation={[Math.PI / 2, 0, Math.PI / 6]} geometry={ELEMENTAL_GEOMETRIES.iceSpikeSmall}>
             <meshStandardMaterial
               color="#E1F5FE"
               emissive="#81D4FA"
@@ -212,8 +215,7 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
             />
           </mesh>
           
-          <mesh position={[-0.5, 1.2, 1.3]} rotation={[Math.PI / 2, 0, -Math.PI / 6]}>
-            <coneGeometry args={[0.08, 0.6, 6]} />
+          <mesh position={[-0.5, 1.2, 1.3]} rotation={[Math.PI / 2, 0, -Math.PI / 6]} geometry={ELEMENTAL_GEOMETRIES.iceSpikeSmall}>
             <meshStandardMaterial
               color="#E1F5FE"
               emissive="#81D4FA"
@@ -229,7 +231,7 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
         </>
       )}
 
-      {/* Horizontal Icicle Orbital Ring (XZ plane) */}
+      {/* Horizontal Icicle Orbital Ring (XZ plane) - MEMORY FIX: Use shared geometry */}
       {[...Array(8)].map((_, i) => {
         const angle = (i / 8) * Math.PI * 2 + timeRef.current * 1.2;
         const radius = 0.8;
@@ -247,8 +249,7 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
               -Math.PI/2
             ]}
           >
-            <mesh>
-              <coneGeometry args={[0.075, 0.3, 6]} />
+            <mesh geometry={ELEMENTAL_GEOMETRIES.icicleOrbital}>
               <meshStandardMaterial
                 color="#CCFFFF"
                 emissive="#CCFFFF"
@@ -261,7 +262,7 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
         );
       })}
 
-      {/* Vertical Icicle Orbital Ring (XY plane) - Perpendicular to horizontal */}
+      {/* Vertical Icicle Orbital Ring (XY plane) - Perpendicular to horizontal - MEMORY FIX: Use shared geometry */}
       {[...Array(8)].map((_, i) => {
         const angle = (i / 8) * Math.PI * 2 + timeRef.current * 1.2 + Math.PI / 8; // Slight offset
         const radius = 0.8;
@@ -279,8 +280,7 @@ export default function ElementalModel({ isAttacking = false }: ElementalModelPr
               0
             ]}
           >
-            <mesh>
-            <coneGeometry args={[0.075, 0.3, 6]} />
+            <mesh geometry={ELEMENTAL_GEOMETRIES.icicleOrbital}>
               <meshStandardMaterial
                 color="#AAEEFF"
                 emissive="#AAEEFF"

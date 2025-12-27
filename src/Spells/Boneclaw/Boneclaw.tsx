@@ -24,11 +24,14 @@ interface BoneclawProps {
   level?: number; // Add level parameter for damage scaling
 }
 
+// MEMORY FIX: Shared geometries for Boneclaw - use scale for size variations
 const sharedGeometries = {
   cylinder: new CylinderGeometry(0.06, 0.02, 0.12, 6),
   sphere: new SphereGeometry(0.12, 12, 12),
   box: new BoxGeometry(0.2, 0.15, 0.08),
-  cone: new ConeGeometry(0.03, 0.3, 6)
+  cone: new ConeGeometry(0.03, 0.3, 6),
+  // Joint sphere - base size 1.0, use scale for different sizes
+  jointSphere: new SphereGeometry(1.0, 8, 8)
 };
 
 const sharedMaterials = {
@@ -75,9 +78,10 @@ export default function Boneclaw({ position, direction, onComplete, parentRef, o
     />
   );
 
+  // MEMORY FIX: Use shared geometry with scale instead of creating new geometry
   const createJoint = (size: number) => (
-    <mesh>
-      <sphereGeometry args={[size*1.1, 8, 8]} />
+    <mesh scale={size * 1.1}>
+      <primitive object={sharedGeometries.jointSphere} />
       <meshStandardMaterial 
         color="#d6cfc7"
         roughness={0.9}

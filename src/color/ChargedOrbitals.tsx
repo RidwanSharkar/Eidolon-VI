@@ -1,7 +1,12 @@
 import React, { useRef } from 'react';
-import { Group, DoubleSide, AdditiveBlending } from 'three';
+import { Group, DoubleSide, AdditiveBlending, SphereGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { WeaponType, WeaponSubclass } from '../Weapons/weapons';
+
+// MEMORY FIX: Shared geometries for orbitals - use scale instead of dynamic args
+// This prevents recreating geometry on every render with different particleSize
+const ORBITAL_SPHERE_BASE = new SphereGeometry(1.0, 8, 8);
+const ORBITAL_SPHERE_OUTER = new SphereGeometry(1.225, 8, 8);
 
 export interface ChargeStatus {
   id: number;
@@ -111,9 +116,9 @@ export default function ChargedOrbitals({
               if (el) particlesRef.current[i] = el;
             }}
           >
-            {/* Inner glowing sphere */}
-            <mesh>
-              <sphereGeometry args={[particleSize, 8, 8]} />
+            {/* Inner glowing sphere - MEMORY FIX: Use shared geometry with scale */}
+            <mesh scale={particleSize}>
+              <primitive object={ORBITAL_SPHERE_BASE} attach="geometry" />
               <meshStandardMaterial
                 color={chargeStatus?.available ? activeColor : "#333333"}
                 emissive={chargeStatus?.available ? activeColor : "#333333"}
@@ -123,9 +128,9 @@ export default function ChargedOrbitals({
               />
             </mesh>
 
-            {/* Outer opaque layer */}
-            <mesh>
-              <sphereGeometry args={[particleSize*1.225, 8, 8]} />
+            {/* Outer opaque layer - MEMORY FIX: Use shared geometry with scale */}
+            <mesh scale={particleSize}>
+              <primitive object={ORBITAL_SPHERE_OUTER} attach="geometry" />
               <meshStandardMaterial
                 color={chargeStatus?.available ? activeColor : "#333333"}
                 emissive={chargeStatus?.available ? activeColor : "#333333"}

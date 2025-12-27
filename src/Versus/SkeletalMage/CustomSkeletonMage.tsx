@@ -118,6 +118,32 @@ const sharedGeometries = {
   kneeJoint: SHARED_ENEMY_SPHERE_MEDIUM // Approximation of (0.12, 12, 12)
 };
 
+// MEMORY FIX: Create static geometries for ShoulderPlate component
+const SHOULDER_PLATE_GEOMETRIES = {
+  basePlate: new CylinderGeometry(0.123, 0.19, 0.175, 6, 1, false, 0, Math.PI*2),
+  armorPlate: new BoxGeometry(0.12, 0.19, 0.02),
+  armorRidge: new BoxGeometry(0.035, 0.24, 0.015),
+  hoverTorus: new TorusGeometry(0.2, 0.035, 3, 5),
+  bottomRim: new TorusGeometry(0.16, 0.02, 4, 5),
+  bottomRimLarge: new TorusGeometry(0.20, 0.02, 4, 5),
+  midRim: new TorusGeometry(0.175, 0.0175, 6, 6)
+};
+
+// MEMORY FIX: Create static geometries for MageRobe component
+const MAGE_ROBE_GEOMETRIES = {
+  robeBody: new CylinderGeometry(0.17, 0.45, 1.85, 6),
+  robeTrim: new CylinderGeometry(0.285, 0.285, 0.135, 8),
+  robeSleeve: new CylinderGeometry(0.1, 0.125, 0.3, 6)
+};
+
+// MEMORY FIX: Create static geometries for StaffModel component
+const STAFF_GEOMETRIES = {
+  ornamentRing: new TorusGeometry(0.075, 0.03, 3, 16)
+};
+
+// MEMORY FIX: Create static geometry for ambient particles
+const AMBIENT_PARTICLE_GEOMETRY = new SphereGeometry(0.01, 6, 6);
+
 const sharedMaterials = {
   bone: new MeshStandardMaterial({
     color: "#e8e8e8",
@@ -258,14 +284,7 @@ function BossClawModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
         {createParallelBones(1.3, 0.15)}
         
         <group position={[0.25, -0.875, 0.21]} scale={[0.8, 0.8, 1.1]}> 
-          <mesh>
-            <sphereGeometry args={[0.12, 12, 12]} />
-            <meshStandardMaterial 
-              color="#e8e8e8"
-              roughness={0.4}
-              metalness={0.3}
-            />
-          </mesh>
+          <mesh geometry={sharedGeometries.kneeJoint} material={sharedMaterials.bone} />
           
           <group rotation={[-0.7, -0, Math.PI / 5]}>
             {createParallelBones(0.8, 0.12)}
@@ -295,9 +314,8 @@ function ShoulderPlate() {
     <group>
       {/* Main shoulder plate with layered armor design */}
       <group>
-        {/* Base plate */}
-        <mesh>
-          <cylinderGeometry args={[0.123, 0.19, 0.175, 6, 1, false, 0, Math.PI*2]} />
+        {/* Base plate - MEMORY FIX: Use shared geometry */}
+        <mesh geometry={SHOULDER_PLATE_GEOMETRIES.basePlate}>
           <meshStandardMaterial 
             color="#97EFFF"
             roughness={0.4}
@@ -305,11 +323,10 @@ function ShoulderPlate() {
           />
         </mesh>
 
-        {/* Overlapping armor plates */}
+        {/* Overlapping armor plates - MEMORY FIX: Use shared geometries */}
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <group key={i} rotation={[0, (i * Math.PI) / 3, 0]}>
-            <mesh position={[0.11, 0, 0]} rotation={[0, Math.PI / 6, 0]}>
-              <boxGeometry args={[0.12, 0.19, 0.02]} />
+            <mesh position={[0.11, 0, 0]} rotation={[0, Math.PI / 6, 0]} geometry={SHOULDER_PLATE_GEOMETRIES.armorPlate}>
               <meshStandardMaterial 
                 color="#97EFFF"
                 roughness={0.5}
@@ -318,8 +335,7 @@ function ShoulderPlate() {
             </mesh>
             
             {/* Decorative ridge on each plate */}
-            <mesh position={[0.07, 0.05, 0.0]} rotation={[0, Math.PI / 6, 0]}>
-              <boxGeometry args={[0.035, 0.24, 0.015]} />
+            <mesh position={[0.07, 0.05, 0.0]} rotation={[0, Math.PI / 6, 0]} geometry={SHOULDER_PLATE_GEOMETRIES.armorRidge}>
               <meshStandardMaterial 
                 color="#c0c0c0"
                 roughness={0.3}
@@ -329,9 +345,8 @@ function ShoulderPlate() {
           </group>
         ))}
 
-        {/* hover Top rim */}
-        <mesh position={[0, 0.22, 0]} rotation={[0, 0.25, Math.PI/2]}>
-          <torusGeometry args={[0.2, 0.035, 3, 5]} />
+        {/* hover Top rim - MEMORY FIX: Use shared geometry */}
+        <mesh position={[0, 0.22, 0]} rotation={[0, 0.25, Math.PI/2]} geometry={SHOULDER_PLATE_GEOMETRIES.hoverTorus}>
           <meshStandardMaterial 
             color="#97EFFF"
             roughness={0.3}
@@ -339,18 +354,16 @@ function ShoulderPlate() {
           />
         </mesh>
 
-                {/* bottom rim */}
-        <mesh position={[0, 0, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.16, 0.02, 4, 5]} />
+                {/* bottom rim - MEMORY FIX: Use shared geometry */}
+        <mesh position={[0, 0, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]} geometry={SHOULDER_PLATE_GEOMETRIES.bottomRim}>
           <meshStandardMaterial 
             color="#00D9FF"
             roughness={0.3}
             metalness={0.5}
           />
         </mesh>
-                {/* bottom rim */}
-                <mesh position={[0, -0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.20, 0.02, 4, 5]} />
+                {/* bottom rim - MEMORY FIX: Use shared geometry */}
+                <mesh position={[0, -0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]} geometry={SHOULDER_PLATE_GEOMETRIES.bottomRimLarge}>
           <meshStandardMaterial 
             color="#00D9FF"
             roughness={0.3}
@@ -359,9 +372,8 @@ function ShoulderPlate() {
         </mesh>
 
 
-        {/* bottom rim */}
-        <mesh position={[0, 0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]}>
-          <torusGeometry args={[0.175, 0.0175, 6, 6]} />
+        {/* bottom rim - MEMORY FIX: Use shared geometry */}
+        <mesh position={[0, 0.10, 0]} rotation={[Math.PI/2, Math.PI, Math.PI/2]} geometry={SHOULDER_PLATE_GEOMETRIES.midRim}>
           <meshStandardMaterial 
             color="#00D9FF"
             roughness={0.3}
@@ -385,11 +397,10 @@ function StaffModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
         />
       </mesh>
 
-      {/* Staff ornaments */}
+      {/* Staff ornaments - MEMORY FIX: Use shared geometry */}
       {[0.3, 0.6, 0.9].map((y, i) => (
         <group key={i} position={[0, y+0.4, 0]}>
-          <mesh>
-            <torusGeometry args={[0.075, 0.03, 3, 16]} />
+          <mesh geometry={STAFF_GEOMETRIES.ornamentRing}>
             <meshStandardMaterial 
               color="#c0c0c0"
               metalness={0.7}
@@ -436,15 +447,13 @@ function StaffModel({ isLeftHand = false }: { isLeftHand?: boolean }) {
 function MageRobe() {
   return (
     <group>
-      {/* Main robe body - use cached material */}
-      <mesh position={[0, -0.15, 0]}>
-        <cylinderGeometry args={[0.17, 0.45, 1.85, 6]} />
+      {/* Main robe body - MEMORY FIX: Use shared geometry */}
+      <mesh position={[0, -0.15, 0]} geometry={MAGE_ROBE_GEOMETRIES.robeBody}>
         <meshStandardMaterial {...robeMaterial} />
       </mesh>
 
-      {/* Robe trim */}
-      <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.285, 0.285, 0.135, 8]} />
+      {/* Robe trim - MEMORY FIX: Use shared geometry */}
+      <mesh position={[0, 0, 0]} geometry={MAGE_ROBE_GEOMETRIES.robeTrim}>
         <meshStandardMaterial 
           color="#00BFFF"
           metalness={0.3}
@@ -452,15 +461,14 @@ function MageRobe() {
         />
       </mesh>
 
-      {/* Shoulder cape pieces */}
+      {/* Shoulder cape pieces - MEMORY FIX: Use shared geometry */}
       {[-1, 1].map((side) => (
         <group 
           key={side}
           position={[0.3 * side, 0.5, 0]}
           rotation={[0, 5, 0.1 * side]}
         >
-          <mesh>
-            <cylinderGeometry args={[0.1, 0.125, 0.3, 6]} />
+          <mesh geometry={MAGE_ROBE_GEOMETRIES.robeSleeve}>
             <meshStandardMaterial 
               color="#4682B4"
               roughness={0.7}
@@ -634,7 +642,7 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
         ))}
       </group>
 
-      {/* Reduced ambient particles from 8 to 4 */}
+      {/* Reduced ambient particles from 8 to 4 - MEMORY FIX: Use shared geometry */}
       {Array.from({ length: 4 }).map((_, i) => (
         <group 
           key={i} 
@@ -644,16 +652,7 @@ export default function CustomSkeletonMage({ position, isAttacking, isWalking, o
             Math.cos(i * Math.PI / 2) * 0.5
           ]}
         >
-          <mesh>
-            <sphereGeometry args={[0.01, 6, 6]} />
-            <meshStandardMaterial 
-              color="#4169E1"
-              emissive="#4169E1"
-              emissiveIntensity={2}
-              transparent
-              opacity={0.7}
-            />
-          </mesh>
+          <mesh geometry={AMBIENT_PARTICLE_GEOMETRY} material={sharedMaterials.particleGlow}></mesh>
           <pointLight 
             color="#4169E1"
             intensity={0.5}

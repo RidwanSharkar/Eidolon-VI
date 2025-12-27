@@ -1,8 +1,12 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Group, MeshStandardMaterial, AdditiveBlending } from 'three';
+import { Mesh, Group, MeshStandardMaterial, AdditiveBlending, BoxGeometry, SphereGeometry } from 'three';
 import { WeaponType, WeaponSubclass } from '@/Weapons/weapons';
- 
+
+// MEMORY FIX: Shared geometries to prevent creating 32 pieces * 2 geometries each = 64 new geometries per render!
+const VORTEX_FRAGMENT_GEOMETRY = new BoxGeometry(0.1075, 0.02, 0.025);
+const VORTEX_CORE_GEOMETRY = new SphereGeometry(0.035, 9, 9);
+const VORTEX_BASE_GLOW_GEOMETRY = new SphereGeometry(0.675, 16, 16);
 
 interface BoneVortexProps {
   parentRef: React.RefObject<Group>;
@@ -66,9 +70,9 @@ const createVortexPiece = (weaponType: WeaponType, weaponSubclass?: WeaponSubcla
   const color = getVortexColor(weaponType, weaponSubclass);
   return (
     <group>
-      {/* Main vortex fragment */}
+      {/* Main vortex fragment - MEMORY FIX: Use shared geometry */}
       <mesh>
-        <boxGeometry args={[0.1075, 0.02, 0.025]} />
+        <primitive object={VORTEX_FRAGMENT_GEOMETRY} attach="geometry" />
         <meshStandardMaterial 
           color={color}
           transparent
@@ -78,9 +82,9 @@ const createVortexPiece = (weaponType: WeaponType, weaponSubclass?: WeaponSubcla
         />
       </mesh>
       
-      {/* Glowing core */}
+      {/* Glowing core - MEMORY FIX: Use shared geometry */}
       <mesh>
-        <sphereGeometry args={[0.035, 9, 9]} />
+        <primitive object={VORTEX_CORE_GEOMETRY} attach="geometry" />
         <meshStandardMaterial 
           color={color}
           emissive={color}
@@ -135,9 +139,9 @@ export default function BoneVortex({ parentRef, weaponType, weaponSubclass }: Bo
 
   return (
     <group ref={groupRef}>
-      {/* Base glow sphere
+      {/* Base glow sphere - MEMORY FIX: Use shared geometry
       <mesh position={[0, -0.40, 0]}>
-        <sphereGeometry args={[0.675, 16, 16]} />
+        <primitive object={VORTEX_BASE_GLOW_GEOMETRY} attach="geometry" />
         <meshBasicMaterial
           color={getVortexColor(weaponType, weaponSubclass)}
           transparent

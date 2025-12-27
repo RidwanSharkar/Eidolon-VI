@@ -1,9 +1,13 @@
 // src/Versus/Reaper/ReaperSubmergeEffect.tsx
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, AdditiveBlending } from 'three';
+import { Mesh, AdditiveBlending, CircleGeometry, RingGeometry } from 'three';
 import { Material, MeshStandardMaterial, SphereGeometry, Vector3 } from 'three';
 import { geometryPools, materialPools } from '@/Scene/EffectPools';
+
+// MEMORY FIX: Shared geometries to prevent recreation on every render
+const SUBMERGE_CIRCLE_GEOMETRY = new CircleGeometry(2.5, 24);
+const SUBMERGE_RING_GEOMETRY = new RingGeometry(1.0, 2.0, 16);
 
 interface ReaperSubmergeEffectProps {
   position: Vector3;
@@ -134,9 +138,9 @@ export default function ReaperSubmergeEffect({
         decay={1.5}
       />
       
-      {/* Ground effect circle - larger and more visible */}
+      {/* Ground effect circle - larger and more visible - MEMORY FIX: Use shared geometry */}
       <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[2.5, 24]} />
+        <primitive object={SUBMERGE_CIRCLE_GEOMETRY} attach="geometry" />
         <meshBasicMaterial 
           color="#8B0000"
           transparent 
@@ -144,9 +148,9 @@ export default function ReaperSubmergeEffect({
         />
       </mesh>
       
-      {/* Additional pulsing ring effect */}
+      {/* Additional pulsing ring effect - MEMORY FIX: Use shared geometry */}
       <mesh position={[0, 0.15, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.0, 2.0, 16]} />
+        <primitive object={SUBMERGE_RING_GEOMETRY} attach="geometry" />
         <meshBasicMaterial 
           color="#FF4500"
           transparent 

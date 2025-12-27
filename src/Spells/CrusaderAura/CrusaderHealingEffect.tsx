@@ -1,7 +1,6 @@
 import React, { useMemo, useRef, useEffect } from 'react';
-import { Vector3 } from 'three';
+import { Vector3, MeshStandardMaterial, SphereGeometry, TorusGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { MeshStandardMaterial, SphereGeometry, TorusGeometry } from 'three';
 
 interface CrusaderHealingEffectProps {
   position: Vector3;
@@ -73,8 +72,11 @@ const CrusaderHealingEffect: React.FC<CrusaderHealingEffectProps> = ({ position,
   const progress = timeRef.current / duration;
   const scale = 1 + progress * 2;
 
+  // MEMORY FIX: Use useMemo to cache position array to avoid recreating on every render
+  const positionArray = useMemo(() => position.toArray(), [position]);
+
   return (
-    <group position={position.toArray()}>
+    <group position={positionArray}>
       {/* Rising healing rings */}
       {[0, 1, 2].map((i) => (
         <mesh

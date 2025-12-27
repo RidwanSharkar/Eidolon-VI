@@ -1,6 +1,6 @@
 // src/versus/SkeletalMage/SkeletalMage.tsx
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, SphereGeometry, MeshStandardMaterial, MeshBasicMaterial } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { HEALTHBAR_GEOMETRIES, HEALTHBAR_MATERIALS } from '@/Versus/HealthBarResources';
@@ -16,6 +16,39 @@ import { globalAggroSystem, PlayerInfo, TargetInfo } from '../AggroSystem';
 import { SkeletalMageProps } from './SkeletalMageProps';
 import MageLightningStrike from './MageLightningStrike';
 import LightningWarningIndicator from './LightningWarningIndicator';
+
+// MEMORY FIX: Pre-create shared geometries and materials for casting effects at module level
+const FIREBALL_HAND_GEOMETRY = new SphereGeometry(0.125, 16, 16);
+const FIREBALL_HAND_MATERIAL = new MeshStandardMaterial({
+  color: "#8A2BE2",
+  emissive: "#8A2BE2",
+  emissiveIntensity: 1.5,
+  transparent: true,
+  opacity: 0.8
+});
+const FIREBALL_HAND_MATERIAL_LEFT = new MeshStandardMaterial({
+  color: "#8A2BE2",
+  emissive: "#8A2BE2",
+  emissiveIntensity: 1.5,
+  transparent: true,
+  opacity: 0.7
+});
+
+const LIGHTNING_CORE_GEOMETRY = new SphereGeometry(0.15, 16, 16);
+const LIGHTNING_CORE_MATERIAL = new MeshStandardMaterial({
+  color: "#00bbff",
+  emissive: "#0088ff",
+  emissiveIntensity: 2,
+  transparent: true,
+  opacity: 0.8
+});
+
+const LIGHTNING_SPARK_GEOMETRY = new SphereGeometry(0.05, 8, 8);
+const LIGHTNING_SPARK_MATERIAL = new MeshBasicMaterial({
+  color: "#B6EAFF",
+  transparent: true,
+  opacity: 0.7
+});
 
 // Define DamageSource interface locally
 interface DamageSource {
@@ -632,13 +665,19 @@ export default function SkeletalMage({
 
   useEffect(() => {
     if (isDead) {
+      const currentTimeouts = activeTimeouts.current; // Capture current ref value
       const cleanup = setTimeout(() => {
+        currentTimeouts.delete(cleanup);
         setShowDeathEffect(false);
         if (enemyRef.current?.parent) {
           enemyRef.current.parent.remove(enemyRef.current);
         }
       }, 3000);
-      return () => clearTimeout(cleanup);
+      currentTimeouts.add(cleanup);
+      return () => {
+        clearTimeout(cleanup);
+        currentTimeouts.delete(cleanup);
+      };
     }
   }, [isDead]);
 
@@ -691,73 +730,47 @@ export default function SkeletalMage({
           onHit={(damage) => handleDamage(damage, { type: weaponType })}
         />
 
-        {/* Visual telegraph when casting */}
+        {/* Visual telegraph when casting - MEMORY FIX: Use shared geometries */}
         {isCastingFireball && (
           <group position={[0.4, 1.975, 0]}>
-            <mesh>
-              <sphereGeometry args={[0.125, 16, 16]} />
-              <meshStandardMaterial
-                color="#8A2BE2"
-                emissive="#8A2BE2"
-                emissiveIntensity={1.5}
-                transparent
-                opacity={0.8}
-              />
-            </mesh>
+            <mesh geometry={FIREBALL_HAND_GEOMETRY} material={FIREBALL_HAND_MATERIAL} />
             <pointLight color="#ff3333" intensity={2} distance={3} />
           </group>
         )}
 
-                {/* Visual telegraph when casting */}
+                {/* Visual telegraph when casting - MEMORY FIX: Use shared geometries */}
                 {isCastingFireball && (
           <group position={[-.4, 1.975, -0.05]}>
-            <mesh>
-              <sphereGeometry args={[0.125, 16, 16]} />
-              <meshStandardMaterial
-                color="#8A2BE2"
-                emissive="#8A2BE2"
-                emissiveIntensity={1.5} 
-                transparent
-                opacity={0.7}
-              />
-            </mesh>
+            <mesh geometry={FIREBALL_HAND_GEOMETRY} material={FIREBALL_HAND_MATERIAL_LEFT} />
             <pointLight color="#ff3333" intensity={2} distance={3} />
           </group>
         )}
 
-        {/* Visual telegraph when casting lightning */}
+        {/* Visual telegraph when casting lightning - MEMORY FIX: Use shared geometries */}
         {isCastingLightning && (
           <group position={[0, 2.65, 0]}>
-            <mesh>
-              <sphereGeometry args={[0.15, 16, 16]} />
-              <meshStandardMaterial
-                color="#00bbff"
-                emissive="#0088ff"
-                emissiveIntensity={2}
-                transparent
-                opacity={0.8}
-              />
-            </mesh>
+            <mesh geometry={LIGHTNING_CORE_GEOMETRY} material={LIGHTNING_CORE_MATERIAL} />
             <pointLight color="#80D9FF" intensity={3} distance={4} />
             
-            {/* Electric crackling around mage */}
-            {[...Array(6)].map((_, i) => (
-              <mesh
-                key={i}
-                position={[
-                  Math.sin(Date.now() * 0.01 + i) * 0.5,
-                  Math.sin(Date.now() * 0.008 + i) * 0.3,
-                  Math.cos(Date.now() * 0.01 + i) * 0.5
-                ]}
-              >
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial
-                  color="#B6EAFF"
-                  transparent
-                  opacity={0.7 + Math.sin(Date.now() * 0.015 + i) * 0.3}
+            {/* Electric crackling around mage - MEMORY FIX: Use shared geometry and material */}
+            {[...Array(6)].map((_, i) => {
+              // Clone material for dynamic opacity per spark
+              const sparkMaterial = LIGHTNING_SPARK_MATERIAL.clone();
+              sparkMaterial.opacity = 0.7 + Math.sin(Date.now() * 0.015 + i) * 0.3;
+              
+              return (
+                <mesh
+                  key={i}
+                  position={[
+                    Math.sin(Date.now() * 0.01 + i) * 0.5,
+                    Math.sin(Date.now() * 0.008 + i) * 0.3,
+                    Math.cos(Date.now() * 0.01 + i) * 0.5
+                  ]}
+                  geometry={LIGHTNING_SPARK_GEOMETRY}
+                  material={sparkMaterial}
                 />
-              </mesh>
-            ))}
+              );
+            })}
           </group>
         )}
 
@@ -835,11 +848,14 @@ export default function SkeletalMage({
             }
             
             // Delay fireball removal to allow explosion animation to complete
-            setTimeout(() => {
+            const currentTimeouts = activeTimeouts.current; // Capture current ref value
+            const removeTimeout = setTimeout(() => {
+              currentTimeouts.delete(removeTimeout);
               setActiveFireballs(prev => 
                 prev.filter(f => f.id !== fireball.id)
               );
             }, 50); // Minimal delay to ensure damage is processed
+            currentTimeouts.add(removeTimeout);
           }}
         />
       ))}

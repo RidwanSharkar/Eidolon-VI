@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { Group, Vector3, Color } from 'three';
 import { useFrame } from '@react-three/fiber';
 import DivineStormShard from '@/color/DivineStormShard';
@@ -11,6 +11,11 @@ interface DivineStormProps {
   parentRef?: React.RefObject<Group>;
   isActive?: boolean; // Control if divine storm should remain active
 }
+
+// MEMORY FIX: Reusable Vector3 for center position (created once, reused)
+const CENTER_POSITION = new Vector3(0, 0, 0);
+// MEMORY FIX: Pre-created Color for divine light
+const DIVINE_GOLD_COLOR = new Color(0xFFD700);
 
 export default function DivineStorm({ 
   onComplete, 
@@ -104,22 +109,22 @@ export default function DivineStorm({
 
   return (
     <group ref={stormRef}>
-      {/* Spinning divine shards */}
+      {/* Spinning divine shards - MEMORY FIX: Use pre-created CENTER_POSITION */}
       {shards.map(shard => (
         <DivineStormShard
           key={shard.id}
           initialPosition={shard.position}
           type={shard.type}
-          centerPosition={new Vector3(0, 0, 0)} // Relative to storm center
+          centerPosition={CENTER_POSITION} // Relative to storm center
           onComplete={() => {
             setShards(prev => prev.filter(s => s.id !== shard.id));
           }}
         />
       ))}
 
-      {/* Divine light */}
+      {/* Divine light - MEMORY FIX: Use pre-created DIVINE_GOLD_COLOR */}
       <pointLight 
-        color={new Color(0xFFD700)}
+        color={DIVINE_GOLD_COLOR}
         intensity={1}
         distance={4}
         decay={1}

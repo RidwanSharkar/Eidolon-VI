@@ -1,8 +1,39 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, SphereGeometry, IcosahedronGeometry, RingGeometry, MeshStandardMaterial } from 'three';
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { HEALTHBAR_GEOMETRIES, HEALTHBAR_MATERIALS } from '@/Versus/HealthBarResources';
+
+// MEMORY FIX: Shared geometries for status effect indicators - created once, reused
+const STATUS_EFFECT_GEOMETRIES = {
+  stunned: new SphereGeometry(0.3, 8, 8),
+  frozen: new IcosahedronGeometry(0.4, 1),
+  slowed: new RingGeometry(0.2, 0.4, 8),
+};
+
+const STATUS_EFFECT_MATERIALS = {
+  stunned: new MeshStandardMaterial({
+    color: "#FFD700",
+    emissive: "#FFD700",
+    emissiveIntensity: 0.5,
+    transparent: true,
+    opacity: 0.8
+  }),
+  frozen: new MeshStandardMaterial({
+    color: "#87CEEB",
+    emissive: "#87CEEB",
+    emissiveIntensity: 0.7,
+    transparent: true,
+    opacity: 0.9
+  }),
+  slowed: new MeshStandardMaterial({
+    color: "#8B4513",
+    emissive: "#8B4513",
+    emissiveIntensity: 0.3,
+    transparent: true,
+    opacity: 0.7
+  })
+};
 
 // Import visual models only (not full unit components)
 import CustomSkeleton from '@/Versus/CustomSkeleton';
@@ -649,44 +680,29 @@ export default function MultiplayerEnemyUnit({
       >
         {getEnemyModel()}
         
-        {/* Status effect visual indicators */}
+        {/* Status effect visual indicators - MEMORY FIX: Use shared geometries and materials */}
         {enemy.isStunned && (
-          <mesh position={[0, getHealthBarHeight() + 1, 0]}>
-            <sphereGeometry args={[0.3, 8, 8]} />
-            <meshStandardMaterial
-              color="#FFD700"
-              emissive="#FFD700"
-              emissiveIntensity={0.5}
-              transparent
-              opacity={0.8}
-            />
-          </mesh>
+          <mesh 
+            position={[0, getHealthBarHeight() + 1, 0]}
+            geometry={STATUS_EFFECT_GEOMETRIES.stunned}
+            material={STATUS_EFFECT_MATERIALS.stunned}
+          />
         )}
         
         {enemy.isFrozen && (
-          <mesh position={[0, getHealthBarHeight() + 0.5, 0]}>
-            <icosahedronGeometry args={[0.4, 1]} />
-            <meshStandardMaterial
-              color="#87CEEB"
-              emissive="#87CEEB"
-              emissiveIntensity={0.7}
-              transparent
-              opacity={0.9}
-            />
-          </mesh>
+          <mesh 
+            position={[0, getHealthBarHeight() + 0.5, 0]}
+            geometry={STATUS_EFFECT_GEOMETRIES.frozen}
+            material={STATUS_EFFECT_MATERIALS.frozen}
+          />
         )}
         
         {enemy.isSlowed && (
-          <mesh position={[0, getHealthBarHeight() + 0.2, 0]}>
-            <ringGeometry args={[0.2, 0.4, 8]} />
-            <meshStandardMaterial
-              color="#8B4513"
-              emissive="#8B4513"
-              emissiveIntensity={0.3}
-              transparent
-              opacity={0.7}
-            />
-          </mesh>
+          <mesh 
+            position={[0, getHealthBarHeight() + 0.2, 0]}
+            geometry={STATUS_EFFECT_GEOMETRIES.slowed}
+            material={STATUS_EFFECT_MATERIALS.slowed}
+          />
         )}
         
         {/* Health bar for all enemy types */}

@@ -9,6 +9,7 @@ import {
   MeshBasicMaterial,
   RingGeometry,
   SphereGeometry,
+  TorusGeometry,
   Vector3
 } from 'three';
 import MeteorTrail from './MeteorTrail';
@@ -71,6 +72,17 @@ if (typeof window !== 'undefined') {
   registerMeteorResources();
 }
 
+// MEMORY FIX: Static shared geometries for meteor explosion - use scale instead of dynamic args
+const METEOR_EXPLOSION_CORE = new SphereGeometry(1.2, 32, 32);
+const METEOR_EXPLOSION_INNER = new SphereGeometry(1, 24, 24);
+const METEOR_EXPLOSION_TORUS = [
+  new TorusGeometry(2.0, 0.225, 4, 32),
+  new TorusGeometry(2.15, 0.225, 4, 32),
+  new TorusGeometry(2.3, 0.225, 4, 32),
+  new TorusGeometry(2.5, 0.225, 4, 32),
+  new TorusGeometry(2.7, 0.225, 4, 32),
+];
+
 const createMeteorImpactEffect = (position: Vector3, startTime: number, onComplete: () => void) => {
   const elapsed = (Date.now() - startTime) / 1000;
   const fade = Math.max(0, 1 - (elapsed / IMPACT_DURATION));
@@ -80,11 +92,15 @@ const createMeteorImpactEffect = (position: Vector3, startTime: number, onComple
     return null;
   }
 
+  // MEMORY FIX: Use scale instead of dynamic geometry args
+  const coreScale = 2 + elapsed;
+  const torusScale = 1.125 + elapsed * 2;
+
   return (
     <group position={position}>
-      {/* Core explosion sphere */}
-      <mesh>
-        <sphereGeometry args={[1.2 * (2 + elapsed), 32, 32]} />
+      {/* Core explosion sphere - FIXED: Use scale instead of dynamic geometry */}
+      <mesh scale={coreScale}>
+        <primitive object={METEOR_EXPLOSION_CORE} />
         <meshStandardMaterial
           color="#ff2200"
           emissive="#ff4400"
@@ -98,7 +114,7 @@ const createMeteorImpactEffect = (position: Vector3, startTime: number, onComple
       
       {/* Inner energy sphere */}
       <mesh>
-        <sphereGeometry args={[1, 24, 24]} />
+        <primitive object={METEOR_EXPLOSION_INNER} />
         <meshStandardMaterial
           color="#ff8800"
           emissive="#ffffff"
@@ -110,10 +126,10 @@ const createMeteorImpactEffect = (position: Vector3, startTime: number, onComple
         />
       </mesh>
 
-      {/* Multiple expanding rings */}
-      {[2.0, 2.15, 2.3, 2.5, 2.7].map((size, i) => (
-        <mesh key={i} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-          <torusGeometry args={[size * (1.125 + elapsed * 2), 0.225, 4, 32]} />
+      {/* Multiple expanding rings - FIXED: Use scale instead of dynamic geometry */}
+      {METEOR_EXPLOSION_TORUS.map((torusGeom, i) => (
+        <mesh key={i} scale={torusScale} rotation={[i * 0.3, i * 0.5, i * 0.2]}>
+          <primitive object={torusGeom} />
           <meshStandardMaterial  
             color="#ff2200"
             emissive="#ff4400"

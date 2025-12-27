@@ -1,6 +1,19 @@
 // src/Versus/DeathKnight/DeathKnightSword.tsx
 import React from 'react';
-import { Shape, AdditiveBlending } from 'three';
+import { Shape, AdditiveBlending, CylinderGeometry, TorusGeometry, ConeGeometry, SphereGeometry } from 'three';
+
+// MEMORY FIX: Create static geometries once
+const DEATH_KNIGHT_SWORD_GEOMETRIES = {
+  handle: new CylinderGeometry(0.048, 0.064, 1.44, 12),
+  handleWrapping: new TorusGeometry(0.072, 0.0256, 8, 16),
+  guardTorus: new TorusGeometry(0.416, 0.112, 16, 32),
+  guardSpike: new ConeGeometry(0.112, 0.88, 3),
+  coreOrb: new SphereGeometry(0.248, 16, 16),
+  glowInner: new SphereGeometry(0.16, 16, 16),
+  glowMid: new SphereGeometry(0.232, 16, 16),
+  glowOuter: new SphereGeometry(0.28, 16, 16),
+  energyAura: new SphereGeometry(1.2, 12, 12)
+};
 
 export default function DeathKnightSword() {
   // Create custom sword blade shape - larger version
@@ -77,27 +90,24 @@ export default function DeathKnightSword() {
         rotation={[0, 0, Math.PI]}
         scale={[0.7, 0.7, 0.7]} 
       >
-        {/* Handle - larger and darker */}
+        {/* Handle - larger and darker - MEMORY FIX: Use shared geometry */}
         <group position={[-0.04, -0.88, 0.56]} rotation={[0, 0, -Math.PI]}>
-          <mesh>
-            <cylinderGeometry args={[0.048, 0.064, 1.44, 12]} />
+          <mesh geometry={DEATH_KNIGHT_SWORD_GEOMETRIES.handle}>
             <meshStandardMaterial color="#1a1a1a" roughness={0.8} metalness={0.2} />
           </mesh>
           
-          {/* Handle wrappings - darker */}
+          {/* Handle wrappings - darker - MEMORY FIX: Use shared geometry */}
           {[...Array(10)].map((_, i) => (
-            <mesh key={`wrapping-${i}`} position={[0, +0.56 - i * 0.176, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.072, 0.0256, 8, 16]} />
+            <mesh key={`wrapping-${i}`} position={[0, +0.56 - i * 0.176, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={DEATH_KNIGHT_SWORD_GEOMETRIES.handleWrapping}>
               <meshStandardMaterial color="#0a0a0a" metalness={0.4} roughness={0.6} />
             </mesh>
           ))}
         </group>
         
-        {/* CIRCLE CONNECTION POINT - larger and darker */}
+        {/* CIRCLE CONNECTION POINT - larger and darker - MEMORY FIX: Use shared geometries */}
         <group position={[-0.04, 0.36, 0.56]} rotation={[Math.PI, 1.5, Math.PI]}>
           {/* Large torus */}
-          <mesh>
-            <torusGeometry args={[0.416, 0.112, 16, 32]} />
+          <mesh geometry={DEATH_KNIGHT_SWORD_GEOMETRIES.guardTorus}>
             <meshStandardMaterial 
               color="#2a2a2a" 
               metalness={0.7}
@@ -105,7 +115,7 @@ export default function DeathKnightSword() {
             />
           </mesh>
           
-          {/* Decorative spikes around torus - more menacing */}
+          {/* Decorative spikes around torus - more menacing - MEMORY FIX: Use shared geometry */}
           {[...Array(8)].map((_, i) => (
             <mesh 
               key={`spike-${i}`} 
@@ -115,8 +125,8 @@ export default function DeathKnightSword() {
                 0
               ]}
               rotation={[0, 0, i * Math.PI / 4 - Math.PI / 2]}
+              geometry={DEATH_KNIGHT_SWORD_GEOMETRIES.guardSpike}
             >
-              <coneGeometry args={[0.112, 0.88, 3]} />
               <meshStandardMaterial 
                 color="#1a1a1a"
                 metalness={0.8}
@@ -125,9 +135,8 @@ export default function DeathKnightSword() {
             </mesh>
           ))}
           
-          {/* CORE ORB - light purple */}
-          <mesh>
-            <sphereGeometry args={[0.248, 16, 16]} />
+          {/* CORE ORB - light purple - MEMORY FIX: Use shared geometry */}
+          <mesh geometry={DEATH_KNIGHT_SWORD_GEOMETRIES.coreOrb}>
             <meshStandardMaterial
               color="#DDA0DD"         // Light purple (plum)
               emissive="#DDA0DD"      // Light purple emission
@@ -137,9 +146,8 @@ export default function DeathKnightSword() {
             />
           </mesh>
           
-          {/* Multiple glow layers for depth - light purple theme */}
-          <mesh>
-            <sphereGeometry args={[0.16, 16, 16]} />
+          {/* Multiple glow layers for depth - light purple theme - MEMORY FIX: Use shared geometries */}
+          <mesh geometry={DEATH_KNIGHT_SWORD_GEOMETRIES.glowInner}>
             <meshStandardMaterial
               color="#DDA0DD"
               emissive="#DDA0DD"
@@ -149,8 +157,7 @@ export default function DeathKnightSword() {
             />
           </mesh>
           
-          <mesh>
-            <sphereGeometry args={[0.232, 16, 16]} />
+          <mesh geometry={DEATH_KNIGHT_SWORD_GEOMETRIES.glowMid}>
             <meshStandardMaterial
               color="#DDA0DD"
               emissive="#DA70D6"
@@ -160,8 +167,7 @@ export default function DeathKnightSword() {
             />
           </mesh>
           
-          <mesh>
-            <sphereGeometry args={[0.28, 16, 16]} />
+          <mesh geometry={DEATH_KNIGHT_SWORD_GEOMETRIES.glowOuter}>
             <meshStandardMaterial
               color="#DDA0DD"
               emissive="#DA70D6"
@@ -209,10 +215,9 @@ export default function DeathKnightSword() {
           </mesh>
         </group>
 
-        {/* Light purple energy aura around the weapon */}
+        {/* Light purple energy aura around the weapon - MEMORY FIX: Use shared geometry */}
         <group position={[0, 0.4, 0.56]}>
-          <mesh>
-            <sphereGeometry args={[1.2, 12, 12]} />
+          <mesh geometry={DEATH_KNIGHT_SWORD_GEOMETRIES.energyAura}>
             <meshStandardMaterial
               color="#E6E6FA"  // Lavender
               emissive="#DA70D6"  // Orchid

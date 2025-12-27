@@ -72,6 +72,55 @@ export const SHARED_BOX_GEOMETRY_035x024x0015 = new BoxGeometry(0.035, 0.24, 0.0
 
 // Ring geometries (for spell effects)
 export const SHARED_RING_GEOMETRY_WARNING = new RingGeometry(0, 1, 32); // Will be scaled dynamically
+export const SHARED_RING_GEOMETRY_UNIT = new RingGeometry(1, 1.2, 32); // For unit-sized effects, use scale
+
+// Explosion effect geometries - Use mesh scale instead of dynamic args to prevent memory leaks
+export const SHARED_EXPLOSION_SPHERE_CORE = new SphereGeometry(0.3, 32, 32); // Base size, scale dynamically
+export const SHARED_EXPLOSION_SPHERE_INNER = new SphereGeometry(0.2, 24, 24); // Base size, scale dynamically
+export const SHARED_EXPLOSION_TORUS_SMALL = new TorusGeometry(0.4, 0.045, 16, 32);
+export const SHARED_EXPLOSION_TORUS_MEDIUM = new TorusGeometry(0.6, 0.045, 16, 32);
+export const SHARED_EXPLOSION_TORUS_LARGE = new TorusGeometry(0.8, 0.045, 16, 32);
+export const SHARED_EXPLOSION_SPHERE_WATER = new SphereGeometry(0.6, 16, 16); // For elemental explosion
+
+// Charge effect geometries - Use mesh scale instead of dynamic args
+export const SHARED_CHARGE_SPHERE_CORE = new SphereGeometry(0.2, 16, 16);
+export const SHARED_CHARGE_SPHERE_SHELL = new SphereGeometry(0.4, 12, 12);
+export const SHARED_CHARGE_TORUS = new TorusGeometry(0.8, 0.05, 8, 16);
+export const SHARED_CHARGE_CYLINDER = new CylinderGeometry(0.02, 0.02, 0.5, 4);
+
+// Portal/Blink effect geometries
+export const SHARED_PORTAL_SPHERE = new SphereGeometry(1.5, 24, 24);
+export const SHARED_PORTAL_TORUS_LARGE = new TorusGeometry(1.8, 0.2, 8, 16);
+export const SHARED_PORTAL_TORUS_MEDIUM = new TorusGeometry(1.4, 0.15, 8, 14);
+export const SHARED_PORTAL_PARTICLE = new SphereGeometry(0.2, 8, 8);
+export const SHARED_PORTAL_TRAIL = new SphereGeometry(0.3, 8, 8);
+export const SHARED_PORTAL_RING = new RingGeometry(1.0, 3.0, 16); // Use scaleX/scaleY for dynamic size
+
+// Venom effect geometries (fixed sizes, no Math.random)
+export const SHARED_VENOM_CLOUD = new SphereGeometry(0.4, 16, 16);
+export const SHARED_VENOM_CORE = new SphereGeometry(0.2, 12, 12);
+export const SHARED_VENOM_TENDRIL = new SphereGeometry(0.15, 8, 8);
+export const SHARED_VENOM_PARTICLE = new SphereGeometry(0.05, 6, 6);
+
+// Health bar geometries - Use scaleX for health percentage
+export const SHARED_HEALTHBAR_PLANE_BG = new PlaneGeometry(2, 0.3);
+export const SHARED_HEALTHBAR_PLANE_FILL = new PlaneGeometry(1, 0.28); // Unit size, scale X by percentage
+
+// Aura effect geometries
+export const SHARED_AURA_CYLINDER = new CylinderGeometry(0.5, 0.8, 0.1, 32); // Base size, use scaleX for level
+export const SHARED_AURA_RING = new RingGeometry(0.85, 1.0, 3);
+
+// Attack indicator geometries - Use scale for range
+export const SHARED_INDICATOR_RING = new RingGeometry(0.8, 1.0, 64); // Unit size, scale for range
+
+// Bow ground effect geometries
+export const SHARED_BOW_PLANE_MAIN = new PlaneGeometry(0.4, 1); // Use scaleY for length
+export const SHARED_BOW_PLANE_SIDE = new PlaneGeometry(0.125, 1); // Use scaleY for length
+
+// Meteor explosion geometries
+export const SHARED_METEOR_EXPLOSION_CORE = new SphereGeometry(1.2, 32, 32); // Scale for expanding
+export const SHARED_METEOR_EXPLOSION_INNER = new SphereGeometry(1, 24, 24);
+export const SHARED_METEOR_TORUS = new TorusGeometry(1, 0.225, 4, 32); // Scale for size variations
 
 // Enemy model geometries - shared across all enemy instances
 export const SHARED_ENEMY_SPHERE_SMALL = new SphereGeometry(0.02, 8, 8);

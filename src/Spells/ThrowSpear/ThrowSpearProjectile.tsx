@@ -1,6 +1,6 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Group, Vector3, Shape } from 'three';
+import { Group, Vector3, Shape, TorusGeometry, CylinderGeometry, ConeGeometry, SphereGeometry } from 'three';
 import { AdditiveBlending, Color, DoubleSide } from 'three';
 
 // Pre-allocated colors for performance - avoids new Color() on every render
@@ -11,6 +11,28 @@ const COLORS = {
   // Returning colors (cyan/blue)
   spearBlue: new Color(0x0088FF),
   lightningCyan: new Color(0x00FFFF),
+};
+
+// MEMORY FIX: Static shared geometries for spinning rings - use scale for size variations
+const SPEAR_RING_GEOMETRIES = [
+  new TorusGeometry(0.15, 0.02, 6, 12),
+  new TorusGeometry(0.20, 0.02, 6, 12),
+  new TorusGeometry(0.25, 0.02, 6, 12),
+  new TorusGeometry(0.30, 0.02, 6, 12),
+];
+
+// MEMORY FIX: Static shared geometries for spear components - prevents recreation every frame
+const SPEAR_GEOMETRIES = {
+  shaft: new CylinderGeometry(0.03, 0.04, 2.2, 12),
+  shaftRing: new TorusGeometry(0.045, 0.016, 8, 16),
+  guard: new TorusGeometry(0.26, 0.07, 16, 32),
+  guardSpike: new ConeGeometry(0.070, 0.55, 3),
+  energyCore: new SphereGeometry(0.155, 16, 16),
+  energyCoreInner: new SphereGeometry(0.1, 16, 16),
+  energyCoreMid: new SphereGeometry(0.145, 16, 16),
+  energyCoreOuter: new SphereGeometry(0.175, 16, 16),
+  trailSphere: new SphereGeometry(0.15, 8, 8),
+  trailGlow: new SphereGeometry(0.2, 6, 6),
 };
 
 interface ThrowSpearProjectileProps {
@@ -129,10 +151,10 @@ export default function ThrowSpearProjectile({
           rotation={[Math.PI/2, 0, 0]}
           scale={[0.8, 0.8, 0.7]}
         >
-          {/* Spear shaft */}
+          {/* Spear shaft - FIXED: Use shared geometry */}
           <group position={[-0.025, -0.55, 0.35]} rotation={[0, 0, -Math.PI]}>
             <mesh>
-              <cylinderGeometry args={[0.03, 0.04, 2.2, 12]} />
+              <primitive object={SPEAR_GEOMETRIES.shaft} />
               <meshStandardMaterial 
                 color="#2a3b4c" 
                 roughness={0.7}
@@ -141,10 +163,10 @@ export default function ThrowSpearProjectile({
               />
             </mesh>
             
-            {/* Spear rings along shaft */}
+            {/* Spear rings along shaft - FIXED: Use shared geometry */}
             {[...Array(12)].map((_, i) => (
               <mesh key={i} position={[0, 1.0 - i * 0.18, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[0.045, 0.016, 8, 16]} />
+                <primitive object={SPEAR_GEOMETRIES.shaftRing} />
                 <meshStandardMaterial 
                   color="#1a2b3c" 
                   metalness={0.6} 
@@ -156,10 +178,10 @@ export default function ThrowSpearProjectile({
             ))}
           </group>
           
-          {/* Spear guard/crossguard */}
+          {/* Spear guard/crossguard - FIXED: Use shared geometry */}
           <group position={[-0.025, .45, 0.35]} rotation={[Math.PI, 1.5, Math.PI]}>
             <mesh>
-              <torusGeometry args={[0.26, 0.07, 16, 32]} />
+              <primitive object={SPEAR_GEOMETRIES.guard} />
               <meshStandardMaterial 
                 color="#4a5b6c" 
                 metalness={0.9}
@@ -169,7 +191,7 @@ export default function ThrowSpearProjectile({
               />
             </mesh>
             
-            {/* Spikes on guard */}
+            {/* Spikes on guard - FIXED: Use shared geometry */}
             {[...Array(8)].map((_, i) => (
               <mesh 
                 key={`spike-${i}`} 
@@ -180,7 +202,7 @@ export default function ThrowSpearProjectile({
                 ]}
                 rotation={[0, 0, i * Math.PI / 4 - Math.PI / 2]}
               >
-                <coneGeometry args={[0.070, 0.55, 3]} />
+                <primitive object={SPEAR_GEOMETRIES.guardSpike} />
                 <meshStandardMaterial 
                   color="#4a5b6c"
                   metalness={0.9}
@@ -191,9 +213,9 @@ export default function ThrowSpearProjectile({
               </mesh>
             ))}
             
-            {/* Energy core - gets brighter with charge */}
+            {/* Energy core - gets brighter with charge - FIXED: Use shared geometries */}
             <mesh>
-              <sphereGeometry args={[0.155, 16, 16]} />
+              <primitive object={SPEAR_GEOMETRIES.energyCore} />
               <meshStandardMaterial
                 color={spearColor}
                 emissive={spearColor}
@@ -204,7 +226,7 @@ export default function ThrowSpearProjectile({
             </mesh>
             
             <mesh>
-              <sphereGeometry args={[0.1, 16, 16]} />
+              <primitive object={SPEAR_GEOMETRIES.energyCoreInner} />
               <meshStandardMaterial
                 color={spearColor}
                 emissive={spearColor}
@@ -215,7 +237,7 @@ export default function ThrowSpearProjectile({
             </mesh>
             
             <mesh>
-              <sphereGeometry args={[0.145, 16, 16]} />
+              <primitive object={SPEAR_GEOMETRIES.energyCoreMid} />
               <meshStandardMaterial
                 color={spearColor}
                 emissive={spearColor}
@@ -226,7 +248,7 @@ export default function ThrowSpearProjectile({
             </mesh>
             
             <mesh>
-              <sphereGeometry args={[.175, 16, 16]} />
+              <primitive object={SPEAR_GEOMETRIES.energyCoreOuter} />
               <meshStandardMaterial
                 color={spearColor}
                 emissive={spearColor}
@@ -335,7 +357,7 @@ export default function ThrowSpearProjectile({
         </group>
       </group>
 
-      {/* Lightning trail effects - more intense with higher charge */}
+      {/* Lightning trail effects - more intense with higher charge - FIXED: Use shared geometries */}
       {[...Array(TRAIL_COUNT)].map((_, index) => {
         const trailOpacity = opacity * (1 - index / TRAIL_COUNT) * 0.6;
         const trailScale = 1.25 - (index / TRAIL_COUNT) * 0.5;
@@ -349,9 +371,9 @@ export default function ThrowSpearProjectile({
             key={`trail-${index}`}
             position={trailOffset} // Position behind the spear along its movement direction
           >
-            {/* Lightning energy trail */}
+            {/* Lightning energy trail - FIXED: Use shared geometry */}
             <mesh scale={[trailScale, trailScale, trailScale]}>
-              <sphereGeometry args={[0.15, 8, 8]} />
+              <primitive object={SPEAR_GEOMETRIES.trailSphere} />
               <meshStandardMaterial
                 color={lightningColor}
                 emissive={lightningColor}
@@ -363,9 +385,9 @@ export default function ThrowSpearProjectile({
               />
             </mesh>
             
-            {/* Outer energy glow */}
+            {/* Outer energy glow - FIXED: Use shared geometry */}
             <mesh scale={[trailScale * 1.5, trailScale * 1.5, trailScale * 1.5]}>
-              <sphereGeometry args={[0.2, 6, 6]} />
+              <primitive object={SPEAR_GEOMETRIES.trailGlow} />
               <meshStandardMaterial
                 color={lightningColor}
                 emissive={lightningColor}
@@ -380,13 +402,13 @@ export default function ThrowSpearProjectile({
         );
       })}
       
-      {/* Spinning energy rings around the spear - more with higher charge */}
+      {/* Spinning energy rings around the spear - FIXED: Use shared geometries */}
       {[...Array(Math.floor(2 + chargeIntensity * 2))].map((_, i) => (
         <group key={`ring-${i}`} position={direction.clone().multiplyScalar(0.3 - i * 0.4)}>
           <mesh
             rotation={[0, 0, Date.now() * 0.01 + i * Math.PI / 3]}
           >
-            <torusGeometry args={[0.15 + i * 0.05, 0.02, 6, 12]} />
+            <primitive object={SPEAR_RING_GEOMETRIES[Math.min(i, SPEAR_RING_GEOMETRIES.length - 1)]} />
             <meshStandardMaterial
               color={lightningColor}
               emissive={lightningColor}

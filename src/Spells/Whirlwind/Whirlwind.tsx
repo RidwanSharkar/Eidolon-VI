@@ -8,7 +8,9 @@ import {
   Mesh,
   MeshStandardMaterial,
   TorusGeometry,
-  PlaneGeometry
+  PlaneGeometry,
+  DodecahedronGeometry,
+  RingGeometry
 } from 'three';
 import { useWhirlwindManager } from './useWhirlwindManager';
 import { ReigniteRef } from '../Reignite/Reignite';
@@ -23,6 +25,12 @@ import {
   SHARED_TORUS_GEOMETRY_SPELL_WIND_2,
   SHARED_PLANE_GEOMETRY_TRAIL
 } from '../../SharedGeometries';
+
+// MEMORY FIX: Static shared geometries for fire effect particles
+const WHIRLWIND_FIRE_GEOMETRIES = {
+  particle: new DodecahedronGeometry(0.115, 0),
+  groundRing: new RingGeometry(0.65, 0.5, 32)
+};
 
 // Use shared geometries for whirlwind - prevents memory leaks
 const whirlwindGeometries = {
@@ -177,10 +185,10 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
 
   return (
     <group ref={flameParticlesRef}>
-      {/* Fire particles */}
+      {/* Fire particles - FIXED: Use shared geometry */}
       {particleRefs.current.map((_, i) => (
         <mesh key={`particle-${i}`}>
-          <dodecahedronGeometry args={[0.115, 0]} /> {/*  particle size */}
+          <primitive object={WHIRLWIND_FIRE_GEOMETRIES.particle} />
           <meshStandardMaterial
             color="#FF4400"
             emissive="#FF2200"
@@ -193,9 +201,9 @@ function WhirlwindFireEffect({ parentRef, rotationSpeed }: { parentRef: React.Re
         </mesh>
       ))}
 
-      {/* Ground fire ring  */}
+      {/* Ground fire ring - FIXED: Use shared geometry */}
       <mesh position={[0, -0.25, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.65, 0.5, 32]} /> 
+        <primitive object={WHIRLWIND_FIRE_GEOMETRIES.groundRing} />
         <meshStandardMaterial
           color="#FF3000"
           emissive="#FF2200"
@@ -257,15 +265,34 @@ export default function Whirlwind({
   // MEMORY FIX: Removed resource disposal tracking - shared geometries from SharedGeometries.ts
   // are managed globally and should NEVER be disposed per-instance
 
-  // Shared materials - memoized to avoid recreation
-  const ringMaterial = useMemo(() => new MeshStandardMaterial({
-    color: WHIRLWIND_RED,
-    emissive: WHIRLWIND_RED,
-    emissiveIntensity: 4,
-    transparent: true,
-    opacity: 0.6,
-    side: DoubleSide
-  }), []);
+  // MEMORY FIX: Create 3 ring materials once (different opacities = 0.6, 0.45, 0.3)
+  // Creating separate materials avoids material recreation on every render
+  const ringMaterials = useMemo(() => [
+    new MeshStandardMaterial({
+      color: WHIRLWIND_RED,
+      emissive: WHIRLWIND_RED,
+      emissiveIntensity: 4,
+      transparent: true,
+      opacity: 0.6,
+      side: DoubleSide
+    }),
+    new MeshStandardMaterial({
+      color: WHIRLWIND_RED,
+      emissive: WHIRLWIND_RED,
+      emissiveIntensity: 4,
+      transparent: true,
+      opacity: 0.45,
+      side: DoubleSide
+    }),
+    new MeshStandardMaterial({
+      color: WHIRLWIND_RED,
+      emissive: WHIRLWIND_RED,
+      emissiveIntensity: 4,
+      transparent: true,
+      opacity: 0.3,
+      side: DoubleSide
+    })
+  ], []);
 
   const trailMaterial = useMemo(() => new MeshStandardMaterial({
     color: WHIRLWIND_RED,
@@ -280,10 +307,10 @@ export default function Whirlwind({
   // Cleanup materials on unmount
   useEffect(() => {
     return () => {
-      ringMaterial.dispose();
+      ringMaterials.forEach(m => m.dispose());
       trailMaterial.dispose();
     };
-  }, [ringMaterial, trailMaterial]);
+  }, [ringMaterials, trailMaterial]);
 
   // Get torus geometry by index
   const getTorusGeometry = (i: number) => {
@@ -295,8 +322,7 @@ export default function Whirlwind({
     }
   };
 
-  // Ring opacity based on index
-  const getRingOpacity = (i: number) => 0.6 - i * 0.15;
+  // MEMORY FIX: Removed getRingOpacity function - now using pre-created materials
 
   const { consumeCharge } = useWhirlwindManager({
     parentRef,
@@ -460,28 +486,16 @@ export default function Whirlwind({
       <group ref={whirlwindRef}>
         {shouldBeActive && (
           <>
-            {/* Whirlwind effect rings - rotated to be parallel to ground - using shared geometries */}
-            {[0, 1, 2].map((i) => {
-              // Clone material to allow different opacities
-              const opacity = getRingOpacity(i);
-              return (
-                <mesh 
-                  key={i} 
-                  position={[0, -0.25, 0]} 
-                  rotation={[Math.PI / 2, 0, 0]}
-                  geometry={getTorusGeometry(i)}
-                >
-                  <meshStandardMaterial
-                    color={WHIRLWIND_RED}
-                    emissive={WHIRLWIND_RED}
-                    emissiveIntensity={4}
-                    transparent
-                    opacity={opacity}
-                    side={DoubleSide}
-                  />
-                </mesh>
-              );
-            })}
+            {/* Whirlwind effect rings - MEMORY FIX: Use pre-created materials */}
+            {[0, 1, 2].map((i) => (
+              <mesh 
+                key={i} 
+                position={[0, -0.25, 0]} 
+                rotation={[Math.PI / 2, 0, 0]}
+                geometry={getTorusGeometry(i)}
+                material={ringMaterials[i]}
+              />
+            ))}
 
             {/* Energy trails - also rotated to be parallel to ground - using shared geometry */}
             {[...Array(8)].map((_, i) => (

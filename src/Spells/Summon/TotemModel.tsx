@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Group, MeshStandardMaterial, CylinderGeometry, ConeGeometry, PlaneGeometry, SphereGeometry, DoubleSide } from 'three';
+import { Group, MeshStandardMaterial, CylinderGeometry, ConeGeometry, PlaneGeometry, SphereGeometry, DoubleSide, TorusGeometry } from 'three';
 import BoneAuraTotem from './BoneAuraTotem';
 import UnholyAura from './UnholyAura';
 import { registerGlobalSharedResource } from '../../Scene/EffectPools';
@@ -51,7 +51,9 @@ const SHARED_GEOMETRIES = {
   crown: new ConeGeometry(0.15, 1.2, 4),
   eye: new SphereGeometry(0.3, 32, 32),
   base: new CylinderGeometry(1, 1.2, 0.6, 8),
-  lightning: new SphereGeometry(0.1, 16, 16)
+  lightning: new SphereGeometry(0.1, 16, 16),
+  // MEMORY FIX: Add missing torus geometry for rune circles
+  runeTorus: new TorusGeometry(0.7, 0.05, 16, 32)
 };
 
 // Lazy registration of global shared resources (client-side only)
@@ -104,12 +106,13 @@ export default function TotemModel({ isAttacking }: TotemModelProps) {
         </group>
       ))}
 
-      {/* Glowing rune circles */}
+      {/* Glowing rune circles - MEMORY FIX: Use shared geometry */}
       {[0.5, 1.5, 2.5, 3.5].map((height, i) => (
         <group key={i} position={[0, height, 0]}>
-          <mesh material={isAttacking ? SHARED_MATERIALS.runesAttacking : SHARED_MATERIALS.runes}>
-            <torusGeometry args={[0.7, 0.05, 16, 32]} />
-          </mesh>
+          <mesh 
+            geometry={SHARED_GEOMETRIES.runeTorus}
+            material={isAttacking ? SHARED_MATERIALS.runesAttacking : SHARED_MATERIALS.runes}
+          />
           {/* Floating rune symbols */}
           {[...Array(4)].map((_, j) => (
             <mesh 

@@ -1,6 +1,11 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Group } from 'three';
+import { Mesh, Group, CylinderGeometry, SphereGeometry } from 'three';
+
+// MEMORY FIX: Shared geometries to prevent creating 16 bones * 3 geometries each = 48 new geometries per render!
+const BONE_SHAFT_GEOMETRY = new CylinderGeometry(0.0175, 0.0175, 0.175, 4);
+const BONE_JOINT_TOP_GEOMETRY = new SphereGeometry(0.03, 4, 4);
+const BONE_JOINT_BOTTOM_GEOMETRY = new SphereGeometry(0.0325, 4, 4);
 
 interface BoneAuraProps {
   parentRef: React.RefObject<Group>;
@@ -8,9 +13,9 @@ interface BoneAuraProps {
 
 const createBonePiece = () => (
   <group rotation={[Math.PI / 4, 0, 0]}>
-    {/* Main bone shaft - thinner and more angular */}
+    {/* Main bone shaft - thinner and more angular - MEMORY FIX: Use shared geometry */}
     <mesh>
-      <cylinderGeometry args={[0.0175, 0.0175, 0.175, 4]} />
+      <primitive object={BONE_SHAFT_GEOMETRY} attach="geometry" />
       <meshStandardMaterial 
         color="#ffffff"
         roughness={0.4}
@@ -18,9 +23,9 @@ const createBonePiece = () => (
       />
     </mesh>
     
-    {/* Bone joints */}
+    {/* Bone joints - MEMORY FIX: Use shared geometries */}
     <mesh position={[0, 0.1, 0]} rotation={[0, 0, Math.PI / 6]}>
-      <sphereGeometry args={[0.03, 4, 4]} />
+      <primitive object={BONE_JOINT_TOP_GEOMETRY} attach="geometry" />
       <meshStandardMaterial 
         color="#ffffff"
         roughness={0.5}
@@ -29,7 +34,7 @@ const createBonePiece = () => (
     </mesh>
 
     <mesh position={[0, -0.1, 0]} rotation={[0, 0, -Math.PI / 6]}>
-      <sphereGeometry args={[0.0325, 4, 4]} />
+      <primitive object={BONE_JOINT_BOTTOM_GEOMETRY} attach="geometry" />
       <meshStandardMaterial 
         color="#a4a4a4"
         roughness={0.5}

@@ -1,10 +1,13 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Group, Vector3, AdditiveBlending } from 'three';
+import { Group, Vector3, AdditiveBlending, SphereGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Enemy } from '@/Versus/enemy';
 import ElementalModel from '@/Spells/Summon/ElementalModel';
 import ElementalProjectile from '@/Spells/Summon/ElementalProjectile';
 import { globalAggroSystem } from '@/Versus/AggroSystem';
+
+// MEMORY FIX: Static shared geometry for explosion - use scale instead of dynamic args
+const ELEMENTAL_EXPLOSION_SPHERE = new SphereGeometry(0.6, 16, 16);
 
 interface ElementalProps {
   id: string;
@@ -327,9 +330,9 @@ export default function Elemental({
             
             return (
               <group key={effect.id} position={effectPosition.toArray()}>
-                {/* Water explosion effect */}
-                <mesh>
-                  <sphereGeometry args={[0.6 * (1 + elapsed * 2), 16, 16]} />
+                {/* Water explosion effect - FIXED: Use scale instead of dynamic geometry */}
+                <mesh scale={1 + elapsed * 2}>
+                  <primitive object={ELEMENTAL_EXPLOSION_SPHERE} />
                   <meshStandardMaterial
                     color="#4FC3F7"
                     emissive="#29B6F6"

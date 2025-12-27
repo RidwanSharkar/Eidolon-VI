@@ -1,5 +1,9 @@
 import { useRef } from 'react';
-import { Group, Vector3, Euler } from 'three';
+import { Group, Vector3, Euler, CylinderGeometry, SphereGeometry } from 'three';
+
+// MEMORY FIX: Shared geometries to prevent creating up to 15 bones * 2 geometries each = 30 new geometries per render
+const WING_BONE_SHAFT_GEOMETRY = new CylinderGeometry(0.023, 0.0175, 0.32, 3);
+const WING_BONE_JOINT_GEOMETRY = new SphereGeometry(0.035, 4, 4);
 
 interface BonePosition {
   pos: Vector3;
@@ -66,9 +70,9 @@ export default function ReaperBoneWings({ collectedBones, isLeftWing }: ReaperBo
 
   const createBonePiece = () => (
     <group>
-      {/* Main bone shaft */}
+      {/* Main bone shaft - MEMORY FIX: Use shared geometry */}
       <mesh>
-        <cylinderGeometry args={[0.023, 0.0175, 0.32, 3]} />
+        <primitive object={WING_BONE_SHAFT_GEOMETRY} attach="geometry" />
         <meshStandardMaterial 
           color="#ffffff"
           emissive="#304040"
@@ -78,9 +82,9 @@ export default function ReaperBoneWings({ collectedBones, isLeftWing }: ReaperBo
         />
       </mesh>
       
-      {/* Upper joint */}
+      {/* Upper joint - MEMORY FIX: Use shared geometry */}
       <mesh position={new Vector3(0, 0.2, 0)}>
-        <sphereGeometry args={[0.035, 4, 4]} />
+        <primitive object={WING_BONE_JOINT_GEOMETRY} attach="geometry" />
         <meshStandardMaterial 
           color="#ffffff"
           emissive="#304040"

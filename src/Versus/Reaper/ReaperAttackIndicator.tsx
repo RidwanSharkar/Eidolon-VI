@@ -1,7 +1,13 @@
 // src/versus/Reaper/ReaperAttackIndicator.tsx
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { DoubleSide, Mesh, MeshBasicMaterial, Vector3 } from 'three';
+import { DoubleSide, Mesh, MeshBasicMaterial, RingGeometry, Vector3 } from 'three';
+
+// MEMORY FIX: Static shared geometries - use scale for range
+const INDICATOR_GEOMETRIES = {
+  mainRing: new RingGeometry(0.8, 1.0, 64),   // Unit size, scale by range
+  innerRing: new RingGeometry(0.35, 0.4, 64), // Unit size, scale by range
+};
 
 interface ReaperAttackIndicatorProps {
   position: Vector3;
@@ -21,7 +27,7 @@ export default function ReaperAttackIndicator({ position, duration, range }: Rea
 
     // Pulse for attack warning
     const scale = 0.65 + Math.sin(elapsed * 8) * 0.15;
-    ringRef.current.scale.setScalar(scale);
+    ringRef.current.scale.setScalar(scale * range);
 
     // Fade out near the end
     if (progress > 0.7) {
@@ -32,12 +38,13 @@ export default function ReaperAttackIndicator({ position, duration, range }: Rea
 
   return (
     <group position={[position.x, 0.5, position.z]}>
-      {/* Main warning ring */}
+      {/* Main warning ring - FIXED: Use shared geometry with scale */}
       <mesh
         ref={ringRef}
         rotation={[-Math.PI / 2, 0, 0]}
+        scale={range}
       >
-        <ringGeometry args={[range - 0.2, range, 64]} />
+        <primitive object={INDICATOR_GEOMETRIES.mainRing} />
         <meshBasicMaterial 
           color="#00BBFF"
           transparent 
@@ -46,11 +53,12 @@ export default function ReaperAttackIndicator({ position, duration, range }: Rea
         />
       </mesh>
 
-      {/* Inner pulse ring */}
+      {/* Inner pulse ring - FIXED: Use shared geometry with scale */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
+        scale={range}
       >
-        <ringGeometry args={[range - 0.65, range - 0.6, 64]} />
+        <primitive object={INDICATOR_GEOMETRIES.innerRing} />
         <meshBasicMaterial 
           color="#66D9FF"
           transparent 
@@ -60,4 +68,4 @@ export default function ReaperAttackIndicator({ position, duration, range }: Rea
       </mesh>
     </group>
   );
-} 
+}

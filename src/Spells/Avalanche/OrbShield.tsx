@@ -1,8 +1,12 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import { Group, Vector3, AdditiveBlending } from 'three';
+import { Group, Vector3, AdditiveBlending, SphereGeometry } from 'three';
 import { useOrbShieldManager } from '@/Spells/Avalanche/useOrbShieldManager';
 import { ChargeStatus } from '@/color/ChargedOrbitals';
 import { useFrame } from '@react-three/fiber';
+
+// MEMORY FIX: Shared geometry to prevent memory leak - created once at module level
+// This was creating new geometry EVERY FRAME in the map function, causing severe memory leaks
+const SPARK_GEOMETRY = new SphereGeometry(0.0125, 4, 4);
 
 interface OrbShieldProps {
   parentRef: React.RefObject<Group>;
@@ -83,7 +87,8 @@ const OrbShieldSparkEffect: React.FC<{ position: Vector3 }> = ({ position }) => 
     <group position={position}>
       {sparkPositions.map((spark, i) => (
         <mesh key={i} position={spark.offset.toArray()}>
-          <sphereGeometry args={[0.0125, 4, 4]} />
+          {/* MEMORY FIX: Use shared geometry instead of inline JSX to prevent memory leak */}
+          <primitive object={SPARK_GEOMETRY} attach="geometry" />
           <meshStandardMaterial
             color="#4488ff"
             emissive="#4488ff"
