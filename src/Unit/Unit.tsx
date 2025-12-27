@@ -11,6 +11,7 @@ import {
   CylinderGeometry,
   Euler,
   Group,
+  MeshStandardMaterial,
   PlaneGeometry,
   Quaternion,
   SphereGeometry,
@@ -29,7 +30,11 @@ import {
   SHARED_TORUS_GEOMETRY_RING_01,
   SHARED_TORUS_GEOMETRY_RING_013,
   SHARED_TORUS_GEOMETRY_RING_016,
-  SHARED_MESH_BASIC_MATERIAL_HEALTH_BAR_BG
+  SHARED_MESH_BASIC_MATERIAL_HEALTH_BAR_BG,
+  SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM,
+  SHARED_SPHERE_GEOMETRY_SPELL_LARGE,
+  SHARED_TORUS_GEOMETRY_SPELL_MEDIUM,
+  SHARED_SPHERE_GEOMETRY_SPELL_PARTICLE
 } from '../SharedGeometries';
 
 // Pre-allocated colors for performance - avoids new Color() on every render
@@ -52,7 +57,6 @@ const STEALTH_EULER = new Euler();
 import {
   SHARED_TORUS_GEOMETRY_RING_02,
   SHARED_CYLINDER_GEOMETRY_SPEAR,
-  SHARED_SPHERE_GEOMETRY_SPELL_PARTICLE,
   SHARED_TORUS_GEOMETRY_SPELL_SMALL,
   SHARED_CONE_GEOMETRY_SMALL
 } from '../SharedGeometries';
@@ -365,8 +369,54 @@ export default function Unit({
     timeRemaining: legionEmpowerment.timeRemaining,
     activateEmpowerment: legionEmpowerment.activateEmpowerment
   }), [legionEmpowerment]);
-  
-  
+
+  // Memoized fireball explosion materials for performance and memory safety
+  const fireballExplosionMaterials = useMemo(() => ({
+    outer: new MeshStandardMaterial({
+      color: "#00ff44",
+      emissive: "#33ff66",
+      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.8,
+      depthWrite: false,
+      blending: AdditiveBlending
+    }),
+    inner: new MeshStandardMaterial({
+      color: "#66ff88",
+      emissive: "#ffffff",
+      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+      blending: AdditiveBlending
+    }),
+    torus: new MeshStandardMaterial({
+      color: "#00ff44",
+      emissive: "#33ff66",
+      emissiveIntensity: 1,
+      transparent: true,
+      opacity: 0.6,
+      depthWrite: false,
+      blending: AdditiveBlending
+    }),
+    spark: new MeshStandardMaterial({
+      color: "#66ff88",
+      emissive: "#ffffff",
+      emissiveIntensity: 2,
+      transparent: true,
+      opacity: 0.8,
+      depthWrite: false,
+      blending: AdditiveBlending
+    })
+  }), []);
+
+  // Cleanup materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      Object.values(fireballExplosionMaterials).forEach(mat => mat.dispose());
+    };
+  }, [fireballExplosionMaterials]);
+
   // Update total skeleton count when SoulReaper changes
   useEffect(() => {
     setSkeletonCount(soulReaperSkeletons);
@@ -5470,94 +5520,71 @@ export default function Unit({
           const elapsed = effect.startTime ? (Date.now() - effect.startTime) / 1000 : 0;
           const duration = effect.duration || 0.225;
           const fade = Math.max(0, 1 - (elapsed / duration));
-          // MEMORY FIX: Use scale instead of dynamic geometry args
-          const coreScale = 1 + elapsed * 2;
-          const innerScale = 1 + elapsed * 3;
-          
+
+          // Update material opacities based on fade for performance
+          fireballExplosionMaterials.outer.opacity = 0.8 * fade;
+          fireballExplosionMaterials.outer.emissiveIntensity = 0.5 * fade;
+          fireballExplosionMaterials.inner.opacity = 0.9 * fade;
+          fireballExplosionMaterials.inner.emissiveIntensity = 0.5 * fade;
+          fireballExplosionMaterials.torus.opacity = 0.6 * fade;
+          fireballExplosionMaterials.torus.emissiveIntensity = 1 * fade;
+          fireballExplosionMaterials.spark.opacity = 0.8 * fade;
+          fireballExplosionMaterials.spark.emissiveIntensity = 2 * fade;
+
+          const getTorusGeometry = (i: number) => {
+            if (i === 0) return SHARED_TORUS_GEOMETRY_SPELL_MEDIUM;
+            if (i === 1) return SHARED_TORUS_GEOMETRY_SPELL_MEDIUM;
+            return SHARED_TORUS_GEOMETRY_SPELL_MEDIUM;
+          };
+
           return (
             <group key={effect.id} position={effect.position}>
-              {/* Core explosion sphere - FIXED: Use scale instead of dynamic geometry */}
-              <mesh scale={coreScale}>
-                <primitive object={UNIT_GEOMETRIES.explosionCore} />
-                <meshStandardMaterial
-                  color="#00ff44"
-                  emissive="#33ff66"
-                  emissiveIntensity={2 * fade}
-                  transparent
-                  opacity={0.8 * fade}
-                  depthWrite={false}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
-              
-              {/* Inner energy sphere - FIXED: Use scale instead of dynamic geometry */}
-              <mesh scale={innerScale}>
-                <primitive object={UNIT_GEOMETRIES.explosionInner} />
-                <meshStandardMaterial
-                  color="#66ff88"
-                  emissive="#ffffff"
-                  emissiveIntensity={3 * fade}
-                  transparent
-                  opacity={0.9 * fade}
-                  depthWrite={false}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
+              {/* Outer explosion sphere */}
+              <mesh
+                geometry={SHARED_SPHERE_GEOMETRY_SPELL_LARGE}
+                material={fireballExplosionMaterials.outer}
+                scale={[1 + elapsed * 2, 1 + elapsed * 2, 1 + elapsed * 2]}
+              />
 
-              {/* Multiple expanding rings - FIXED: Use scale instead of dynamic geometry */}
-              {[UNIT_GEOMETRIES.explosionTorus0, UNIT_GEOMETRIES.explosionTorus1, UNIT_GEOMETRIES.explosionTorus2].map((torusGeom, i) => {
+              {/* Inner energy sphere */}
+              <mesh
+                geometry={SHARED_SPHERE_GEOMETRY_SPELL_MEDIUM}
+                material={fireballExplosionMaterials.inner}
+                scale={[1 + elapsed * 3, 1 + elapsed * 3, 1 + elapsed * 3]}
+              />
+
+              {/* Multiple expanding rings */}
+              {[0, 1, 2].map((i) => {
                 // Create dynamic spinning rotation using effect.id for deterministic randomness
                 const seed = effect.id + i;
                 const spinSpeedX = ((seed % 7) / 7) * 3 + 2; // 2-5 range
                 const spinSpeedY = ((seed % 11) / 11) * 4 + 3; // 3-7 range
                 const spinSpeedZ = ((seed % 13) / 13) * 3 + 1; // 1-4 range
-                
+
                 return (
-                  <mesh 
-                    key={`explosion-torus-${effect.id}-${i}`} 
-                    scale={innerScale} 
-                    rotation={[
-                      elapsed * spinSpeedX + i * 0.5,
-                      elapsed * spinSpeedY + i * 1.2,
-                      elapsed * spinSpeedZ + i * 0.8
-                    ]}
-                  >
-                    <primitive object={torusGeom} />
-                    <meshStandardMaterial
-                      color="#00ff44"
-                      emissive="#33ff66"
-                      emissiveIntensity={0.8 * fade}
-                      transparent
-                      opacity={0.5 * fade * (1 - i * 0.2)}
-                      depthWrite={false}
-                      blending={AdditiveBlending}
-                    />
-                  </mesh>
+                  <mesh
+                    key={`explosion-torus-${effect.id}-${i}`}
+                    rotation={[elapsed * spinSpeedX + i * 0.5, elapsed * spinSpeedY + i * 1.2, elapsed * spinSpeedZ + i * 0.8]}
+                    geometry={getTorusGeometry(i)}
+                    material={fireballExplosionMaterials.torus}
+                    scale={[1 + elapsed * 3, 1 + elapsed * 3, 1 + elapsed * 3]}
+                  />
                 );
               })}
 
               {/* Ground-perpendicular ring - largest and always horizontal */}
-              <mesh 
-                key={`explosion-torus-ground-${effect.id}`} 
-                scale={innerScale} 
+              <mesh
+                key={`explosion-torus-ground-${effect.id}`}
                 rotation={[-Math.PI / 2, elapsed * 4, 0]}
-              >
-                <primitive object={UNIT_GEOMETRIES.explosionTorusGround} />
-                <meshStandardMaterial
-                  color="#00ff44"
-                  emissive="#33ff66"
-                  emissiveIntensity={0.6 * fade}
-                  transparent
-                  opacity={0.4 * fade}
-                  depthWrite={false}
-                  blending={AdditiveBlending}
-                />
-              </mesh>
+                geometry={SHARED_TORUS_GEOMETRY_SPELL_MEDIUM}
+                material={fireballExplosionMaterials.torus}
+                scale={[1 + elapsed * 3, 1 + elapsed * 3, 1 + elapsed * 3]}
+              />
 
               {/* Particle sparks */}
-              {[...Array(8)].map((_, i) => {
-                const angle = (i / 8) * Math.PI * 2;
-                const radius = 0.5 * coreScale;
+              {[...Array(6)].map((_, i) => {
+                const angle = (i / 6) * Math.PI * 2;
+                const radius = 0.5 * (1 + elapsed * 2);
                 return (
                   <mesh
                     key={`explosion-spark-${effect.id}-${i}`}
@@ -5566,25 +5593,16 @@ export default function Unit({
                       Math.cos(angle) * radius,
                       0
                     ]}
-                  >
-                    <primitive object={SHARED_SPHERE_GEOMETRY_LOW} />
-                    <meshStandardMaterial
-                      color="#66ff88"
-                      emissive="#ffffff"
-                      emissiveIntensity={1.85 * fade}
-                      transparent
-                      opacity={0.85 * fade}
-                      depthWrite={false}
-                      blending={AdditiveBlending}
-                    />
-                  </mesh>
+                    geometry={SHARED_SPHERE_GEOMETRY_SPELL_PARTICLE}
+                    material={fireballExplosionMaterials.spark}
+                  />
                 );
               })}
 
-              {/* Dynamic lights */}
+              {/* Point lights for illumination */}
               <pointLight
                 color="#00ff44"
-                intensity={2 * fade}
+                intensity={1 * fade}
                 distance={4}
                 decay={2}
               />

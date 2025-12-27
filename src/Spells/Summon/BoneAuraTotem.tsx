@@ -3,6 +3,12 @@ import { Group, Mesh } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Euler, Vector3 } from 'three';
 
+// MEMORY FIX: Shared vectors and eulers to prevent creating new objects every render
+const SHARED_UPPER_JOINT_POSITION = new Vector3(0, 0.5, 0);
+const SHARED_LOWER_JOINT_POSITION = new Vector3(0, 0.15, 0);
+const SHARED_UPPER_JOINT_ROTATION = new Euler(0, 0, Math.PI / 6);
+const SHARED_LOWER_JOINT_ROTATION = new Euler(0, 0, -Math.PI / 6);
+
 interface BoneAuraTotemProps {
   parentRef: React.RefObject<Group>;
 }
@@ -20,16 +26,16 @@ const createBonePiece = () => (
     </mesh>
     
     {/* Bone joints */}
-    <mesh position={new Vector3(0, 0.5, 0)} rotation={new Euler(0, 0, Math.PI / 6)}>
+    <mesh position={SHARED_UPPER_JOINT_POSITION} rotation={SHARED_UPPER_JOINT_ROTATION}>
       <sphereGeometry args={[0.12, 8, 8]} />
-      <meshStandardMaterial 
+      <meshStandardMaterial
         color="#ffffff"
         roughness={0.5}
         metalness={0.2}
       />
     </mesh>
 
-    <mesh position={new Vector3(0, 0.15, 0)} rotation={new Euler(0, 0, -Math.PI / 6)}>
+    <mesh position={SHARED_LOWER_JOINT_POSITION} rotation={SHARED_LOWER_JOINT_ROTATION}>
       <sphereGeometry args={[0.12, 8, 8]} />
       <meshStandardMaterial 
         color="#a4a4a4"

@@ -4,6 +4,12 @@ import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, Euler, AdditiveBlending } from 'three';
 
+// MEMORY FIX: Shared vectors and euler to prevent creating new objects every render/frame
+const SHARED_WING_POSITION = new Vector3(0, -0.3, 0);
+const SHARED_WING_ROTATION = new Euler(0, Math.PI, 0);
+const SHARED_JET_DIRECTION = new Vector3();
+const SHARED_PARTICLE_POSITION: [number, number, number] = [0, 0, 0]; // Reusable tuple for particle positions
+
 interface WingJetProps {
   isActive: boolean;
   collectedBones: number;
@@ -94,12 +100,13 @@ const DraconicWingJets: React.FC<WingJetProps> = ({
         particle.position.copy(bone.pos);
         particle.position.y -= 0.3; // Offset for parent positioning
         
-        // Jet direction based on bone rotation and wing side
-        const jetDirection = new Vector3(
+        // Jet direction based on bone rotation and wing side - MEMORY FIX: Reuse shared vector
+        SHARED_JET_DIRECTION.set(
           isLeftWing ? -1 : 1, // Outward from body
           -0.3, // Slightly downward
           -0.8  // Backward thrust
         ).normalize();
+        const jetDirection = SHARED_JET_DIRECTION;
         
         particle.velocity.copy(jetDirection).multiplyScalar(2 + Math.random() * 3);
         particle.life = particle.maxLife;
@@ -122,10 +129,10 @@ const DraconicWingJets: React.FC<WingJetProps> = ({
   if (!isActive) return null;
 
   return (
-    <group 
+    <group
       ref={jetGroupRef}
-      rotation={new Euler(0, Math.PI, 0)}
-      position={new Vector3(0, -0.3, 0)}
+      rotation={SHARED_WING_ROTATION}
+      position={SHARED_WING_POSITION}
     >
       {/* Energy jets from each wing bone */}
       {wingBonePositions.slice(0, Math.min(wingBonePositions.length, collectedBones)).map((bone, i) => (
@@ -188,24 +195,30 @@ const DraconicWingJets: React.FC<WingJetProps> = ({
 
       {/* Jet particles */}
       <group>
-        {jetParticles.map(particle => (
-          <mesh 
-            key={particle.id} 
-            position={particle.position.toArray()}
-            scale={[particle.scale, particle.scale, particle.scale]}
-          >
-            <icosahedronGeometry args={[0.3, 0]} />
-            <meshStandardMaterial
-              color="#E0F6FF"
-              emissive="#4A90E2"
-              emissiveIntensity={1.5}
-              transparent
-              opacity={particle.life / particle.maxLife * 0.8}
-              depthWrite={false}
-              blending={AdditiveBlending}
-            />
-          </mesh>
-        ))}
+        {jetParticles.map(particle => {
+          SHARED_PARTICLE_POSITION[0] = particle.position.x;
+          SHARED_PARTICLE_POSITION[1] = particle.position.y;
+          SHARED_PARTICLE_POSITION[2] = particle.position.z;
+          const opacity = particle.life / particle.maxLife * 0.8;
+          return (
+            <mesh
+              key={particle.id}
+              position={SHARED_PARTICLE_POSITION}
+              scale={[particle.scale, particle.scale, particle.scale]}
+            >
+              <icosahedronGeometry args={[0.3, 0]} />
+              <meshStandardMaterial
+                color="#E0F6FF"
+                emissive="#4A90E2"
+                emissiveIntensity={1.5}
+                transparent
+                opacity={opacity}
+                depthWrite={false}
+                blending={AdditiveBlending}
+              />
+            </mesh>
+          );
+        })}
       </group>
 
       {/* Additional ambient glow around wings */}

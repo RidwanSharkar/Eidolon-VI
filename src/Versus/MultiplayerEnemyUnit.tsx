@@ -190,6 +190,11 @@ export default function MultiplayerEnemyUnit({
   const currentRotation = useRef(enemy.rotation || 0);
   const targetRotation = useRef(enemy.rotation || 0);
 
+  // MEMORY FIX: Reusable Vector3 objects to prevent memory leaks from inline JSX Vector3 creation
+  const tempVector1 = useRef(new Vector3());
+  const tempVector2 = useRef(new Vector3());
+  const tempVector3 = useRef(new Vector3());
+
   // Update target position and rotation when server state changes
   useEffect(() => {
     if (enemy.position) {
@@ -796,7 +801,7 @@ export default function MultiplayerEnemyUnit({
       {activeLightningWarnings.map(warning => (
         <LightningWarningIndicator
           key={warning.id}
-          position={new Vector3(warning.position.x, warning.position.y, warning.position.z)}
+          position={tempVector1.current.set(warning.position.x, warning.position.y, warning.position.z)}
           duration={warning.duration}
           onComplete={() => {
             setActiveLightningWarnings(prev => prev.filter(w => w.id !== warning.id));
@@ -808,7 +813,7 @@ export default function MultiplayerEnemyUnit({
       {activeLightningStrikes.map(strike => (
         <MageLightningStrike
           key={strike.id}
-          position={new Vector3(strike.position.x, strike.position.y, strike.position.z)}
+          position={tempVector2.current.set(strike.position.x, strike.position.y, strike.position.z)}
           onComplete={() => {
             setActiveLightningStrikes(prev => prev.filter(s => s.id !== strike.id));
           }}
@@ -834,7 +839,7 @@ export default function MultiplayerEnemyUnit({
         <FrostStrike
           key={effect.id}
           position={effect.position}
-          direction={new Vector3().subVectors(effect.target, effect.position).normalize()}
+          direction={tempVector3.current.subVectors(effect.target, effect.position).normalize()}
           onComplete={() => {
             setActiveFrostStrike(prev => prev.filter(e => e.id !== effect.id));
           }}
@@ -897,7 +902,7 @@ export default function MultiplayerEnemyUnit({
         <AscendantChargingIndicator
           key={effect.id}
           startPosition={effect.position}
-          targetPosition={effect.position.clone().add(effect.direction.clone().multiplyScalar(4.0))}
+          targetPosition={tempVector1.current.copy(effect.position).add(tempVector2.current.copy(effect.direction).multiplyScalar(4.0))}
           chargeDuration={1000}
           onComplete={() => {
             setActiveAscendantCharging(prev => prev.filter(e => e.id !== effect.id));

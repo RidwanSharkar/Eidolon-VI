@@ -4,6 +4,11 @@ import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3, Euler } from 'three';
 
+// MEMORY FIX: Shared vectors and euler to prevent creating new objects every render/frame
+const SHARED_WING_POSITION = new Vector3(0, -0.3, 0);
+const SHARED_WING_ROTATION = new Euler(0, Math.PI, 0);
+const SHARED_JET_DIRECTION = new Vector3();
+
 
 interface WingJetProps {
   isActive: boolean;
@@ -95,12 +100,13 @@ const AscendantWingJets: React.FC<WingJetProps> = ({
         particle.position.copy(bone.pos);
         particle.position.y -= 0.3; // Offset for parent positioning
         
-        // Jet direction based on bone rotation and wing side
-        const jetDirection = new Vector3(
+        // Jet direction based on bone rotation and wing side - MEMORY FIX: Reuse shared vector
+        SHARED_JET_DIRECTION.set(
           isLeftWing ? -1 : 1, // Outward from body
           -0.3, // Slightly downward
           -0.8  // Backward thrust
         ).normalize();
+        const jetDirection = SHARED_JET_DIRECTION;
         
         particle.velocity.copy(jetDirection).multiplyScalar(2 + Math.random() * 3);
         particle.life = particle.maxLife;
@@ -123,10 +129,10 @@ const AscendantWingJets: React.FC<WingJetProps> = ({
   if (!isActive) return null;
 
   return (
-    <group 
+    <group
       ref={jetGroupRef}
-      rotation={new Euler(0, Math.PI, 0)}
-      position={new Vector3(0, -0.3, 0)}
+      rotation={SHARED_WING_ROTATION}
+      position={SHARED_WING_POSITION}
     >
 
 

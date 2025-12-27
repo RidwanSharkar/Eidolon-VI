@@ -8,6 +8,9 @@ import { useFrame } from '@react-three/fiber';
 // This was creating new geometry EVERY FRAME in the map function, causing severe memory leaks
 const SPARK_GEOMETRY = new SphereGeometry(0.0125, 4, 4);
 
+// MEMORY FIX: Shared vector to prevent creating new Vector3 objects in map function
+const SHARED_POSITION_VECTOR = new Vector3();
+
 interface OrbShieldProps {
   parentRef: React.RefObject<Group>;
   charges: Array<ChargeStatus>;
@@ -146,7 +149,7 @@ const OrbShield = forwardRef<OrbShieldRef, OrbShieldProps>(({
         return (
           <OrbShieldSparkEffect
             key={charge.id}
-            position={new Vector3(x, y, z)}
+            position={SHARED_POSITION_VECTOR.set(x, y, z)}
           />
         );
       })}

@@ -5,6 +5,11 @@ import { Group, Vector3, Euler, CylinderGeometry, SphereGeometry } from 'three';
 const WING_BONE_SHAFT_GEOMETRY = new CylinderGeometry(0.023, 0.0175, 0.32, 3);
 const WING_BONE_JOINT_GEOMETRY = new SphereGeometry(0.035, 4, 4);
 
+// MEMORY FIX: Shared vectors and euler to prevent creating new objects every render
+const SHARED_WING_POSITION = new Vector3(0, -0.3, 0);
+const SHARED_WING_ROTATION = new Euler(0, Math.PI, 0);
+const SHARED_JOINT_POSITION = new Vector3(0, 0.2, 0);
+
 interface BonePosition {
   pos: Vector3;
   rot: Euler;
@@ -82,10 +87,10 @@ export default function ReaperBoneWings({ collectedBones, isLeftWing }: ReaperBo
         />
       </mesh>
       
-      {/* Upper joint - MEMORY FIX: Use shared geometry */}
-      <mesh position={new Vector3(0, 0.2, 0)}>
+      {/* Upper joint - MEMORY FIX: Use shared geometry and vector */}
+      <mesh position={SHARED_JOINT_POSITION}>
         <primitive object={WING_BONE_JOINT_GEOMETRY} attach="geometry" />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           color="#ffffff"
           emissive="#304040"
           emissiveIntensity={0.6}
@@ -99,10 +104,10 @@ export default function ReaperBoneWings({ collectedBones, isLeftWing }: ReaperBo
   
 
   return (
-    <group 
+    <group
       ref={wingsRef}
-      rotation={new Euler(0, Math.PI, 0)}
-      position={new Vector3(0, -0.3, 0)}
+      rotation={SHARED_WING_ROTATION}
+      position={SHARED_WING_POSITION}
     >
       {wingBonePositions.slice(0, Math.min(15, collectedBones)).map((bone, i) => (
         <group

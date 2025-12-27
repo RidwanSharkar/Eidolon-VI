@@ -24,6 +24,11 @@ const CACHED_JOINT_MATERIAL = new MeshStandardMaterial({
   metalness: 0.3
 });
 
+// MEMORY FIX: Shared vectors and euler to prevent creating new objects every render
+const SHARED_WING_POSITION = new Vector3(0, -0.3, 0);
+const SHARED_WING_ROTATION = new Euler(0, Math.PI, 0);
+const SHARED_JOINT_POSITION = new Vector3(0, 0.2, 0);
+
 interface BonePosition {
   pos: Vector3;
   rot: Euler;
@@ -87,10 +92,10 @@ export default function BoneWings({ collectedBones, isLeftWing }: BoneWingsProps
   ];
 
   return (
-    <group 
+    <group
       ref={wingsRef}
-      rotation={new Euler(0, Math.PI, 0)}
-      position={new Vector3(0, -0.3, 0)}
+      rotation={SHARED_WING_ROTATION}
+      position={SHARED_WING_POSITION}
     >
       {wingBonePositions.slice(0, Math.min(15, collectedBones)).map((bone, i) => (
         <group
@@ -105,7 +110,7 @@ export default function BoneWings({ collectedBones, isLeftWing }: BoneWingsProps
             <mesh geometry={CACHED_GEOMETRIES.boneShaft} material={CACHED_MATERIAL} />
             
             {/* Upper joint */}
-            <mesh position={new Vector3(0, 0.2, 0)} geometry={CACHED_GEOMETRIES.joint} material={CACHED_JOINT_MATERIAL} />
+            <mesh position={SHARED_JOINT_POSITION} geometry={CACHED_GEOMETRIES.joint} material={CACHED_JOINT_MATERIAL} />
           </group>
         </group>
       ))}
