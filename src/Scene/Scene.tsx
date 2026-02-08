@@ -27,11 +27,11 @@ import {
 } from 'three';
 import InstancedMountains from '../Environment/InstancedMountains';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
-import InstancedVegetation from '../Environment/InstancedVegetation';
 import Pillar from '../Environment/Pillar';
 import Pedestal from '../Environment/Pedestal';
 import { initializeSharedResources, sharedGeometries, sharedMaterials, disposeSharedResources } from './SharedResources';
 import { useMultiplayer } from '@/Multiplayer/MultiplayerContext';
+import EnvironmentPrecompiler from '../Environment/EnvironmentPrecompiler';
 import MultiplayerPlayer from '@/Multiplayer/MultiplayerPlayer';
 import { WeaponType } from '../Weapons/weapons';
 import { AbilityType } from '../Weapons/weapons';
@@ -154,7 +154,19 @@ export default function Scene({
   const treeData = useMemo(() => generateClusteredTrees(), []);
 
   // Renderer info for GPU memory tracking
-  const { gl } = useThree();
+  const { gl, scene, camera } = useThree();
+  const [isPrecompiled, setIsPrecompiled] = useState(false);
+
+  // Precompile shaders for environment
+  useEffect(() => {
+    // Only precompile once
+    if (gl && scene && camera && !isPrecompiled) {
+      console.log('🚀 Precompiling environment shaders...');
+      gl.compile(scene, camera);
+      setIsPrecompiled(true);
+      console.log('✅ Shader precompilation complete');
+    }
+  }, [gl, scene, camera, isPrecompiled]);
 
   // Add group pool with disposal
   const [groupPool] = useState(() => new ObjectPool<Group>(
@@ -318,11 +330,7 @@ export default function Scene({
   }, [groupPool]);
 
   // Use multiplayer enemies when in room, otherwise use local enemies
-  const [localEnemies, setLocalEnemies] = useState<Enemy[]>(() => 
-    Array.from({ length: initialSkeletons }, (_, index) => 
-      createEnemy(`skeleton-${index}`)
-    )
-  );
+  const [localEnemies, setLocalEnemies] = useState<Enemy[]>([]);
 
   // Convert multiplayer enemies to local enemy format
   const convertedMultiplayerEnemies = useMemo(() => {
@@ -344,7 +352,7 @@ export default function Scene({
   // Use the appropriate enemy list based on multiplayer status
   const enemies = isInRoom ? convertedMultiplayerEnemies : localEnemies;
 
-  const totalSpawnedRef = useRef(initialSkeletons);
+  const totalSpawnedRef = useRef(0);
   const playerRef = useRef<Group>(null);
   const [playerPosition, setPlayerPosition] = useState<Vector3>(new Vector3(0, 0, 0));
   
@@ -1662,9 +1670,29 @@ export default function Scene({
       }
       // Reset any scene-specific state
       setPlayerPosition(new Vector3(0, 0, 0));
-      totalSpawnedRef.current = initialSkeletons;
+      totalSpawnedRef.current = 0;
     };
-  }, [initialSkeletons]);
+  }, []);
+
+  // Effect to spawn initial skeletons after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLocalEnemies(prev => {
+        // Only spawn if we are in single player mode (multiplayer handles its own enemies)
+        if (isInRoom) return prev;
+        
+        // Only spawn if there are no local enemies yet (initial spawn)
+        if (prev.length > 0) return prev;
+
+        const newInitialSkeletons = Array.from({ length: initialSkeletons }, (_, index) => 
+          createEnemy(`skeleton-${index}`)
+        );
+        totalSpawnedRef.current = initialSkeletons;
+        return [...prev, ...newInitialSkeletons];
+      });
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [initialSkeletons, createEnemy, isInRoom]);
 
   useEffect(() => {
     const resources = {
@@ -1786,6 +1814,7 @@ export default function Scene({
     
     // MEMORY FIX: Reset emergency cleanup timer
     lastEmergencyCleanup.current = 0;
+    totalSpawnedRef.current = 0;
     
     console.log('✅ Scene cleanup: Complete');
   }, [removeEnemy, groupPool]);
@@ -1859,11 +1888,12 @@ export default function Scene({
   return (
     <>
       <group>
+        {!isPrecompiled && <EnvironmentPrecompiler />}
         <CustomSky level={currentLevel} />
         <Planet />
         <Terrain />
-        <InstancedVegetation />
-        <DetailedTrees trees={treeData} />
+   
+       {/* <DetailedTrees trees={treeData} /> */}
 
         <InstancedMountains mountains={mountainData} />
         <InstancedMushrooms mushrooms={mushroomData} />
