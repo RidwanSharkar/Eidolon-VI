@@ -552,24 +552,27 @@ export default function AscendantUnit({
         .subVectors(targetPlayerPosition, currentPosition.current)
         .normalize();
 
-      // Calculate separation force (simplified)
+      // Calculate separation force (optimized: only every 3 frames)
       const separationForce = new Vector3();
-      const otherEnemies = ascendantRef.current.parent?.children
-        .filter(child => 
-          child !== ascendantRef.current && 
-          child.position && 
-          child.position.distanceTo(currentPosition.current) < SEPARATION_RADIUS
-        ) || [];
+      const frameCount = Math.floor(_.clock.getElapsedTime() * 60);
+      if (frameCount % 3 === 0) {
+        const otherEnemies = ascendantRef.current.parent?.children
+          .filter(child => 
+            child !== ascendantRef.current && 
+            child.position && 
+            child.position.distanceTo(currentPosition.current) < SEPARATION_RADIUS
+          ) || [];
 
-      if (otherEnemies.length > 0) {
-        otherEnemies.forEach(enemy => {
-          const diff = new Vector3()
-            .subVectors(currentPosition.current, enemy.position)
-            .normalize()
-            .multiplyScalar(SEPARATION_FORCE);
-          separationForce.add(diff);
-        });
-        separationForce.normalize().multiplyScalar(0.3); // Limit separation influence
+        if (otherEnemies.length > 0) {
+          otherEnemies.forEach(enemy => {
+            const diff = new Vector3()
+              .subVectors(currentPosition.current, enemy.position)
+              .normalize()
+              .multiplyScalar(SEPARATION_FORCE);
+            separationForce.add(diff);
+          });
+          separationForce.normalize().multiplyScalar(0.3); // Limit separation influence
+        }
       }
 
       // Combine direction and separation (like player movement)

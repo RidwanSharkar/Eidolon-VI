@@ -15,7 +15,7 @@ interface BoneWingsProps {
   parentRef: React.RefObject<Group>;
 }
 
-// Shared shapes and settings - moved inside component for proper disposal
+// Shared shapes and settings
 const FEATHER_SHAPE = (() => {
   const shape = new Shape();
   shape.moveTo(0, 0);
@@ -50,6 +50,48 @@ const EXTRUDE_SETTINGS = {
   curveSegments: 8
 } as const;
 
+// MEMORY FIX: Shared geometries and materials for all wing instances
+const SHARED_GEOMETRIES = {
+  feather: new ExtrudeGeometry(FEATHER_SHAPE, EXTRUDE_SETTINGS),
+  redMarking: new ExtrudeGeometry(RED_MARKING_SHAPE, EXTRUDE_SETTINGS)
+};
+
+const SHARED_MATERIALS = {
+  feather: new MeshStandardMaterial({
+    color: "#F5F5DC",
+    emissive: "#2A2A1A",
+    emissiveIntensity: 0.3,
+    metalness: 0.1,
+    roughness: 0.6,
+    side: DoubleSide
+  }),
+  redMarking: new MeshStandardMaterial({
+    color: "#FF0000",
+    emissive: "#FF0000",
+    emissiveIntensity: 1.5,
+    metalness: 0.7,
+    roughness: 0.2,
+    opacity: 0.9,
+    transparent: true,
+    side: DoubleSide
+  }),
+  wingBone: new MeshStandardMaterial({
+    color: "#E8E8E8",
+    emissive: "#404040",
+    emissiveIntensity: 0.4,
+    metalness: 0.3,
+    roughness: 0.4
+  })
+};
+
+// Mark as shared to prevent disposal
+Object.values(SHARED_GEOMETRIES).forEach(geo => {
+  geo.userData = { shared: true };
+});
+Object.values(SHARED_MATERIALS).forEach(mat => {
+  mat.userData = { shared: true };
+});
+
 
 // Static vectors and eulers to prevent recreation
 const WING_POSITION = new Vector3(0, -0.2, 0);
@@ -57,49 +99,6 @@ const WING_ROTATION = new Euler(0, 0, 0);
 
 export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneWingsProps) {
   const wingsRef = useRef<Group>(null);
-
-  // Create geometries and materials with proper disposal
-  const featherGeometry = useMemo(() => new ExtrudeGeometry(FEATHER_SHAPE, EXTRUDE_SETTINGS), []);
-  const redMarkingGeometry = useMemo(() => new ExtrudeGeometry(RED_MARKING_SHAPE, EXTRUDE_SETTINGS), []);
-
-  const sharedMaterials = useMemo(() => ({
-    feather: new MeshStandardMaterial({
-      color: "#F5F5DC",
-      emissive: "#2A2A1A",
-      emissiveIntensity: 0.3,
-      metalness: 0.1,
-      roughness: 0.6,
-      side: DoubleSide
-    }),
-    redMarking: new MeshStandardMaterial({
-      color: "#FF0000",
-      emissive: "#FF0000",
-      emissiveIntensity: 1.5,
-      metalness: 0.7,
-      roughness: 0.2,
-      opacity: 0.9,
-      transparent: true,
-      side: DoubleSide
-    }),
-    wingBone: new MeshStandardMaterial({
-      color: "#E8E8E8",
-      emissive: "#404040",
-      emissiveIntensity: 0.4,
-      metalness: 0.3,
-      roughness: 0.4
-    })
-  }), []);
-
-  // Dispose geometries and materials on unmount
-  useEffect(() => {
-    return () => {
-      featherGeometry.dispose();
-      redMarkingGeometry.dispose();
-      sharedMaterials.feather.dispose();
-      sharedMaterials.redMarking.dispose();
-      sharedMaterials.wingBone.dispose();
-    };
-  }, [featherGeometry, redMarkingGeometry, sharedMaterials]);
 
   // Wing segment definitions - memoized to prevent recreation every frame
   const wingSegments = useMemo(() => [
@@ -184,29 +183,15 @@ export default function AscendantBoneWings({ collectedBones, isLeftWing }: BoneW
       scale={segment.scale}
     >
       {/* Base feather */}
-      <mesh geometry={featherGeometry} material={sharedMaterials.feather}>
-        <pointLight
-          color="#F5F5DC"
-          intensity={0.3}
-          distance={0.8}
-          decay={2}
-        />
-      </mesh>
+      <mesh geometry={SHARED_GEOMETRIES.feather} material={SHARED_MATERIALS.feather} />
       
       {/* Red marking overlay */}
       {segment.hasRedMarking && (
         <mesh
-          geometry={redMarkingGeometry}
-          material={sharedMaterials.redMarking}
+          geometry={SHARED_GEOMETRIES.redMarking}
+          material={SHARED_MATERIALS.redMarking}
           position={[0, 0, 0.01]}
-        >
-          <pointLight
-            color="#FF0000"
-            intensity={1.2}
-            distance={1.2}
-            decay={2}
-          />
-        </mesh>
+        />
       )}
     </group>
   );

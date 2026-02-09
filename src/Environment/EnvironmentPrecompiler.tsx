@@ -9,6 +9,7 @@ import Planet from './Planet';
 import InstancedMountains from './InstancedMountains';
 import InstancedMushrooms from './InstancedMushrooms';
 import InstancedVegetation from './InstancedVegetation';
+import SimpleBorderEffects from './SimpleBorderEffects';
 import DetailedTrees from './DetailedTrees';
 import { generateMountains, generateMushrooms, generateClusteredTrees } from './terrainGenerators';
 
@@ -67,6 +68,7 @@ const EnvironmentPrecompiler: React.FC = () => {
           <CustomSky level={level} />
           <Pillar level={level} />
           <Pedestal level={level} />
+          <SimpleBorderEffects level={level} />
         </group>
       ))}
       

@@ -36,12 +36,9 @@ export default function PlayerStunEffect({
   const lightningOffset = useRef(Math.random() * Math.PI * 2);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (onComplete) onComplete();
-    }, duration);
-
-    return () => clearTimeout(timeout);
-  }, [duration, onComplete]);
+    // No longer using setTimeout here as it was being reset by re-renders
+    // The component now self-completes in useFrame when progress reaches 1
+  }, []);
 
   useFrame(() => {
     if (!effectRef.current) return;
@@ -49,6 +46,12 @@ export default function PlayerStunEffect({
     const currentTime = Date.now();
     const elapsed = currentTime - startTime;
     const progress = Math.min(elapsed / duration, 1);
+
+    // Auto-complete when duration is reached
+    if (progress >= 1) {
+      if (onComplete) onComplete();
+      return;
+    }
 
     // Fade out in the last 500ms
     if (progress > 0.75) {

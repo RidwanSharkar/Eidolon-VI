@@ -294,7 +294,7 @@ export default function AscendantModel({
 
 
 
-      {/* Add Glowing Core Effect */}
+      {/* Add Glowing Core Effect - MEMORY FIX: Reduced count */}
       <group position={[0, 1, 0]} scale={[0.7, 0.7, 0.7]}>
         <AscendantTrailEffect parentRef={groupRef} />
       </group>
@@ -304,18 +304,9 @@ export default function AscendantModel({
       </group>
 
 
-      <group position={[0, 1.8, 0.35]} scale={[0.4, 0.4, 0.4]}>
-        <AscendantTrailEffect parentRef={groupRef} />
-      </group>
-
-
-      {/* Bone Vortex Effects */}
+      {/* Bone Vortex Effects - MEMORY FIX: Reduced count */}
       <group scale={[1.45, 1.9, 1.45]} position={[0, -0.25, 0]}>
-        {/* Front and Back Vortexes only */}
-        <group position={[0, 0, 0.1]} rotation={[0, 0, 0]}>
-          <AscendantBoneVortex parentRef={groupRef} />
-        </group>
-        <group position={[0, 0, -0.1]} rotation={[0, Math.PI, 0]}>
+        <group position={[0, 0, 0]} rotation={[0, 0, 0]}>
           <AscendantBoneVortex parentRef={groupRef} />
         </group>
       </group>

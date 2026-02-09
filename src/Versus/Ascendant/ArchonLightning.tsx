@@ -20,8 +20,8 @@ const ArchonLightning: React.FC<ArchonLightningProps> = ({
   const flickerRef = useRef(1);
   
   // Create horizontal lightning geometry
-  const mainBoltSegments = 96;
-  const branchCount = 32;
+  const mainBoltSegments = 48; // Reduced from 96
+  const branchCount = 12;      // Reduced from 32
   
   const branches = useMemo(() => {
     const direction = targetPosition.clone().sub(startPosition).normalize();
@@ -39,85 +39,59 @@ const ArchonLightning: React.FC<ArchonLightningProps> = ({
         const perpendicular1 = new Vector3().crossVectors(direction, new Vector3(0, 1, 0)).normalize();
         const perpendicular2 = new Vector3().crossVectors(direction, perpendicular1).normalize();
         
-        // Create zigzag pattern
-        const primaryOffset = Math.sin(t * Math.PI * 12) * (1 - t * 0.5) * 0.5;
-        const secondaryOffset = Math.sin(t * Math.PI * 24) * (1 - t * 0.5) * 0.25;
-        const randomOffset = (Math.random() - 0.5) * 0.6 * (1 - t * 0.7);
+        // Create zigzag pattern - simplified
+        const primaryOffset = Math.sin(t * Math.PI * 6) * (1 - t * 0.5) * 0.4;
+        const randomOffset = (Math.random() - 0.5) * 0.4 * (1 - t * 0.7);
         
         // Apply offsets perpendicular to the main direction
         basePosition.add(perpendicular1.clone().multiplyScalar(primaryOffset + randomOffset));
-        basePosition.add(perpendicular2.clone().multiplyScalar(secondaryOffset));
+        basePosition.add(perpendicular2.clone().multiplyScalar(randomOffset * 0.5));
         
         return basePosition;
       }),
-      thickness: 0.06,
+      thickness: 0.08,
       isCoreStrike: true
     };
 
-    // Create secondary branches
+    // Create secondary branches - significantly reduced
     const secondaryBranches = Array(branchCount).fill(0).map(() => {
-      const startIdx = Math.floor(Math.random() * (mainBoltSegments * 0.8));
+      const startIdx = Math.floor(Math.random() * (mainBoltSegments * 0.7));
       const startPoint = mainBolt.points[startIdx];
-      const branchLength = Math.floor(mainBoltSegments * (0.08 + Math.random() * 0.15));
+      const branchLength = Math.floor(mainBoltSegments * (0.15 + Math.random() * 0.2));
       
-      // Random direction for branch, but generally perpendicular to main bolt
+      // Random direction for branch
       const perpendicular1 = new Vector3().crossVectors(direction, new Vector3(0, 1, 0)).normalize();
       const perpendicular2 = new Vector3().crossVectors(direction, perpendicular1).normalize();
       
       const branchDir = perpendicular1.clone()
         .multiplyScalar((Math.random() - 0.5) * 2)
-        .add(perpendicular2.clone().multiplyScalar((Math.random() - 0.5) * 0.5))
+        .add(perpendicular2.clone().multiplyScalar((Math.random() - 0.5) * 1.5))
         .normalize();
       
       return {
         points: Array(branchLength).fill(0).map((_, i) => {
           const t = i / (branchLength - 1);
           const branchTarget = startPoint.clone().add(
-            branchDir.clone().multiplyScalar(distance * 0.15 * t)
+            branchDir.clone().multiplyScalar(distance * 0.2 * t)
           );
           
           const randomJitter = new Vector3(
-            (Math.random() - 0.5) * 0.25,
-            (Math.random() - 0.5) * 0.25,
-            (Math.random() - 0.5) * 0.25
+            (Math.random() - 0.5) * 0.2,
+            (Math.random() - 0.5) * 0.2,
+            (Math.random() - 0.5) * 0.2
           );
           
           const point = startPoint.clone().lerp(branchTarget, t);
           point.add(randomJitter);
           return point;
         }),
-        thickness: 0.04 + Math.random() * 0.05,
+        thickness: 0.05 + Math.random() * 0.04,
         isCoreStrike: false
       };
     });
 
-    // Tertiary micro-branches
-    const tertiaryBranches = secondaryBranches.flatMap(branch => {
-      if (Math.random() > 0.4) return [];
-      
-      const startIdx = Math.floor(Math.random() * branch.points.length * 0.6);
-      const startPoint = branch.points[startIdx];
-      const miniBranchLength = Math.floor(branch.points.length * 0.3);
-      
-      return [{
-        points: Array(miniBranchLength).fill(0).map((_, i) => {
-          const t = i / (miniBranchLength - 1);
-          const randomDir = new Vector3(
-            (Math.random() - 0.5),
-            (Math.random() - 0.5),
-            (Math.random() - 0.5)
-          ).normalize();
-          
-          return startPoint.clone().add(
-            randomDir.multiplyScalar(distance * 0.02 * t)
-          );
-        }),
-        thickness: 0.02 + Math.random() * 0.025,
-        isCoreStrike: false
-      }];
-    });
-
-    return [mainBolt, ...secondaryBranches, ...tertiaryBranches];
+    // MEMORY FIX: Removed tertiary micro-branches to save hundreds of draw calls per bolt
+    return [mainBolt, ...secondaryBranches];
   }, [startPosition, targetPosition]);
   
   // Use pooled geometries and materials
@@ -198,22 +172,22 @@ const ArchonLightning: React.FC<ArchonLightningProps> = ({
           scale={[0.60, 0.60, 0.60]}
         />
         
-        {/* Energy rings at start */}
-        {[0.6, 0.9, 1.2].map((size, i) => (
+        {/* MEMORY FIX: Reduced energy rings and lights */}
+        {[0.6, 1.2].map((size, i) => (
           <mesh 
             key={i} 
             rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
-            scale={[size / 0.8, size / 0.8, 1]} // Scale based on default ring size
+            scale={[size / 0.8, size / 0.8, 1]} 
             geometry={pooledResources.geometries.ring}
             material={pooledResources.materials.ring}
           />
         ))}
         
-        {/* Red point light at palm */}
+        {/* Red point light at palm - reduced intensity and distance */}
         <pointLight
           color="#FF0000"
-          intensity={25 * (1 - (Date.now() - startTimeRef.current) / (duration * 1000)) * flickerRef.current}
-          distance={8}
+          intensity={12 * (1 - (Date.now() - startTimeRef.current) / (duration * 1000)) * flickerRef.current}
+          distance={5}
           decay={2}
         />
       </group>
@@ -226,22 +200,22 @@ const ArchonLightning: React.FC<ArchonLightningProps> = ({
           scale={[1.0, 1.0, 1.0]}
         />
         
-        {/* Impact rings at target */}
-        {[0.75, 1.225, 1.45].map((size, i) => (
+        {/* Impact rings at target - reduced count */}
+        {[0.75, 1.45].map((size, i) => (
           <mesh 
             key={i} 
             rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
-            scale={[size / 0.8, size / 0.8, 1]} // Scale based on default ring size
+            scale={[size / 0.8, size / 0.8, 1]} 
             geometry={pooledResources.geometries.ring}
             material={pooledResources.materials.ring}
           />
         ))}
         
-        {/* Red point light at impact */}
+        {/* Red point light at impact - reduced intensity and distance */}
         <pointLight
           color="#FF0000"
-          intensity={25 * (1 - (Date.now() - startTimeRef.current) / (duration * 1000)) * flickerRef.current}
-          distance={12}
+          intensity={15 * (1 - (Date.now() - startTimeRef.current) / (duration * 1000)) * flickerRef.current}
+          distance={8}
           decay={2}
         />
       </group>

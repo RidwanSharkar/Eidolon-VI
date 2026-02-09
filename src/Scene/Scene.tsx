@@ -27,6 +27,7 @@ import {
 } from 'three';
 import InstancedMountains from '../Environment/InstancedMountains';
 import InstancedMushrooms from '../Environment/InstancedMushrooms';
+import SimpleBorderEffects from '../Environment/SimpleBorderEffects';
 import Pillar from '../Environment/Pillar';
 import Pedestal from '../Environment/Pedestal';
 import { initializeSharedResources, sharedGeometries, sharedMaterials, disposeSharedResources } from './SharedResources';
@@ -1897,6 +1898,7 @@ export default function Scene({
 
         <InstancedMountains mountains={mountainData} />
         <InstancedMushrooms mushrooms={mushroomData} />
+        <SimpleBorderEffects radius={25} level={currentLevel} />
         {/* Central Pedestal */}
         <Pedestal position={[0, 0, 0]} scale={0.4} level={currentLevel} />
         {/* Three pillars in triangle formation */}

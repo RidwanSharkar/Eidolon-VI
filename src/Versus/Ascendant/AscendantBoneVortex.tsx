@@ -10,14 +10,14 @@ interface AscendantBoneVortexProps {
 const VORTEX_BOX_GEOMETRY = new BoxGeometry(0.045, 0.012, 0.012);
 const VORTEX_SPHERE_GEOMETRY = new SphereGeometry(0.023, 6, 6);
 
-const createVortexPiece = () => (
+const createVortexPiece = (opacity: number) => (
   <group>
     {/* Main vortex fragment */}
     <mesh geometry={VORTEX_BOX_GEOMETRY}>
       <meshStandardMaterial 
         color="#cc0000"
         transparent
-        opacity={0.35}
+        opacity={opacity}
         emissive="#cc0000"
         emissiveIntensity={0.4}
       />
@@ -30,7 +30,7 @@ const createVortexPiece = () => (
         emissive="#cc0000"
         emissiveIntensity={0.9}
         transparent
-        opacity={0.6}
+        opacity={opacity * 1.7}
       />
     </mesh>
   </group>
@@ -67,27 +67,27 @@ export default function AscendantBoneVortex({ parentRef }: AscendantBoneVortexPr
       piece.rotation.x = Math.PI / 6;
       piece.rotation.z = Math.sin(time * 3 + i) * 0.1;
       
-      // Update material opacity
-      const meshChild = piece.children[0] as Mesh;
-      if (meshChild && meshChild.material) {
-        const material = meshChild.material as MeshStandardMaterial;
-        material.opacity = Math.max(0.1, 1 - (heightOffset * 2));
-      }
+      // MEMORY FIX: Removed redundant material opacity update from loop
+      // Opacity is now set once during creation as it only depends on heightOffset
     });
   });
 
   return (
     <group ref={groupRef}>
-      {Array.from({ length: pieceCount }).map((_, i) => (
-        <group
-          key={i}
-          ref={(el) => {
-            if (el) vortexPiecesRef.current[i] = el;
-          }}
-        >
-          {createVortexPiece()}
-        </group>
-      ))}
+      {Array.from({ length: pieceCount }).map((_, i) => {
+        const heightOffset = ((i / pieceCount) * 0.55);
+        const opacity = Math.max(0.1, 1 - (heightOffset * 2)) * 0.35;
+        return (
+          <group
+            key={i}
+            ref={(el) => {
+              if (el) vortexPiecesRef.current[i] = el;
+            }}
+          >
+            {createVortexPiece(opacity)}
+          </group>
+        );
+      })}
       
       <pointLight 
         color="#cc0000"
